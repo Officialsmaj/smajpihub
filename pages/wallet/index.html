@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet — SMAJ PI HUB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Boxicons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="../../assets/images/logo.png" alt="SMAJ PI HUB Logo">
+      </div>
+      <div class="menu-toggle" id="menuToggle">
+        <i class='bx bx-menu'></i>
+      </div>
+      <nav id="navMenu">
+        <a href="../../index.html">Home</a>
+        <a href="/pages/about.html">About</a>
+
+        <a href="/pages/service.html">Services</a>
+        <a href="/pages/how-it-works.html">How It Works</a>
+        <a href="/pages/pricing.html">Pricing</a>
+        <a href="marketplace.html">Marketplace</a>
+
+        <a href="/pages/faq.html">FAQ</a>
+        <a href="/pages/contact.html">Contact</a>
+        <a href="/pages/dashboard/client.html">Dashboard</a>
+      </nav>
+      <button class="wallet-btn"><i class='bx bx-wallet'></i> Connect Pi</button>
+    </div>
+  </header>
+
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+      <ul>
+        <li><a href="../dashboard/client.html"><i class='bx bx-home'></i> Dashboard Home</a></li>
+        <li class="active"><a href="index.html"><i class='bx bx-wallet'></i> Wallet</a></li>
+        <li><a href="#"><i class='bx bx-transfer'></i> Deposit</a></li>
+        <li><a href="#"><i class='bx bx-export'></i> Withdraw</a></li>
+        <li><a href="../dashboard/settings.html"><i class='bx bx-cog'></i> Settings</a></li>
+        <li><a href="#"><i class='bx bx-log-out'></i> Logout</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <h1>My Pi Wallet</h1>
+
+      <!-- Wallet Summary -->
+      <div class="dashboard-cards">
+        <div class="card balance-card">
+          <i class='bx bx-wallet wallet-icon'></i>
+          <h3>Pi Balance</h3>
+          <p id="pi-balance">0 π</p>
+        </div>
+        <div class="card pending-card">
+          <i class='bx bx-time-five pending-icon'></i>
+          <h3>Pending</h3>
+          <p id="pending-balance">0 π</p>
+        </div>
+        <div class="card earned-card">
+          <i class='bx bx-line-chart earned-icon'></i>
+          <h3>Total Earned</h3>
+          <p id="earned-balance">0 π</p>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <section class="transactions">
+        <h2>Recent Transactions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount (π)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-list">
+            <tr>
+              <td colspan="4">No transactions yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Quick Actions -->
+      <div class="wallet-actions">
+        <button id="send-btn"><i class='bx bx-send'></i> Send Pi</button>
+        <button id="receive-btn"><i class='bx bx-download'></i> Receive Pi</button>
+        <button id="deposit-btn"><i class='bx bx-wallet'></i> Deposit Pi</button>
+        <button id="withdraw-btn"><i class='bx bx-up-arrow-alt'></i> Withdraw Pi</button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+
+      <div>
+        <h4>SMAJ PI HUB</h4>
+        <p>All services are priced in Pi. No fake promises. Real utility.</p>
+      </div>
+
+      <div>
+        <h4>Platform</h4>
+        <a href="../../index.html">Home</a>
+        <a href="/pages/about.html">About</a>
+        <a href="/pages/service.html">Services</a>
+        <a href="/pages/service-detail.html">Service Detail</a>
+
+        <a href="/pages/how-it-works.html">How It Works</a>
+        <a href="/pages/pricing.html">Pricing</a>
+        <a href="/pages/blog.html">Blog</a>
+        <a href="/pages/blog-post.html">Blog Post</a>
+
+        <a href="/pages/faq.html">FAQ</a>
+        <a href="/pages/portfolio.html">Portfolio</a>
+        <a href="/pages/contact.html">Contact</a>
+      </div>
+
+      <div>
+        <h4>Programs</h4>
+        <a href="/pages/affiliate.html">Affiliate Program</a>
+        <a href="/pages/collaborate.html">Collaborate With Us</a>
+        <a href="/pages/partners.html">Partners</a>
+        <a href="/pages/community.html">Community</a>
+        <a href="/pages/developers.html">Developers</a>
+        <a href="/pages/help-center.html">Help Center</a>
+      </div>
+
+      <div>
+        <h4>Legal</h4>
+        <a href="/pages/legal/privacy.html">Privacy Policy</a>
+        <a href="/pages/legal/terms.html">Terms & Conditions</a>
+        <a href="/pages/legal/cookie.html">Cookie Policy</a>
+        <a href="/pages/legal/report.html">Report Abuse</a>
+      </div>
+
+      <div>
+        <h4>Follow Us</h4>
+        <div class="socials">
+          <i class='bx bxl-telegram'></i>
+          <i class='bx bxl-twitter'></i>
+          <i class='bx bxl-facebook'></i>
+          <i class='bx bxl-instagram'></i>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="copyright">
+      © 2025 SMAJ PI HUB. All rights reserved.
+    </p>
+  </footer>
+
+  <!-- JS -->
+  <script src="../../js/main.js"></script>
+  <script src="../../js/wallet.js"></script>
+</body>
+
+</html>

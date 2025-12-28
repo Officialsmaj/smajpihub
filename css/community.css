@@ -1,0 +1,213 @@
+/* ================= HERO ================= */
+.community-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 60px 0;
+    gap: 40px;
+}
+
+.community-hero .hero-text h1 {
+    font-size: 2.8rem;
+    color: #7d3cff;
+    margin-bottom: 15px;
+}
+
+.community-hero .hero-text p {
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+}
+
+.hero-actions .btn {
+    margin-right: 15px;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.hero-actions .btn:hover {
+    transform: translateY(-3px);
+}
+
+/* ================= CATEGORIES ================= */
+.community-categories .category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.community-categories .category {
+    padding: 10px 20px;
+    border-radius: 20px;
+    background: #eee;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.community-categories .category.active,
+.community-categories .category:hover {
+    background: #7d3cff;
+    color: #fff;
+}
+
+/* ================= POSTS ================= */
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.post-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-5px);
+}
+
+.post-card h3 {
+    color: #0b0f1a;
+    margin-bottom: 10px;
+}
+
+.post-info {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.post-actions button {
+    padding: 6px 14px;
+    border: none;
+    margin-right: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.post-actions button:hover {
+    background: #7d3cff;
+    color: #fff;
+}
+
+/* ================= FEATURED MEMBERS ================= */
+.members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+}
+
+.member-card {
+    background: #fff;
+    text-align: center;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(125, 60, 255, 0.3);
+}
+
+.member-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 2px solid #7d3cff;
+    animation: rotateBorder 8s linear infinite;
+}
+
+@keyframes rotateBorder {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.member-card h4 {
+    margin-bottom: 5px;
+    color: #0b0f1a;
+}
+
+.member-card p {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.member-card .socials i {
+    font-size: 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.member-card .socials i:hover {
+    color: #7d3cff;
+}
+
+/* ================= CTA ================= */
+.community-cta {
+    text-align: center;
+    padding: 60px 0;
+    background: #f4f4f4;
+}
+
+.community-cta h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #0b0f1a;
+}
+
+.community-cta p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.community-cta .btn {
+    padding: 12px 25px;
+    margin-right: 15px;
+    transition: all 0.3s ease;
+}
+
+.community-cta .btn:hover {
+    transform: translateY(-3px);
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px) {
+    .community-hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-image img {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .community-categories .category-buttons {
+        justify-content: center;
+    }
+
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .members-grid {
+        grid-template-columns: 1fr;
+    }
+}

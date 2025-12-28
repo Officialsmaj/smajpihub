@@ -1,0 +1,358 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #111;
+  line-height: 1.6;
+  background: #fff;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* CONTAINER */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.container p {
+  margin-bottom: 10px;
+}
+
+/* ================= HEADER ================= */
+.header {
+  background: #0b0f1a;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  width: 150px;
+}
+
+nav a {
+  margin: 0 10px;
+  color: #fff;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+nav a:hover {
+  color: #7d3cff;
+}
+
+.wallet-btn {
+  background-color: #7d3cff;
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.5s;
+}
+
+.wallet-btn:hover {
+  background-color: #5f2bd6;
+}
+
+.menu-toggle {
+  display: none;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* ================= BUTTONS ================= */
+.btn-primary,
+.btn-secondary {
+  padding: 12px 22px;
+  border-radius: 6px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: #7d3cff;
+  color: #fff;
+  transition: background-color 0.5s;
+}
+
+.btn-primary:hover {
+  background-color: #5f2bd6;
+
+}
+
+.btn-secondary {
+  border: 2px solid #7d3cff;
+  color: #7d3cff;
+  transition: color 0.5s, background-color 0.5s;
+}
+
+.btn-secondary:hover {
+  color: #fff;
+  background-color: #5f2bd6;
+
+}
+
+/* ================= HERO ================= */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 40px;
+  padding: 60px 0;
+}
+
+.hero-text h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.hero-text p {
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 15px;
+}
+
+/* ================= FEATURES ================= */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 60px 0;
+}
+
+.feature-card,
+.service-card,
+.step {
+  background: #f7f7f7;
+  padding: 25px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.feature-card i,
+.step i {
+  font-size: 36px;
+  color: #7d3cff;
+  margin-bottom: 15px;
+}
+
+.service-card img {
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* ================= TITLES ================= */
+.section-title {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 32px;
+}
+
+/* ================= CTA ================= */
+.cta {
+  background: #0b0f1a;
+  color: #fff;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.cta-btn {
+  background-color: #7d3cff;
+  color: #fff;
+  transition: background-color 0.5s;
+  padding: 12px 22px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+}
+
+.cta-btn:hover {
+  background-color: #5f2bd6;
+}
+
+.cta h2 {
+  font-size: 32px;
+  margin-bottom: 15px;
+}
+  
+
+
+/* ================= FOOTER ================= */
+.footer {
+  background: #0b0f1a;
+  color: #ccc;
+  padding: 50px 0 20px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.footer h4 {
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.footer a {
+  display: block;
+  margin: 6px 0;
+  font-size: 14px;
+  transition: color 0.3;
+}
+
+.footer a:hover {
+  color: #7d3cff;
+}
+
+.footer i {
+  font-size: 22px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+footer p {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-actions {
+    justify-content: center;
+  }
+
+  nav {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    background: #0b0f1a;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  nav.active {
+    display: flex;
+  }
+
+  nav a {
+    padding: 15px;
+    border-top: 1px solid #222;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .wallet-btn {
+    display: none;
+  }
+
+}
+
+.transactions table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  color: #fff;
+}
+
+.transactions th,
+.transactions td {
+  border: 1px solid #333;
+  padding: 10px;
+  text-align: left;
+}
+
+.wallet-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.wallet-actions button {
+  background-color: #7d3cff;
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.5s;
+}
+
+.wallet-actions button:hover {
+  background-color: #5a24b6;
+}
+
+.socials a i {
+  font-size: 22px;
+  margin: 8px;
+  transition: transform .3s, color .3s;
+}
+
+.socials a {
+  display: inline-block;
+}
+
+
+.socials i:hover {
+  color: #5a24b6;
+}
+
+.btn {
+  background-color: #7d3cff;
+  color: white;
+  transition: background-color 0.5s;
+  padding: 12px 22px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+}
+
+.btn:hover {
+    background-color: #5f2bd6;
+}

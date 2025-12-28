@@ -1,0 +1,197 @@
+/* Portfolio Page Styles */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    color: #0b0f1a;
+    animation: fadeIn 1.5s ease-in;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: #333;
+    margin-top: 15px;
+}
+
+.filters {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.filter-btn {
+    margin: 0 10px;
+    padding: 10px 20px;
+    border: none;
+    background: #eee;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: #7d3cff;
+    color: #fff;
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.portfolio-item {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+.portfolio-item:hover {
+    transform: translateY(-10px);
+}
+
+.portfolio-item img {
+    width: 100%;
+    display: block;
+}
+
+.portfolio-info {
+    padding: 15px;
+}
+
+.portfolio-info h4 {
+    margin-bottom: 5px;
+    color: #0b0f1a;
+}
+
+.portfolio-info p {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.portfolio-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn.primary {
+    background: #7d3cff;
+    color: #fff;
+}
+
+.btn.primary:hover {
+    background: #5a29b0;
+}
+
+.btn.secondary {
+    background: #eee;
+    color: #0b0f1a;
+}
+
+.btn.secondary:hover {
+    background: #ccc;
+}
+
+.metrics {
+    margin-top: 10px;
+}
+
+.progress-bar {
+    background: #eee;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-bar span {
+    display: block;
+    height: 100%;
+    background: #7d3cff;
+    width: 0;
+    animation: fillBar 1.5s forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fillBar {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+/* Stats */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 50px 0;
+    text-align: center;
+}
+
+.stat-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: #7d3cff;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.stat-card h3 {
+    font-size: 1.8rem;
+}
+
+.stat-card p {
+    color: #555;
+}
+
+/* CTA */
+.cta {
+    background: #7d3cff;
+    color: #fff;
+    text-align: center;
+    padding: 40px 20px;
+    border-radius: 10px;
+    margin-bottom: 50px;
+}
+
+.cta a.btn.primary {
+    background: #fff;
+    color: #7d3cff;
+}

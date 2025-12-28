@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Settings — SMAJ PI HUB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Boxicons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/main.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="../../assets/images/logo.png" alt="SMAJ PI HUB Logo">
+      </div>
+      <div class="menu-toggle" id="menuToggle">
+        <i class='bx bx-menu'></i>
+      </div>
+
+      <nav id="navMenu">
+        <a href="../../index.html">Home</a>
+        <a href="../about.html">About</a>
+
+        <a href="../service.html">Services</a>
+        <a href="../how-it-works.html">How It Works</a>
+        <a href="../pricing.html">Pricing</a>
+        <a href="../marketplace/markerplace.html">Marketplace</a>
+
+        <a href="../faq.html">FAQ</a>
+        <a href="../contact.html">Contact</a>
+        <a href="../dashboard/client.html">Dashboard</a>
+      </nav>
+      <button class="wallet-btn"><i class='bx bx-wallet'></i> Connect Pi</button>
+    </div>
+  </header>
+
+  <!-- Dashboard Container -->
+<div class="dashboard-container">
+
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar">
+    <ul>
+      <li><a href="client.html"><i class='bx bx-home'></i> Dashboard Home</a></li>
+      <li><a href="provider.html"><i class='bx bx-user'></i> Provider</a></li>
+      <li><a href="settings.html" class="active"><i class='bx bx-cog'></i> Settings</a></li>
+      <li><a href="../../pages/auth/login.html"><i class='bx bx-log-out'></i> Logout</a></li>
+    </ul>
+  </aside>
+
+  <!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Confirm Logout</h3>
+    <p>Are you sure you want to log out?</p>
+    <div class="modal-actions">
+      <button id="confirmLogout" class="btn primary">Yes, Log Out</button>
+      <button id="cancelLogout" class="btn secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <h1>Account Settings</h1>
+
+    <!-- Profile Section -->
+    <section class="settings-section profile-settings">
+      <h2>Profile Settings</h2>
+      <div class="profile-card">
+        <div class="profile-image">
+          <img src="../../assets/images/team/ceo.png" alt="Profile Image">
+        </div>
+        <div class="profile-form">
+          <label>Name</label>
+          <input type="text" placeholder="Enter your name">
+          <label>Username</label>
+          <input type="text" placeholder="Enter your username">
+          <label>Email</label>
+          <input type="email" placeholder="Enter your email">
+          <label>Social Media</label>
+          <div class="social-handles">
+            <i class='bx bxl-facebook'></i>
+            <i class='bx bxl-twitter'></i>
+            <i class='bx bxl-instagram'></i>
+            <i class='bx bxl-telegram'></i>
+            <i class='bx bxl-linkedin'></i>
+          </div>
+          <button class="btn primary save-profile">Save Profile</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Password & Security -->
+    <section class="settings-section security-settings">
+      <h2>Password & Security</h2>
+      <label>Current Password</label>
+      <input type="password" placeholder="Enter current password">
+      <label>New Password</label>
+      <input type="password" placeholder="Enter new password">
+      <label>Confirm New Password</label>
+      <input type="password" placeholder="Confirm new password">
+      <div class="toggle-group">
+        <label>Enable 2FA</label>
+        <label class="switch">
+          <input type="checkbox" id="toggle2FA">
+          <span class="slider round"></span>
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>Security Alerts</label>
+        <label class="switch">
+          <input type="checkbox" id="toggleAlerts">
+          <span class="slider round"></span>
+        </label>
+      </div>
+      <button class="btn primary save-security">Save Security</button>
+    </section>
+
+    <!-- Wallet & Payments -->
+    <section class="settings-section wallet-settings">
+      <h2>Wallet & Payments</h2>
+      <p>Connected Wallet: <strong>0 π</strong></p>
+      <button class="btn secondary connect-wallet"><i class='bx bx-wallet'></i> Connect Wallet</button>
+      <button class="btn secondary disconnect-wallet"><i class='bx bx-x-circle'></i> Disconnect Wallet</button>
+      <h3>Recent Transactions</h3>
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Amount (π)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>--/--/----</td>
+            <td>Deposit</td>
+            <td>0 π</td>
+            <td>Pending</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Notifications -->
+    <section class="settings-section notifications-settings">
+      <h2>Notifications</h2>
+      <div class="toggle-group">
+        <label>Email Notifications</label>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>SMS Notifications</label>
+        <label class="switch">
+          <input type="checkbox">
+          <span class="slider round"></span>
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>In-App Notifications</label>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Language & Theme -->
+    <section class="settings-section display-settings">
+      <h2>Language & Theme</h2>
+      <label>Language</label>
+      <select>
+        <option>English</option>
+        <option>Hausa</option>
+        <option>Arabic</option>
+      </select>
+      <div class="toggle-group">
+        <label>Dark Mode</label>
+        <label class="switch">
+          <input type="checkbox" id="toggleTheme">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Preferences -->
+    <section class="settings-section preferences-settings">
+      <h2>Other Preferences</h2>
+      <label>Timezone</label>
+      <select>
+        <option>UTC+0</option>
+        <option>UTC+1</option>
+        <option>UTC-1</option>
+      </select>
+      <div class="currency-toggle">
+        <label>Display Currency:</label>
+        <label class="switch">
+          <input type="checkbox" id="currencyToggle">
+          <span class="slider round"></span>
+        </label>
+        <span id="currencyLabel">π</span>
+      </div>
+      <button class="btn primary save-preferences">Save Preferences</button>
+    </section>
+
+  </main>
+</div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+
+      <div>
+        <h4>SMAJ PI HUB</h4>
+        <p>Real Pi utility through digital services.</p>
+      </div>
+
+      <div>
+        <h4>Platform</h4>
+        <a href="../../index.html">Home</a>
+        <a href="../about.html">About</a>
+        <a href="../service.html">Services</a>
+        <a href="../service-detail.html">Service Detail</a>
+
+        <a href="../how-it-works.html">How It Works</a>
+        <a href="../pricing.html">Pricing</a>
+        <a href="../blog.html">Blog</a>
+        <a href="../blog-post.html">Blog Post</a>
+
+        <a href="../faq.html">FAQ</a>
+        <a href="../portfolio.html">Portfolio</a>
+        <a href="../contact.html">Contact</a>
+      </div>
+
+      <div>
+        <h4>Programs</h4>
+        <a href="../affiliate.html">Affiliate Program</a>
+        <a href="../collaborate.html">Collaborate With Us</a>
+        <a href="/pages/partners.html">Partners</a>
+        <a href="/pages/community.html">Community</a>
+        <a href="/pages/developers.html">Developers</a>
+        <a href="/pages/help-center.html">Help Center</a>
+      </div>
+
+      <div>
+        <h4>Legal</h4>
+        <a href="/pages/legal/privacy.html">Privacy Policy</a>
+        <a href="/pages/legal/terms.html">Terms & Conditions</a>
+        <a href="/pages/legal/cookie.html">Cookie Policy</a>
+        <a href="/pages/legal/report.html">Report Abuse</a>
+      </div>
+
+      <div>
+        <h4>Follow Us</h4>
+        <div class="socials">
+                 <a href=""><i class='bx bxl-linkedin'></i>
+          </a>
+          <a href=""><i class='bx bxl-telegram'></i>
+          </a>
+          <a href=""><i class='bx bxl-twitter'></i>
+          </a>
+          </a>
+          <a href=""><i class='bx bxl-facebook'></i>
+          </a>
+          <a href=""><i class='bx bxl-instagram'></i>
+          </a>
+          <a href=""><i class='bx bxl-youtube'></i>
+          </a>
+          <a href=""><i class='bx bxl-tiktok'></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="copyright">
+      © 2025 SMAJ PI HUB. All rights reserved.
+    </p>
+  </footer>
+
+  <script src="../../js/main.js"></script>
+  <script src="../../js/dashboard.js"></script>
+</body>
+
+</html>

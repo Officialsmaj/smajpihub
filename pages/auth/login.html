@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Login — SMAJ PI HUB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Boxicons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <!-- Pi SDK -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/auth.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="../../assets/images/logo.png" alt="SMAJ PI HUB Logo">
+      </div>
+
+
+  </header>
+
+  <!-- AUTH CONTAINER -->
+  <main class="auth-container">
+
+    <div class="auth-box">
+
+      <h1>Welcome Back</h1>
+      <p>Login to your SMAJ PI HUB account</p>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm">
+        <div class="input-group">
+          <i class='bx bx-user'></i>
+          <input type="text" placeholder="Username or Email" required>
+        </div>
+
+        <div class="input-group">
+          <i class='bx bx-lock'></i>
+          <input type="password" placeholder="Password" required>
+        </div>
+
+        <button type="submit" class="auth-btn">
+          <i class='bx bx-log-in'></i> Login
+        </button>
+      </form>
+
+      <div class="divider">OR</div>
+
+      <!-- PI WALLET LOGIN -->
+      <button class="pi-login-btn" id="piLoginBtn">
+        <i class='bx bx-wallet'></i> Login with Pi Wallet
+      </button>
+
+      <div class="auth-links">
+        <a href="forget-password.html">Forgot Password?</a>
+        <a href="register.html">Create Account</a>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>SMAJ PI HUB</h4>
+        <p>All services are priced in Pi. No fake promises. Real utility.</p>
+        <p class="copyright">
+          © 2025 SMAJ PI HUB. All rights reserved.
+        </p>
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- JS -->
+  <script src="../../js/auth.js"></script>
+
+</body>
+
+</html>

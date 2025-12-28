@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Abuse | SMAJ PI HUB</title>
+
+  <!-- Global CSS -->
+   <link rel="stylesheet" href="../../css/report-abuse.css">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="../../assets/images/logo.png" alt="SMAJ PI HUB Logo">
+      </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+
+  <!-- Hero Section -->
+  <section class="report-hero container">
+    <h1><i class='bx bx-shield-x'></i> Report Abuse</h1>
+    <p>If you encounter any suspicious, fraudulent, or abusive activity on SMAJ PI HUB, please report it using the form
+      below. Your safety is our priority.</p>
+  </section>
+
+  <!-- Report Form Section -->
+  <section class="report-form container">
+    <h2><i class='bx bx-edit-alt'></i> Submit a Report</h2>
+    <form id="abuseForm">
+      <div class="form-group">
+        <label for="name">Your Name <i class='bx bx-user'></i></label>
+        <input type="text" id="name" placeholder="Enter your full name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email <i class='bx bx-envelope'></i></label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="reportType">Report Type <i class='bx bx-category'></i></label>
+        <select id="reportType" required>
+          <option value="">Select Type</option>
+          <option value="fraud">Fraud / Scam</option>
+          <option value="abuse">Abuse / Harassment</option>
+          <option value="inappropriate">Inappropriate Content</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description <i class='bx bx-detail'></i></label>
+        <textarea id="description" placeholder="Provide details of the issue..." rows="5" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="screenshot">Screenshot / Evidence (Optional) <i class='bx bx-image'></i></label>
+        <input type="file" id="screenshot" accept="image/*">
+      </div>
+
+      <button type="submit" class="btn primary"><i class='bx bx-send'></i> Submit Report</button>
+    </form>
+  </section>
+
+  <!-- Info Section -->
+  <section class="report-info container">
+    <h2><i class='bx bx-info-circle'></i> How We Handle Reports</h2>
+    <ul>
+      <li><i class='bx bx-check-circle'></i> All reports are confidential and reviewed by our security team.</li>
+      <li><i class='bx bx-time-five'></i> We investigate every case promptly and fairly.</li>
+      <li><i class='bx bx-shield'></i> Users found violating our policies may be restricted or removed.</li>
+      <li><i class='bx bx-mail-send'></i> You will receive feedback about your report through your email.</li>
+    </ul>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>SMAJ PI HUB</h4>
+        <p>All services are priced in Pi. No fake promises. Real utility.</p>
+        <p class="copyright">
+          © 2025 SMAJ PI HUB. All rights reserved.
+        </p>
+      </div>
+    </div>
+
+  </footer>
+  <script src="../../js/report-abuse.js"></script>
+  <script src="../../js/main.js"></script>
+
+</body>
+
+</html>
