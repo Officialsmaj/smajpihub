@@ -10,6 +10,7 @@ const JWT_SECRET = 'your-secret-key'; // In production, use env variable
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('.'));
 
 // In-memory user storage (replace with DB in production)
 let users = [];
@@ -126,10 +127,10 @@ let transactions = [
   { id: 1, date: '2025-12-24', type: 'Deposit', amount: 0, status: 'Pending', userId: 1 }
 ];
 let recommendedServices = [
-  { id: 1, name: 'Website Development', category: 'Web', price: 0.0000001, usdPrice: 10, image: '../../assets/images/services/web.jpg' },
-  { id: 2, name: 'Logo & Graphic Design', category: 'Design', price: 0.0000002, usdPrice: 20, image: '../../assets/images/services/design.jpg' },
-  { id: 3, name: 'Crypto Training', category: 'Education', price: 0.0000001, usdPrice: 10, image: '../../assets/images/services/crypto.jpg' },
-  { id: 4, name: 'Digital Marketing', category: 'Marketing', price: 0.0000002, usdPrice: 20, image: '../../assets/images/services/marketing.jpg' }
+  { id: 1, name: 'Website Development', category: 'Web', price: 0.0000001, usdPrice: 10, image: '../../assets/images/logo.png' },
+  { id: 2, name: 'Logo & Graphic Design', category: 'Design', price: 0.0000002, usdPrice: 20, image: '../../assets/images/logo.png' },
+  { id: 3, name: 'Crypto Training', category: 'Education', price: 0.0000001, usdPrice: 10, image: '../../assets/images/logo.png' },
+  { id: 4, name: 'Digital Marketing', category: 'Marketing', price: 0.0000002, usdPrice: 20, image: '../../assets/images/logo.png' }
 ];
 
 // Initialize for existing user

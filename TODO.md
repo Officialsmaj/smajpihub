@@ -19,6 +19,13 @@
 - [ ] Add error handling and user feedback improvements if needed
 - [ ] Consider adding a database (e.g., MongoDB) for persistent storage instead of in-memory
 
+## Fixed Issues
+- [x] Provider Dashboard Not Loading Data: Added `<script src="../../js/dashboard.js"></script>` to `provider.html`
+- [x] Authentication Guard Incomplete: Updated `requireAuth()` to check for both `token` and `pi_user`
+- [x] Logout Inconsistency: Standardized logout to remove all auth-related localStorage items (`token`, `user`, `pi_user`)
+- [x] Missing Service Images: Updated recommended services images to use existing `logo.png` instead of non-existent `services/` folder
+- [x] Username Display for Email Logins: Added logic to display username for both Pi and email logins
+
 ## Notes
 - Backend uses in-memory storage for simplicity; replace with a database for production.
 - Pi SDK is initialized in sandbox mode; set to production when deploying.

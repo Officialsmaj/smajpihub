@@ -55,15 +55,23 @@ if (menuToggle && navMenu) {
   menuToggle.addEventListener("click", () => {
     navMenu.classList.toggle("active");
   });
+
+  // Close menu when clicking a link
+  document.querySelectorAll('#navMenu a').forEach(link => {
+    link.addEventListener('click', () => {
+      navMenu.classList.remove('active');
+    });
+  });
 }
 
 // ===============================
 // AUTH GUARD – PROTECT PAGES
 // ===============================
 function requireAuth() {
+  const token = localStorage.getItem("token");
   const piUser = localStorage.getItem("pi_user");
 
-  if (!piUser) {
+  if (!token && !piUser) {
     console.warn("Unauthorized access. Redirecting to login.");
     window.location.href = "../../pages/auth/login.html";
   }
@@ -81,6 +89,8 @@ const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
     localStorage.removeItem("pi_user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     window.location.href = "../../pages/auth/login.html";
   });
 }

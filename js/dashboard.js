@@ -217,6 +217,7 @@ if (confirmLogout) {
   confirmLogout.addEventListener('click', () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('pi_user');
     window.location.href = '../../pages/auth/login.html';
   });
 }
