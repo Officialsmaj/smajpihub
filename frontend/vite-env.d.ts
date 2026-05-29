@@ -18,18 +18,3 @@ declare module '*.module.sass';
 declare module '*.module.less';
 
 declare module '*.module.styl';
-
-interface Window {
-  Pi: {
-    authenticate: (
-      scopes: string[],
-      onIncompletePaymentFound: (payment: any) => void
-    ) => Promise<{
-      accessToken: string;
-      user: {
-        username: string;
-        uid: string;
-      };
-    }>;
-  };
-}

@@ -6,7 +6,9 @@ declare global {
       backendURL?: string;
       sandbox?: string;
     };
-    Pi: {
+    Pi?: {
+      init(config: { version: string; sandbox: boolean }): void;
+
       authenticate(scopes: string[], onIncompletePaymentFound?: (payment: PaymentDTO) => void): Promise<AuthResult>;
 
       createPayment(

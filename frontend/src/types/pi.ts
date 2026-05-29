@@ -1,13 +1,16 @@
 export type AuthResult = {
   accessToken: string;
   user: {
-    uid: string;
-    username: string;
-    roles: string[];
+    uid?: string;
+    username?: string;
+    wallet_address?: string;
+    roles?: string[];
   };
 };
 
-export type User = AuthResult["user"];
+export type User = AuthResult["user"] & {
+  accessToken?: string;
+};
 
 export type PaymentStatus = {
   developer_approved: boolean;

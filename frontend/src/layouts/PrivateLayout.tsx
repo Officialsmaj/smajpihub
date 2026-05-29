@@ -24,7 +24,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchPhraseIndex, setSearchPhraseIndex] = useState(0);
   const navigate = useNavigate();
-  const roles = user?.roles ?? [];
 
   const rotatingSearchPhrases = [
     "Search jobs...",
@@ -45,8 +44,10 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   const coreLinks = useMemo(() => privatePages.filter((page) => page.section === "core"), []);
   const workspaceLinks = useMemo(
-    () =>
-      privatePages.filter((page) => {
+    () => {
+      const roles = user?.roles ?? [];
+
+      return privatePages.filter((page) => {
         if (page.section !== "workspace") {
           return false;
         }
@@ -54,8 +55,9 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           return true;
         }
         return page.roles.some((role) => roles.includes(role));
-      }),
-    [roles],
+      });
+    },
+    [user?.roles],
   );
 
   const submitSearch = (value: string) => {

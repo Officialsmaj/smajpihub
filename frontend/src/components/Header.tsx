@@ -10,6 +10,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useAuthContext } from "../contexts/AuthContext";
+import LoginWithPiButton from "./LoginWithPiButton";
 import logoImage from "/logo.png";
 
 const navItems = [
@@ -57,6 +58,15 @@ const rotatingSearchPhrases = [
 
 const trendingSearches = ["Jobs", "Phones", "Apartments", "Sports", "Food Delivery"];
 
+const readRecentSearches = () => {
+  try {
+    const stored = window.localStorage.getItem("smaj_recent_searches");
+    return stored ? (JSON.parse(stored) as string[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 const UtilityIcons = () => (
   <div className="smaj-utility-icons" aria-label="Utility actions">
     <button type="button" className="smaj-utility-icon-btn" aria-label="Language and region">
@@ -69,34 +79,27 @@ const UtilityIcons = () => (
 );
 
 const Header = () => {
-  const { user, isAuthenticated, signIn, signOut, isLoading, authFeedback } = useAuthContext();
+  const { user, isAuthenticated, signOut, isLoading, authFeedback } = useAuthContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchPhraseIndex, setSearchPhraseIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches);
   const [mobileThemeMode, setMobileThemeMode] = useState<"light" | "dark">("light");
   const location = useLocation();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchPanelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setIsServicesMenuOpen(false);
-    setIsSearchModalOpen(false);
-  }, [location.pathname]);
+    const timer = window.setTimeout(() => {
+      setIsMobileMenuOpen(false);
+      setIsServicesMenuOpen(false);
+      setIsSearchModalOpen(false);
+    }, 0);
 
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem("smaj_recent_searches");
-      if (stored) {
-        setRecentSearches(JSON.parse(stored) as string[]);
-      }
-    } catch (_err) {
-      // ignore local storage errors
-    }
-  }, []);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
@@ -183,7 +186,7 @@ const Header = () => {
     setRecentSearches(next);
     try {
       window.localStorage.setItem("smaj_recent_searches", JSON.stringify(next));
-    } catch (_err) {
+    } catch {
       // ignore local storage errors
     }
   };
@@ -325,12 +328,12 @@ const Header = () => {
                 </button>
               </div>
             ) : (
-              <button onClick={signIn} className="smaj-login-btn" disabled={isLoading}>
+              <LoginWithPiButton className="smaj-login-btn">
                 <span className="smaj-login-icon" aria-hidden="true">
                   <LoginIcon fontSize="small" />
                 </span>
                 <span className="smaj-login-text">{isLoading ? "Signing in..." : "Login with Pi"}</span>
-              </button>
+              </LoginWithPiButton>
             )}
           </div>
         </nav>
@@ -355,12 +358,12 @@ const Header = () => {
             </div>
           ) : (
             <>
-              <button onClick={signIn} className="smaj-login-btn" disabled={isLoading}>
+              <LoginWithPiButton className="smaj-login-btn">
                 <span className="smaj-login-icon" aria-hidden="true">
                   <LoginIcon fontSize="small" />
                 </span>
                 <span className="smaj-login-text">{isLoading ? "Signing in..." : "Login with Pi"}</span>
-              </button>
+              </LoginWithPiButton>
               <UtilityIcons />
             </>
           )}

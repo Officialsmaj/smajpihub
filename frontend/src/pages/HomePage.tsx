@@ -10,6 +10,7 @@ import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
 import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
 import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
+import LoginWithPiButton from "../components/LoginWithPiButton";
 
 const previewServices = [
   {
@@ -51,7 +52,7 @@ const previewServices = [
 ];
 
 const HomePage = () => {
-  const { signIn, isLoading } = useAuthContext();
+  const { isLoading } = useAuthContext();
 
   return (
     <AppLayout>
@@ -66,9 +67,9 @@ const HomePage = () => {
                 login.
               </p>
               <div className="home-hero-cta">
-                <button type="button" className="home-hero-primary-btn" onClick={() => void signIn()} disabled={isLoading}>
+                <LoginWithPiButton className="home-hero-primary-btn">
                   {isLoading ? "Signing in..." : "Login with Pi"}
-                </button>
+                </LoginWithPiButton>
                 <Link to="/services" className="home-hero-secondary-btn">
                   Explore Services
                 </Link>

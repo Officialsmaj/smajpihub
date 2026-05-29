@@ -28,10 +28,14 @@
     <script>
       const runSDKInSandboxMode = window.__ENV.sandbox === "true";
 
-      Pi.init({
-        version: "2.0",
-        sandbox: runSDKInSandboxMode,
-      });
+      if (window.Pi?.init) {
+        window.Pi.init({
+          version: "2.0",
+          sandbox: runSDKInSandboxMode,
+        });
+      } else {
+        console.warn("Pi SDK not available at startup; app will continue without immediate Pi init.");
+      }
     </script>
 
     <title>React App</title>

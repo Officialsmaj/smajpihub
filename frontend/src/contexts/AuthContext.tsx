@@ -5,6 +5,7 @@ interface AuthContextType {
   user: ReturnType<typeof useAuth>["user"];
   isAuthenticated: boolean;
   showSignIn: boolean;
+  loginWithPi: () => Promise<void>;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   closeSignIn: () => void;
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       user: auth.user,
       isAuthenticated: auth.isAuthenticated,
       showSignIn: auth.showSignIn,
+      loginWithPi: auth.loginWithPi,
       signIn: auth.signIn,
       signOut: auth.signOut,
       closeSignIn: auth.closeSignIn,
@@ -39,6 +41,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (!context) {

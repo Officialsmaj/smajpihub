@@ -1,8 +1,9 @@
 import AppLayout from "../layouts/AppLayout";
 import { useAuthContext } from "../contexts/AuthContext";
+import LoginWithPiButton from "../components/LoginWithPiButton";
 
 const EngagementTasksPage = () => {
-  const { isAuthenticated, signIn } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
 
   return (
     <AppLayout>
@@ -16,7 +17,7 @@ const EngagementTasksPage = () => {
               <p>Please sign in with Pi to access your engagement task dashboard.</p>
             )}
           </div>
-          {!isAuthenticated ? <button onClick={signIn}>Login with Pi</button> : null}
+          {!isAuthenticated ? <LoginWithPiButton>Login with Pi</LoginWithPiButton> : null}
         </section>
       </main>
     </AppLayout>

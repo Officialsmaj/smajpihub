@@ -50,6 +50,11 @@ export const usePayments = ({ isAuthenticated, onRequireAuth }: UsePaymentsArgs)
         return;
       }
 
+      if (!window.Pi) {
+        onRequireAuth();
+        return;
+      }
+
       setIsLoading(true);
       try {
         await window.Pi.createPayment(

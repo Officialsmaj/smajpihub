@@ -35,7 +35,7 @@ const SignIn = ({ onSignIn, onModalClose, disabled }: SignInProps) => {
       <p style={{ fontWeight: "bold" }}>You need to sign in first.</p>
       <div style={buttonContainerStyle}>
         <button onClick={onSignIn} disabled={disabled}>
-          Sign in
+          Login with Pi
         </button>
         <button onClick={onModalClose}>Close</button>
       </div>
