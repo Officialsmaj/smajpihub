@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AddIcon from "@mui/icons-material/Add";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
-import { useAuthContext } from "../../contexts/AuthContext";
 
 const StorePage = () => {
-  const { user } = useAuthContext();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
 
   useEffect(() => {
     axiosClient.get<{ products: Product[] }>("/marketplace/products")
@@ -18,11 +18,26 @@ const StorePage = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const categories = useMemo(() => ["All", ...Array.from(new Set(products.map((product) => product.category))).sort()], [products]);
+  const visibleProducts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return products.filter((product) => {
+      const matchesCategory = category === "All" || product.category === category;
+      const matchesSearch = !query || [product.title, product.location, product.sellerName, product.category]
+        .join(" ").toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
+    });
+  }, [category, products, search]);
+
   return (
     <main className="private-page">
       <section className="private-page-head">
         <div><p className="private-kicker">MARKETPLACE</p><h1>SMAJ Store</h1><p>Discover products from Pi community sellers.</p></div>
-        {user?.role === "seller" ? <Link className="private-primary-button" to="/app/add-product"><AddIcon /> Add Product</Link> : null}
+        <Link className="private-primary-button" to="/add-product"><AddIcon /> Add Product</Link>
+      </section>
+      <section className="store-tools">
+        <label><span>Search products</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title, seller, or location" /></label>
+        <label><span>Category</span><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
       </section>
       {loading ? <div className="private-state">Loading products...</div> : null}
       {error ? <div className="private-alert error">{error}</div> : null}
@@ -30,7 +45,7 @@ const StorePage = () => {
         <div className="private-state"><h2>No products yet</h2><p>The first seller listing will appear here.</p></div>
       ) : null}
       <section className="product-grid">
-        {products.map((product) => (
+        {visibleProducts.map((product) => (
           <article className="product-card" key={product._id}>
             <div className="product-image-wrap">
               {product.image ? <img src={product.image} alt={product.title} /> : <span>No image</span>}
@@ -39,11 +54,13 @@ const StorePage = () => {
             <div className="product-card-body">
               <p className="product-location">{product.location}</p>
               <h2>{product.title}</h2>
-              <div className="product-card-foot"><strong>{product.pricePi} Pi</strong><Link to={`/app/store/${product._id}`}>View product</Link></div>
+              <p className="product-seller">Sold by {product.sellerName || product.piUsername}</p>
+              <div className="product-card-foot"><strong>{product.pricePi} Pi</strong><Link className="product-view-button" to={`/product/${product._id}`}>View</Link></div>
             </div>
           </article>
         ))}
       </section>
+      {!loading && products.length > 0 && visibleProducts.length === 0 ? <div className="private-state"><h2>No matching products</h2><p>Try another search or category.</p></div> : null}
     </main>
   );
 };

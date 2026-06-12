@@ -16,10 +16,10 @@ import logoImage from "/logo.png";
 type PrivateLayoutProps = { children: ReactNode };
 
 const links = [
-  { to: "/app/dashboard", label: "Dashboard", icon: <DashboardOutlinedIcon /> },
-  { to: "/app/store", label: "Store", icon: <StorefrontOutlinedIcon /> },
-  { to: "/app/add-product", label: "Add Product", icon: <AddBoxOutlinedIcon /> },
-  { to: "/app/orders", label: "Orders", icon: <ReceiptLongOutlinedIcon /> },
+  { to: "/dashboard", label: "Dashboard", icon: <DashboardOutlinedIcon /> },
+  { to: "/store", label: "Store", icon: <StorefrontOutlinedIcon /> },
+  { to: "/add-product", label: "Add Product", icon: <AddBoxOutlinedIcon /> },
+  { to: "/orders", label: "Orders", icon: <ReceiptLongOutlinedIcon /> },
   { to: "/app/profile", label: "Profile", icon: <PersonOutlineIcon /> },
   { to: "/app/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
 ];
@@ -37,7 +37,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   return (
     <div className="private-shell">
       <header className="private-header">
-        <Link to="/app/dashboard" className="private-brand">
+        <Link to="/dashboard" className="private-brand">
           <img src={logoImage} alt="SMAJ PI HUB" />
           <span>SMAJ PI HUB</span>
         </Link>

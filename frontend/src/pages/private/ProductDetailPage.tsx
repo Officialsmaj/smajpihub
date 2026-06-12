@@ -25,7 +25,7 @@ const ProductDetailPage = () => {
     setError("");
     try {
       await axiosClient.post("/marketplace/orders", { productId: product._id });
-      navigate("/app/orders", { state: { message: "Order created. Complete the Pi payment when ready." } });
+      navigate("/orders", { state: { message: "Order created successfully." } });
     } catch (err: any) {
       setError(err.response?.data?.message || "Could not create order.");
     } finally {
@@ -38,7 +38,7 @@ const ProductDetailPage = () => {
 
   return (
     <main className="private-page">
-      <Link to="/app/store" className="private-back-link"><ArrowBackIcon /> Back to store</Link>
+      <Link to="/store" className="private-back-link"><ArrowBackIcon /> Back to Store</Link>
       <section className="product-detail">
         <div className="product-detail-image">{product.image ? <img src={product.image} alt={product.title} /> : <span>No image supplied</span>}</div>
         <div className="product-detail-content">
@@ -48,7 +48,7 @@ const ProductDetailPage = () => {
           <p>{product.description}</p>
           <dl className="product-facts">
             <div><dt>Location</dt><dd>{product.location}</dd></div>
-            <div><dt>Seller</dt><dd>{product.sellerName}</dd></div>
+            <div><dt>Seller</dt><dd>{product.sellerName}{product.piUsername ? ` (@${product.piUsername})` : ""}</dd></div>
             <div><dt>Contact</dt><dd>{product.sellerContact}</dd></div>
           </dl>
           {error ? <div className="private-alert error">{error}</div> : null}

@@ -45,7 +45,7 @@ app.use(
 );
 
 // Enable response bodies to be sent as JSON:
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 // Handle CORS:
 const allowedOrigins = new Set(
@@ -141,6 +141,53 @@ const start = async () => {
     app.locals.marketplaceOrderCollection = db.collection("orders");
     app.locals.productCollection = db.collection("products");
     app.locals.userCollection = db.collection("users");
+
+    if ((await app.locals.productCollection.countDocuments()) === 0) {
+      await app.locals.productCollection.insertMany([
+        {
+          sellerId: "smaj-demo-store",
+          sellerName: "SMAJ Market",
+          piUsername: "smajmarket",
+          title: "SMAJ Creator Headphones",
+          image: "/smaj-hero.png",
+          pricePi: 18,
+          description: "Comfortable wireless headphones for work, learning, and entertainment.",
+          category: "Electronics",
+          location: "Lagos, Nigeria",
+          sellerContact: "@smajmarket",
+          active: true,
+          createdAt: new Date(),
+        },
+        {
+          sellerId: "smaj-demo-store",
+          sellerName: "SMAJ Market",
+          piUsername: "smajmarket",
+          title: "Purple Everyday Backpack",
+          image: "/smaj_ecosystem_logo.png",
+          pricePi: 12.5,
+          description: "A practical everyday backpack with space for devices and essentials.",
+          category: "Fashion",
+          location: "Accra, Ghana",
+          sellerContact: "@smajmarket",
+          active: true,
+          createdAt: new Date(),
+        },
+        {
+          sellerId: "smaj-demo-store",
+          sellerName: "SMAJ Market",
+          piUsername: "smajmarket",
+          title: "Digital Business Starter Pack",
+          image: "/logo.png",
+          pricePi: 7,
+          description: "A downloadable starter collection for small online businesses.",
+          category: "Digital",
+          location: "Online",
+          sellerContact: "@smajmarket",
+          active: true,
+          createdAt: new Date(),
+        },
+      ]);
+    }
     console.log("Connected to MongoDB on: ", mongoUri);
 
     app.listen(env.port, () => {

@@ -1978,6 +1978,12 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-state .private-primary-button { margin: 12px auto 0; }
 .private-alert { padding: 12px 14px; color: #ddd4f3; background: #261e39; border: 1px solid #49356f; border-radius: 9px; }
 .private-alert.error { color: #ffc9cf; background: #351c25; border-color: #713343; }
+.private-alert.success { color: #8ce9b8; background: #17372a; border-color: #2f6b50; }
+
+.store-tools { padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 14px; background: #171d29; border: 1px solid #2c3446; border-radius: 12px; }
+.store-tools label { display: grid; gap: 7px; color: #aeb5c6; font-size: 12px; font-weight: 700; }
+.store-tools input, .store-tools select { width: 100%; padding: 11px 12px; color: #f5f3ff; background: #10151f; border: 1px solid #343d50; border-radius: 8px; outline: none; }
+.store-tools input:focus, .store-tools select:focus { border-color: #8451ed; box-shadow: 0 0 0 3px rgba(132, 81, 237, .12); }
 
 .product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .product-card { overflow: hidden; background: #171d29; border: 1px solid #2c3446; border-radius: 14px; }
@@ -1988,9 +1994,10 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .product-card-body { padding: 16px; }
 .product-location { margin: 0; color: #8e95a8; font-size: 12px; }
 .product-card h2 { margin: 6px 0 18px; color: #fff; font-size: 18px; }
+.product-seller { margin: -10px 0 16px; color: #929bad; font-size: 12px; }
 .product-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .product-card-foot strong, .product-detail-price { color: #bc98ff; font-size: 20px; }
-.product-card-foot a { color: #d8c7ff; font-size: 13px; }
+.product-view-button { padding: 7px 11px; color: #fff; background: #6631cc; border-radius: 7px; font-size: 12px; font-weight: 700; text-decoration: none; }
 .private-back-link { width: fit-content; display: inline-flex; align-items: center; gap: 5px; color: #bfa5f6; text-decoration: none; }
 .private-back-link svg { font-size: 18px; }
 .product-detail { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); overflow: hidden; background: #171d29; border: 1px solid #2c3446; border-radius: 16px; }
@@ -2009,6 +2016,8 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-form input, .private-form textarea, .private-form select { width: 100%; padding: 12px 13px; color: #f5f3ff; background: #10151f; border: 1px solid #343d50; border-radius: 8px; outline: none; font: inherit; }
 .private-form input:focus, .private-form textarea:focus, .private-form select:focus { border-color: #8451ed; box-shadow: 0 0 0 3px rgba(132, 81, 237, .12); }
 .private-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.product-upload-preview { width: min(100%, 420px); height: 230px; overflow: hidden; background: #10151f; border: 1px solid #343d50; border-radius: 10px; }
+.product-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
 .profile-readonly { padding: 13px; display: flex; justify-content: space-between; gap: 20px; background: #111620; border-radius: 8px; }
 .profile-readonly span, .form-help { color: #8e95a8; }
 .profile-readonly strong { overflow-wrap: anywhere; }
@@ -2020,7 +2029,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .order-image img { width: 100%; height: 100%; object-fit: cover; }
 .order-main small { color: #9b73ef; text-transform: uppercase; }
 .order-main h2 { margin: 3px 0; font-size: 16px; }
-.order-main p { margin: 0; color: #7f889b; font-size: 12px; }
+.order-main p { margin: 2px 0 0; color: #7f889b; font-size: 12px; }
 .order-price { color: #cfb4ff; white-space: nowrap; }
 .order-status { padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .order-status.pending { color: #ffd786; background: #3c321d; }
@@ -2057,7 +2066,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
   .private-overlay { top: 62px; background: rgba(3, 5, 10, .7); }
   .private-content { padding: 18px 13px 30px; }
   .private-page-head { align-items: flex-start; flex-direction: column; }
-  .dashboard-grid, .product-grid { grid-template-columns: 1fr; }
+  .dashboard-grid, .product-grid, .store-tools { grid-template-columns: 1fr; }
   .private-form-row { grid-template-columns: 1fr; }
   .product-detail-content { padding: 24px 18px; }
   .product-detail-content h1 { font-size: 27px; }

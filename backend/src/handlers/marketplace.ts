@@ -34,9 +34,6 @@ export default function mountMarketplaceEndpoints(router: Router) {
   router.post("/products", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
-    if (user.role !== "seller") {
-      return res.status(403).json({ error: "forbidden", message: "Switch your profile role to seller first" });
-    }
 
     const title = String(req.body?.title || "").trim();
     const image = String(req.body?.image || "").trim();
@@ -46,13 +43,14 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const sellerContact = String(req.body?.sellerContact || "").trim();
     const pricePi = Number(req.body?.pricePi);
 
-    if (!title || !description || !category || !location || !sellerContact || !Number.isFinite(pricePi) || pricePi <= 0) {
+    if (!title || !image || !description || !category || !location || !sellerContact || !Number.isFinite(pricePi) || pricePi <= 0) {
       return res.status(400).json({ error: "bad_request", message: "Complete all required product fields" });
     }
 
     const product = {
       sellerId: user.uid,
-      sellerName: user.displayName || user.piUsername,
+      sellerName: user.displayName || user.piUsername || user.username,
+      piUsername: user.piUsername || user.username,
       title,
       image,
       pricePi,
@@ -95,7 +93,9 @@ export default function mountMarketplaceEndpoints(router: Router) {
 
     const order = {
       buyerId: user.uid,
+      buyerName: user.displayName || user.piUsername || user.username,
       sellerId: product.sellerId,
+      sellerName: product.sellerName || product.piUsername || "Pi seller",
       productId,
       productTitle: product.title,
       productImage: product.image,
@@ -114,7 +114,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
     }
     const status = req.body?.status;
-    if (!["completed", "cancelled"].includes(status)) {
+    if (!["paid", "completed", "cancelled"].includes(status)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order status" });
     }
     const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -123,6 +123,18 @@ export default function mountMarketplaceEndpoints(router: Router) {
     }
     if (status === "completed" && order.sellerId !== user.uid) {
       return res.status(403).json({ error: "forbidden", message: "Only the seller can complete an order" });
+    }
+    if (["paid", "cancelled"].includes(status) && order.buyerId !== user.uid) {
+      return res.status(403).json({ error: "forbidden", message: "Only the buyer can update this order" });
+    }
+    if (status === "paid" && order.status !== "pending") {
+      return res.status(400).json({ error: "bad_request", message: "Only pending orders can be marked paid" });
+    }
+    if (status === "cancelled" && order.status !== "pending") {
+      return res.status(400).json({ error: "bad_request", message: "Only pending orders can be cancelled" });
+    }
+    if (status === "completed" && order.status !== "paid") {
+      return res.status(400).json({ error: "bad_request", message: "Only paid orders can be completed" });
     }
     await req.app.locals.marketplaceOrderCollection.updateOne({ _id: order._id }, { $set: { status } });
     return res.status(200).json({ message: `Order marked ${status}` });

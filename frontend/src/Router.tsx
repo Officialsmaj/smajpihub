@@ -202,7 +202,7 @@ export const router = createBrowserRouter(
     },
     {
       path: "/dashboard",
-      element: <Navigate to="/app/dashboard" replace />,
+      element: <ProtectedRoute><PrivateLayout><DashboardPage /></PrivateLayout></ProtectedRoute>,
     },
     {
       path: "/profile",
@@ -214,7 +214,7 @@ export const router = createBrowserRouter(
     },
     {
       path: "/orders",
-      element: <Navigate to="/app/orders" replace />,
+      element: <ProtectedRoute><PrivateLayout><OrdersPage /></PrivateLayout></ProtectedRoute>,
     },
     {
       path: "/messages",
@@ -224,6 +224,9 @@ export const router = createBrowserRouter(
       path: "/settings",
       element: <Navigate to="/app/settings" replace />,
     },
+    { path: "/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
+    { path: "/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/product/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
     {
       path: "/search",
       element: (
@@ -234,11 +237,11 @@ export const router = createBrowserRouter(
         </ProtectedRoute>
       ),
     },
-    { path: "/app/dashboard", element: <ProtectedRoute><PrivateLayout><DashboardPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/store/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/orders", element: <ProtectedRoute><PrivateLayout><OrdersPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/dashboard", element: <Navigate to="/dashboard" replace /> },
+    { path: "/app/store", element: <Navigate to="/store" replace /> },
+    { path: "/app/store/:id", element: <Navigate to="/store" replace /> },
+    { path: "/app/add-product", element: <Navigate to="/add-product" replace /> },
+    { path: "/app/orders", element: <Navigate to="/orders" replace /> },
     { path: "/app/profile", element: <ProtectedRoute><PrivateLayout><ProfilePage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/settings", element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute> },
     ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings"].includes(page.path)).map((page) => ({

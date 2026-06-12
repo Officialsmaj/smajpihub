@@ -2,6 +2,7 @@ export type Product = {
   _id: string;
   sellerId: string;
   sellerName: string;
+  piUsername?: string;
   title: string;
   image: string;
   pricePi: number;
@@ -17,7 +18,9 @@ export type OrderStatus = "pending" | "paid" | "completed" | "cancelled";
 export type Order = {
   _id: string;
   buyerId: string;
+  buyerName: string;
   sellerId: string;
+  sellerName: string;
   productId: string;
   productTitle: string;
   productImage: string;
