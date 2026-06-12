@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuthContext } from "../../contexts/AuthContext";
+import TrustBadge from "../../components/TrustBadge";
+import { axiosClient } from "../../lib/axiosClient";
 
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthContext();
@@ -9,6 +11,9 @@ const ProfilePage = () => {
   const [contactPhone, setContactPhone] = useState(user?.contactPhone || "");
   const [role, setRole] = useState<"buyer" | "seller" | "admin">(user?.role || "buyer");
   const [message, setMessage] = useState("");
+  const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
+  useEffect(() => { axiosClient.get("/user/stats").then(({ data }) => setStats(data.stats)).catch(() => undefined); }, []);
+  const requestVerification = async () => { await axiosClient.post("/user/verification-request"); setMessage("Trusted Seller request sent to the admin team."); };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -30,6 +35,7 @@ const ProfilePage = () => {
       {!editing ? (
         <section className="profile-card">
           <div className="profile-avatar">{(user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</div>
+          <TrustBadge level={user?.verificationLevel} />
           <div className="profile-details">
             <div><span>Pi username</span><strong>@{user?.piUsername || user?.username}</strong></div>
             <div><span>Display name</span><strong>{user?.displayName || "Not set"}</strong></div>
@@ -37,7 +43,10 @@ const ProfilePage = () => {
             <div><span>Role</span><strong className="capitalize">{user?.role || "buyer"}</strong></div>
             <div><span>Joined</span><strong>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available"}</strong></div>
             <div><span>Phone / WhatsApp</span><strong>{user?.contactPhone || "Not set"}</strong></div>
+            <div><span>Total products</span><strong>{stats.totalProducts}</strong></div>
+            <div><span>Successful orders</span><strong>{stats.successfulOrders}</strong></div>
           </div>
+          {user?.role === "seller" && user.verificationLevel !== "trusted_seller" ? <button className="private-secondary-button" disabled={user.verificationRequested} onClick={() => void requestVerification()}>{user.verificationRequested ? "Verification requested" : "Request Trusted Seller"}</button> : null}
         </section>
       ) : (
         <form className="private-form" onSubmit={(event) => void submit(event)}>

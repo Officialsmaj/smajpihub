@@ -17,6 +17,8 @@ const toClientUser = (user: any) => user ? ({
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
+  verificationLevel: user.verificationLevel || "basic",
+  verificationRequested: Boolean(user.verificationRequested),
   settings: user.settings || { theme: "light", language: "English", notifications: true },
   createdAt: user.createdAt,
 }) : null;
@@ -93,6 +95,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
+            verificationLevel: currentUser.verificationLevel || "basic",
+            verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
             accessToken: auth.accessToken,
@@ -112,6 +116,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role: "buyer",
         roles: ["buyer"],
         blocked: false,
+        verificationLevel: "basic",
+        verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
         accessToken: auth.accessToken,
@@ -157,14 +163,35 @@ export default function mountUserEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Invalid profile details" });
     }
 
+    const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : displayName && country && contactPhone ? "verified" : "basic";
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, role, roles: [role] } },
+      { $set: { displayName, country, contactPhone, role, roles: [role], verificationLevel } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
     req.session.currentUser = updatedUser;
     return res.status(200).json({ user: toClientUser(updatedUser) });
+  });
+
+  router.get("/stats", async (req: Request, res: Response) => {
+    const currentUser = req.session.currentUser;
+    if (!currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    const [totalProducts, successfulOrders] = await Promise.all([
+      req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ $or: [{ sellerId: currentUser.uid }, { buyerId: currentUser.uid }], status: "completed" }),
+    ]);
+    return res.status(200).json({ stats: { totalProducts, successfulOrders } });
+  });
+
+  router.post("/verification-request", async (req: Request, res: Response) => {
+    const currentUser = req.session.currentUser;
+    if (!currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    if (currentUser.role !== "seller") return res.status(400).json({ error: "bad_request", message: "Only sellers can request trusted verification" });
+    await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { verificationRequested: true, verificationRequestedAt: new Date() } });
+    const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
+    req.session.currentUser = updatedUser;
+    return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });
   });
 
   router.put("/settings", async (req: Request, res: Response) => {

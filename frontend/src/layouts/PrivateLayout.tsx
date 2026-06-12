@@ -16,10 +16,13 @@ import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
+import { axiosClient } from "../lib/axiosClient";
 
 type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
@@ -32,6 +35,9 @@ const pageTitles: Record<string, string> = {
   "/profile": "Profile",
   "/settings": "Settings",
   "/search": "Search",
+  "/messages": "Messages",
+  "/notifications": "Notifications",
+  "/saved": "Saved Products",
 };
 
 const links = [
@@ -39,6 +45,8 @@ const links = [
   { to: "/store", label: "Store", icon: <StorefrontOutlinedIcon /> },
   { to: "/add-product", label: "Add Product", icon: <AddBoxOutlinedIcon /> },
   { to: "/orders", label: "Orders", icon: <ReceiptLongOutlinedIcon /> },
+  { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
+  { to: "/saved", label: "Saved", icon: <FavoriteBorderOutlinedIcon /> },
   { to: "/seller", label: "Seller", icon: <SellOutlinedIcon /> },
   { to: "/profile", label: "Profile", icon: <PersonOutlineIcon /> },
   { to: "/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
@@ -48,6 +56,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
@@ -57,6 +66,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useEffect(() => {
     document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
   }, [user?.settings?.theme]);
+
+  useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
@@ -87,7 +98,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
           <Link className="private-header-icon" to="/search" aria-label="Search" title="Search"><SearchOutlinedIcon /></Link>
-          <button className="private-header-icon" type="button" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon /></button>
+          <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
           <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
             {user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </button>
@@ -123,6 +134,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
                 <span className="private-nav-label">{link.label}</span>
               </NavLink>
             ))}
+            <NavLink to="/notifications" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Notifications" : undefined} aria-label="Notifications"><NotificationsNoneOutlinedIcon /><span className="private-nav-label">Notifications</span>{unreadCount ? <b className="sidebar-count">{unreadCount}</b> : null}</NavLink>
             {user?.role === "admin" ? <NavLink to="/admin" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Admin Panel" : undefined} aria-label="Admin Panel"><AdminPanelSettingsOutlinedIcon /><span className="private-nav-label">Admin Panel</span></NavLink> : null}
           </nav>
           <button type="button" className="private-sidebar-logout" onClick={() => void logout()} disabled={isLoading} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout">

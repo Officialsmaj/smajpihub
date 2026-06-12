@@ -33,6 +33,8 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
   settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
   createdAt: candidate?.createdAt || fallback.createdAt,
+  verificationLevel: candidate?.verificationLevel || fallback.verificationLevel || "basic",
+  verificationRequested: candidate?.verificationRequested ?? fallback.verificationRequested ?? false,
   accessToken: fallback.accessToken,
 });
 
@@ -61,6 +63,8 @@ const authResultUser = (authResult: AuthResult): User => ({
   role: "buyer",
   contactPhone: "",
   blocked: false,
+  verificationLevel: "basic",
+  verificationRequested: false,
   settings: { theme: "light", language: "English", notifications: true },
   accessToken: authResult.accessToken,
 });

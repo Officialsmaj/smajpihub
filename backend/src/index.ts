@@ -18,6 +18,7 @@ import "./types/session";
 import mountNotificationEndpoints from "./handlers/notifications";
 import mountMarketplaceEndpoints from "./handlers/marketplace";
 import mountAdminEndpoints from "./handlers/admin";
+import mountMessageEndpoints from "./handlers/messages";
 
 const dbName = env.mongo_db_name;
 const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
@@ -131,6 +132,10 @@ const notificationRouter = express.Router();
 mountNotificationEndpoints(notificationRouter);
 app.use("/notifications", notificationRouter);
 
+const messageRouter = express.Router();
+mountMessageEndpoints(messageRouter);
+app.use("/messages", messageRouter);
+
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
   res.status(200).send({ message: "Hello, World!" });
@@ -147,6 +152,11 @@ const start = async () => {
     app.locals.productCollection = db.collection("products");
     app.locals.userCollection = db.collection("users");
     app.locals.reportCollection = db.collection("reports");
+    app.locals.favoriteCollection = db.collection("favorites");
+    app.locals.reviewCollection = db.collection("reviews");
+    app.locals.conversationCollection = db.collection("conversations");
+    app.locals.messageCollection = db.collection("messages");
+    app.locals.notificationCollection = db.collection("notifications");
 
     if ((await app.locals.productCollection.countDocuments()) === 0) {
       await app.locals.productCollection.insertMany([

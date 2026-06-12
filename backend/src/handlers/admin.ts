@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
+import { createNotification } from "../services/notifications";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
 
@@ -43,9 +44,18 @@ export default function mountAdminEndpoints(router: Router) {
       updates.role = req.body.role;
       updates.roles = [req.body.role];
     }
+    if (["basic", "verified", "trusted_seller"].includes(req.body?.verificationLevel)) {
+      updates.verificationLevel = req.body.verificationLevel;
+      updates.verificationRequested = false;
+    }
     if (!Object.keys(updates).length) return res.status(400).json({ error: "bad_request", message: "No valid user update supplied" });
     await req.app.locals.userCollection.updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
     return res.status(200).json({ message: "User updated" });
+  });
+
+  router.get("/verification-requests", async (req, res) => {
+    const users = await req.app.locals.userCollection.find({ verificationRequested: true }).sort({ verificationRequestedAt: -1 }).toArray();
+    return res.status(200).json({ users: users.map(serialize) });
   });
 
   router.get("/products", async (req, res) => {
@@ -59,7 +69,10 @@ export default function mountAdminEndpoints(router: Router) {
     if (typeof req.body?.approved === "boolean") updates.approved = req.body.approved;
     if (typeof req.body?.hidden === "boolean") updates.hidden = req.body.hidden;
     if (!Object.keys(updates).length) return res.status(400).json({ error: "bad_request", message: "No valid product update supplied" });
+    const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });
     await req.app.locals.productCollection.updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
+    if (product && typeof req.body?.approved === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_approved", title: "Product approved", message: `${product.title} is approved for the Store`, relatedId: req.params.id });
+    if (product && typeof req.body?.hidden === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_hidden", title: req.body.hidden ? "Product hidden" : "Product visible", message: `${product.title} visibility was updated`, relatedId: req.params.id });
     return res.status(200).json({ message: "Product updated" });
   });
 
@@ -92,10 +105,12 @@ export default function mountAdminEndpoints(router: Router) {
 
   router.patch("/reports/:id/resolve", async (req, res) => {
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid report id" });
+    const report = await req.app.locals.reportCollection.findOne({ _id: new ObjectId(req.params.id) });
     await req.app.locals.reportCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
       { $set: { resolved: true, resolvedAt: new Date(), resolvedBy: req.session.currentUser?.uid } },
     );
+    if (report?.reportedBy) await createNotification(req.app, { userId: report.reportedBy, type: "report_update", title: "Report resolved", message: `Your report about ${report.targetName || report.targetType} was reviewed`, relatedId: req.params.id });
     return res.status(200).json({ message: "Report resolved" });
   });
 }

@@ -7,9 +7,16 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { axiosClient } from "../../lib/axiosClient";
+import type { Product } from "../../types/marketplace";
+import MarketplaceProductCard from "../../components/MarketplaceProductCard";
+const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"];
 
 const DashboardPage = () => {
   const { user } = useAuthContext();
+  const [feed, setFeed] = useState<{ recommended: Product[]; latest: Product[] } | null>(null);
+  useEffect(() => { axiosClient.get("/marketplace/feed").then(({ data }) => setFeed(data)).catch(() => undefined); }, []);
   return (
     <main className="private-page">
       <section className="private-welcome">
@@ -45,6 +52,10 @@ const DashboardPage = () => {
           <div><span>Roadmap</span><h2>Coming Soon Services</h2><p>More Pi utility modules are planned after this MVP.</p></div>
         </Link>
       </section>
+      <section className="section-title"><div><h2>Popular categories</h2><p>Explore the Store by what you need.</p></div></section>
+      <section className="category-grid">{STORE_CATEGORIES.map((category) => <Link key={category} to={`/store?category=${encodeURIComponent(category)}`}>{category}</Link>)}</section>
+      {feed?.recommended.length ? <><section className="section-title"><div><h2>Recommended for you</h2><p>Listings based on your marketplace activity.</p></div><Link to="/store">See all</Link></section><section className="product-grid dashboard-products">{feed.recommended.slice(0, 4).map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section></> : null}
+      {feed?.latest.length ? <><section className="section-title"><div><h2>Latest products</h2><p>Fresh listings from SMAJ sellers.</p></div><Link to="/store">Browse Store</Link></section><section className="product-grid dashboard-products">{feed.latest.slice(0, 4).map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section></> : null}
     </main>
   );
 };

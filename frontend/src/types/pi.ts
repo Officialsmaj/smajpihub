@@ -17,6 +17,8 @@ export type AuthResult = {
       notifications: boolean;
     };
     createdAt?: string;
+    verificationLevel?: "basic" | "verified" | "trusted_seller";
+    verificationRequested?: boolean;
   };
 };
 

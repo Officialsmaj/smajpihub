@@ -5,6 +5,7 @@ export type Product = {
   piUsername?: string;
   title: string;
   image: string;
+  images?: string[];
   pricePi: number;
   description: string;
   category: string;
@@ -14,7 +15,15 @@ export type Product = {
   approved?: boolean;
   hidden?: boolean;
   createdAt: string;
+  verificationLevel?: VerificationLevel;
 };
+
+export type VerificationLevel = "basic" | "verified" | "trusted_seller";
+export type SellerSummary = { uid: string; username?: string; piUsername?: string; displayName: string; country?: string; createdAt?: string; verificationLevel?: VerificationLevel; totalProducts?: number; successfulOrders?: number; averageRating?: number; reviewCount?: number };
+export type Review = { _id: string; buyerName: string; rating: number; message?: string; createdAt: string };
+export type Conversation = { _id: string; buyerId: string; sellerId: string; productId: string; productTitle: string; productImage?: string; lastMessage?: string; updatedAt: string; unreadBy?: string[]; buyerName?: string; sellerName?: string };
+export type ChatMessage = { _id: string; conversationId: string; senderId: string; message: string; createdAt: string };
+export type AppNotification = { _id: string; type: string; title: string; message: string; read: boolean; relatedId?: string; createdAt: string };
 
 export type OrderStatus = "pending" | "paid" | "completed" | "cancelled";
 

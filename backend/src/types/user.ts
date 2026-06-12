@@ -11,6 +11,8 @@ export interface UserData {
   country: string,
   contactPhone?: string,
   blocked?: boolean,
+  verificationLevel?: "basic" | "verified" | "trusted_seller",
+  verificationRequested?: boolean,
   settings?: {
     theme: "dark" | "light",
     language: string,

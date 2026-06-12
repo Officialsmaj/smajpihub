@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 
-const initialForm = { title: "", image: "", pricePi: "", description: "", category: "", location: "", sellerContact: "" };
+const initialForm = { title: "", image: "", images: [] as string[], pricePi: "", description: "", category: "Electronics", location: "", sellerContact: "" };
 
 const AddProductPage = () => {
   const navigate = useNavigate();
@@ -12,21 +12,12 @@ const AddProductPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
 
-  const selectImage = (file?: File) => {
+  const selectImages = (files?: FileList | null) => {
     setError("");
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Product image must be 2 MB or smaller.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setForm((current) => ({ ...current, image: String(reader.result || "") }));
-    reader.onerror = () => setError("Could not read the selected image.");
-    reader.readAsDataURL(file);
+    const selected = Array.from(files || []).slice(0, 5);
+    if (!selected.length) return;
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) return setError("Choose up to five images, each 2 MB or smaller.");
+    Promise.all(selected.map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }))).then((images) => setForm((current) => ({ ...current, image: images[0], images }))).catch(() => setError("Could not read the selected images."));
   };
 
   const submit = async (event: FormEvent) => {
@@ -57,11 +48,11 @@ const AddProductPage = () => {
       <section className="private-page-head"><div><p className="private-kicker">SELLER TOOLS</p><h1>Add Product</h1><p>Create a simple product listing priced in Pi.</p></div></section>
       <form className="private-form" onSubmit={(event) => void submit(event)}>
         <label>Product title<input required maxLength={120} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-        <label>Product image<input required type="file" accept="image/*" onChange={(event) => selectImage(event.target.files?.[0])} /></label>
-        {form.image ? <div className="product-upload-preview"><img src={form.image} alt="Product preview" /></div> : null}
+        <label>Product gallery (up to 5 images)<input required multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>
+        {form.images.length ? <div className="product-upload-preview gallery-preview">{form.images.map((image) => <img src={image} alt="Product preview" key={image.slice(-30)} />)}</div> : null}
         <div className="private-form-row">
           <label>Price in Pi<input required type="number" min="0.01" step="0.01" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value })} /></label>
-          <label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label>
+          <label>Category<select required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"].map((item) => <option key={item}>{item}</option>)}</select></label>
         </div>
         <label>Description<textarea required minLength={20} maxLength={1500} rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /><small className="form-help">{form.description.length}/1500 characters</small></label>
         <div className="private-form-row">

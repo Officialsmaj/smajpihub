@@ -32,6 +32,10 @@ import ProfilePage from "./pages/private/ProfilePage";
 import SettingsPage from "./pages/private/SettingsPage";
 import SellerPage from "./pages/private/SellerPage";
 import EditProductPage from "./pages/private/EditProductPage";
+import SellerProfilePage from "./pages/private/SellerProfilePage";
+import SavedProductsPage from "./pages/private/SavedProductsPage";
+import MessagesPage from "./pages/private/MessagesPage";
+import NotificationsPage from "./pages/private/NotificationsPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
@@ -222,8 +226,10 @@ export const router = createBrowserRouter(
     },
     {
       path: "/messages",
-      element: <Navigate to="/app/messages" replace />,
+      element: <ProtectedRoute><PrivateLayout><MessagesPage /></PrivateLayout></ProtectedRoute>,
     },
+    { path: "/notifications", element: <ProtectedRoute><PrivateLayout><NotificationsPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/saved", element: <ProtectedRoute><PrivateLayout><SavedProductsPage /></PrivateLayout></ProtectedRoute> },
     {
       path: "/settings",
       element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,
@@ -232,6 +238,7 @@ export const router = createBrowserRouter(
     { path: "/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
     { path: "/product/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
     { path: "/seller", element: <ProtectedRoute><PrivateLayout><SellerPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/seller/:id", element: <ProtectedRoute><PrivateLayout><SellerProfilePage /></PrivateLayout></ProtectedRoute> },
     { path: "/edit-product/:id", element: <ProtectedRoute><PrivateLayout><EditProductPage /></PrivateLayout></ProtectedRoute> },
     { path: "/admin", element: <ProtectedRoute><AdminLayout><AdminDashboardPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/users", element: <ProtectedRoute><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute> },

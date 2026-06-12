@@ -3,6 +3,7 @@ import { Router } from "express";
 import platformAPIClient from "../services/platformAPIClient";
 import "../types/session";
 import { ObjectId } from "mongodb";
+import { createNotification } from "../services/notifications";
 
 export default function mountPaymentsEndpoints(router: Router) {
   // handle the incomplete payment
@@ -35,10 +36,23 @@ export default function mountPaymentsEndpoints(router: Router) {
 
       await paymentCollection.updateOne({ pi_payment_id: paymentId }, { $set: { txid, paid: true } });
       if (order.orderId && ObjectId.isValid(order.orderId)) {
+        const marketplaceOrder = await app.locals.marketplaceOrderCollection.findOne({
+          _id: new ObjectId(order.orderId),
+          buyerId: order.user,
+        });
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(order.orderId), buyerId: order.user },
           { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
         );
+        if (marketplaceOrder) {
+          await createNotification(app, {
+            userId: marketplaceOrder.sellerId,
+            type: "order_paid",
+            title: "Order paid",
+            message: `${marketplaceOrder.productTitle} has been paid with Pi.`,
+            relatedId: String(marketplaceOrder._id),
+          });
+        }
       }
       await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
       return res.status(200).json({ message: `Handled the incomplete payment ${paymentId}` });
@@ -129,10 +143,23 @@ export default function mountPaymentsEndpoints(router: Router) {
       }
       await paymentCollection.updateOne({ pi_payment_id: paymentId }, { $set: { txid: txid, paid: true } });
       if (ObjectId.isValid(paymentRecord.orderId)) {
+        const marketplaceOrder = await app.locals.marketplaceOrderCollection.findOne({
+          _id: new ObjectId(paymentRecord.orderId),
+          buyerId: req.session.currentUser?.uid,
+        });
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
           { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
         );
+        if (marketplaceOrder) {
+          await createNotification(app, {
+            userId: marketplaceOrder.sellerId,
+            type: "order_paid",
+            title: "Order paid",
+            message: `${marketplaceOrder.productTitle} has been paid with Pi.`,
+            relatedId: String(marketplaceOrder._id),
+          });
+        }
       }
       await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
       return res.status(200).json({ message: `Completed the payment ${paymentId}` });
