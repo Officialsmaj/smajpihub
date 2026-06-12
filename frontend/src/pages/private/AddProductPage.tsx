@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
+import { isAxiosError } from "axios";
 
 const initialForm = { title: "", image: "", pricePi: "", description: "", category: "", location: "", sellerContact: "" };
 
@@ -37,8 +38,8 @@ const AddProductPage = () => {
       await axiosClient.post("/marketplace/products", { ...form, pricePi: Number(form.pricePi) });
       setSuccess("Product published successfully. Redirecting to the Store...");
       window.setTimeout(() => navigate("/store"), 700);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Could not add product.");
+    } catch (err: unknown) {
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : "Could not add product.");
     } finally {
       setSubmitting(false);
     }

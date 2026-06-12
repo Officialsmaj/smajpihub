@@ -28,7 +28,7 @@ const DashboardPage = () => {
           <ReceiptLongOutlinedIcon />
           <div><span>Activity</span><h2>Orders</h2><p>Track pending and paid purchases.</p></div>
         </Link>
-        <Link to="/app/profile" className="dashboard-card">
+        <Link to="/profile" className="dashboard-card">
           <PersonOutlineIcon />
           <div><span>Account</span><h2>Profile</h2><p>Manage your name, country, and marketplace role.</p></div>
         </Link>

@@ -28,7 +28,10 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   piUsername: candidate?.piUsername || fallback.piUsername || candidate?.username || fallback.username,
   displayName: candidate?.displayName || fallback.displayName || candidate?.username || fallback.username,
   country: candidate?.country ?? fallback.country ?? "",
+  contactPhone: candidate?.contactPhone ?? fallback.contactPhone ?? "",
   role: candidate?.role || fallback.role || "buyer",
+  blocked: candidate?.blocked ?? fallback.blocked ?? false,
+  settings: candidate?.settings || fallback.settings || { theme: "dark", language: "English", notifications: true },
   createdAt: candidate?.createdAt || fallback.createdAt,
   accessToken: fallback.accessToken,
 });
@@ -56,6 +59,9 @@ const authResultUser = (authResult: AuthResult): User => ({
   displayName: authResult.user.username,
   country: "",
   role: "buyer",
+  contactPhone: "",
+  blocked: false,
+  settings: { theme: "dark", language: "English", notifications: true },
   accessToken: authResult.accessToken,
 });
 
@@ -145,8 +151,13 @@ export const useAuth = () => {
     }
   }, [signInUser]);
 
-  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" }) => {
+  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string }) => {
     const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
+    if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
+  }, [user]);
+
+  const updateSettings = useCallback(async (settings: { theme: "dark" | "light"; language: string; notifications: boolean }) => {
+    const response = await axiosClient.put<SignInResponse>("/user/settings", settings);
     if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
   }, [user]);
 
@@ -175,6 +186,7 @@ export const useAuth = () => {
     signIn: loginWithPi,
     signOut,
     updateProfile,
+    updateSettings,
     closeSignIn: () => setShowSignIn(false),
     requireAuth: () => setShowSignIn(true),
     isLoading,

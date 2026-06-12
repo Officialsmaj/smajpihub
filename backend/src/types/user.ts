@@ -6,9 +6,16 @@ export interface UserData {
   piUsername: string,
   uid: string,
   roles: Array<string>,
-  role: "buyer" | "seller",
+  role: "buyer" | "seller" | "admin",
   displayName: string,
   country: string,
+  contactPhone?: string,
+  blocked?: boolean,
+  settings?: {
+    theme: "dark" | "light",
+    language: string,
+    notifications: boolean,
+  },
   createdAt: Date,
   accessToken: string
 }

@@ -8,7 +8,14 @@ export type AuthResult = {
     piUsername?: string;
     displayName?: string;
     country?: string;
-    role?: "buyer" | "seller";
+    role?: "buyer" | "seller" | "admin";
+    contactPhone?: string;
+    blocked?: boolean;
+    settings?: {
+      theme: "dark" | "light";
+      language: string;
+      notifications: boolean;
+    };
     createdAt?: string;
   };
 };

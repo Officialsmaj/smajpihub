@@ -17,6 +17,7 @@ import mountUserEndpoints, { handleSignIn } from "./handlers/users";
 import "./types/session";
 import mountNotificationEndpoints from "./handlers/notifications";
 import mountMarketplaceEndpoints from "./handlers/marketplace";
+import mountAdminEndpoints from "./handlers/admin";
 
 const dbName = env.mongo_db_name;
 const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
@@ -118,6 +119,10 @@ const marketplaceRouter = express.Router();
 mountMarketplaceEndpoints(marketplaceRouter);
 app.use("/marketplace", marketplaceRouter);
 
+const adminRouter = express.Router();
+mountAdminEndpoints(adminRouter);
+app.use("/admin", adminRouter);
+
 // Canonical auth endpoint matching FLOWS.md Authentication section.
 app.post("/signin", handleSignIn);
 
@@ -141,6 +146,7 @@ const start = async () => {
     app.locals.marketplaceOrderCollection = db.collection("orders");
     app.locals.productCollection = db.collection("products");
     app.locals.userCollection = db.collection("users");
+    app.locals.reportCollection = db.collection("reports");
 
     if ((await app.locals.productCollection.countDocuments()) === 0) {
       await app.locals.productCollection.insertMany([

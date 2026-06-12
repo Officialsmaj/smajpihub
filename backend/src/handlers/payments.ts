@@ -37,7 +37,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (order.orderId && ObjectId.isValid(order.orderId)) {
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(order.orderId), buyerId: order.user },
-          { $set: { status: "paid", piPaymentId: paymentId, txid } },
+          { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
         );
       }
       await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
@@ -89,6 +89,11 @@ export default function mountPaymentsEndpoints(router: Router) {
         created_at: new Date(),
       } }, { upsert: true });
 
+      await app.locals.marketplaceOrderCollection.updateOne(
+        { _id: marketplaceOrder._id },
+        { $set: { paymentStatus: "processing", paymentId } },
+      );
+
       await platformAPIClient.post(`/v2/payments/${paymentId}/approve`);
       return res.status(200).json({ message: `Approved the payment ${paymentId}` });
     } catch (err) {
@@ -105,6 +110,10 @@ export default function mountPaymentsEndpoints(router: Router) {
       const txid = req.body.txid;
       const paymentCollection = app.locals.paymentCollection;
 
+      if (!req.session.currentUser || !paymentId || !txid) {
+        return res.status(401).json({ error: "unauthorized", message: "A signed-in user and payment details are required" });
+      }
+
       /* 
         Implement your logic here
         e.g. verify the transaction, deliver the item to the user, etc...
@@ -114,11 +123,15 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (!paymentRecord || paymentRecord.user !== req.session.currentUser?.uid) {
         return res.status(404).json({ error: "not_found", message: "Payment record not found" });
       }
+      const currentPayment = await platformAPIClient.get(`/v2/payments/${paymentId}`);
+      if (String(currentPayment.data.transaction?.txid || "") !== String(txid)) {
+        return res.status(400).json({ error: "mismatch", message: "Payment transaction does not match" });
+      }
       await paymentCollection.updateOne({ pi_payment_id: paymentId }, { $set: { txid: txid, paid: true } });
       if (ObjectId.isValid(paymentRecord.orderId)) {
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
-          { $set: { status: "paid", piPaymentId: paymentId, txid } },
+          { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
         );
       }
       await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
@@ -146,7 +159,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (paymentRecord?.orderId && ObjectId.isValid(paymentRecord.orderId)) {
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
-          { $set: { status: "cancelled" } },
+          { $set: { status: "pending", paymentStatus: "cancelled" } },
         );
       }
       return res.status(200).json({ message: `Cancelled the payment ${paymentId}` });
@@ -154,5 +167,20 @@ export default function mountPaymentsEndpoints(router: Router) {
       console.error("Error cancelling payment:", err);
       return res.status(500).json({ error: "internal_error", message: "Failed to cancel payment" });
     }
+  });
+
+  router.post("/failed", async (req, res) => {
+    if (!req.session.currentUser) {
+      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    }
+    const orderId = String(req.body?.orderId || "");
+    if (!ObjectId.isValid(orderId)) {
+      return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
+    }
+    await req.app.locals.marketplaceOrderCollection.updateOne(
+      { _id: new ObjectId(orderId), buyerId: req.session.currentUser.uid, status: "pending" },
+      { $set: { paymentStatus: "failed" } },
+    );
+    return res.status(200).json({ message: "Payment failure recorded" });
   });
 }

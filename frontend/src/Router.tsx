@@ -30,6 +30,10 @@ import AddProductPage from "./pages/private/AddProductPage";
 import OrdersPage from "./pages/private/OrdersPage";
 import ProfilePage from "./pages/private/ProfilePage";
 import SettingsPage from "./pages/private/SettingsPage";
+import SellerPage from "./pages/private/SellerPage";
+import EditProductPage from "./pages/private/EditProductPage";
+import AdminLayout from "./layouts/AdminLayout";
+import { AdminDashboardPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
 const buildPrivatePageElement = (title: string, description: string, roles?: string[]) => {
   const page = <PrivatePage title={title} description={description} />;
@@ -206,7 +210,7 @@ export const router = createBrowserRouter(
     },
     {
       path: "/profile",
-      element: <Navigate to="/app/profile" replace />,
+      element: <ProtectedRoute><PrivateLayout><ProfilePage /></PrivateLayout></ProtectedRoute>,
     },
     {
       path: "/wallet",
@@ -222,11 +226,19 @@ export const router = createBrowserRouter(
     },
     {
       path: "/settings",
-      element: <Navigate to="/app/settings" replace />,
+      element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,
     },
     { path: "/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
     { path: "/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
     { path: "/product/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/seller", element: <ProtectedRoute><PrivateLayout><SellerPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/edit-product/:id", element: <ProtectedRoute><PrivateLayout><EditProductPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/admin", element: <ProtectedRoute><AdminLayout><AdminDashboardPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/users", element: <ProtectedRoute><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/products", element: <ProtectedRoute><AdminLayout><AdminProductsPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/orders", element: <ProtectedRoute><AdminLayout><AdminOrdersPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/reports", element: <ProtectedRoute><AdminLayout><AdminReportsPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/settings", element: <ProtectedRoute><AdminLayout><AdminSettingsPage /></AdminLayout></ProtectedRoute> },
     {
       path: "/search",
       element: (
@@ -242,8 +254,8 @@ export const router = createBrowserRouter(
     { path: "/app/store/:id", element: <Navigate to="/store" replace /> },
     { path: "/app/add-product", element: <Navigate to="/add-product" replace /> },
     { path: "/app/orders", element: <Navigate to="/orders" replace /> },
-    { path: "/app/profile", element: <ProtectedRoute><PrivateLayout><ProfilePage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/settings", element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/profile", element: <Navigate to="/profile" replace /> },
+    { path: "/app/settings", element: <Navigate to="/settings" replace /> },
     ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings"].includes(page.path)).map((page) => ({
       path: `/app/${page.path}`,
       element: buildPrivatePageElement(page.title, page.description, page.roles),

@@ -11,9 +11,10 @@ type UsePaymentsArgs = {
   isAuthenticated: boolean;
   onRequireAuth: () => void;
   onPaymentStatus?: (message: string) => void;
+  onPaymentComplete?: () => void | Promise<void>;
 };
 
-export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus }: UsePaymentsArgs) => {
+export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, onPaymentComplete }: UsePaymentsArgs) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const onReadyForServerApproval = useCallback(async (paymentId: string) => {
@@ -28,22 +29,29 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus }:
     try {
       await axiosClient.post("/payments/complete", { paymentId, txid });
       onPaymentStatus?.("Pi payment completed. Your order is now paid.");
+      await onPaymentComplete?.();
     } catch (err) {
       console.error("Error completing payment:", err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [onPaymentStatus]);
+  }, [onPaymentComplete, onPaymentStatus]);
 
   const onCancel = useCallback(async (paymentId: string) => {
     try {
       await axiosClient.post("/payments/cancelled_payment", { paymentId });
-      onPaymentStatus?.("Pi payment was cancelled.");
+      onPaymentStatus?.("Pi payment was cancelled. Your order remains pending.");
     } catch (err) {
       console.error("Error cancelling payment:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [onPaymentStatus]);
 
-  const onError = useCallback((error: Error, payment?: PaymentDTO) => {
+  const onError = useCallback(async (error: Error, payment?: PaymentDTO) => {
     console.error("Payment error:", error, payment);
+    const orderId = String(payment?.metadata?.orderId || "");
+    if (orderId) await axiosClient.post("/payments/failed", { orderId }).catch(() => undefined);
     onPaymentStatus?.("Pi payment failed. Please try again in Pi Browser.");
     setIsLoading(false);
   }, [onPaymentStatus]);
@@ -56,7 +64,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus }:
       }
 
       if (!window.Pi) {
-        onRequireAuth();
+        onPaymentStatus?.("Please open SMAJ PI HUB inside Pi Browser to use Pi payment.");
         return;
       }
 
@@ -73,11 +81,12 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus }:
         );
       } catch (err) {
         console.error("Error creating payment:", err);
-      } finally {
+        await axiosClient.post("/payments/failed", { orderId: metadata.orderId }).catch(() => undefined);
+        onPaymentStatus?.("Pi payment failed. Your order remains pending.");
         setIsLoading(false);
       }
     },
-    [isAuthenticated, onRequireAuth, onReadyForServerApproval, onReadyForServerCompletion, onCancel, onError]
+    [isAuthenticated, onRequireAuth, onPaymentStatus, onReadyForServerApproval, onReadyForServerCompletion, onCancel, onError]
   );
 
   return {

@@ -1,0 +1,48 @@
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { axiosClient } from "../../lib/axiosClient";
+import type { Order, Product } from "../../types/marketplace";
+import type { User } from "../../types/pi";
+
+const Head = ({ title, description }: { title: string; description: string }) => <section className="private-page-head"><div><p className="private-kicker">ADMIN PANEL</p><h1>{title}</h1><p>{description}</p></div></section>;
+const Notice = ({ text }: { text: string }) => text ? <div className="private-alert success">{text}</div> : null;
+
+export const AdminDashboardPage = () => {
+  const [stats, setStats] = useState<Record<string, number> | null>(null);
+  useEffect(() => { axiosClient.get("/admin/stats").then(({ data }) => setStats(data.stats)); }, []);
+  const cards = [["totalUsers", "Total Users", "/admin/users"], ["totalProducts", "Total Products", "/admin/products"], ["totalOrders", "Total Orders", "/admin/orders"], ["pendingOrders", "Pending Orders", "/admin/orders"], ["paidOrders", "Paid Orders", "/admin/orders"], ["reportedProducts", "Reported Products", "/admin/reports"]];
+  return <main className="private-page"><Head title="Admin Dashboard" description="Platform health, moderation, and marketplace operations." />{!stats ? <div className="private-state">Loading platform totals...</div> : <section className="stats-grid admin-stats">{cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key]}</strong></Link>)}</section>}</main>;
+};
+
+type AdminUser = User & { _id: string; blocked?: boolean };
+export const AdminUsersPage = () => {
+  const [users, setUsers] = useState<AdminUser[]>([]); const [message, setMessage] = useState("");
+  const load = useCallback(async () => setUsers((await axiosClient.get("/admin/users")).data.users), []); useEffect(() => { axiosClient.get("/admin/users").then(({ data }) => setUsers(data.users)); }, []);
+  const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/users/${id}`, body); setMessage("User updated."); await load(); };
+  return <main className="private-page"><Head title="Users" description="Manage access, account roles, and blocked users." /><Notice text={message} /><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Country</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{users.map((user) => <tr key={user._id}><td><strong>{user.displayName}</strong><small>@{user.piUsername || user.username}</small></td><td>{user.country || "-"}</td><td><select value={user.role} onChange={(event) => void update(user._id, { role: event.target.value })}><option>buyer</option><option>seller</option><option>admin</option></select></td><td>{user.blocked ? "Blocked" : "Active"}</td><td><button onClick={() => void update(user._id, { blocked: !user.blocked })}>{user.blocked ? "Unblock" : "Block"}</button></td></tr>)}</tbody></table></div></main>;
+};
+
+export const AdminProductsPage = () => {
+  const [products, setProducts] = useState<Product[]>([]); const [message, setMessage] = useState("");
+  const load = useCallback(async () => setProducts((await axiosClient.get("/admin/products")).data.products), []); useEffect(() => { axiosClient.get("/admin/products").then(({ data }) => setProducts(data.products)); }, []);
+  const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/products/${id}`, body); setMessage("Product updated."); await load(); };
+  const remove = async (id: string) => { if (!window.confirm("Delete this product permanently?")) return; await axiosClient.delete(`/admin/products/${id}`); setMessage("Product deleted."); await load(); };
+  return <main className="private-page"><Head title="Products" description="Approve, hide, or remove marketplace listings." /><Notice text={message} /><div className="management-list">{products.map((product) => <article className="management-row" key={product._id}><img src={product.image} alt="" /><div className="management-main"><h3>{product.title}</h3><p>{product.sellerName} · {product.pricePi} Pi</p></div><span className={`availability ${product.hidden ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.approved === false ? "Pending" : "Visible"}</span><div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div></article>)}</div></main>;
+};
+
+export const AdminOrdersPage = () => {
+  const [orders, setOrders] = useState<Order[]>([]); const [message, setMessage] = useState(""); const [selected, setSelected] = useState<Order | null>(null);
+  const load = useCallback(async () => setOrders((await axiosClient.get("/admin/orders")).data.orders), []); useEffect(() => { axiosClient.get("/admin/orders").then(({ data }) => setOrders(data.orders)); }, []);
+  const update = async (id: string, status: string) => { await axiosClient.patch(`/admin/orders/${id}`, { status }); setMessage("Order status updated."); await load(); };
+  return <main className="private-page"><Head title="Orders" description="Review order details and correct statuses when necessary." /><Notice text={message} /><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Product</th><th>Buyer / Seller</th><th>Price</th><th>Status</th><th>Action</th></tr></thead><tbody>{orders.map((order) => <tr key={order._id}><td>{order.productTitle}</td><td><small>{order.buyerName}<br />{order.sellerName}</small></td><td>{order.pricePi} Pi</td><td><select value={order.status} onChange={(event) => void update(order._id, event.target.value)}><option>pending</option><option>paid</option><option>completed</option><option>cancelled</option></select></td><td><button onClick={() => setSelected(order)}>Details</button></td></tr>)}</tbody></table></div>{selected ? <div className="detail-panel"><button onClick={() => setSelected(null)}>Close</button><h2>{selected.productTitle}</h2><p>Order ID: {selected._id}</p><p>Payment ID: {selected.paymentId || "Not paid"}</p><p>Transaction: {selected.paymentTxid || "Not available"}</p><p>Created: {new Date(selected.createdAt).toLocaleString()}</p></div> : null}</main>;
+};
+
+type Report = { _id: string; targetType: "product" | "user"; targetId: string; reason: string; details?: string; resolved?: boolean; createdAt: string };
+export const AdminReportsPage = () => {
+  const [reports, setReports] = useState<Report[]>([]); const [message, setMessage] = useState("");
+  const load = useCallback(async () => setReports((await axiosClient.get("/admin/reports")).data.reports), []); useEffect(() => { axiosClient.get("/admin/reports").then(({ data }) => setReports(data.reports)); }, []);
+  const resolve = async (id: string) => { await axiosClient.patch(`/admin/reports/${id}/resolve`); setMessage("Report resolved."); await load(); };
+  return <main className="private-page"><Head title="Reports" description="Review reported products and users, then record resolution." /><Notice text={message} />{reports.length === 0 ? <div className="private-state">No reports have been submitted.</div> : <div className="management-list">{reports.map((report) => <article className="report-card" key={report._id}><div><span>{report.targetType}</span><h3>{report.reason}</h3><p>{report.details || `Target: ${report.targetId}`}</p></div><strong className={report.resolved ? "resolved" : "open"}>{report.resolved ? "Resolved" : "Open"}</strong>{!report.resolved ? <button onClick={() => void resolve(report._id)}>Mark resolved</button> : null}</article>)}</div>}</main>;
+};
+
+export const AdminSettingsPage = () => <main className="private-page"><Head title="Admin Settings" description="Administrative preferences use your main SMAJ settings." /><div className="private-state"><p>Theme, language, notifications, and logout are managed in account settings.</p><Link className="private-primary-button" to="/settings">Open Settings</Link></div></main>;

@@ -10,6 +10,9 @@ export type Product = {
   category: string;
   location: string;
   sellerContact: string;
+  active: boolean;
+  approved?: boolean;
+  hidden?: boolean;
   createdAt: string;
 };
 
@@ -26,5 +29,9 @@ export type Order = {
   productImage: string;
   pricePi: number;
   status: OrderStatus;
+  paymentId?: string | null;
+  paidAt?: string | null;
+  paymentStatus?: "pending" | "processing" | "paid" | "failed" | "cancelled";
+  paymentTxid?: string | null;
   createdAt: string;
 };

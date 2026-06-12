@@ -4,6 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { isAxiosError } from "axios";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -26,8 +27,8 @@ const ProductDetailPage = () => {
     try {
       await axiosClient.post("/marketplace/orders", { productId: product._id });
       navigate("/orders", { state: { message: "Order created successfully." } });
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Could not create order.");
+    } catch (err: unknown) {
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not create order." : "Could not create order.");
     } finally {
       setSubmitting(false);
     }

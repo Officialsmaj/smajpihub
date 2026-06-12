@@ -3,9 +3,11 @@ import { useLocation } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { Order, OrderStatus } from "../../types/marketplace";
+import { usePayments } from "../../hooks/usePayments";
+import { isAxiosError } from "axios";
 
 const OrdersPage = () => {
-  const { user } = useAuthContext();
+  const { user, isAuthenticated, requireAuth } = useAuthContext();
   const location = useLocation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,14 +28,20 @@ const OrdersPage = () => {
   }, []);
 
   useEffect(() => { void loadOrders(); }, [loadOrders]);
+  const { orderProduct, isLoading: paymentLoading } = usePayments({
+    isAuthenticated,
+    onRequireAuth: requireAuth,
+    onPaymentStatus: setMessage,
+    onPaymentComplete: loadOrders,
+  });
   const updateStatus = async (orderId: string, status: OrderStatus) => {
     setUpdatingId(orderId);
     try {
       await axiosClient.patch(`/marketplace/orders/${orderId}/status`, { status });
       setMessage(status === "paid" ? "Test payment successful. Order marked paid." : `Order marked ${status}.`);
       await loadOrders();
-    } catch (error: any) {
-      setMessage(error.response?.data?.message || "Could not update order.");
+    } catch (error: unknown) {
+      setMessage(isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "Could not update order." : "Could not update order.");
     } finally {
       setUpdatingId("");
     }
@@ -62,10 +70,12 @@ const OrdersPage = () => {
               <strong className="order-price">{order.pricePi} Pi</strong>
               <span className={`order-status ${order.status}`}>{order.status}</span>
               <div className="order-actions">
-                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "paid")}>Pay with Pi (Test)</button> : null}
+                {isBuyer && order.status === "pending" ? <button disabled={paymentLoading || updatingId === order._id} onClick={() => void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, { productId: order.productId, orderId: order._id })}>{paymentLoading ? "Opening Pi payment..." : "Pay with Pi Browser"}</button> : null}
+                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id || paymentLoading} className="secondary" onClick={() => void updateStatus(order._id, "paid")}>Pay with Pi (Test)</button> : null}
                 {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id} className="secondary" onClick={() => void updateStatus(order._id, "cancelled")}>Cancel order</button> : null}
                 {!isBuyer && order.status === "paid" ? <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>Mark as completed</button> : null}
               </div>
+              {order.paymentStatus && order.paymentStatus !== "pending" ? <small className={`payment-state ${order.paymentStatus}`}>Payment: {order.paymentStatus}{order.paymentTxid ? ` · Tx ${order.paymentTxid}` : ""}</small> : null}
             </article>
           );
         })}
