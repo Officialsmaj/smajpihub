@@ -10,6 +10,7 @@ const ProfilePage = () => {
   const [country, setCountry] = useState(user?.country || "");
   const [contactPhone, setContactPhone] = useState(user?.contactPhone || "");
   const [role, setRole] = useState<"buyer" | "seller" | "admin">(user?.role || "buyer");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
   const [message, setMessage] = useState("");
   const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
   useEffect(() => { axiosClient.get("/user/stats").then(({ data }) => setStats(data.stats)).catch(() => undefined); }, []);
@@ -18,7 +19,7 @@ const ProfilePage = () => {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      await updateProfile({ displayName, country, contactPhone, role });
+      await updateProfile({ displayName, country, contactPhone, role, avatar });
       setMessage("Profile saved.");
       setEditing(false);
     } catch {
@@ -34,7 +35,7 @@ const ProfilePage = () => {
       </section>
       {!editing ? (
         <section className="profile-card">
-          <div className="profile-avatar">{(user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</div>
+          <div className="profile-avatar">{user?.avatar ? <img src={user.avatar} alt="Profile" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</div>
           <TrustBadge level={user?.verificationLevel} />
           <div className="profile-details">
             <div><span>Pi username</span><strong>@{user?.piUsername || user?.username}</strong></div>
@@ -51,6 +52,8 @@ const ProfilePage = () => {
       ) : (
         <form className="private-form" onSubmit={(event) => void submit(event)}>
           <div className="profile-readonly"><span>Pi username</span><strong>@{user?.piUsername || user?.username}</strong></div>
+          <label>Profile picture<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (!file || file.size > 2 * 1024 * 1024) return setMessage("Choose an image up to 2 MB."); const reader = new FileReader(); reader.onload = () => setAvatar(String(reader.result || "")); reader.readAsDataURL(file); }} /></label>
+          {avatar ? <div className="profile-avatar profile-avatar-preview"><img src={avatar} alt="Profile preview" /></div> : null}
           <label>Display name<input required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
           <label>Country<input value={country} onChange={(event) => setCountry(event.target.value)} placeholder="Your country" /></label>
           <label>Phone / WhatsApp<input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} placeholder="Phone or WhatsApp number" /></label>

@@ -14,6 +14,7 @@ const toClientUser = (user: any) => user ? ({
   displayName: user.displayName,
   country: user.country,
   contactPhone: user.contactPhone || "",
+  avatar: user.avatar || "",
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
@@ -156,17 +157,18 @@ export default function mountUserEndpoints(router: Router) {
     const displayName = String(req.body?.displayName || "").trim();
     const country = String(req.body?.country || "").trim();
     const contactPhone = String(req.body?.contactPhone || "").trim();
+    const avatar = String(req.body?.avatar || currentUser.avatar || "");
     const requestedRole = req.body?.role;
     const role = currentUser.role === "admin" ? "admin" : requestedRole;
 
-    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || !["buyer", "seller", "admin"].includes(role)) {
+    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || avatar.length > 3_000_000 || (avatar && !avatar.startsWith("data:image/")) || !["buyer", "seller", "admin"].includes(role)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid profile details" });
     }
 
     const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : displayName && country && contactPhone ? "verified" : "basic";
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, role, roles: [role], verificationLevel } },
+      { $set: { displayName, country, contactPhone, avatar, role, roles: [role], verificationLevel } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });

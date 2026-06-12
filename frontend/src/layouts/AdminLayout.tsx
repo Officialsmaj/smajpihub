@@ -40,7 +40,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     await signOut();
-    navigate("/home");
+    navigate("/home", { replace: true });
   };
 
   const toggleSidebar = () => {

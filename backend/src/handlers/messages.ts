@@ -49,6 +49,7 @@ export default function mountMessageEndpoints(router: Router) {
     const uid = req.session.currentUser!.uid;
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    await req.app.locals.messageCollection.updateMany({ conversationId: req.params.id, senderId: { $ne: uid }, readAt: { $exists: false } }, { $set: { readAt: new Date() } });
     const messages = await req.app.locals.messageCollection.find({ conversationId: req.params.id }).sort({ createdAt: 1 }).toArray();
     await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $pull: { unreadBy: uid } });
     return res.status(200).json({ conversation: serialize(conversation), messages: messages.map(serialize) });

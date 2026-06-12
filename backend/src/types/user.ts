@@ -10,6 +10,7 @@ export interface UserData {
   displayName: string,
   country: string,
   contactPhone?: string,
+  avatar?: string,
   blocked?: boolean,
   verificationLevel?: "basic" | "verified" | "trusted_seller",
   verificationRequested?: boolean,

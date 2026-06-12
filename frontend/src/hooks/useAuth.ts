@@ -29,6 +29,7 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   displayName: candidate?.displayName || fallback.displayName || candidate?.username || fallback.username,
   country: candidate?.country ?? fallback.country ?? "",
   contactPhone: candidate?.contactPhone ?? fallback.contactPhone ?? "",
+  avatar: candidate?.avatar ?? fallback.avatar ?? "",
   role: candidate?.role || fallback.role || "buyer",
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
   settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
@@ -62,6 +63,7 @@ const authResultUser = (authResult: AuthResult): User => ({
   country: "",
   role: "buyer",
   contactPhone: "",
+  avatar: "",
   blocked: false,
   verificationLevel: "basic",
   verificationRequested: false,
@@ -139,7 +141,7 @@ export const useAuth = () => {
     try {
       const authResult = await authenticateWithTimeout(["username", "payments", "wallet_address"]);
       await signInUser(authResult);
-      window.location.href = getDashboardUrl();
+      window.location.replace(getDashboardUrl());
       return true;
     } catch (err) {
       console.error("Pi login failed:", err);
@@ -155,7 +157,7 @@ export const useAuth = () => {
     }
   }, [signInUser]);
 
-  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string }) => {
+  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string; avatar?: string }) => {
     const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
     if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
   }, [user]);

@@ -1,63 +1,27 @@
-import { Link } from "react-router-dom";
-import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { useEffect, useState } from "react";
 import { axiosClient } from "../../lib/axiosClient";
-import type { Product } from "../../types/marketplace";
+import type { Conversation, Order, Product } from "../../types/marketplace";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
-const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"];
 
-const DashboardPage = () => {
-  const { user } = useAuthContext();
-  const [feed, setFeed] = useState<{ recommended: Product[]; latest: Product[] } | null>(null);
-  useEffect(() => { axiosClient.get("/marketplace/feed").then(({ data }) => setFeed(data)).catch(() => undefined); }, []);
-  return (
-    <main className="private-page">
-      <section className="private-welcome">
-        <p className="private-kicker">PRIVATE DASHBOARD</p>
-        <h1>Welcome, @{user?.piUsername || user?.username}</h1>
-        <p>Buy, sell, and manage Pi-powered orders from one simple workspace.</p>
-      </section>
-      <section className="dashboard-quick-actions" aria-label="Quick actions">
-        <Link to="/add-product"><AddBoxOutlinedIcon />Add Product</Link>
-        <Link to="/store"><StorefrontOutlinedIcon />View Store</Link>
-        <Link to="/orders"><ReceiptLongOutlinedIcon />My Orders</Link>
-        <Link to="/profile"><PersonOutlineIcon />Edit Profile</Link>
-      </section>
-      <section className="dashboard-grid">
-        <Link to="/wallet" className="dashboard-card wallet-card">
-          <AccountBalanceWalletOutlinedIcon />
-          <div><span>Wallet status</span><h2>Pi Wallet Connected</h2><p>Authenticated as @{user?.piUsername || user?.username}</p></div>
-        </Link>
-        <Link to="/store" className="dashboard-card">
-          <StorefrontOutlinedIcon />
-          <div><span>Marketplace</span><h2>Store</h2><p>Browse products priced in Pi.</p></div>
-        </Link>
-        <Link to="/orders" className="dashboard-card">
-          <ReceiptLongOutlinedIcon />
-          <div><span>Activity</span><h2>Orders</h2><p>Track pending and paid purchases.</p></div>
-        </Link>
-        <Link to="/seller" className="dashboard-card">
-          <SellOutlinedIcon />
-          <div><span>Seller tools</span><h2>Seller Dashboard</h2><p>Manage listings and incoming orders.</p></div>
-        </Link>
-        <Link to="/services" className="dashboard-card muted-card">
-          <AutoAwesomeOutlinedIcon />
-          <div><span>Roadmap</span><h2>Coming Soon Services</h2><p>More Pi utility modules are planned after this MVP.</p></div>
-        </Link>
-      </section>
-      <section className="section-title"><div><h2>Popular categories</h2><p>Explore the Store by what you need.</p></div></section>
-      <section className="category-grid">{STORE_CATEGORIES.map((category) => <Link key={category} to={`/store?category=${encodeURIComponent(category)}`}>{category}</Link>)}</section>
-      {feed?.recommended.length ? <><section className="section-title"><div><h2>Recommended for you</h2><p>Listings based on your marketplace activity.</p></div><Link to="/store">See all</Link></section><section className="product-grid dashboard-products">{feed.recommended.slice(0, 4).map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section></> : null}
-      {feed?.latest.length ? <><section className="section-title"><div><h2>Latest products</h2><p>Fresh listings from SMAJ sellers.</p></div><Link to="/store">Browse Store</Link></section><section className="product-grid dashboard-products">{feed.latest.slice(0, 4).map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section></> : null}
-    </main>
-  );
-};
-
+type HomeData = { recommended: Product[]; latest: Product[] };
+const DashboardPage = () => { const { user } = useAuthContext(); const navigate = useNavigate(); const [feed, setFeed] = useState<HomeData>({ recommended: [], latest: [] }); const [orders, setOrders] = useState<Order[]>([]); const [products, setProducts] = useState<Product[]>([]); const [saved, setSaved] = useState<Product[]>([]); const [conversations, setConversations] = useState<Conversation[]>([]); const [lastViewed, setLastViewed] = useState<Product | null>(null); const [search, setSearch] = useState(""); const [searchType, setSearchType] = useState("products");
+  useEffect(() => { Promise.all([axiosClient.get("/marketplace/feed"), axiosClient.get("/marketplace/orders"), axiosClient.get("/marketplace/seller"), axiosClient.get("/marketplace/saved"), axiosClient.get("/messages")]).then(([feedData, orderData, sellerData, savedData, messageData]) => { setFeed(feedData.data); setOrders(orderData.data.orders); setProducts(sellerData.data.products); setSaved(savedData.data.products); setConversations(messageData.data.conversations); }).catch(() => undefined); const viewedId = window.localStorage.getItem("smaj_last_viewed_product"); if (viewedId) axiosClient.get(`/marketplace/products/${viewedId}`).then(({ data }) => setLastViewed(data.product)).catch(() => undefined); }, []);
+  const pending = useMemo(() => orders.filter((order) => order.status === "pending"), [orders]); const submitSearch = (event: FormEvent) => { event.preventDefault(); const query = search.trim(); if (searchType === "products") navigate(`/store?search=${encodeURIComponent(query)}`); else if (searchType === "services") navigate("/app/services"); else if (searchType === "sellers") navigate(`/store?search=${encodeURIComponent(query)}`); else navigate("/app/help-center"); };
+  return <main className="private-page"><section className="home-command-hero"><p className="private-kicker">HOME</p><h1>Hi {user?.displayName || user?.piUsername || user?.username}</h1><p>What do you need today?</p><form className="global-search" onSubmit={submitSearch}><select value={searchType} onChange={(event) => setSearchType(event.target.value)}><option value="products">Products</option><option value="services">Services</option><option value="sellers">Sellers</option><option value="help">Help</option></select><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${searchType}`} /><button><SearchOutlinedIcon />Search</button></form></section>
+    <section className="dashboard-quick-actions"><Link to="/store"><StorefrontOutlinedIcon />Buy Product</Link><Link to="/add-product"><AddBoxOutlinedIcon />Sell Product</Link><Link to="/orders"><ReceiptLongOutlinedIcon />My Orders</Link><Link to="/messages"><ChatOutlinedIcon />Messages</Link></section>
+    <section className="home-activity-grid"><Link to="/orders"><ReceiptLongOutlinedIcon /><span>Orders</span><strong>{orders.length}</strong></Link><Link to="/seller"><Inventory2OutlinedIcon /><span>Products</span><strong>{products.length}</strong></Link><Link to="/saved"><BookmarkBorderOutlinedIcon /><span>Saved items</span><strong>{saved.length}</strong></Link><Link to="/messages"><ChatOutlinedIcon /><span>Messages</span><strong>{conversations.length}</strong></Link></section>
+    <section className="section-title"><div><h2>Continue</h2><p>Pick up your recent marketplace activity.</p></div></section><section className="continue-grid">{lastViewed ? <Link to={`/product/${lastViewed._id}`}><span>Last viewed product</span><strong>{lastViewed.title}</strong><p>{lastViewed.pricePi} Pi · {lastViewed.location}</p></Link> : <Link to="/store"><span>Last viewed product</span><strong>Explore the marketplace</strong><p>Your latest viewed listing will appear here.</p></Link>}<Link to="/orders"><span>Pending orders</span><strong>{pending.length}</strong><p>{pending.length ? pending[0].productTitle : "No pending orders"}</p></Link><Link to="/messages"><span>Recent messages</span><strong>{conversations[0]?.productTitle || "No conversations"}</strong><p>{conversations[0]?.lastMessage || "Messages from buyers and sellers appear here."}</p></Link></section>
+    {feed.recommended.length ? <><section className="section-title"><div><h2>Recommended products</h2><p>Selected from your marketplace activity.</p></div><Link to="/store">See all</Link></section><section className="product-grid dashboard-products">{feed.recommended.slice(0, 4).map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section></> : null}
+    <section className="section-title"><div><h2>Recommended services</h2><p>Start with SMAJ Store and watch the ecosystem grow.</p></div><Link to="/app/services">All services</Link></section><section className="recommended-services"><Link to="/store"><StorefrontOutlinedIcon /><strong>SMAJ Store</strong><span>LIVE</span><p>Buy and sell products with Pi.</p></Link><Link to="/app/services"><ChatOutlinedIcon /><strong>SMAJ Services</strong><span>Coming Soon</span><p>Discover upcoming ecosystem services.</p></Link></section>
+    <section className="section-title"><div><h2>Updates</h2><p>SMAJ news and announcements.</p></div></section><section className="updates-list"><article><span>SMAJ NEWS</span><strong>Marketplace MVP is live</strong><p>Browse products, message sellers, save listings, and manage Pi orders.</p></article><article><span>ANNOUNCEMENT</span><strong>More ecosystem services are on the roadmap</strong><p>Use Notify Me in Services to register your interest.</p></article></section>
+  </main>; };
 export default DashboardPage;

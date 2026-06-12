@@ -12,7 +12,6 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "./LoginWithPiButton";
 import logoImage from "/logo.png";
-import ConfirmSignOutModal from "./ConfirmSignOutModal";
 
 const navItems = [
   { to: "/white-paper", label: "White Paper" },
@@ -82,7 +81,7 @@ const UtilityIcons = ({ theme, onToggleTheme }: { theme: "light" | "dark"; onTog
 );
 
 const Header = () => {
-  const { user, isAuthenticated, signOut, isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading } = useAuthContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -90,7 +89,6 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches);
   const [mobileThemeMode, setMobileThemeMode] = useState<"light" | "dark">(readPublicTheme);
-  const [showSignOut, setShowSignOut] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -223,7 +221,6 @@ const Header = () => {
   const modalResults = publicSearchItems.filter((item) =>
     [item.label, ...item.keywords].join(" ").toLowerCase().includes(searchQuery.trim().toLowerCase()),
   );
-  const confirmSignOut = async () => { await signOut(); setShowSignOut(false); setIsMobileMenuOpen(false); };
 
   return (
     <header className="smaj-header">
@@ -330,13 +327,8 @@ const Header = () => {
                 </button>
               </div>
             </div>
-            {isAuthenticated && user ? (
-              <div className="smaj-user-info">
-                <span className="smaj-username">{user.username}</span>
-                <button onClick={() => setShowSignOut(true)} className="smaj-signout-btn" disabled={isLoading}>
-                  Sign Out
-                </button>
-              </div>
+            {isAuthenticated ? (
+              <NavLink to="/dashboard" className="smaj-login-btn" onClick={() => setIsMobileMenuOpen(false)}>Go to Dashboard</NavLink>
             ) : (
               <LoginWithPiButton className="smaj-login-btn">
                 <span className="smaj-login-icon" aria-hidden="true">
@@ -359,13 +351,8 @@ const Header = () => {
           <button type="button" className="smaj-auth-search-btn" aria-label="Open search" onClick={openSearchModal}>
             <SearchIcon fontSize="small" />
           </button>
-          {isAuthenticated && user ? (
-            <div className="smaj-user-info">
-              <span className="smaj-username">{user.username}</span>
-              <button onClick={() => setShowSignOut(true)} className="smaj-signout-btn" disabled={isLoading}>
-                Sign Out
-              </button>
-            </div>
+          {isAuthenticated ? (
+            <NavLink to="/dashboard" className="smaj-login-btn">Go to Dashboard</NavLink>
           ) : (
             <>
               <LoginWithPiButton className="smaj-login-btn">
@@ -432,7 +419,6 @@ const Header = () => {
           </div>
         </div>
       ) : null}
-      <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void confirmSignOut()} />
     </header>
   );
 };

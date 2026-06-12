@@ -36,6 +36,10 @@ import SellerProfilePage from "./pages/private/SellerProfilePage";
 import SavedProductsPage from "./pages/private/SavedProductsPage";
 import MessagesPage from "./pages/private/MessagesPage";
 import NotificationsPage from "./pages/private/NotificationsPage";
+import ServicesHubPage from "./pages/private/ServicesHubPage";
+import AiAssistantPage from "./pages/private/AiAssistantPage";
+import WalletPage from "./pages/private/WalletPage";
+import HelpCenterPage from "./pages/private/HelpCenterPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
@@ -230,6 +234,9 @@ export const router = createBrowserRouter(
     },
     { path: "/notifications", element: <ProtectedRoute><PrivateLayout><NotificationsPage /></PrivateLayout></ProtectedRoute> },
     { path: "/saved", element: <ProtectedRoute><PrivateLayout><SavedProductsPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/ai-assistant", element: <ProtectedRoute><PrivateLayout><AiAssistantPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/help-center", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     {
       path: "/settings",
       element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,
@@ -240,6 +247,7 @@ export const router = createBrowserRouter(
     { path: "/seller", element: <ProtectedRoute><PrivateLayout><SellerPage /></PrivateLayout></ProtectedRoute> },
     { path: "/seller/:id", element: <ProtectedRoute><PrivateLayout><SellerProfilePage /></PrivateLayout></ProtectedRoute> },
     { path: "/edit-product/:id", element: <ProtectedRoute><PrivateLayout><EditProductPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/wallet", element: <ProtectedRoute><PrivateLayout><WalletPage /></PrivateLayout></ProtectedRoute> },
     { path: "/admin", element: <ProtectedRoute><AdminLayout><AdminDashboardPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/users", element: <ProtectedRoute><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/products", element: <ProtectedRoute><AdminLayout><AdminProductsPage /></AdminLayout></ProtectedRoute> },
@@ -263,7 +271,7 @@ export const router = createBrowserRouter(
     { path: "/app/orders", element: <Navigate to="/orders" replace /> },
     { path: "/app/profile", element: <Navigate to="/profile" replace /> },
     { path: "/app/settings", element: <Navigate to="/settings" replace /> },
-    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings"].includes(page.path)).map((page) => ({
+    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings", "wallet", "ai-assistant"].includes(page.path)).map((page) => ({
       path: `/app/${page.path}`,
       element: buildPrivatePageElement(page.title, page.description, page.roles),
     })),
