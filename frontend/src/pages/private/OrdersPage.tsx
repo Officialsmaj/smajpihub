@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { Order, OrderStatus } from "../../types/marketplace";
 import { usePayments } from "../../hooks/usePayments";
-import { isAxiosError } from "axios";
 
 const OrdersPage = () => {
   const { user, isAuthenticated, requireAuth } = useAuthContext();
@@ -28,58 +28,68 @@ const OrdersPage = () => {
   }, []);
 
   useEffect(() => { void loadOrders(); }, [loadOrders]);
-  const { orderProduct, isLoading: paymentLoading } = usePayments({
+  const buyerOrders = useMemo(() => orders.filter((order) => order.buyerId === user?.uid), [orders, user?.uid]);
+  const sellerOrders = useMemo(() => orders.filter((order) => order.sellerId === user?.uid), [orders, user?.uid]);
+  const { orderProduct, isLoading: paymentLoading, activeOrderId } = usePayments({
     isAuthenticated,
     onRequireAuth: requireAuth,
     onPaymentStatus: setMessage,
     onPaymentComplete: loadOrders,
   });
+
   const updateStatus = async (orderId: string, status: OrderStatus) => {
     setUpdatingId(orderId);
     try {
       await axiosClient.patch(`/marketplace/orders/${orderId}/status`, { status });
-      setMessage(status === "paid" ? "Test payment successful. Order marked paid." : `Order marked ${status}.`);
+      setMessage(status === "paid" ? "Fake payment successful. Test payment details were saved." : `Order marked ${status}.`);
       await loadOrders();
-    } catch (error: unknown) {
-      setMessage(isAxiosError<{ message?: string }>(error) ? error.response?.data?.message || "Could not update order." : "Could not update order.");
+    } catch (err: unknown) {
+      setMessage(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not update order." : "Could not update order.");
     } finally {
       setUpdatingId("");
     }
   };
 
+  const renderOrder = (order: Order, mode: "buyer" | "seller") => {
+    const isPaying = paymentLoading && activeOrderId === order._id;
+    return (
+      <article className="order-card" key={order._id}>
+        <div className="order-image">{order.productImage ? <img src={order.productImage} alt="" /> : <span>PI</span>}</div>
+        <div className="order-main">
+          <small>{mode === "buyer" ? "Purchase" : "Sale"}</small>
+          <h2>{order.productTitle}</h2>
+          <p>{mode === "buyer" ? `Seller: ${order.sellerName || order.sellerId}` : `Buyer: ${order.buyerName || order.buyerId}`}</p>
+          <p>{new Date(order.createdAt).toLocaleString()}</p>
+          {order.paidAt ? <p>Paid: {new Date(order.paidAt).toLocaleString()}</p> : null}
+        </div>
+        <strong className="order-price">{order.pricePi} Pi</strong>
+        <span className={`order-status ${order.status}`}>{order.status}</span>
+        <div className="order-actions">
+          {mode === "buyer" && order.status === "pending" ? <button className="pi-payment-button" disabled={paymentLoading || updatingId === order._id} onClick={() => void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, { productId: order.productId, orderId: order._id })}>{isPaying ? "Opening Pi payment..." : "Pay with Pi Browser"}</button> : null}
+          {mode === "buyer" && order.status === "pending" ? <button disabled={updatingId === order._id || paymentLoading} className="secondary pi-payment-button" onClick={() => void updateStatus(order._id, "paid")}>Fake Pay</button> : null}
+          {order.status === "pending" ? <button disabled={updatingId === order._id || isPaying} className="secondary" onClick={() => void updateStatus(order._id, "cancelled")}>Cancel Order</button> : null}
+          {mode === "seller" && order.status === "paid" ? <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>Mark as Completed</button> : null}
+        </div>
+        {order.paymentStatus && order.paymentStatus !== "pending" ? <small className={`payment-state ${order.paymentStatus}`}>Payment: {order.paymentStatus}{order.paymentId ? ` · ID ${order.paymentId}` : ""}{order.paymentTxid ? ` · Tx ${order.paymentTxid}` : ""}</small> : null}
+      </article>
+    );
+  };
+
+  const orderSection = (title: string, description: string, list: Order[], mode: "buyer" | "seller") => (
+    <section className="orders-section">
+      <div className="section-title"><div><h2>{title}</h2><p>{description}</p></div><span>{list.length}</span></div>
+      {list.length ? <div className="orders-list">{list.map((order) => renderOrder(order, mode))}</div> : <div className="private-state compact"><h3>No {mode === "buyer" ? "buyer" : "seller"} orders</h3><p>{mode === "buyer" ? "Orders you create from the Store will appear here." : "Orders placed for your products will appear here."}</p></div>}
+    </section>
+  );
+
   return (
     <main className="private-page">
       <section className="private-page-head"><div><p className="private-kicker">STORE ACTIVITY</p><h1>Orders</h1><p>Manage purchases, sales, and Pi payment status.</p></div></section>
+      {!window.Pi ? <div className="private-alert">Please open SMAJ PI HUB inside Pi Browser to use Pi payment.</div> : null}
       {message ? <div className="private-alert">{message}</div> : null}
       {error ? <div className="private-alert error">{error}</div> : null}
       {loading ? <div className="private-state">Loading orders...</div> : null}
-      {!loading && orders.length === 0 ? <div className="private-state"><h2>No orders yet</h2><p>Create an order from a product page to begin.</p></div> : null}
-      <section className="orders-list">
-        {orders.map((order) => {
-          const isBuyer = order.buyerId === user?.uid;
-          return (
-            <article className="order-card" key={order._id}>
-              <div className="order-image">{order.productImage ? <img src={order.productImage} alt="" /> : <span>PI</span>}</div>
-              <div className="order-main">
-                <small>{isBuyer ? "Purchase" : "Sale"}</small>
-                <h2>{order.productTitle}</h2>
-                <p>Buyer: {order.buyerName || order.buyerId}</p>
-                <p>Seller: {order.sellerName || order.sellerId}</p>
-                <p>{new Date(order.createdAt).toLocaleString()}</p>
-              </div>
-              <strong className="order-price">{order.pricePi} Pi</strong>
-              <span className={`order-status ${order.status}`}>{order.status}</span>
-              <div className="order-actions">
-                {isBuyer && order.status === "pending" ? <button className="pi-payment-button" disabled={paymentLoading || updatingId === order._id} onClick={() => void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, { productId: order.productId, orderId: order._id })}>{paymentLoading ? "Opening Pi payment..." : "Pay with Pi Browser"}</button> : null}
-                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id || paymentLoading} className="secondary pi-payment-button" onClick={() => void updateStatus(order._id, "paid")}>Pay with Pi (Test)</button> : null}
-                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id} className="secondary" onClick={() => void updateStatus(order._id, "cancelled")}>Cancel order</button> : null}
-                {!isBuyer && order.status === "paid" ? <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>Mark as completed</button> : null}
-              </div>
-              {order.paymentStatus && order.paymentStatus !== "pending" ? <small className={`payment-state ${order.paymentStatus}`}>Payment: {order.paymentStatus}{order.paymentTxid ? ` · Tx ${order.paymentTxid}` : ""}</small> : null}
-            </article>
-          );
-        })}
-      </section>
+      {!loading ? <>{orderSection("Buyer Orders", "Products you ordered from SMAJ sellers.", buyerOrders, "buyer")}{orderSection("Seller Orders", "Orders customers placed for your products.", sellerOrders, "seller")}</> : null}
     </main>
   );
 };

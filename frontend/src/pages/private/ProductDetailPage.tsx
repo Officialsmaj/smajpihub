@@ -5,6 +5,8 @@ import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { isAxiosError } from "axios";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -13,6 +15,8 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     axiosClient.get<{ product: Product }>(`/marketplace/products/${id}`)
@@ -34,6 +38,22 @@ const ProductDetailPage = () => {
     }
   };
 
+  const reportProduct = async () => {
+    if (!product) return;
+    const reason = window.prompt("Why are you reporting this product?", "Misleading or inappropriate listing");
+    if (!reason?.trim()) return;
+    setReporting(true);
+    setError("");
+    try {
+      await axiosClient.post(`/marketplace/products/${product._id}/report`, { reason: reason.trim() });
+      setMessage("Product report submitted for admin review.");
+    } catch (err: unknown) {
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not report product." : "Could not report product.");
+    } finally {
+      setReporting(false);
+    }
+  };
+
   if (!product && !error) return <main className="private-page"><div className="private-state">Loading product...</div></main>;
   if (!product) return <main className="private-page"><div className="private-alert error">{error}</div></main>;
 
@@ -47,14 +67,14 @@ const ProductDetailPage = () => {
           <h1>{product.title}</h1>
           <p className="product-detail-price">{product.pricePi} Pi</p>
           <p>{product.description}</p>
-          <dl className="product-facts">
-            <div><dt>Location</dt><dd>{product.location}</dd></div>
-            <div><dt>Seller</dt><dd>{product.sellerName}{product.piUsername ? ` (@${product.piUsername})` : ""}</dd></div>
-            <div><dt>Contact</dt><dd>{product.sellerContact}</dd></div>
-          </dl>
+          <section className="seller-info-card">
+            <StorefrontOutlinedIcon />
+            <div><span>Seller</span><strong>{product.sellerName}</strong><p>{product.piUsername ? `@${product.piUsername}` : "Pi seller"} · {product.location}</p><p>{product.sellerContact}</p></div>
+          </section>
+          {message ? <div className="private-alert success">{message}</div> : null}
           {error ? <div className="private-alert error">{error}</div> : null}
           {product.sellerId === user?.uid ? <p className="private-alert">This is your listing.</p> : (
-            <button className="private-primary-button wide" onClick={() => void createOrder()} disabled={submitting}>{submitting ? "Creating order..." : "Create Order"}</button>
+            <div className="product-detail-actions"><button className="private-primary-button" onClick={() => void createOrder()} disabled={submitting}>{submitting ? "Creating order..." : "Create Order"}</button><button className="private-secondary-button" onClick={() => void reportProduct()} disabled={reporting}><FlagOutlinedIcon />{reporting ? "Reporting..." : "Report Product"}</button></div>
           )}
         </div>
       </section>

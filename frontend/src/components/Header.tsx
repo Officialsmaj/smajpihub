@@ -67,13 +67,15 @@ const readRecentSearches = () => {
   }
 };
 
-const UtilityIcons = () => (
+const readPublicTheme = (): "light" | "dark" => window.localStorage.getItem("smaj_public_theme") === "dark" ? "dark" : "light";
+
+const UtilityIcons = ({ theme, onToggleTheme }: { theme: "light" | "dark"; onToggleTheme: () => void }) => (
   <div className="smaj-utility-icons" aria-label="Utility actions">
     <button type="button" className="smaj-utility-icon-btn" aria-label="Language and region">
       <LanguageIcon fontSize="small" />
     </button>
-    <button type="button" className="smaj-utility-icon-btn" aria-label="Display mode">
-      <LightModeOutlinedIcon fontSize="small" />
+    <button type="button" className="smaj-utility-icon-btn" aria-label="Toggle display mode" onClick={onToggleTheme}>
+      {theme === "dark" ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
     </button>
   </div>
 );
@@ -86,11 +88,19 @@ const Header = () => {
   const [searchPhraseIndex, setSearchPhraseIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>(readRecentSearches);
-  const [mobileThemeMode, setMobileThemeMode] = useState<"light" | "dark">("light");
+  const [mobileThemeMode, setMobileThemeMode] = useState<"light" | "dark">(readPublicTheme);
   const location = useLocation();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchPanelRef = useRef<HTMLDivElement | null>(null);
+  const selectTheme = (theme: "light" | "dark") => {
+    setMobileThemeMode(theme);
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("smaj_public_theme", theme);
+  };
+  useEffect(() => {
+    document.documentElement.dataset.theme = mobileThemeMode;
+  }, [mobileThemeMode]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setIsMobileMenuOpen(false);
@@ -296,7 +306,7 @@ const Header = () => {
                     type="button"
                     className={`smaj-mobile-theme-btn ${mobileThemeMode === "light" ? "active" : ""}`}
                     aria-label="Light mode"
-                    onClick={() => setMobileThemeMode("light")}
+                    onClick={() => selectTheme("light")}
                   >
                     <LightModeOutlinedIcon fontSize="small" />
                   </button>
@@ -304,7 +314,7 @@ const Header = () => {
                     type="button"
                     className={`smaj-mobile-theme-btn ${mobileThemeMode === "dark" ? "active" : ""}`}
                     aria-label="Dark mode"
-                    onClick={() => setMobileThemeMode("dark")}
+                    onClick={() => selectTheme("dark")}
                   >
                     <DarkModeOutlinedIcon fontSize="small" />
                   </button>
@@ -364,7 +374,7 @@ const Header = () => {
                 </span>
                 <span className="smaj-login-text">{isLoading ? "Signing in..." : "Login with Pi"}</span>
               </LoginWithPiButton>
-              <UtilityIcons />
+              <UtilityIcons theme={mobileThemeMode} onToggleTheme={() => selectTheme(mobileThemeMode === "dark" ? "light" : "dark")} />
             </>
           )}
         </div>

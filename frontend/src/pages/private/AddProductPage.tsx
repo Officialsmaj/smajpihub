@@ -31,11 +31,18 @@ const AddProductPage = () => {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    setSubmitting(true);
     setError("");
     setSuccess("");
+    const pricePi = Number(form.pricePi);
+    if (form.title.trim().length < 3) return setError("Product title must be at least 3 characters.");
+    if (!form.image) return setError("Choose a product image before publishing.");
+    if (!Number.isFinite(pricePi) || pricePi <= 0) return setError("Enter a valid Pi price greater than zero.");
+    if (form.category.trim().length < 2) return setError("Enter a valid category.");
+    if (form.description.trim().length < 20) return setError("Description must be at least 20 characters.");
+    if (!form.location.trim() || !form.sellerContact.trim()) return setError("Location and seller contact are required.");
+    setSubmitting(true);
     try {
-      await axiosClient.post("/marketplace/products", { ...form, pricePi: Number(form.pricePi) });
+      await axiosClient.post("/marketplace/products", { ...form, title: form.title.trim(), description: form.description.trim(), category: form.category.trim(), location: form.location.trim(), sellerContact: form.sellerContact.trim(), pricePi });
       setSuccess("Product published successfully. Redirecting to the Store...");
       window.setTimeout(() => navigate("/store"), 700);
     } catch (err: unknown) {
@@ -56,14 +63,14 @@ const AddProductPage = () => {
           <label>Price in Pi<input required type="number" min="0.01" step="0.01" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value })} /></label>
           <label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label>
         </div>
-        <label>Description<textarea required rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
+        <label>Description<textarea required minLength={20} maxLength={1500} rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /><small className="form-help">{form.description.length}/1500 characters</small></label>
         <div className="private-form-row">
           <label>Location<input required value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} /></label>
           <label>Seller contact<input required placeholder="Email, phone, or Pi username" value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label>
         </div>
         {error ? <div className="private-alert error">{error}</div> : null}
         {success ? <div className="private-alert success">{success}</div> : null}
-        <button className="private-primary-button" disabled={submitting}>{submitting ? "Publishing..." : "Publish Product"}</button>
+        <button className="private-primary-button" disabled={submitting}>{submitting ? "Saving product..." : "Publish Product"}</button>
       </form>
     </main>
   );

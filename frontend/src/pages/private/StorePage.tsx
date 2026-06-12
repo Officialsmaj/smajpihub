@@ -46,7 +46,7 @@ const StorePage = () => {
       ) : null}
       <section className="product-grid">
         {visibleProducts.map((product) => (
-          <article className="product-card" key={product._id}>
+          <Link className="product-card product-card-link" key={product._id} to={`/product/${product._id}`} aria-label={`View ${product.title}`}>
             <div className="product-image-wrap">
               {product.image ? <img src={product.image} alt={product.title} /> : <span>No image</span>}
               <span className="product-category">{product.category}</span>
@@ -55,9 +55,9 @@ const StorePage = () => {
               <p className="product-location">{product.location}</p>
               <h2>{product.title}</h2>
               <p className="product-seller">Sold by {product.sellerName || product.piUsername}</p>
-              <div className="product-card-foot"><strong>{product.pricePi} Pi</strong><Link className="product-view-button" to={`/product/${product._id}`}>View</Link></div>
+              <div className="product-card-foot"><strong>{product.pricePi} Pi</strong><span className="product-view-button">View</span></div>
             </div>
-          </article>
+          </Link>
         ))}
       </section>
       {!loading && products.length > 0 && visibleProducts.length === 0 ? <div className="private-state"><h2>No matching products</h2><p>Try another search or category.</p></div> : null}

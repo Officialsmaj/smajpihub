@@ -16,6 +16,7 @@ type UsePaymentsArgs = {
 
 export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, onPaymentComplete }: UsePaymentsArgs) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeOrderId, setActiveOrderId] = useState("");
 
   const onReadyForServerApproval = useCallback(async (paymentId: string) => {
     try {
@@ -34,6 +35,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
       console.error("Error completing payment:", err);
     } finally {
       setIsLoading(false);
+      setActiveOrderId("");
     }
   }, [onPaymentComplete, onPaymentStatus]);
 
@@ -45,6 +47,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
       console.error("Error cancelling payment:", err);
     } finally {
       setIsLoading(false);
+      setActiveOrderId("");
     }
   }, [onPaymentStatus]);
 
@@ -54,6 +57,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
     if (orderId) await axiosClient.post("/payments/failed", { orderId }).catch(() => undefined);
     onPaymentStatus?.("Pi payment failed. Please try again in Pi Browser.");
     setIsLoading(false);
+    setActiveOrderId("");
   }, [onPaymentStatus]);
 
   const orderProduct = useCallback(
@@ -69,6 +73,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
       }
 
       setIsLoading(true);
+      setActiveOrderId(metadata.orderId);
       try {
         await window.Pi.createPayment(
           { amount, memo, metadata },
@@ -84,6 +89,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
         await axiosClient.post("/payments/failed", { orderId: metadata.orderId }).catch(() => undefined);
         onPaymentStatus?.("Pi payment failed. Your order remains pending.");
         setIsLoading(false);
+        setActiveOrderId("");
       }
     },
     [isAuthenticated, onRequireAuth, onPaymentStatus, onReadyForServerApproval, onReadyForServerCompletion, onCancel, onError]
@@ -92,5 +98,6 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
   return {
     orderProduct,
     isLoading,
+    activeOrderId,
   };
 };
