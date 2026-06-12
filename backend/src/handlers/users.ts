@@ -7,6 +7,17 @@ type VerifiedPiUser = {
   username?: string;
 };
 
+const toClientUser = (user: any) => user ? ({
+  uid: user.uid,
+  username: user.username,
+  piUsername: user.piUsername,
+  displayName: user.displayName,
+  country: user.country,
+  role: user.role,
+  roles: user.roles,
+  createdAt: user.createdAt,
+}) : null;
+
 const destroySession = (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
@@ -98,7 +109,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
     }
 
     req.session.currentUser = currentUser;
-    return res.status(200).json({ message: "User signed in", user: currentUser });
+    return res.status(200).json({ message: "User signed in", user: toClientUser(currentUser) });
   } catch (err) {
     console.error("Error during signin:", err);
     return res.status(500).json({ error: "internal_error", message: "Failed to sign in" });
@@ -112,7 +123,7 @@ export default function mountUserEndpoints(router: Router) {
   // GET /user (session check)
   router.get("/", async (req: Request, res: Response) => {
     return res.status(200).json({
-      user: req.session.currentUser ?? null,
+      user: toClientUser(req.session.currentUser),
     });
   });
 
@@ -139,7 +150,7 @@ export default function mountUserEndpoints(router: Router) {
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
     req.session.currentUser = updatedUser;
-    return res.status(200).json({ user: updatedUser });
+    return res.status(200).json({ user: toClientUser(updatedUser) });
   });
 
   // GET|POST /user/signout

@@ -14,11 +14,13 @@ const requireUser = (req: Request, res: Response) => {
 
 export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/products", async (req, res) => {
+    if (!requireUser(req, res)) return;
     const products = await req.app.locals.productCollection.find({ active: true }).sort({ createdAt: -1 }).toArray();
     return res.status(200).json({ products: products.map(serialize) });
   });
 
   router.get("/products/:id", async (req, res) => {
+    if (!requireUser(req, res)) return;
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     }
