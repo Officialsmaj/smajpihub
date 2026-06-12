@@ -17,7 +17,7 @@ const toClientUser = (user: any) => user ? ({
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
-  settings: user.settings || { theme: "dark", language: "English", notifications: true },
+  settings: user.settings || { theme: "light", language: "English", notifications: true },
   createdAt: user.createdAt,
 }) : null;
 
@@ -93,7 +93,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            settings: currentUser.settings || { theme: "dark", language: "English", notifications: true },
+            settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
             accessToken: auth.accessToken,
           },
@@ -112,7 +112,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role: "buyer",
         roles: ["buyer"],
         blocked: false,
-        settings: { theme: "dark", language: "English", notifications: true },
+        settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
         accessToken: auth.accessToken,
       });

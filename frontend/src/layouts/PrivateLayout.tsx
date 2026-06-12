@@ -33,7 +33,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.documentElement.dataset.privateTheme = user?.settings?.theme || "dark";
+    document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
   }, [user?.settings?.theme]);
 
   const logout = async () => {

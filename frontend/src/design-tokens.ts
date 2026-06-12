@@ -5,20 +5,23 @@
  */
 
 export const colors = {
-  primary: '#7d3cff',      // Main purple (buttons, accents, icons)
-  primaryDark: '#5f2bd6',
+  primary: '#2563eb',      // SMAJ blue (ecosystem actions)
+  primaryDark: '#1d4ed8',
+  accent: '#7c3aed',       // Pi and innovation features
+  success: '#10b981',
   gold: '#f5c400',          // CTA gradient start
   goldLight: '#ffdd55',     // CTA gradient end
-  darkBg: '#0b0f1a',        // Hero/dark sections
-  darkCard: '#111',         // Cards in dark mode
+  darkBg: '#0b0f19',        // Dark mode background
+  darkCard: '#111827',       // Cards in dark mode
   lightBg: '#ffffff',       // Main backgrounds
+  lightSecondary: '#f8fafc',
   lightCard: '#fff',        // Light cards
-  grayDark: '#29313d',      // Headings
-  grayMed: '#707a8a',       // Body text
-  disableText: '#4f5867',   // Disabled text
-  grayLight: '#d4d8e4',     // Secondary text
-  borderLight: '#e6eaf5',   // Borders
-  pillBg: '#f0e9ff',        // Purple pills
+  grayDark: '#111827',      // Headings
+  grayMed: '#6b7280',       // Body text
+  disableText: '#9ca3af',   // Disabled text
+  grayLight: '#6b7280',     // Secondary text
+  borderLight: '#e5e7eb',   // Borders
+  pillBg: '#eff6ff',        // Blue pills
 } as const;
 
 export const spacing = {
@@ -48,7 +51,7 @@ export const shadows = {
   card: '0 12px 28px rgba(17, 22, 39, 0.07)',
   hover: '0 12px 30px rgba(17, 22, 39, 0.09)',
   dark: '0 20px 45px rgba(0, 0, 0, 0.35)',
-  glow: '0 0 15px #7d3cff',
+  glow: '0 0 15px rgba(37, 99, 235, 0.35)',
 } as const;
 
 export const typography = {

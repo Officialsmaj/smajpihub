@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
@@ -22,6 +22,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, signOut } = useAuthContext();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  useEffect(() => {
+    document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
+  }, [user?.settings?.theme]);
   if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
   const logout = async () => { await signOut(); navigate("/home"); };
   return <div className="private-shell admin-shell"><header className="private-header"><Link to="/admin" className="private-brand"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link><div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div><button className="private-menu-toggle" onClick={() => setOpen(!open)}>{open ? <CloseIcon /> : <MenuIcon />}</button></header>

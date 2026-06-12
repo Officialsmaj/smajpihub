@@ -15,7 +15,7 @@
 }
 
 :local(.button--primary) {
-  background: linear-gradient(135deg, var(--color-primary), #5f2bd6);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
 }
 

@@ -70,8 +70,8 @@ const OrdersPage = () => {
               <strong className="order-price">{order.pricePi} Pi</strong>
               <span className={`order-status ${order.status}`}>{order.status}</span>
               <div className="order-actions">
-                {isBuyer && order.status === "pending" ? <button disabled={paymentLoading || updatingId === order._id} onClick={() => void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, { productId: order.productId, orderId: order._id })}>{paymentLoading ? "Opening Pi payment..." : "Pay with Pi Browser"}</button> : null}
-                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id || paymentLoading} className="secondary" onClick={() => void updateStatus(order._id, "paid")}>Pay with Pi (Test)</button> : null}
+                {isBuyer && order.status === "pending" ? <button className="pi-payment-button" disabled={paymentLoading || updatingId === order._id} onClick={() => void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, { productId: order.productId, orderId: order._id })}>{paymentLoading ? "Opening Pi payment..." : "Pay with Pi Browser"}</button> : null}
+                {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id || paymentLoading} className="secondary pi-payment-button" onClick={() => void updateStatus(order._id, "paid")}>Pay with Pi (Test)</button> : null}
                 {isBuyer && order.status === "pending" ? <button disabled={updatingId === order._id} className="secondary" onClick={() => void updateStatus(order._id, "cancelled")}>Cancel order</button> : null}
                 {!isBuyer && order.status === "paid" ? <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>Mark as completed</button> : null}
               </div>

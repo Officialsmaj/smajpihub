@@ -5,7 +5,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 const SettingsPage = () => {
   const { user, updateSettings, signOut } = useAuthContext();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<"dark" | "light">(user?.settings?.theme || "dark");
+  const [theme, setTheme] = useState<"dark" | "light">(user?.settings?.theme || "light");
   const [language, setLanguage] = useState(user?.settings?.language || "English");
   const [notifications, setNotifications] = useState(user?.settings?.notifications ?? true);
   const [message, setMessage] = useState("");

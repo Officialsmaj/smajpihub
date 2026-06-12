@@ -31,7 +31,7 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   contactPhone: candidate?.contactPhone ?? fallback.contactPhone ?? "",
   role: candidate?.role || fallback.role || "buyer",
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
-  settings: candidate?.settings || fallback.settings || { theme: "dark", language: "English", notifications: true },
+  settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
   createdAt: candidate?.createdAt || fallback.createdAt,
   accessToken: fallback.accessToken,
 });
@@ -61,7 +61,7 @@ const authResultUser = (authResult: AuthResult): User => ({
   role: "buyer",
   contactPhone: "",
   blocked: false,
-  settings: { theme: "dark", language: "English", notifications: true },
+  settings: { theme: "light", language: "English", notifications: true },
   accessToken: authResult.accessToken,
 });
 
