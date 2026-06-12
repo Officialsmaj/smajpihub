@@ -3279,6 +3279,10 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 
 /* Final theme-specific layout overrides */
 .private-shell { overflow-x: hidden; }
+.private-sidebar { overflow: hidden; }
+.private-sidebar nav { overflow: visible; }
+.private-sidebar-top { justify-content: flex-end; }
+.private-sidebar-collapsed .private-sidebar-top { justify-content: center; }
 :root[data-theme="light"] .smaj-auth-search-btn,
 :root[data-theme="light"] .smaj-public-search-mobile-toggle,
 :root[data-theme="light"] .smaj-menu-toggle,

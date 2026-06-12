@@ -22,7 +22,6 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
-import logoImage from "/logo.png";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 
@@ -115,10 +114,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
           <div className="private-sidebar-top">
-            <Link to="/dashboard" className="private-sidebar-brand" title="SMAJ PI HUB">
-              <img src={logoImage} alt="SMAJ PI HUB" />
-              <span>SMAJ PI HUB</span>
-            </Link>
             <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
               {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
             </button>
@@ -130,7 +125,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
                 <span className="private-nav-label">{link.label}</span>
               </NavLink>
             ))}
-            <NavLink to="/notifications" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Notifications" : undefined} aria-label="Notifications"><NotificationsNoneOutlinedIcon /><span className="private-nav-label">Notifications</span>{unreadCount ? <b className="sidebar-count">{unreadCount}</b> : null}</NavLink>
             {user?.role === "admin" ? <NavLink to="/admin" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Admin Panel" : undefined} aria-label="Admin Panel"><AdminPanelSettingsOutlinedIcon /><span className="private-nav-label">Admin Panel</span></NavLink> : null}
           </nav>
           <div className="private-sidebar-account">
