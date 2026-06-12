@@ -5,12 +5,15 @@ export type AuthResult = {
     username?: string;
     wallet_address?: string;
     roles?: string[];
+    piUsername?: string;
+    displayName?: string;
+    country?: string;
+    role?: "buyer" | "seller";
+    createdAt?: string;
   };
 };
 
-export type User = AuthResult["user"] & {
-  accessToken?: string;
-};
+export type User = AuthResult["user"] & { accessToken?: string };
 
 export type PaymentStatus = {
   developer_approved: boolean;
@@ -29,9 +32,5 @@ export type PaymentDTO = {
   metadata: Record<string, unknown>;
   status: PaymentStatus;
   to_address: string;
-  transaction: null | {
-    txid: string;
-    verified: boolean;
-    _link: string;
-  };
+  transaction: null | { txid: string; verified: boolean; _link: string };
 };

@@ -1,55 +1,63 @@
 import { AxiosError, isAxiosError } from "axios";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { axiosClient, getBaseURL } from "../lib/axiosClient";
 import type { AuthResult, PaymentDTO, User } from "../types/pi";
 
-type AuthFeedback = {
-  type: "success" | "error";
-  message: string;
-};
-
-type BackendErrorBody = {
-  error?: string;
-  message?: string;
-};
+type AuthFeedback = { type: "success" | "error"; message: string };
+type BackendErrorBody = { error?: string; message?: string };
+type SignInResponse = { user?: Partial<User> | null };
 
 const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 
-export function onIncompletePaymentFound(payment: PaymentDTO) {
-  console.log("Incomplete Pi payment found:", payment);
-}
+const onIncompletePaymentFound = (payment: PaymentDTO) => {
+  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment });
+};
 
 const authenticateWithTimeout = (scopes: string[]) =>
   Promise.race<AuthResult>([
     window.Pi!.authenticate(scopes, onIncompletePaymentFound),
-    new Promise<AuthResult>((_, reject) => {
-      setTimeout(() => reject(new Error("PI_AUTH_TIMEOUT")), PI_AUTH_TIMEOUT_MS);
-    }),
+    new Promise<AuthResult>((_, reject) => setTimeout(() => reject(new Error("PI_AUTH_TIMEOUT")), PI_AUTH_TIMEOUT_MS)),
   ]);
+
+const toUser = (candidate: Partial<User> | null | undefined, fallback: User): User => ({
+  uid: candidate?.uid || fallback.uid,
+  username: candidate?.username || fallback.username,
+  wallet_address: candidate?.wallet_address || fallback.wallet_address,
+  roles: Array.isArray(candidate?.roles) ? candidate.roles : Array.isArray(fallback.roles) ? fallback.roles : [],
+  piUsername: candidate?.piUsername || fallback.piUsername || candidate?.username || fallback.username,
+  displayName: candidate?.displayName || fallback.displayName || candidate?.username || fallback.username,
+  country: candidate?.country ?? fallback.country ?? "",
+  role: candidate?.role || fallback.role || "buyer",
+  createdAt: candidate?.createdAt || fallback.createdAt,
+  accessToken: fallback.accessToken,
+});
 
 const getStoredPiUser = () => {
   try {
-    const storedUser = window.localStorage.getItem(PI_USER_STORAGE_KEY);
-    return storedUser ? (JSON.parse(storedUser) as User) : null;
-  } catch (err) {
-    console.warn("Unable to read stored Pi user:", err);
+    const stored = window.localStorage.getItem(PI_USER_STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as User) : null;
+  } catch {
     return null;
   }
 };
 
-const savePiUser = (authResult: AuthResult) => {
-  const piUser: User = {
-    uid: authResult.user?.uid,
-    username: authResult.user?.username,
-    wallet_address: authResult.user?.wallet_address,
-    roles: authResult.user?.roles ?? [],
-    accessToken: authResult.accessToken,
-  };
-
-  window.localStorage.setItem(PI_USER_STORAGE_KEY, JSON.stringify(piUser));
-  return piUser;
+const storeUser = (user: User) => {
+  window.localStorage.setItem(PI_USER_STORAGE_KEY, JSON.stringify(user));
+  return user;
 };
+
+const authResultUser = (authResult: AuthResult): User => ({
+  uid: authResult.user.uid,
+  username: authResult.user.username,
+  wallet_address: authResult.user.wallet_address,
+  roles: authResult.user.roles ?? [],
+  piUsername: authResult.user.username,
+  displayName: authResult.user.username,
+  country: "",
+  role: "buyer",
+  accessToken: authResult.accessToken,
+});
 
 const getDashboardUrl = () => {
   const baseUrl = import.meta.env.BASE_URL || "/";
@@ -58,136 +66,94 @@ const getDashboardUrl = () => {
 
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
-
-  if (!axiosErr.response) {
-    return "Cannot reach backend. Check BACKEND_URL, HTTPS, and CORS settings.";
-  }
-
-  const status = axiosErr.response.status;
-  const backendMessage = axiosErr.response.data?.message;
-
-  if (status === 401) {
-    return "Pi token verification failed (401). If you are in Sandbox, set backend PLATFORM_API_URL to sandbox and verify PI_API_KEY.";
-  }
-
-  if (backendMessage) {
-    return `Login failed: ${backendMessage}`;
-  }
-
-  return `Login failed with status ${status}.`;
+  if (!axiosErr.response) return "Cannot reach backend. Check BACKEND_URL, HTTPS, and CORS settings.";
+  if (axiosErr.response.status === 401) return "Pi token verification failed. Check the Pi Sandbox and API configuration.";
+  return axiosErr.response.data?.message ? `Login failed: ${axiosErr.response.data.message}` : `Login failed with status ${axiosErr.response.status}.`;
 };
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showSignIn, setShowSignIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Initialize as true for initial session check
+  const [isLoading, setIsLoading] = useState(true);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
 
   useEffect(() => {
-    if (authFeedback) {
-      const timer = setTimeout(() => setAuthFeedback(null), 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!authFeedback) return;
+    const timer = window.setTimeout(() => setAuthFeedback(null), 5000);
+    return () => window.clearTimeout(timer);
   }, [authFeedback]);
 
-  // Effect for initial session check
   useEffect(() => {
-    let isMounted = true;
-
+    let mounted = true;
     const checkSession = async () => {
-      const storedPiUser = getStoredPiUser();
-      if (storedPiUser && isMounted) {
-        setUser(storedPiUser);
-        setIsLoading(false);
-      }
-
-      if (!getBaseURL()) {
-        setIsLoading(false);
-        return;
-      }
-
+      const stored = getStoredPiUser();
+      if (stored && mounted) setUser(stored);
+      if (!getBaseURL()) { if (mounted) setIsLoading(false); return; }
       try {
-        // Assuming /user endpoint returns current user if logged in
-        const response = await axiosClient.get("/user");
-        if (response.data?.user && isMounted) {
-          setUser(response.data.user);
+        const response = await axiosClient.get<{ user?: Partial<User> | null }>("/user");
+        if (response.data.user?.uid && response.data.user.username && mounted) {
+          setUser(storeUser(toUser(response.data.user, stored || response.data.user as User)));
         }
       } catch (err) {
-        // No active session found or backend unreachable, user remains null
         console.log("No active session found or error checking session:", err);
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (mounted) setIsLoading(false);
       }
     };
-    checkSession();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Run once on mount
-
-  const signInUser = useCallback(async (authResult: AuthResult) => {
-    const piUser = savePiUser(authResult);
-
-    if (getBaseURL()) {
-      try {
-        await axiosClient.post("/signin", { authResult });
-      } catch (err) {
-        console.warn("Backend sign-in failed after Pi authentication:", err);
-      }
-    }
-
-    setUser(piUser);
-    setShowSignIn(false);
-    setAuthFeedback({ type: "success", message: `Signed in as ${piUser.username ?? "Pi user"}.` });
+    void checkSession();
+    return () => { mounted = false; };
   }, []);
 
-  const loginWithPi = useCallback(async function loginWithPi() {
+  const signInUser = useCallback(async (authResult: AuthResult) => {
+    const fallback = authResultUser(authResult);
+    let signedInUser = fallback;
+    if (getBaseURL()) {
+      const response = await axiosClient.post<SignInResponse>("/signin", { authResult });
+      signedInUser = toUser(response.data.user, fallback);
+    }
+    setUser(storeUser(signedInUser));
+    setShowSignIn(false);
+    setAuthFeedback({ type: "success", message: `Signed in as ${signedInUser.username || "Pi user"}.` });
+  }, []);
+
+  const loginWithPi = useCallback(async () => {
     setIsLoading(true);
     setAuthFeedback(null);
-
     if (!window.Pi) {
       const message = "Please open SMAJ PI HUB inside Pi Browser to login.";
       setAuthFeedback({ type: "error", message });
       alert(message);
       setIsLoading(false);
-      return;
+      return false;
     }
-
     try {
-      const scopes = ["username", "payments", "wallet_address"];
-      const authResult = await authenticateWithTimeout(scopes);
+      const authResult = await authenticateWithTimeout(["username", "payments", "wallet_address"]);
       await signInUser(authResult);
       window.location.href = getDashboardUrl();
+      return true;
     } catch (err) {
       console.error("Pi login failed:", err);
-      // Only show generic Pi Browser error if it's not a backend Axios error
-      if (isAxiosError<BackendErrorBody>(err)) {
-        setAuthFeedback({ type: "error", message: toErrorMessage(err) });
-      } else if ((err as Error)?.message === "PI_AUTH_TIMEOUT") {
-        setAuthFeedback({
-          type: "error",
-          message: "Pi login timed out. Please close Pi Browser, reopen it, and try Login with Pi again.",
-        });
-      } else {
-        setAuthFeedback({ type: "error", message: "Pi login failed. Please try again inside Pi Browser." });
-      }
-      alert("Pi login failed. Please try again inside Pi Browser.");
+      const message = isAxiosError<BackendErrorBody>(err)
+        ? toErrorMessage(err)
+        : (err as Error)?.message === "PI_AUTH_TIMEOUT"
+          ? "Pi login timed out. Please close Pi Browser, reopen it, and try again."
+          : "Pi login failed. Please try again inside Pi Browser.";
+      setAuthFeedback({ type: "error", message });
+      return false;
     } finally {
       setIsLoading(false);
     }
   }, [signInUser]);
 
-  const signIn = loginWithPi;
+  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" }) => {
+    const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
+    if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
+  }, [user]);
 
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (getBaseURL()) {
-        await axiosClient.get("/user/signout");
-      }
+      if (getBaseURL()) await axiosClient.post("/user/signout");
       window.localStorage.removeItem(PI_USER_STORAGE_KEY);
       setUser(null);
       setAuthFeedback({ type: "success", message: "Signed out successfully." });
@@ -201,18 +167,15 @@ export const useAuth = () => {
     }
   }, []);
 
-  const closeSignIn = useCallback(() => {
-    setShowSignIn(false);
-  }, []);
-
   return {
     user,
     isAuthenticated: Boolean(user),
     showSignIn,
     loginWithPi,
-    signIn,
+    signIn: loginWithPi,
     signOut,
-    closeSignIn,
+    updateProfile,
+    closeSignIn: () => setShowSignIn(false),
     requireAuth: () => setShowSignIn(true),
     isLoading,
     authFeedback,

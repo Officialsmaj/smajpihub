@@ -3,6 +3,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SignIn from "../components/SignIn";
+import { useNavigate } from "react-router-dom";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -11,6 +12,12 @@ type AppLayoutProps = {
 
 const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
   const { showSignIn, closeSignIn, isLoading, signIn } = useAuthContext();
+  const navigate = useNavigate();
+  const login = async () => {
+    if (await signIn()) {
+      navigate("/app/dashboard");
+    }
+  };
 
   return (
     <>
@@ -34,7 +41,7 @@ const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
           }}
           onClick={closeSignIn}
         >
-          <SignIn onSignIn={signIn} onModalClose={closeSignIn} disabled={isLoading} />
+          <SignIn onSignIn={() => void login()} onModalClose={closeSignIn} disabled={isLoading} />
         </div>
       )}
     </>

@@ -23,6 +23,13 @@ import PrivateLayout from "./layouts/PrivateLayout";
 import PrivatePage from "./pages/private/PrivatePage";
 import RoleRoute from "./components/RoleRoute";
 import SearchPage from "./pages/private/SearchPage";
+import DashboardPage from "./pages/private/DashboardPage";
+import StorePage from "./pages/private/StorePage";
+import ProductDetailPage from "./pages/private/ProductDetailPage";
+import AddProductPage from "./pages/private/AddProductPage";
+import OrdersPage from "./pages/private/OrdersPage";
+import ProfilePage from "./pages/private/ProfilePage";
+import SettingsPage from "./pages/private/SettingsPage";
 
 const buildPrivatePageElement = (title: string, description: string, roles?: string[]) => {
   const page = <PrivatePage title={title} description={description} />;
@@ -227,7 +234,14 @@ export const router = createBrowserRouter(
         </ProtectedRoute>
       ),
     },
-    ...privatePages.map((page) => ({
+    { path: "/app/dashboard", element: <ProtectedRoute><PrivateLayout><DashboardPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/store/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/orders", element: <ProtectedRoute><PrivateLayout><OrdersPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/profile", element: <ProtectedRoute><PrivateLayout><ProfilePage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/settings", element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute> },
+    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings"].includes(page.path)).map((page) => ({
       path: `/app/${page.path}`,
       element: buildPrivatePageElement(page.title, page.description, page.roles),
     })),

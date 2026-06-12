@@ -16,6 +16,7 @@ import mountUserEndpoints, { handleSignIn } from "./handlers/users";
 // https://stackoverflow.com/questions/65108033/property-user-does-not-exist-on-type-session-partialsessiondata#comment125163548_65381085
 import "./types/session";
 import mountNotificationEndpoints from "./handlers/notifications";
+import mountMarketplaceEndpoints from "./handlers/marketplace";
 
 const dbName = env.mongo_db_name;
 const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
@@ -113,6 +114,10 @@ const userRouter = express.Router();
 mountUserEndpoints(userRouter);
 app.use("/user", userRouter);
 
+const marketplaceRouter = express.Router();
+mountMarketplaceEndpoints(marketplaceRouter);
+app.use("/marketplace", marketplaceRouter);
+
 // Canonical auth endpoint matching FLOWS.md Authentication section.
 app.post("/signin", handleSignIn);
 
@@ -132,7 +137,9 @@ const start = async () => {
   try {
     const client = await MongoClient.connect(mongoUri, mongoClientOptions);
     const db = client.db(dbName);
-    app.locals.orderCollection = db.collection("orders");
+    app.locals.paymentCollection = db.collection("pi_payments");
+    app.locals.marketplaceOrderCollection = db.collection("orders");
+    app.locals.productCollection = db.collection("products");
     app.locals.userCollection = db.collection("users");
     console.log("Connected to MongoDB on: ", mongoUri);
 
