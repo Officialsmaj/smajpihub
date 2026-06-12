@@ -89,7 +89,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (!authFeedback) return;
-    const timer = window.setTimeout(() => setAuthFeedback(null), 5000);
+    const timer = window.setTimeout(() => setAuthFeedback(null), 3000);
     return () => window.clearTimeout(timer);
   }, [authFeedback]);
 

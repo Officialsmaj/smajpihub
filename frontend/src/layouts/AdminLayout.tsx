@@ -13,6 +13,7 @@ import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrow
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
+import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const links = [
@@ -28,6 +29,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, signOut } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
+  const [showSignOut, setShowSignOut] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,11 +76,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               </NavLink>
             ))}
           </nav>
-          <button className="private-sidebar-logout" onClick={() => void logout()} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout"><LogoutIcon /><span className="private-nav-label">Logout</span></button>
+          <button className="private-sidebar-logout" onClick={() => setShowSignOut(true)} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout"><LogoutIcon /><span className="private-nav-label">Logout</span></button>
         </aside>
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>
       </div>
+      <ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );
 };

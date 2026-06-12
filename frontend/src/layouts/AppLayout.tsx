@@ -15,7 +15,7 @@ const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
   const navigate = useNavigate();
   const login = async () => {
     if (await signIn()) {
-      navigate("/app/dashboard");
+      navigate("/dashboard");
     }
   };
 

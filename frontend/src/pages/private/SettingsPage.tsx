@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
+import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
 
 const SettingsPage = () => {
   const { user, updateSettings, signOut } = useAuthContext();
@@ -9,6 +10,7 @@ const SettingsPage = () => {
   const [language, setLanguage] = useState(user?.settings?.language || "English");
   const [notifications, setNotifications] = useState(user?.settings?.notifications ?? true);
   const [message, setMessage] = useState("");
+  const [showSignOut, setShowSignOut] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = theme;
@@ -36,7 +38,8 @@ const SettingsPage = () => {
         {message ? <div className="private-alert">{message}</div> : null}
         <button className="private-primary-button">Save Settings</button>
       </form>
-      <section className="danger-card"><div><h2>Sign out</h2><p>End this session on the current device.</p></div><button className="private-secondary-button danger" onClick={() => void logout()}>Logout</button></section>
+      <section className="danger-card"><div><h2>Sign out</h2><p>End this session on the current device.</p></div><button className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button></section>
+      <ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </main>
   );
 };

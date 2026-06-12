@@ -10,6 +10,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
@@ -23,6 +24,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import { axiosClient } from "../lib/axiosClient";
+import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 
 type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
@@ -48,8 +50,6 @@ const links = [
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
   { to: "/saved", label: "Saved", icon: <FavoriteBorderOutlinedIcon /> },
   { to: "/seller", label: "Seller", icon: <SellOutlinedIcon /> },
-  { to: "/profile", label: "Profile", icon: <PersonOutlineIcon /> },
-  { to: "/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
 ];
 
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
@@ -57,6 +57,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [showSignOut, setShowSignOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
@@ -79,6 +81,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   const logout = async () => {
     await signOut();
+    setShowSignOut(false);
     navigate("/home");
   };
 
@@ -120,13 +123,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
             </button>
           </div>
-          <div className="private-sidebar-user">
-            <span>{(user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span>
-            <div>
-              <strong>{user?.displayName || user?.username}</strong>
-              <small>{user?.role || "buyer"} account</small>
-            </div>
-          </div>
           <nav aria-label="Private navigation">
             {links.map((link) => (
               <NavLink key={link.to} to={link.to} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? link.label : undefined} aria-label={link.label}>
@@ -137,14 +133,17 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             <NavLink to="/notifications" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Notifications" : undefined} aria-label="Notifications"><NotificationsNoneOutlinedIcon /><span className="private-nav-label">Notifications</span>{unreadCount ? <b className="sidebar-count">{unreadCount}</b> : null}</NavLink>
             {user?.role === "admin" ? <NavLink to="/admin" onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? "Admin Panel" : undefined} aria-label="Admin Panel"><AdminPanelSettingsOutlinedIcon /><span className="private-nav-label">Admin Panel</span></NavLink> : null}
           </nav>
-          <button type="button" className="private-sidebar-logout" onClick={() => void logout()} disabled={isLoading} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout">
-            <LogoutIcon />
-            <span className="private-nav-label">Logout</span>
-          </button>
+          <div className="private-sidebar-account">
+            {profileMenuOpen ? <div className="private-profile-menu"><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><button type="button" onClick={() => void toggleTheme()}>{user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+            <button type="button" className="private-sidebar-profile" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} title={sidebarCollapsed ? (user?.displayName || user?.username) : undefined}>
+              <span className="private-profile-avatar">{(user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><span className="private-profile-copy"><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></span><KeyboardArrowUpIcon className="private-profile-chevron" />
+            </button>
+          </div>
         </aside>
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>
       </div>
+      <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );
 };
