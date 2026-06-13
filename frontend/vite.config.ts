@@ -9,6 +9,28 @@ export default defineConfig(({ mode }) => {
   const rootDir = __dirname;
   const env = loadEnv(mode, rootDir, "");
   const isPublicBuild = mode === "public";
+  const build = {
+    ...(isPublicBuild
+      ? {
+          // GitHub Pages build output (uploaded by Actions workflow).
+          outDir: "dist-public",
+          assetsDir: "assets",
+          emptyOutDir: true,
+        }
+      : {}),
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("react-router") || id.includes("react-dom") || id.includes("/react/")) return "react-vendor";
+          if (id.includes("@mui")) return "mui-vendor";
+          if (id.includes("styled-components") || id.includes("stylis")) return "styling-vendor";
+          if (id.includes("axios")) return "http-vendor";
+          return undefined;
+        },
+      },
+    },
+  };
   return {
     root: rootDir,
     base: isPublicBuild ? "/smajpihub/" : "/",
@@ -50,14 +72,7 @@ export default defineConfig(({ mode }) => {
         "@mui/styled-engine": path.resolve(__dirname, "node_modules/@mui/styled-engine-sc"),
       },
     },
-    build: isPublicBuild
-      ? {
-          // GitHub Pages build output (uploaded by Actions workflow).
-          outDir: "dist-public",
-          assetsDir: "assets",
-          emptyOutDir: true,
-        }
-      : undefined,
+    build,
     server: {
       port: parseInt(env.PORT) || 3314,
     },
