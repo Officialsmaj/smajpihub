@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
 
-const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"];
+const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Home", "Property", "Phones", "Computers", "Beauty", "Services", "Others"];
 
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;

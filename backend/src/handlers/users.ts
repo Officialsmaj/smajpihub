@@ -15,6 +15,10 @@ const toClientUser = (user: any) => user ? ({
   country: user.country,
   contactPhone: user.contactPhone || "",
   avatar: user.avatar || "",
+  coverImage: user.coverImage || "",
+  bio: user.bio || "",
+  language: user.language || user.settings?.language || "English",
+  sellerActive: Boolean(user.sellerActive || user.role === "seller"),
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
@@ -158,17 +162,21 @@ export default function mountUserEndpoints(router: Router) {
     const country = String(req.body?.country || "").trim();
     const contactPhone = String(req.body?.contactPhone || "").trim();
     const avatar = String(req.body?.avatar || currentUser.avatar || "");
+    const coverImage = String(req.body?.coverImage || currentUser.coverImage || "");
+    const bio = String(req.body?.bio || currentUser.bio || "").trim();
+    const language = String(req.body?.language || currentUser.language || currentUser.settings?.language || "English").trim();
+    const sellerActive = typeof req.body?.sellerActive === "boolean" ? req.body.sellerActive : Boolean(currentUser.sellerActive || currentUser.role === "seller");
     const requestedRole = req.body?.role;
-    const role = currentUser.role === "admin" ? "admin" : requestedRole;
+    const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : requestedRole === "seller" ? "seller" : "buyer";
 
-    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || avatar.length > 3_000_000 || (avatar && !avatar.startsWith("data:image/")) || !["buyer", "seller", "admin"].includes(role)) {
+    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 3_000_000 || coverImage.length > 3_000_000 || (avatar && !avatar.startsWith("data:image/")) || (coverImage && !coverImage.startsWith("data:image/")) || !["buyer", "seller", "admin"].includes(role)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid profile details" });
     }
 
     const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : displayName && country && contactPhone ? "verified" : "basic";
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, role, roles: [role], verificationLevel } },
+      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });

@@ -5,7 +5,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 
-const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"];
+const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Home", "Property", "Phones", "Computers", "Beauty", "Services", "Others"];
 const StorePage = () => {
   const [params] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]); const [savedIds, setSavedIds] = useState<string[]>([]);

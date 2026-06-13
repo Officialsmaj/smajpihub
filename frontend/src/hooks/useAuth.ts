@@ -30,6 +30,10 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   country: candidate?.country ?? fallback.country ?? "",
   contactPhone: candidate?.contactPhone ?? fallback.contactPhone ?? "",
   avatar: candidate?.avatar ?? fallback.avatar ?? "",
+  coverImage: candidate?.coverImage ?? fallback.coverImage ?? "",
+  bio: candidate?.bio ?? fallback.bio ?? "",
+  language: candidate?.language ?? fallback.language ?? candidate?.settings?.language ?? fallback.settings?.language ?? "English",
+  sellerActive: candidate?.sellerActive ?? fallback.sellerActive ?? candidate?.role === "seller",
   role: candidate?.role || fallback.role || "buyer",
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
   settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
@@ -64,6 +68,10 @@ const authResultUser = (authResult: AuthResult): User => ({
   role: "buyer",
   contactPhone: "",
   avatar: "",
+  coverImage: "",
+  bio: "",
+  language: "English",
+  sellerActive: false,
   blocked: false,
   verificationLevel: "basic",
   verificationRequested: false,
@@ -157,7 +165,7 @@ export const useAuth = () => {
     }
   }, [signInUser]);
 
-  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string; avatar?: string }) => {
+  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string; avatar?: string; coverImage?: string; bio?: string; language?: string; sellerActive?: boolean }) => {
     const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
     if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
   }, [user]);

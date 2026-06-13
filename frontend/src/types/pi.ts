@@ -11,6 +11,10 @@ export type AuthResult = {
     role?: "buyer" | "seller" | "admin";
     contactPhone?: string;
     avatar?: string;
+    coverImage?: string;
+    bio?: string;
+    language?: string;
+    sellerActive?: boolean;
     blocked?: boolean;
     settings?: {
       theme: "dark" | "light";

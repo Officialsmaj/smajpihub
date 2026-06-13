@@ -23,7 +23,7 @@ export type SellerSummary = { uid: string; username?: string; piUsername?: strin
 export type Review = { _id: string; buyerName: string; rating: number; message?: string; createdAt: string };
 export type Conversation = { _id: string; buyerId: string; sellerId: string; productId: string; productTitle: string; productImage?: string; lastMessage?: string; updatedAt: string; unreadBy?: string[]; buyerName?: string; sellerName?: string };
 export type ChatMessage = { _id: string; conversationId: string; senderId: string; message: string; createdAt: string; readAt?: string };
-export type AppNotification = { _id: string; type: string; title: string; message: string; read: boolean; relatedId?: string; createdAt: string };
+export type AppNotification = { _id: string; type: string; title: string; message: string; read: boolean; relatedId?: string; createdAt: string; image?: string };
 
 export type OrderStatus = "pending" | "paid" | "completed" | "cancelled";
 

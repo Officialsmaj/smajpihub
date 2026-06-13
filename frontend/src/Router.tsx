@@ -40,6 +40,8 @@ import ServicesHubPage from "./pages/private/ServicesHubPage";
 import AiAssistantPage from "./pages/private/AiAssistantPage";
 import WalletPage from "./pages/private/WalletPage";
 import HelpCenterPage from "./pages/private/HelpCenterPage";
+import ServiceDetailPage from "./pages/private/ServiceDetailPage";
+import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
@@ -106,6 +108,10 @@ export const router = createBrowserRouter(
     },
     {
       path: "/smaj-food-delivery",
+      element: <Navigate to="/services/food-delivery" replace />,
+    },
+    {
+      path: "/services/food",
       element: <Navigate to="/services/food-delivery" replace />,
     },
     {
@@ -234,9 +240,16 @@ export const router = createBrowserRouter(
     },
     { path: "/notifications", element: <ProtectedRoute><PrivateLayout><NotificationsPage /></PrivateLayout></ProtectedRoute> },
     { path: "/saved", element: <ProtectedRoute><PrivateLayout><SavedProductsPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/cart", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="cart" /></PrivateLayout></ProtectedRoute> },
+    { path: "/checkout", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="checkout" /></PrivateLayout></ProtectedRoute> },
+    { path: "/payment-method", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="payment-method" /></PrivateLayout></ProtectedRoute> },
+    { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/ai-assistant", element: <ProtectedRoute><PrivateLayout><AiAssistantPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/assistant", element: <ProtectedRoute><PrivateLayout><AiAssistantPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/help-center", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/help", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     {
       path: "/settings",
       element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,

@@ -158,51 +158,16 @@ const start = async () => {
     app.locals.messageCollection = db.collection("messages");
     app.locals.notificationCollection = db.collection("notifications");
 
-    if ((await app.locals.productCollection.countDocuments()) === 0) {
-      await app.locals.productCollection.insertMany([
-        {
-          sellerId: "smaj-demo-store",
-          sellerName: "SMAJ Market",
-          piUsername: "smajmarket",
-          title: "SMAJ Creator Headphones",
-          image: "/smaj-hero.png",
-          pricePi: 18,
-          description: "Comfortable wireless headphones for work, learning, and entertainment.",
-          category: "Electronics",
-          location: "Lagos, Nigeria",
-          sellerContact: "@smajmarket",
-          active: true,
-          createdAt: new Date(),
-        },
-        {
-          sellerId: "smaj-demo-store",
-          sellerName: "SMAJ Market",
-          piUsername: "smajmarket",
-          title: "Purple Everyday Backpack",
-          image: "/smaj_ecosystem_logo.png",
-          pricePi: 12.5,
-          description: "A practical everyday backpack with space for devices and essentials.",
-          category: "Fashion",
-          location: "Accra, Ghana",
-          sellerContact: "@smajmarket",
-          active: true,
-          createdAt: new Date(),
-        },
-        {
-          sellerId: "smaj-demo-store",
-          sellerName: "SMAJ Market",
-          piUsername: "smajmarket",
-          title: "Digital Business Starter Pack",
-          image: "/logo.png",
-          pricePi: 7,
-          description: "A downloadable starter collection for small online businesses.",
-          category: "Digital",
-          location: "Online",
-          sellerContact: "@smajmarket",
-          active: true,
-          createdAt: new Date(),
-        },
-      ]);
+    const demoSellerId = "smaj-demo-store";
+    await app.locals.userCollection.updateOne({ uid: demoSellerId }, { $setOnInsert: { uid: demoSellerId, username: "smajmarket", piUsername: "smajmarket", displayName: "SMAJ Market", country: "Nigeria", contactPhone: "@smajmarket", role: "seller", roles: ["seller"], blocked: false, verificationLevel: "trusted_seller", settings: { theme: "light", language: "English", notifications: true }, createdAt: new Date("2025-01-15") } }, { upsert: true });
+    const productCount = await app.locals.productCollection.countDocuments();
+    if (productCount < 210) {
+      const categories = ["Electronics", "Fashion", "Vehicles", "Home", "Property", "Phones", "Computers", "Beauty", "Services", "Others"];
+      const names = ["Wireless Headphones", "Smart Watch", "Everyday Backpack", "Running Shoes", "Android Phone", "Office Laptop", "Home Blender", "Skincare Set", "City Bicycle", "Portable Speaker", "Desk Lamp", "Coffee Maker", "Phone Case", "Digital Service", "Modern Chair"];
+      const locations = ["Lagos, Nigeria", "Abuja, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Cape Town, South Africa", "Online"];
+      const needed = 210 - productCount;
+      const products = Array.from({ length: needed }, (_, offset) => { const index = productCount + offset; const title = `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`; const image = `https://picsum.photos/seed/smaj-product-${index}/800/620`; const pricePi = Number((0.0005 + ((index * 137) % 145) / 10000).toFixed(4)); return { sellerId: demoSellerId, sellerName: "SMAJ Market", piUsername: "smajmarket", title, image, images: [image, `https://picsum.photos/seed/smaj-product-${index}-detail/800/620`], pricePi, description: `${title} offered by a trusted SMAJ PI HUB marketplace seller. Contact the seller for availability and delivery details.`, category: categories[index % categories.length], location: locations[index % locations.length], sellerContact: "@smajmarket", active: true, approved: true, hidden: false, createdAt: new Date(Date.now() - index * 3600000) }; });
+      await app.locals.productCollection.insertMany(products);
     }
     console.log("Connected to MongoDB on: ", mongoUri);
 

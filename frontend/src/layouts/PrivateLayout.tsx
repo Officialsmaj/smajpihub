@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -24,6 +24,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 import logoImage from "/logo.png";
+import { serviceCatalog } from "../content/serviceCatalog";
 
 type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
@@ -61,17 +62,26 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [showSignOut, setShowSignOut] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
+    : location.pathname.startsWith("/app/services/") ? "Service"
     : location.pathname.startsWith("/edit-product/") ? "Edit Product"
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
-    document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
+    const mode = window.localStorage.getItem("smaj_private_theme_mode") || user?.settings?.theme || "light";
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => { document.documentElement.dataset.privateTheme = mode === "system" ? (media.matches ? "dark" : "light") : mode; };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [user?.settings?.theme]);
 
   useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
+  useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
@@ -93,6 +103,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     document.documentElement.dataset.privateTheme = theme;
     await updateSettings({ ...settings, theme });
   };
+  const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
+  const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
   return (
     <div className="private-shell">
@@ -100,6 +112,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
+        <Link to="/dashboard" className="private-header-brand"><img src={logoImage} alt="" /><span>SMAJ PI HUB</span></Link>
+        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
           <Link className="private-header-icon" to="/search" aria-label="Search" title="Search"><SearchOutlinedIcon /></Link>
@@ -107,10 +121,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
             {user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
           </button>
-          <div className="private-user-pill">
-            <span className="private-wallet-dot" />
-            <span>@{user?.piUsername || user?.username}</span>
-          </div>
+          <Link to="/profile" className="private-header-avatar" title="Profile">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</Link>
         </div>
       </header>
 
