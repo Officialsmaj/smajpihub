@@ -9,6 +9,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -61,6 +62,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -82,6 +84,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
+  useEffect(() => { setMobileAccountOpen(false); }, [location.pathname]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
@@ -109,6 +112,15 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   return (
     <div className="private-shell">
       <header className="private-header">
+        <div className="mobile-private-header-content">
+          <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
+          <div className="mobile-private-header-actions">
+            <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
+            <button className="mobile-private-avatar" type="button" onClick={() => setMobileAccountOpen((open) => !open)} aria-label="Open account menu" aria-expanded={mobileAccountOpen}>
+              {user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}
+            </button>
+          </div>
+        </div>
         <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
@@ -124,6 +136,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <Link to="/profile" className="private-header-avatar" title="Profile">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</Link>
         </div>
       </header>
+
+      {mobileAccountOpen ? <><button className="mobile-account-overlay" type="button" onClick={() => setMobileAccountOpen(false)} aria-label="Close account menu" /><div className="mobile-account-menu">
+        <div className="mobile-account-summary"><span className="private-profile-avatar">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><div><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></div></div>
+        <Link to="/profile"><PersonOutlineIcon />Profile</Link><Link to="/wallet"><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings"><SettingsOutlinedIcon />Settings</Link><Link to="/help"><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setMobileAccountOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button>
+      </div></> : null}
 
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
@@ -152,6 +169,14 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>
       </div>
+      <Link className="mobile-ai-fab" to="/assistant" aria-label="Open SMAJ PI HUB AI Assistant"><AutoAwesomeOutlinedIcon /></Link>
+      <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
+        <NavLink to="/dashboard"><DashboardOutlinedIcon /><span>Home</span></NavLink>
+        <NavLink to="/app/services"><AppsOutlinedIcon /><span>Services</span></NavLink>
+        <NavLink to="/search"><SearchOutlinedIcon /><span>Search</span></NavLink>
+        <NavLink to="/messages"><ChatOutlinedIcon /><span>Messages</span></NavLink>
+        <button type="button" className={mobileAccountOpen || ["/profile", "/wallet", "/settings", "/help"].includes(location.pathname) ? "active" : ""} onClick={() => setMobileAccountOpen((open) => !open)}><PersonOutlineIcon /><span>You</span></button>
+      </nav>
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );
