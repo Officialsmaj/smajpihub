@@ -16,6 +16,7 @@ export type Product = {
   hidden?: boolean;
   createdAt: string;
   verificationLevel?: VerificationLevel;
+  rating?: number;
 };
 
 export type VerificationLevel = "basic" | "verified" | "trusted_seller";

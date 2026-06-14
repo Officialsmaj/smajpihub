@@ -4262,3 +4262,862 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     white-space: nowrap;
   }
 }
+
+/* Latest approved private mobile review */
+@media (max-width: 767px) {
+  .private-header {
+    transition: transform .24s ease, background-color .2s ease, border-color .2s ease;
+  }
+
+  .mobile-header-hidden .private-header {
+    transform: translateY(-105%);
+  }
+
+  .mobile-header-hidden .mobile-home-tabs {
+    top: 0;
+  }
+
+  .mobile-home-shell .private-header {
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(15,23,42,.42), transparent);
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .mobile-home-shell .mobile-private-icon,
+  .mobile-home-shell .mobile-private-avatar {
+    color: #ffffff;
+  }
+
+  .mobile-home-shell .private-body {
+    padding-top: 0;
+  }
+
+  .mobile-home-shell .private-home {
+    margin-top: 0;
+  }
+
+  .mobile-home-hero {
+    min-height: 515px;
+    padding-top: 88px;
+    background-image: linear-gradient(180deg, rgba(15,23,42,.03) 30%, rgba(19,24,52,.82) 100%), url("/assets/smaj-mobile-hero-v2.png");
+    background-position: center top;
+  }
+
+  .mobile-home-hero-copy > span {
+    color: rgba(255,255,255,.88);
+  }
+
+  .mobile-hero-icons .service-art,
+  .mobile-hero-icons b {
+    width: 45px;
+    height: 45px;
+    flex-basis: 45px;
+  }
+
+  .mobile-service-group {
+    gap: 0;
+    overflow: hidden;
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 18px;
+    box-shadow: 0 7px 22px rgba(15,23,42,.06);
+  }
+
+  .mobile-service-app {
+    min-height: 92px;
+    grid-template-columns: 66px minmax(0,1fr);
+    padding: 13px;
+  }
+
+  .mobile-service-app + .mobile-service-app {
+    border-top: 1px solid var(--smaj-border);
+  }
+
+  .mobile-service-app div {
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: center;
+  }
+
+  .mobile-service-app strong,
+  .mobile-service-app span {
+    grid-column: 1;
+  }
+
+  .mobile-service-app small {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    padding: 5px 7px;
+    color: var(--smaj-primary);
+    background: color-mix(in srgb, var(--smaj-primary) 9%, transparent);
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .mobile-service-app > svg {
+    display: none;
+  }
+
+  .mobile-feature-card {
+    min-height: 0;
+    display: grid;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+  }
+
+  .mobile-feature-card > img {
+    width: 100%;
+    height: 215px;
+    display: block;
+    object-fit: cover;
+  }
+
+  .mobile-feature-card > div {
+    min-height: 148px;
+    position: relative;
+    padding: 17px 18px 58px;
+  }
+
+  .mobile-feature-card h3 {
+    color: var(--smaj-text);
+  }
+
+  .mobile-feature-card p {
+    color: var(--smaj-text-secondary);
+  }
+
+  .mobile-feature-card span {
+    position: absolute;
+    right: 16px;
+    bottom: 15px;
+    padding: 9px 13px;
+    color: #ffffff;
+    background: var(--smaj-primary);
+    border-radius: 999px;
+  }
+
+  .mobile-media-card {
+    min-width: min(82vw, 360px);
+    aspect-ratio: auto;
+    padding: 0;
+    display: grid;
+    overflow: hidden;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+  }
+
+  .mobile-media-card > img {
+    width: 100%;
+    height: 185px;
+    object-fit: cover;
+  }
+
+  .mobile-media-card > div {
+    min-height: 86px;
+    position: relative;
+    padding: 14px 15px;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+  }
+
+  .mobile-media-card b {
+    width: max-content;
+    margin-top: -37px;
+    margin-bottom: 10px;
+    padding: 6px 9px;
+    color: #111827;
+    background: #ffffff;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.14);
+    font-size: 10px;
+  }
+
+  .mobile-media-card span {
+    color: var(--smaj-text);
+  }
+
+  .mobile-media-card small {
+    color: var(--smaj-text-secondary);
+  }
+
+  .mobile-phone-screen {
+    position: relative;
+    justify-content: flex-start;
+    background: var(--smaj-card);
+    border-color: #111827;
+  }
+
+  .mobile-phone-screen::after {
+    content: "";
+    width: 72%;
+    height: 115px;
+    margin-top: 30px;
+    background: linear-gradient(135deg, color-mix(in srgb,var(--smaj-primary) 18%,var(--smaj-secondary-bg)), color-mix(in srgb,var(--smaj-accent) 20%,var(--smaj-card)));
+    border-radius: 18px;
+  }
+
+  .mobile-phone-screen > i {
+    width: 78%;
+    height: 44px;
+    display: block;
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
+    border-radius: 12px;
+  }
+
+  .mobile-phone-screen > i:first-child {
+    margin-top: 42px;
+  }
+
+  .mobile-private-footer {
+    gap: 18px;
+    padding-top: 38px;
+  }
+
+  .mobile-private-footer nav {
+    padding: 5px 0 13px;
+    gap: 14px 18px;
+  }
+
+  .mobile-socials {
+    margin: 8px 0 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--smaj-border);
+  }
+
+  .mobile-search-page {
+    max-width: none;
+    padding: 8px 3px 28px;
+  }
+
+  .mobile-search-box {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    color: var(--smaj-text-secondary);
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
+    border-radius: 999px;
+  }
+
+  .mobile-search-box input {
+    min-width: 0;
+    padding: 15px 0;
+    color: var(--smaj-text);
+    background: transparent;
+    border: 0;
+    outline: 0;
+    font-size: 15px;
+  }
+
+  .mobile-search-box button {
+    display: grid;
+    place-items: center;
+    color: inherit;
+    background: transparent;
+    border: 0;
+  }
+
+  .mobile-search-section {
+    padding-top: 28px;
+  }
+
+  .mobile-search-section h1,
+  .mobile-search-section h2 {
+    margin: 0 0 14px;
+    font-size: 1.28rem;
+  }
+
+  .mobile-explore-grid,
+  .mobile-suggestion-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 7px;
+  }
+
+  .mobile-explore-grid a,
+  .mobile-suggestion-grid button {
+    min-width: 0;
+    min-height: 86px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+    color: var(--smaj-text);
+    background: var(--smaj-secondary-bg);
+    border: 1px solid transparent;
+    border-radius: 16px;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .mobile-explore-grid svg {
+    color: var(--smaj-primary);
+    font-size: 31px;
+  }
+
+  .mobile-suggestion-grid button {
+    min-height: 74px;
+    border-color: var(--smaj-border);
+    cursor: pointer;
+  }
+
+  .mobile-suggestion-grid svg {
+    color: var(--smaj-primary);
+  }
+
+  .mobile-search-results {
+    padding-top: 25px;
+  }
+
+  .mobile-search-result-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .mobile-search-result-head h1 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .mobile-search-result-head button {
+    color: var(--smaj-primary);
+    background: transparent;
+    border: 0;
+  }
+
+  .mobile-search-results section {
+    margin-top: 23px;
+    display: grid;
+    gap: 7px;
+  }
+
+  .mobile-search-results section h2 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+  }
+
+  .mobile-search-results section a {
+    padding: 13px;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 12px;
+    text-decoration: none;
+  }
+
+  .search-desktop-fallback {
+    display: none;
+  }
+
+  .messages-desktop-intro {
+    display: none;
+  }
+
+  .mobile-messages-heading {
+    display: block;
+    padding: 2px 2px 15px;
+  }
+
+  .mobile-messages-heading h1 {
+    margin: 0;
+  }
+
+  .messages-layout.rich {
+    min-height: calc(100dvh - 170px);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .messages-page .conversation-list {
+    max-height: none;
+    border: 0;
+  }
+
+  .messages-page .conversation-list button {
+    min-height: 83px;
+    padding: 12px 4px;
+    background: transparent;
+  }
+
+  .messages-page .conversation-list button.active {
+    background: var(--smaj-secondary-bg);
+  }
+
+  .messages-page .conversation-avatar {
+    width: 54px !important;
+    height: 54px !important;
+    flex-basis: 54px !important;
+  }
+
+  .messages-page .chat-panel {
+    display: none;
+  }
+
+  .messages-page.conversation-selected .mobile-messages-heading,
+  .messages-page.conversation-selected .conversation-list {
+    display: none;
+  }
+
+  .messages-page.conversation-selected .chat-panel {
+    min-height: calc(100dvh - 128px);
+    display: flex;
+    position: relative;
+  }
+
+  .chat-panel > header {
+    min-height: 62px;
+    padding: 8px 3px;
+    display: grid;
+    grid-template-columns: auto minmax(0,1fr) auto;
+    align-items: center;
+    gap: 8px;
+    background: var(--smaj-card);
+  }
+
+  .chat-mobile-back {
+    display: grid;
+    place-items: center;
+    color: var(--smaj-text);
+    background: transparent;
+    border: 0;
+  }
+
+  .chat-header-actions {
+    display: flex;
+  }
+
+  .chat-header-actions button {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    color: var(--smaj-text);
+    background: transparent;
+    border: 0;
+  }
+
+  .chat-product-preview {
+    display: none;
+  }
+
+  .chat-messages {
+    min-height: 0;
+    padding: 12px 8px 92px;
+    background: color-mix(in srgb,var(--smaj-primary) 5%,var(--smaj-secondary-bg));
+  }
+
+  .chat-product-mobile {
+    width: min(310px,90%);
+    margin: 0 auto 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 13px;
+  }
+
+  .chat-product-mobile img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 9px;
+  }
+
+  .chat-product-mobile div {
+    display: grid;
+  }
+
+  .chat-product-mobile span {
+    color: var(--smaj-text-secondary);
+    font-size: 11px;
+  }
+
+  .chat-messages article {
+    max-width: 82%;
+  }
+
+  .chat-panel form {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 4;
+    padding: 8px;
+    align-items: center;
+    gap: 3px;
+    background: var(--smaj-card);
+    border-top: 1px solid var(--smaj-border);
+  }
+
+  .chat-panel form input {
+    padding: 11px 5px;
+    color: var(--smaj-text);
+    background: transparent;
+    border: 0;
+    outline: 0;
+  }
+
+  .chat-panel form button {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: grid;
+    place-items: center;
+    color: var(--smaj-text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+  }
+
+  .chat-panel form .chat-send-button {
+    color: #ffffff;
+    background: var(--smaj-primary);
+  }
+
+  .notifications-page .private-page-head {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .notifications-page .private-page-head .private-kicker {
+    display: none;
+  }
+
+  .notifications-page .private-page-head h1 {
+    font-size: 1.7rem;
+  }
+
+  .notifications-page .private-page-head > button {
+    width: auto;
+    font-size: 11px;
+  }
+
+  .account-dashboard-page,
+  .manage-account-page {
+    max-width: none;
+    padding: 4px 2px 30px;
+  }
+
+  .account-dashboard-identity {
+    padding: 18px 5px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .account-dashboard-avatar {
+    width: 88px;
+    height: 88px;
+    flex: 0 0 88px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #ffffff;
+    background: linear-gradient(135deg,var(--smaj-primary),var(--smaj-accent));
+    border-radius: 50%;
+    font-size: 2rem;
+    font-weight: 850;
+  }
+
+  .account-dashboard-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .account-dashboard-identity h1,
+  .account-dashboard-identity p {
+    margin: 0;
+  }
+
+  .account-dashboard-identity h1 {
+    font-size: 1.75rem;
+  }
+
+  .account-dashboard-identity p {
+    margin: 3px 0 8px;
+    color: var(--smaj-text-secondary);
+  }
+
+  .account-dashboard-identity > div:last-child > span {
+    margin-right: 6px;
+    padding: 4px 7px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .account-dashboard-identity > div:last-child > span svg {
+    font-size: 14px;
+  }
+
+  .account-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 8px;
+  }
+
+  .account-quick-grid a {
+    min-width: 0;
+    min-height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 7px;
+    color: var(--smaj-text);
+    background: var(--smaj-secondary-bg);
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .account-quick-grid svg {
+    font-size: 25px;
+  }
+
+  .account-dashboard-list {
+    margin-top: 24px;
+    overflow: hidden;
+    border-top: 1px solid var(--smaj-border);
+  }
+
+  .account-dashboard-list a,
+  .account-dashboard-list > div {
+    min-height: 55px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--smaj-text);
+    border-bottom: 1px solid var(--smaj-border);
+    text-decoration: none;
+  }
+
+  .account-dashboard-list small {
+    color: var(--smaj-text-secondary);
+  }
+
+  .manage-account-page > header {
+    min-height: 55px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .manage-account-page > header a {
+    color: var(--smaj-text);
+  }
+
+  .manage-account-page > header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+
+  .manage-account-page > nav {
+    margin: 0 -15px;
+    padding: 0 12px;
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--smaj-border);
+    scrollbar-width: none;
+  }
+
+  .manage-account-page > nav button {
+    position: relative;
+    padding: 15px 12px;
+    color: var(--smaj-text);
+    background: transparent;
+    border: 0;
+    white-space: nowrap;
+  }
+
+  .manage-account-page > nav button.active::after {
+    content: "";
+    position: absolute;
+    right: 7px;
+    bottom: 0;
+    left: 7px;
+    height: 3px;
+    background: var(--smaj-text);
+  }
+
+  .manage-account-person {
+    padding: 34px 0 25px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+
+  .manage-account-person > span {
+    width: 100px;
+    height: 100px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #ffffff;
+    background: linear-gradient(135deg,var(--smaj-primary),var(--smaj-accent));
+    border-radius: 50%;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  .manage-account-person img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .manage-account-person h2,
+  .manage-account-person p {
+    margin: 0;
+  }
+
+  .manage-account-person h2 {
+    margin-top: 10px;
+  }
+
+  .manage-account-person p {
+    color: var(--smaj-text-secondary);
+  }
+
+  .manage-account-cards {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 8px;
+  }
+
+  .manage-account-cards button {
+    min-height: 132px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    color: var(--smaj-text);
+    background: var(--smaj-secondary-bg);
+    border: 0;
+    border-radius: 17px;
+    text-align: left;
+  }
+
+  .manage-account-cards span {
+    color: var(--smaj-text-secondary);
+    font-size: 11px;
+  }
+
+  .account-checkup {
+    margin-top: 28px;
+    padding: 21px;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 18px;
+  }
+
+  .account-checkup h2,
+  .account-checkup p {
+    margin: 0;
+  }
+
+  .account-checkup p {
+    margin: 10px 0 17px;
+    color: var(--smaj-text-secondary);
+  }
+
+  .account-checkup button {
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 999px;
+    font-weight: 800;
+  }
+
+  .manage-account-detail {
+    padding-top: 28px;
+  }
+
+  .manage-account-detail h2 {
+    margin: 0 0 16px;
+    font-size: 2rem;
+  }
+
+  .manage-account-detail a {
+    min-height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    color: var(--smaj-text);
+    border-bottom: 1px solid var(--smaj-border);
+    text-decoration: none;
+  }
+
+  .manage-account-detail a div {
+    display: grid;
+    gap: 6px;
+  }
+
+  .manage-account-detail span {
+    color: var(--smaj-text-secondary);
+    font-size: 13px;
+  }
+
+  .product-rating {
+    width: max-content;
+    padding: 3px 6px;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 800;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-messages-heading,
+  .chat-mobile-back,
+  .chat-header-actions,
+  .chat-product-mobile {
+    display: none;
+  }
+
+  .mobile-search-page > :not(.search-desktop-fallback) {
+    display: none;
+  }
+
+  .search-desktop-fallback {
+    display: grid;
+    gap: 10px;
+    padding: 24px;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 16px;
+  }
+
+  .search-desktop-fallback a {
+    color: var(--smaj-primary);
+  }
+}

@@ -116,6 +116,10 @@ export const useAuth = () => {
         }
       } catch (err) {
         console.log("No active session found or error checking session:", err);
+        if (isAxiosError(err) && err.response?.status === 401) {
+          window.localStorage.removeItem(PI_USER_STORAGE_KEY);
+          if (mounted) setUser(null);
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }

@@ -21,6 +21,7 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import SettingsBrightnessOutlinedIcon from "@mui/icons-material/SettingsBrightnessOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -62,7 +63,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
+  const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
+  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => (window.localStorage.getItem("smaj_private_theme_mode") as "light" | "dark" | "system") || user?.settings?.theme || "light");
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -74,17 +76,23 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
-    const mode = window.localStorage.getItem("smaj_private_theme_mode") || user?.settings?.theme || "light";
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => { document.documentElement.dataset.privateTheme = mode === "system" ? (media.matches ? "dark" : "light") : mode; };
+    const apply = () => { document.documentElement.dataset.privateTheme = themeMode === "system" ? (media.matches ? "dark" : "light") : themeMode; };
     apply();
+    window.localStorage.setItem("smaj_private_theme_mode", themeMode);
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
-  }, [user?.settings?.theme]);
+  }, [themeMode]);
 
   useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
-  useEffect(() => { setMobileAccountOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    if (location.pathname !== "/dashboard") { setMobileHeaderHidden(false); return; }
+    let lastY = window.scrollY;
+    const onScroll = () => { const nextY = window.scrollY; setMobileHeaderHidden(nextY > 90 && nextY > lastY + 3); lastY = nextY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [location.pathname]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
@@ -102,23 +110,25 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   const toggleTheme = async () => {
     const settings = user?.settings || { theme: "light" as const, language: "English", notifications: true };
-    const theme = settings.theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.privateTheme = theme;
-    await updateSettings({ ...settings, theme });
+    const next = themeMode === "light" ? "dark" : themeMode === "dark" ? "system" : "light";
+    setThemeMode(next);
+    const resolved = next === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : next;
+    await updateSettings({ ...settings, theme: resolved }).catch(() => undefined);
   };
+  const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : themeMode === "system" ? <SettingsBrightnessOutlinedIcon /> : <DarkModeOutlinedIcon />;
   const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
   return (
-    <div className="private-shell">
+    <div className={`private-shell ${mobileHeaderHidden ? "mobile-header-hidden" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
           <div className="mobile-private-header-actions">
             <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
-            <button className="mobile-private-avatar" type="button" onClick={() => setMobileAccountOpen((open) => !open)} aria-label="Open account menu" aria-expanded={mobileAccountOpen}>
+            <Link className="mobile-private-avatar" to="/account/manage" aria-label="Manage SMAJ PI HUB Account">
               {user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}
-            </button>
+            </Link>
           </div>
         </div>
         <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
@@ -131,16 +141,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <Link className="private-header-icon" to="/search" aria-label="Search" title="Search"><SearchOutlinedIcon /></Link>
           <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
           <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
-            {user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+            {themeIcon}
           </button>
           <Link to="/profile" className="private-header-avatar" title="Profile">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</Link>
         </div>
       </header>
-
-      {mobileAccountOpen ? <><button className="mobile-account-overlay" type="button" onClick={() => setMobileAccountOpen(false)} aria-label="Close account menu" /><div className="mobile-account-menu">
-        <div className="mobile-account-summary"><span className="private-profile-avatar">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><div><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></div></div>
-        <Link to="/profile"><PersonOutlineIcon />Profile</Link><Link to="/wallet"><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings"><SettingsOutlinedIcon />Settings</Link><Link to="/help"><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setMobileAccountOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button>
-      </div></> : null}
 
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
@@ -160,7 +165,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             ))}
           </nav>
           <div className="private-sidebar-account">
-            {profileMenuOpen ? <div className="private-profile-menu"><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{user?.settings?.theme === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+            {profileMenuOpen ? <div className="private-profile-menu"><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{themeIcon}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
             <button type="button" className="private-sidebar-profile" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} title={sidebarCollapsed ? (user?.displayName || user?.username) : undefined}>
               <span className="private-profile-avatar">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><span className="private-profile-copy"><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></span><KeyboardArrowUpIcon className="private-profile-chevron" />
             </button>
@@ -175,7 +180,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <NavLink to="/app/services"><AppsOutlinedIcon /><span>Services</span></NavLink>
         <NavLink to="/search"><SearchOutlinedIcon /><span>Search</span></NavLink>
         <NavLink to="/messages"><ChatOutlinedIcon /><span>Messages</span></NavLink>
-        <button type="button" className={mobileAccountOpen || ["/profile", "/wallet", "/settings", "/help"].includes(location.pathname) ? "active" : ""} onClick={() => setMobileAccountOpen((open) => !open)}><PersonOutlineIcon /><span>You</span></button>
+        <NavLink to="/account"><PersonOutlineIcon /><span>You</span></NavLink>
       </nav>
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>

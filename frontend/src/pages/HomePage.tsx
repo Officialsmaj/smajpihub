@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import AppLayout from "../layouts/AppLayout";
 import ActionButton from "../components/ActionButton";
 import heroImage from "/smaj-hero.png";
@@ -52,7 +53,11 @@ const previewServices = [
 ];
 
 const HomePage = () => {
-  const { isLoading } = useAuthContext();
+  const { isAuthenticated, isLoading } = useAuthContext();
+  const navigate = useNavigate();
+  useEffect(() => { if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true }); }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading || isAuthenticated) return null;
 
   return (
     <AppLayout>
