@@ -3386,6 +3386,10 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   display: none;
 }
 
+.services-mobile-view {
+  display: none;
+}
+
 @media (max-width: 767px) {
   html,
   body,
@@ -4163,5 +4167,98 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
   .mobile-socials svg {
     font-size: 16px;
+  }
+
+  .services-launcher {
+    max-width: none;
+    padding: 4px 2px 22px;
+  }
+
+  .services-desktop-view {
+    display: none;
+  }
+
+  .services-mobile-view {
+    display: block;
+  }
+
+  .services-mobile-view > header {
+    padding: 5px 2px 20px;
+  }
+
+  .services-mobile-view h1,
+  .services-mobile-view p {
+    margin: 0;
+  }
+
+  .services-mobile-view h1 {
+    color: var(--smaj-text);
+    font-size: 1.75rem;
+    letter-spacing: -.035em;
+  }
+
+  .services-mobile-view p {
+    max-width: 330px;
+    margin-top: 6px;
+    color: var(--smaj-text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .mobile-services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mobile-services-grid > a {
+    min-width: 0;
+    aspect-ratio: .82;
+    padding: 12px 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 17px;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .06);
+    text-align: center;
+    text-decoration: none;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  }
+
+  .mobile-services-grid > a:active {
+    transform: scale(.97);
+  }
+
+  .mobile-services-grid .service-art {
+    width: clamp(52px, 16vw, 66px);
+    height: clamp(52px, 16vw, 66px);
+    flex: 0 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .14);
+  }
+
+  .mobile-services-grid strong {
+    width: 100%;
+    margin-top: 9px;
+    overflow: hidden;
+    font-size: clamp(11px, 3.2vw, 13px);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-services-grid span {
+    width: 100%;
+    margin-top: 4px;
+    overflow: hidden;
+    color: var(--smaj-text-secondary);
+    font-size: clamp(8px, 2.45vw, 10px);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
