@@ -5294,6 +5294,59 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+/* Mobile chat header avatar: compact messaging-app presentation */
+@media (max-width: 767px) {
+  .messages-page.conversation-selected .chat-person {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+  }
+
+  .messages-page.conversation-selected .chat-person .conversation-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    display: block;
+    overflow: hidden;
+    border-radius: 50% !important;
+    background: var(--smaj-secondary-bg);
+  }
+
+  .messages-page.conversation-selected .chat-person .conversation-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    display: block;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .messages-page.conversation-selected .chat-person > div {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .messages-page.conversation-selected .chat-person strong,
+  .messages-page.conversation-selected .chat-person small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .messages-page.conversation-selected .chat-person strong {
+    font-size: 14px;
+  }
+
+  .messages-page.conversation-selected .chat-person small {
+    color: var(--smaj-text-secondary);
+    font-size: 11px;
+  }
+}
+
 /* Mobile Home carousel refinements: Suggested rows and media image alignment only */
 @media (max-width: 767px) {
   .mobile-home-shell .mobile-service-groups {
