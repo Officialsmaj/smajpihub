@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
@@ -41,13 +41,29 @@ const ServiceStrip = ({ services }: { services: ServiceDefinition[] }) => <div c
 
 const MobileHome = () => {
   const [activeTab, setActiveTab] = useState<HomeTab>("For you");
+  const [tabsPinned, setTabsPinned] = useState(false);
+  const tabsAnchorRef = useRef<HTMLDivElement>(null);
   const lifestyleSlugs = ["food", "health", "housing", "transport", "education", "charity"];
   const tabServices = activeTab === "Lifestyle" ? serviceCatalog.filter((service) => lifestyleSlugs.includes(service.slug)) : activeTab === "Trending" ? serviceCatalog.filter((service) => ["store", "stream", "sports", "events", "food", "jobs"].includes(service.slug)) : serviceCatalog;
+  useEffect(() => {
+    const updatePinnedState = () => {
+      const anchor = tabsAnchorRef.current;
+      if (!anchor) return;
+      setTabsPinned(anchor.getBoundingClientRect().top <= 0);
+    };
+    updatePinnedState();
+    window.addEventListener("scroll", updatePinnedState, { passive: true });
+    window.addEventListener("resize", updatePinnedState);
+    return () => {
+      window.removeEventListener("scroll", updatePinnedState);
+      window.removeEventListener("resize", updatePinnedState);
+    };
+  }, []);
   return <div className="mobile-super-home">
     <section className="mobile-home-hero">
       <div className="mobile-home-hero-copy"><span>SMAJ PI HUB</span><h1>Everything you need.<br />One place.</h1><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div>
     </section>
-    <div className="mobile-home-tabs" role="tablist">{tabs.map((tab) => <button key={tab} type="button" className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</div>
+    <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><div className="mobile-home-tabs" role="tablist">{tabs.map((tab) => <button key={tab} type="button" className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</div></div>
 
     {activeTab === "Categories" ? <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Service categories</h2><p>Explore the complete SMAJ PI HUB ecosystem.</p></div><ServiceStrip services={tabServices} /></section> : <>
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>{activeTab === "For you" ? "Suggested for you" : activeTab}</h2><Link to="/app/services">See all</Link></div>{activeTab === "For you" ? <div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" • ")}</span><small>{serviceRatings[service.slug]}★</small></div></Link>)}</div>)}</div> : <ServiceStrip services={tabServices} />}</section>
