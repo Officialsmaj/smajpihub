@@ -5547,6 +5547,47 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+/* Keep each individual SMAJ service header visible while its page scrolls. */
+.service-detail-page .service-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  align-self: start;
+  width: 100%;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .08);
+}
+
+@media (max-width: 767px) {
+  .service-detail-page .service-page-header {
+    top: 68px;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    min-height: 58px;
+    padding: 8px;
+    border-radius: 0;
+  }
+
+  .service-detail-page .service-page-header > button,
+  .service-detail-page .service-page-header > label {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+  }
+
+  .service-detail-page .service-page-header > div {
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .service-detail-page .service-page-header > div strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 /* Pi Browser/iOS: pin Home tabs only after their natural scroll position reaches the top. */
 @media (max-width: 767px) {
   .mobile-home-shell .mobile-home-tabs-anchor {
