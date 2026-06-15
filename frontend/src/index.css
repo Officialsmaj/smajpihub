@@ -5404,6 +5404,27 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+/* Mobile Home natural header flow and sticky tabs */
+@media (max-width: 767px) {
+  .mobile-home-shell .private-header {
+    position: absolute !important;
+    transform: none !important;
+  }
+
+  .mobile-home-shell .private-home,
+  .mobile-home-shell .mobile-super-home {
+    overflow: visible !important;
+  }
+
+  .mobile-home-shell .mobile-home-tabs,
+  .mobile-home-shell.mobile-header-hidden .mobile-home-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+    transition: none;
+  }
+}
+
 /* Mobile Home carousel refinements: Suggested rows and media image alignment only */
 @media (max-width: 767px) {
   .mobile-home-shell .mobile-service-groups {
@@ -5509,5 +5530,19 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   .mobile-home-shell .mobile-service-app .service-art {
     width: 66px;
     height: 66px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-home-shell .mobile-media-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: stretch !important;
+  }
+
+  .mobile-home-shell .mobile-media-card > img {
+    inline-size: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
   }
 }

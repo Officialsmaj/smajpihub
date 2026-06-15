@@ -63,7 +63,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [mobileHeaderHidden, setMobileHeaderHidden] = useState(false);
   const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => (window.localStorage.getItem("smaj_private_theme_mode") as "light" | "dark" | "system") || user?.settings?.theme || "light");
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
@@ -86,29 +85,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
-  useEffect(() => {
-    if (location.pathname !== "/dashboard") { setMobileHeaderHidden(false); return; }
-    let lastY = window.scrollY;
-    let ticking = false;
-    const updateHeader = () => {
-      const nextY = window.scrollY;
-      const delta = nextY - lastY;
-      if (nextY <= 24) setMobileHeaderHidden(false);
-      else if (delta > 5 && nextY > 90) setMobileHeaderHidden(true);
-      else if (delta < -5) setMobileHeaderHidden(false);
-      lastY = nextY;
-      ticking = false;
-    };
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateHeader);
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [location.pathname]);
-
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
       const next = !collapsed;
@@ -135,7 +111,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
   return (
-    <div className={`private-shell ${mobileHeaderHidden ? "mobile-header-hidden" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""}`}>
+    <div className={`private-shell ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
