@@ -5293,3 +5293,111 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     flex-basis: 46px;
   }
 }
+
+/* Mobile Home carousel refinements: Suggested rows and media image alignment only */
+@media (max-width: 767px) {
+  .mobile-home-shell .mobile-service-groups {
+    padding-right: 10vw;
+    gap: 15px;
+    scroll-padding-inline: 0;
+  }
+
+  .mobile-home-shell .mobile-service-group {
+    width: 86vw;
+    min-width: 86vw;
+    gap: 12px;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .mobile-home-shell .mobile-service-app {
+    min-height: 82px;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 13px;
+    padding: 5px 2px;
+    background: transparent;
+    border: 0;
+  }
+
+  .mobile-home-shell .mobile-service-app + .mobile-service-app {
+    border-top: 0;
+  }
+
+  .mobile-home-shell .mobile-service-app .service-art {
+    width: 72px;
+    height: 72px;
+    border-radius: 17px;
+  }
+
+  .mobile-home-shell .mobile-service-app div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 3px;
+  }
+
+  .mobile-home-shell .mobile-service-app strong,
+  .mobile-home-shell .mobile-service-app span,
+  .mobile-home-shell .mobile-service-app small {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .mobile-home-shell .mobile-service-app strong {
+    font-size: 16px;
+  }
+
+  .mobile-home-shell .mobile-service-app span {
+    font-size: 12px;
+  }
+
+  .mobile-home-shell .mobile-service-app small {
+    margin-top: 1px;
+    padding: 3px 6px;
+    color: var(--smaj-text-secondary);
+    background: var(--smaj-secondary-bg);
+    border-radius: 7px;
+    font-size: 10px;
+  }
+
+  .mobile-home-shell .mobile-media-card > img {
+    width: 100% !important;
+    max-width: none !important;
+    height: 185px;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block;
+    align-self: stretch;
+    justify-self: stretch;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  .mobile-home-shell .mobile-media-card > div {
+    margin: 0;
+  }
+
+  .mobile-home-shell .mobile-ai-fab {
+    bottom: calc(94px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  .mobile-home-shell .mobile-service-group {
+    width: 88vw;
+    min-width: 88vw;
+  }
+
+  .mobile-home-shell .mobile-service-app {
+    grid-template-columns: 66px minmax(0, 1fr);
+  }
+
+  .mobile-home-shell .mobile-service-app .service-art {
+    width: 66px;
+    height: 66px;
+  }
+}
