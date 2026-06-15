@@ -40,6 +40,7 @@ import ServicesHubPage from "./pages/private/ServicesHubPage";
 import WalletPage from "./pages/private/WalletPage";
 import HelpCenterPage from "./pages/private/HelpCenterPage";
 import ServiceDetailPage from "./pages/private/ServiceDetailPage";
+import ServiceDiscoveryPage from "./pages/private/ServiceDiscoveryPage";
 import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import ManageAccountPage from "./pages/private/ManageAccountPage";
@@ -249,6 +250,9 @@ export const router = createBrowserRouter(
     { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/trending", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="trending" /></PrivateLayout></ProtectedRoute> },
+    { path: "/lifestyle", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="lifestyle" /></PrivateLayout></ProtectedRoute> },
+    { path: "/categories", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="categories" /></PrivateLayout></ProtectedRoute> },
     { path: "/app/help-center", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     { path: "/help", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     {

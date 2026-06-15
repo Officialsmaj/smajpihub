@@ -5547,6 +5547,204 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+/* Private discovery routes for Trending, Lifestyle, and Categories. */
+.service-discovery-page {
+  max-width: 760px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+.discovery-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--smaj-card);
+  border-bottom: 1px solid var(--smaj-border);
+}
+
+.discovery-tabs a,
+.mobile-home-tabs a {
+  position: relative;
+  padding: 17px 8px 14px;
+  color: var(--smaj-text-secondary);
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.discovery-tabs a.active,
+.mobile-home-tabs a.active {
+  color: var(--smaj-primary);
+}
+
+.discovery-tabs a.active::after,
+.mobile-home-tabs a.active::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 3px;
+  background: var(--smaj-primary);
+  border-radius: 3px 3px 0 0;
+}
+
+.discovery-filters {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+}
+
+.discovery-filters button,
+.discovery-filters a {
+  min-height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.discovery-filters button:first-child {
+  color: var(--smaj-primary);
+  background: color-mix(in srgb, var(--smaj-primary) 12%, var(--smaj-card));
+  border-color: transparent;
+}
+
+.discovery-ranking {
+  display: grid;
+}
+
+.discovery-ranking > a {
+  min-width: 0;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 28px 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--smaj-text);
+  text-decoration: none;
+}
+
+.discovery-ranking .service-art {
+  width: 72px;
+  height: 72px;
+  border-radius: 17px;
+}
+
+.discovery-rank {
+  color: var(--smaj-text-secondary);
+  text-align: center;
+}
+
+.discovery-service-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.discovery-service-copy strong,
+.discovery-service-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discovery-service-copy small { color: var(--smaj-text-secondary); }
+.discovery-service-copy b { width: max-content; padding: 3px 7px; color: var(--smaj-primary); background: var(--smaj-secondary-bg); border-radius: 7px; font-size: 11px; }
+
+.service-categories-page {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  color: var(--smaj-text);
+  background: var(--smaj-bg);
+}
+
+.service-categories-page > header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  min-height: 68px;
+  padding: 8px 16px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 12px;
+  background: var(--smaj-card);
+  border-bottom: 1px solid var(--smaj-border);
+}
+
+.service-categories-page > header button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--smaj-text);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+}
+
+.service-categories-page > header h1 { margin: 0; font-size: 1.4rem; }
+.service-categories-page > section { padding: 8px 16px 28px; }
+
+.service-categories-page > section a {
+  min-height: 78px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-bottom: 0;
+  text-decoration: none;
+}
+
+.service-categories-page > section a:first-child { border-radius: 16px 16px 0 0; }
+.service-categories-page > section a:last-child { border-bottom: 1px solid var(--smaj-border); border-radius: 0 0 16px 16px; }
+.service-categories-page .service-art { width: 54px; height: 54px; flex: 0 0 54px; border-radius: 13px; }
+.service-categories-page a > span { min-width: 0; display: grid; gap: 3px; }
+.service-categories-page a small { color: var(--smaj-text-secondary); }
+
+@media (max-width: 767px) {
+  .service-discovery-page {
+    max-width: none;
+    padding: 0 0 22px !important;
+  }
+
+  .service-discovery-page .discovery-tabs {
+    top: 68px;
+  }
+
+  .mobile-category-shell .private-header,
+  .mobile-category-shell .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .mobile-category-shell .private-body {
+    min-height: 100dvh;
+    padding-top: 0 !important;
+  }
+
+  .mobile-category-shell .private-content {
+    padding: 0 !important;
+  }
+
+  .service-categories-page {
+    width: 100%;
+    min-height: 100dvh;
+  }
+}
+
 /* Keep each individual SMAJ service header visible while its page scrolls. */
 .service-detail-page .service-page-header {
   position: sticky;

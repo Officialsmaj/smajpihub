@@ -41,6 +41,9 @@ const pageTitles: Record<string, string> = {
   "/notifications": "Notifications",
   "/saved": "Saved Products",
   "/app/services": "Services",
+  "/trending": "Trending",
+  "/lifestyle": "Lifestyle",
+  "/categories": "Categories",
   "/app/help-center": "Help Center",
   "/app/wallet": "Wallet",
 };
@@ -107,7 +110,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
   return (
-    <div className={`private-shell ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""}`}>
+    <div className={`private-shell ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
