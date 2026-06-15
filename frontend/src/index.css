@@ -5121,3 +5121,175 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     color: var(--smaj-primary);
   }
 }
+
+/* Mobile Home header/hero behavior: final priority overrides */
+@media (max-width: 767px) {
+  .mobile-home-shell .private-header {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1200;
+    height: 60px;
+    min-height: 60px;
+    color: #ffffff !important;
+    background: linear-gradient(180deg, rgba(9, 17, 35, .42), rgba(9, 17, 35, 0)) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    transform: translateY(0);
+    transition: transform .25s ease;
+  }
+
+  .mobile-home-shell.mobile-header-hidden .private-header {
+    transform: translateY(-105%);
+  }
+
+  .mobile-home-shell .mobile-private-header-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .mobile-home-shell .mobile-private-brand img {
+    width: 42px;
+    height: 42px;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,.22));
+  }
+
+  .mobile-home-shell .mobile-private-icon,
+  .mobile-home-shell .mobile-private-avatar {
+    color: #ffffff !important;
+    background: rgba(15, 23, 42, .2);
+    box-shadow: 0 3px 12px rgba(0,0,0,.14);
+  }
+
+  .mobile-home-shell .mobile-private-icon svg {
+    display: block;
+    color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+  }
+
+  .mobile-home-shell .private-body,
+  .mobile-home-shell .private-body.private-body-collapsed {
+    padding-top: 0 !important;
+  }
+
+  .mobile-home-shell .private-content {
+    padding-top: 0;
+  }
+
+  .mobile-home-shell .private-home {
+    margin-top: -18px;
+  }
+
+  .mobile-home-shell .mobile-home-hero {
+    min-height: 455px;
+    padding: 84px 20px 25px;
+    background-image: linear-gradient(180deg, rgba(10,18,36,.02) 42%, rgba(19,24,52,.68) 100%), url("/assets/smaj-mobile-hero-v2.png");
+    background-position: 50% 24%;
+    border-radius: 0 0 27px 27px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: 12px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > span,
+  .mobile-home-shell .mobile-home-hero h1 {
+    grid-column: 1 / -1;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > span {
+    margin-bottom: 6px;
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,.45);
+  }
+
+  .mobile-home-shell .mobile-home-hero h1 {
+    max-width: 330px;
+    margin: 0 0 19px;
+    color: #ffffff !important;
+    font-size: clamp(2.15rem, 10.4vw, 3.1rem);
+    line-height: .98;
+    text-shadow: 0 3px 16px rgba(0,0,0,.48);
+  }
+
+  .mobile-home-shell .mobile-hero-icons {
+    min-width: 0;
+    gap: 7px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons .service-art,
+  .mobile-home-shell .mobile-hero-icons b {
+    width: clamp(48px, 13.5vw, 56px);
+    height: clamp(48px, 13.5vw, 56px);
+    flex: 0 0 clamp(48px, 13.5vw, 56px);
+    border: 3px solid rgba(255,255,255,.9);
+    border-radius: 15px;
+    box-shadow: 0 8px 22px rgba(0,0,0,.25);
+  }
+
+  .mobile-home-shell .mobile-hero-icons b {
+    color: #312e81;
+    background: #f1edff;
+    font-size: 14px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > a {
+    float: none;
+    min-height: 49px;
+    margin: 0 58px 2px 0;
+    padding: 11px 17px;
+    justify-content: center;
+    color: #111827;
+    background: #ffffff;
+    box-shadow: 0 8px 22px rgba(0,0,0,.18);
+    white-space: nowrap;
+  }
+
+  .mobile-home-shell .mobile-home-tabs {
+    top: 60px;
+    z-index: 1100;
+    min-height: 55px;
+    transition: top .25s ease, box-shadow .2s ease;
+    box-shadow: 0 4px 12px rgba(15,23,42,.05);
+  }
+
+  .mobile-home-shell.mobile-header-hidden .mobile-home-tabs {
+    top: 0;
+  }
+
+  .mobile-home-shell .mobile-home-tabs button {
+    padding: 18px 10px 14px;
+  }
+
+  .mobile-home-shell .mobile-ai-fab {
+    right: 15px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: 45px;
+    height: 45px;
+    border-width: 3px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mobile-home-shell .mobile-home-hero-copy > a {
+    margin-right: 50px;
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons {
+    gap: 4px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons .service-art,
+  .mobile-home-shell .mobile-hero-icons b {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+}

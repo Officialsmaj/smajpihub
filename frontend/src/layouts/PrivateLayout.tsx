@@ -89,7 +89,22 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useEffect(() => {
     if (location.pathname !== "/dashboard") { setMobileHeaderHidden(false); return; }
     let lastY = window.scrollY;
-    const onScroll = () => { const nextY = window.scrollY; setMobileHeaderHidden(nextY > 90 && nextY > lastY + 3); lastY = nextY; };
+    let ticking = false;
+    const updateHeader = () => {
+      const nextY = window.scrollY;
+      const delta = nextY - lastY;
+      if (nextY <= 24) setMobileHeaderHidden(false);
+      else if (delta > 5 && nextY > 90) setMobileHeaderHidden(true);
+      else if (delta < -5) setMobileHeaderHidden(false);
+      lastY = nextY;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeader);
+        ticking = true;
+      }
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [location.pathname]);
