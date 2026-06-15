@@ -37,7 +37,6 @@ import SavedProductsPage from "./pages/private/SavedProductsPage";
 import MessagesPage from "./pages/private/MessagesPage";
 import NotificationsPage from "./pages/private/NotificationsPage";
 import ServicesHubPage from "./pages/private/ServicesHubPage";
-import AiAssistantPage from "./pages/private/AiAssistantPage";
 import WalletPage from "./pages/private/WalletPage";
 import HelpCenterPage from "./pages/private/HelpCenterPage";
 import ServiceDetailPage from "./pages/private/ServiceDetailPage";
@@ -250,8 +249,6 @@ export const router = createBrowserRouter(
     { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/ai-assistant", element: <ProtectedRoute><PrivateLayout><AiAssistantPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/assistant", element: <ProtectedRoute><PrivateLayout><AiAssistantPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/help-center", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     { path: "/help", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     {
@@ -288,7 +285,7 @@ export const router = createBrowserRouter(
     { path: "/app/orders", element: <Navigate to="/orders" replace /> },
     { path: "/app/profile", element: <Navigate to="/profile" replace /> },
     { path: "/app/settings", element: <Navigate to="/settings" replace /> },
-    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings", "wallet", "ai-assistant"].includes(page.path)).map((page) => ({
+    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings", "wallet"].includes(page.path)).map((page) => ({
       path: `/app/${page.path}`,
       element: buildPrivatePageElement(page.title, page.description, page.roles),
     })),

@@ -9,7 +9,6 @@ type PrivatePageProps = {
 const quickActions = [
   { to: "/app/verification-center", label: "Verification Center" },
   { to: "/app/support-tickets", label: "Support Tickets" },
-  { to: "/app/ai-assistant", label: "AI Assistant Chat" },
 ];
 
 const PrivatePage = ({ title, description }: PrivatePageProps) => {

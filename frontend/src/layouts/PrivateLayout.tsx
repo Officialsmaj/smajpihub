@@ -8,8 +8,6 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -43,7 +41,6 @@ const pageTitles: Record<string, string> = {
   "/notifications": "Notifications",
   "/saved": "Saved Products",
   "/app/services": "Services",
-  "/app/ai-assistant": "AI Assistant",
   "/app/help-center": "Help Center",
   "/app/wallet": "Wallet",
 };
@@ -54,7 +51,6 @@ const links = [
   { to: "/store", label: "Marketplace", icon: <StorefrontOutlinedIcon /> },
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
   { to: "/notifications", label: "Notifications", icon: <NotificationsNoneOutlinedIcon /> },
-  { to: "/app/ai-assistant", label: "AI Assistant", icon: <SmartToyOutlinedIcon /> },
 ];
 
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
@@ -165,7 +161,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>
       </div>
-      <Link className="mobile-ai-fab" to="/assistant" aria-label="Open SMAJ PI HUB AI Assistant"><AutoAwesomeOutlinedIcon /></Link>
       <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
         <NavLink to="/dashboard"><DashboardOutlinedIcon /><span>Home</span></NavLink>
         <NavLink to="/app/services"><AppsOutlinedIcon /><span>Services</span></NavLink>

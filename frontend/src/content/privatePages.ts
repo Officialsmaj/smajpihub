@@ -52,12 +52,6 @@ export const privatePages: PrivatePageDefinition[] = [
     section: "core",
   },
   {
-    path: "ai-assistant",
-    title: "AI Assistant Chat",
-    description: "Ask the SMAJ assistant for help navigating services and workflows.",
-    section: "core",
-  },
-  {
     path: "vendor-dashboard",
     title: "Vendor Dashboard",
     description: "Seller workspace for catalog, orders, and revenue operations.",
