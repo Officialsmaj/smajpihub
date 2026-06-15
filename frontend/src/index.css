@@ -5294,6 +5294,63 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+/* Mobile hero action row: keep 3 service icons, +12, and Explore visible */
+@media (max-width: 767px) {
+  .mobile-home-shell .mobile-home-hero-copy {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 18px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons {
+    width: max-content;
+    max-width: 100%;
+    gap: 5px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons .service-art,
+  .mobile-home-shell .mobile-hero-icons b {
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    border-width: 2px;
+    border-radius: 12px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons b {
+    font-size: 12px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > a {
+    min-width: 112px;
+    min-height: 47px;
+    margin: 0;
+    padding: 10px 15px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mobile-home-shell .mobile-home-hero-copy {
+    column-gap: 12px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons {
+    gap: 4px;
+  }
+
+  .mobile-home-shell .mobile-hero-icons .service-art,
+  .mobile-home-shell .mobile-hero-icons b {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > a {
+    min-width: 104px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+
 /* Mobile chat header avatar: compact messaging-app presentation */
 @media (max-width: 767px) {
   .messages-page.conversation-selected .chat-person {
