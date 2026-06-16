@@ -12,7 +12,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
-import { categoryTiles, footerColumns, heroSlides, homeSections, infoItems, popularSearches, promoStripItems, sectionCategories, storeTopNav, vehicleTiles } from "../../content/storefront";
+import { categoryGroups, footerColumns, heroSlides, homeSections, infoItems, popularSearches, promoStripItems, sectionCategories, storeTopNav, vehicleTiles } from "../../content/storefront";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const demoNames = ["Wireless Earbuds", "Smart Watch", "Portable Speaker", "Classic Sneakers", "Travel Backpack", "Android Phone", "Laptop Computer", "Skincare Set", "Modern Sofa", "City Bicycle", "Kitchen Blender", "Office Chair", "Summer Dress", "Gaming Mouse", "Power Bank", "Digital Camera", "Family Sedan", "Graphic Design Service", "Fresh Food Box", "Premium Perfume", "Smart Television", "Gaming Console", "Coffee Maker", "Luxury Handbag", "Sports Shoes", "Road Bicycle", "Baby Stroller", "Noise Cancelling Headphones", "Printer Bundle", "Men Care Kit"];
@@ -62,8 +62,8 @@ const StorePage = () => {
   const [search, setSearch] = useState(params.get("search") || "");
   const [category, setCategory] = useState(params.get("category") || "All");
   const [heroIndex, setHeroIndex] = useState(0);
+  const [categoryPage, setCategoryPage] = useState(0);
   const [infoOpen, setInfoOpen] = useState<string>(infoItems[0].title);
-  const topCategoriesRef = useRef<HTMLDivElement>(null);
   const vehiclesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,6 +95,7 @@ const StorePage = () => {
 
   const homepageProducts = visibleProducts.length ? visibleProducts : products;
   const showSearchResults = Boolean(search.trim()) || category !== "All";
+  const activeCategoryItems = categoryGroups[categoryPage]?.items || [];
   const dealCards = [
     { title: "Best Deals", body: "Sharp Pi prices on everyday picks." },
     { title: "New Arrivals", body: "Fresh drops from SMAJ sellers." },
@@ -198,18 +199,31 @@ const StorePage = () => {
           <div className="storefront-section-head">
             <div><h2>Browse by category</h2><p>Real products across every SMAJ Store department.</p></div>
             <div className="storefront-arrow-pair">
-              <button type="button" onClick={() => scrollRail(topCategoriesRef.current, "left")} aria-label="Scroll categories left"><ArrowBackIosNewOutlinedIcon /></button>
-              <button type="button" onClick={() => scrollRail(topCategoriesRef.current, "right")} aria-label="Scroll categories right"><ArrowForwardIosOutlinedIcon /></button>
+              <button type="button" disabled={categoryPage === 0} onClick={() => setCategoryPage((value) => Math.max(0, value - 1))} aria-label="Show previous categories"><ArrowBackIosNewOutlinedIcon /></button>
+              <button type="button" disabled={categoryPage === categoryGroups.length - 1} onClick={() => setCategoryPage((value) => Math.min(categoryGroups.length - 1, value + 1))} aria-label="Show next categories"><ArrowForwardIosOutlinedIcon /></button>
             </div>
           </div>
-          <div className="storefront-category-rail" ref={topCategoriesRef}>
-            {categoryTiles.map((tile) => (
-              <button type="button" key={tile.name} className="storefront-category-card" onClick={() => { if (tile.search) setSearch(tile.search); if (STORE_CATEGORIES.includes(tile.name)) updateCategory(tile.name); }}>
+          <div className="storefront-category-page">
+            <div className="storefront-category-rail storefront-category-rail-grid">
+            {activeCategoryItems.map((tile) => (
+              <button type="button" key={tile.name} className="storefront-category-card storefront-browse-card" onClick={() => { if (tile.search) setSearch(tile.search); if (STORE_CATEGORIES.includes(tile.name)) updateCategory(tile.name); }}>
                 <img src={tile.image} alt={tile.name} />
                 <strong>{tile.name}</strong>
                 <span>{tile.hint}</span>
               </button>
             ))}
+            </div>
+            <div className="storefront-category-pager" aria-label="Category pages">
+              {categoryGroups.map((group, index) => (
+                <button
+                  type="button"
+                  key={group.id}
+                  className={index === categoryPage ? "active" : ""}
+                  aria-label={`Open category page ${index + 1}`}
+                  onClick={() => setCategoryPage(index)}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
