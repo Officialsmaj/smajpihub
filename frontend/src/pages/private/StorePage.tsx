@@ -94,6 +94,7 @@ const StorePage = () => {
   }, [category, products, search]);
 
   const homepageProducts = visibleProducts.length ? visibleProducts : products;
+  const showSearchResults = Boolean(search.trim()) || category !== "All";
   const dealCards = [
     { title: "Best Deals", body: "Sharp Pi prices on everyday picks." },
     { title: "New Arrivals", body: "Fresh drops from SMAJ sellers." },
@@ -221,7 +222,7 @@ const StorePage = () => {
 
         {!loading ? (
           <>
-            {homeSections.map((section) => {
+            {homeSections.filter((section) => section.title !== "Vehicle Deals").map((section) => {
               const sectionProducts = pickProducts(homepageProducts, section);
               return (
                 <section className="storefront-product-section" key={section.title}>
@@ -339,23 +340,25 @@ const StorePage = () => {
           </>
         ) : null}
 
-        <section className="storefront-search-results">
-          <div className="storefront-section-head">
-            <div><h2>{search ? `Results for "${search}"` : "All products"}</h2><p>{visibleProducts.length} products found</p></div>
-          </div>
-          <div className="storefront-product-grid search-grid">
-            {visibleProducts.slice(0, 18).map((product) => (
-              <MarketplaceProductCard
-                key={`search-${product._id}`}
-                product={product}
-                saved={savedIds.includes(product._id)}
-                onFavorite={(item) => void toggleFavorite(item)}
-                onAddToCart={addProductToCart}
-                onBuy={goToCheckout}
-              />
-            ))}
-          </div>
-        </section>
+        {showSearchResults ? (
+          <section className="storefront-search-results">
+            <div className="storefront-section-head">
+              <div><h2>{search ? `Results for "${search}"` : `${category} products`}</h2><p>{visibleProducts.length} products found</p></div>
+            </div>
+            <div className="storefront-product-grid search-grid">
+              {visibleProducts.slice(0, 18).map((product) => (
+                <MarketplaceProductCard
+                  key={`search-${product._id}`}
+                  product={product}
+                  saved={savedIds.includes(product._id)}
+                  onFavorite={(item) => void toggleFavorite(item)}
+                  onAddToCart={addProductToCart}
+                  onBuy={goToCheckout}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </section>
     </main>
   );
