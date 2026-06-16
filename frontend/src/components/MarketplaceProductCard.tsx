@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import type { Product } from "../types/marketplace";
 
 const usd = (pi: number) => (pi * 3.14159).toFixed(5);
@@ -14,12 +15,23 @@ type MarketplaceProductCardProps = {
   onBuy?: (product: Product) => void;
 };
 
+const badgeTypes = ["Best Seller", "New", "Hot Deal"] as const;
+
 const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy }: MarketplaceProductCardProps) => {
   const discount = 10 + ((product.title.length + Math.round(product.pricePi * 10000)) % 41);
   const reviewCount = 40 + ((product.title.length * 17) % 860);
+  const badge = badgeTypes[(product.title.length + Math.round(product.pricePi * 10000)) % badgeTypes.length];
+  const deliveryLabel = product.pricePi < 0.01 ? "Pi checkout available" : "Delivery updates in app";
 
   return (
-    <article className="product-card product-card-link">
+    <article className="product-card product-card-link storefront-product-card">
+      <span className={`storefront-product-badge badge-${badge.toLowerCase().replace(/\s+/g, "-")}`}>{badge}</span>
+      {onFavorite ? (
+        <button className="favorite-button storefront-favorite-button" type="button" onClick={() => onFavorite(product)} aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}>
+          {saved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+        </button>
+      ) : null}
+
       <Link
         to={`/product/${product._id}`}
         onClick={() => {
@@ -29,41 +41,39 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
         }}
         aria-label={`View ${product.title}`}
       >
-        <div className="product-image-wrap">
+        <div className="product-image-wrap storefront-product-image-wrap">
           {product.image ? <img src={product.image} alt={product.title} /> : <span>No image</span>}
-          <span className="product-category">{product.category}</span>
         </div>
-        <div className="product-card-body">
+
+        <div className="product-card-body storefront-product-body">
           <h2>{product.title}</h2>
-          <p className="product-seller">Sold by {product.sellerName || product.piUsername}</p>
-          <div className="product-meta-row">
-            <span className="product-rating">{(product.rating || 4.7).toFixed(1)}★</span>
-            <small>{reviewCount} reviews</small>
+          <div className="storefront-product-rating">
+            <span>{(product.rating || 4.7).toFixed(1)}★</span>
+            <small>({reviewCount} reviews)</small>
           </div>
-          <div className="product-price-stack">
+          <div className="storefront-price-stack">
             <strong>{product.pricePi.toFixed(4)} Pi</strong>
-            <small>≈ ${usd(product.pricePi)}</small>
+            <small>${usd(product.pricePi)}</small>
           </div>
-          <div className="product-meta-row">
-            <small>{product.location}</small>
-            <span className="product-discount">-{discount}%</span>
+          <div className="storefront-product-meta">
+            <span className="storefront-product-discount">{discount}% off</span>
+            <small>{deliveryLabel}</small>
           </div>
         </div>
       </Link>
-      <div className="product-card-actions">
-        <button className="product-action-button product-action-secondary" type="button" onClick={() => onAddToCart?.(product)}>
+
+      <div className="storefront-product-actions">
+        <button className="storefront-product-add" type="button" onClick={() => onAddToCart?.(product)} aria-label={`Quick add ${product.title}`}>
+          <AddOutlinedIcon />
+        </button>
+        <button className="product-action-button product-action-secondary storefront-product-cart" type="button" onClick={() => onAddToCart?.(product)}>
           <AddShoppingCartOutlinedIcon />
           Add to Cart
         </button>
-        <button className="product-action-button product-action-primary" type="button" onClick={() => onBuy?.(product)}>
-          Buy
+        <button className="product-action-button product-action-primary storefront-product-buy" type="button" onClick={() => onBuy?.(product)}>
+          Buy Now
         </button>
       </div>
-      {onFavorite ? (
-        <button className="favorite-button" type="button" onClick={() => onFavorite(product)} aria-label={saved ? "Remove saved product" : "Save product"}>
-          {saved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-        </button>
-      ) : null}
     </article>
   );
 };

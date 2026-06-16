@@ -9,13 +9,26 @@ import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
-import { categoryGroups, footerColumns, heroSlides, homeSections, infoItems, popularSearches, promoStripItems, sectionCategories, storeTopNav, vehicleTiles } from "../../content/storefront";
+import {
+  categoryGroups,
+  footerColumns,
+  heroSlides,
+  homeSections,
+  infoItems,
+  popularSearches,
+  promoStripItems,
+  storeCategoryShowcases,
+  storeOfferCards,
+  storeTopNav,
+  vehicleTiles,
+} from "../../content/storefront";
 import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const demoNames = ["Wireless Earbuds", "Smart Watch", "Portable Speaker", "Classic Sneakers", "Travel Backpack", "Android Phone", "Laptop Computer", "Skincare Set", "Modern Sofa", "City Bicycle", "Kitchen Blender", "Office Chair", "Summer Dress", "Gaming Mouse", "Power Bank", "Digital Camera", "Family Sedan", "Graphic Design Service", "Fresh Food Box", "Premium Perfume", "Smart Television", "Gaming Console", "Coffee Maker", "Luxury Handbag", "Sports Shoes", "Road Bicycle", "Baby Stroller", "Noise Cancelling Headphones", "Printer Bundle", "Men Care Kit"];
 const demoLocations = ["Lagos, Nigeria", "Abuja, Nigeria", "Kano, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Dakar, Senegal", "Johannesburg, South Africa", "London, UK"];
 const demoImageKeyword: Record<string, string> = { Deals: "shopping", Grocery: "grocery", Electronics: "electronics", Mobiles: "smartphone", Laptops: "laptop", Fashion: "fashion", Beauty: "beauty", Home: "furniture", Vehicles: "car", Accessories: "accessories" };
+
 const DEMO_PRODUCTS: Product[] = Array.from({ length: 500 }, (_, index) => {
   const category = STORE_CATEGORIES[index % STORE_CATEGORIES.length];
   const title = `${demoNames[index % demoNames.length]} ${Math.floor(index / demoNames.length) + 1}`;
@@ -27,7 +40,10 @@ const DEMO_PRODUCTS: Product[] = Array.from({ length: 500 }, (_, index) => {
     piUsername: "smajmarket",
     title,
     image: `https://loremflickr.com/640/480/${demoImageKeyword[category]}?lock=${index + 1}`,
-    images: [`https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 1}`, `https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 501}`],
+    images: [
+      `https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 1}`,
+      `https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 501}`,
+    ],
     pricePi,
     description: `${title} from a trusted SMAJ PI HUB demo seller. Contact the seller for availability and delivery details.`,
     category,
@@ -46,7 +62,7 @@ const scrollRail = (target: HTMLDivElement | null, direction: "left" | "right") 
 };
 
 const pickProducts = (products: Product[], section: { category?: string; search?: string }, count = 12) => {
-  const filtered = products.filter((product) => (!section.category || product.category === section.category) && (!section.search || [product.title, product.category, product.description].join(" ").toLowerCase().includes(section.search.toLowerCase())));
+  const filtered = products.filter((product) => (!section.category || product.category === section.category) && (!section.search || [product.title, product.category, product.description, product.sellerName].join(" ").toLowerCase().includes(section.search.toLowerCase())));
   return (filtered.length ? filtered : products).slice(0, count);
 };
 
@@ -63,6 +79,7 @@ const StorePage = () => {
   const [categoryPage, setCategoryPage] = useState(0);
   const [infoOpen, setInfoOpen] = useState<string>(infoItems[0].title);
   const vehiclesRef = useRef<HTMLDivElement>(null);
+  const railRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     Promise.all([
@@ -100,6 +117,10 @@ const StorePage = () => {
     { title: "Top Rated", body: "Best reviewed products this week." },
     { title: "Verified Sellers", body: "Shop with trusted Pi merchants." },
   ];
+
+  const setRailRef = (key: string, node: HTMLDivElement | null) => {
+    railRefs.current[key] = node;
+  };
 
   const toggleFavorite = async (product: Product) => {
     if (product._id.startsWith("demo-product-")) {
@@ -153,6 +174,7 @@ const StorePage = () => {
               <Link to="/profile"><span>Profile</span></Link>
             </nav>
           </div>
+
           <div className="storefront-mobile-top">
             <Link to="/store" className="storefront-mobile-logo" aria-label="SMAJ Store">
               <img src={logoImage} alt="SMAJ Store" />
@@ -162,12 +184,18 @@ const StorePage = () => {
               <Link to="/profile" aria-label="Profile"><span>P</span></Link>
             </div>
           </div>
+
           <label className="storefront-search storefront-mobile-search">
             <SearchOutlinedIcon />
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
           </label>
+
           <nav className="storefront-category-nav">
-            {storeTopNav.map((item) => <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => updateCategory(item === "More" ? "All" : item)}>{item}</button>)}
+            {storeTopNav.map((item) => (
+              <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => updateCategory(item === "More" ? "All" : item)}>
+                {item}
+              </button>
+            ))}
           </nav>
         </header>
 
@@ -204,23 +232,17 @@ const StorePage = () => {
           </div>
           <div className="storefront-category-page">
             <div className="storefront-category-rail storefront-category-rail-grid">
-            {activeCategoryItems.map((tile) => (
-              <button type="button" key={tile.name} className="storefront-category-card storefront-browse-card" onClick={() => { if (tile.search) setSearch(tile.search); if (STORE_CATEGORIES.includes(tile.name)) updateCategory(tile.name); }}>
-                <img src={tile.image} alt={tile.name} />
-                <strong>{tile.name}</strong>
-                <span>{tile.hint}</span>
-              </button>
-            ))}
+              {activeCategoryItems.map((tile) => (
+                <button type="button" key={tile.name} className="storefront-category-card storefront-browse-card" onClick={() => { if (tile.search) setSearch(tile.search); if (STORE_CATEGORIES.includes(tile.name)) updateCategory(tile.name); }}>
+                  <img src={tile.image} alt={tile.name} />
+                  <strong>{tile.name}</strong>
+                  <span>{tile.hint}</span>
+                </button>
+              ))}
             </div>
             <div className="storefront-category-pager" aria-label="Category pages">
               {categoryGroups.map((group, index) => (
-                <button
-                  type="button"
-                  key={group.id}
-                  className={index === categoryPage ? "active" : ""}
-                  aria-label={`Open category page ${index + 1}`}
-                  onClick={() => setCategoryPage(index)}
-                />
+                <button type="button" key={group.id} className={index === categoryPage ? "active" : ""} aria-label={`Open category page ${index + 1}`} onClick={() => setCategoryPage(index)} />
               ))}
             </div>
           </div>
@@ -243,7 +265,7 @@ const StorePage = () => {
                     <div><h2>{section.title}</h2>{section.subtitle ? <p>{section.subtitle}</p> : null}</div>
                     <button type="button" className="section-view-all" onClick={() => { if (section.search) setSearch(section.search); if (section.category) updateCategory(section.category); }}>View All</button>
                   </div>
-                  <div className="storefront-product-grid">
+                  <div className="storefront-product-rail" ref={(node) => setRailRef(section.title, node)}>
                     {sectionProducts.map((product) => (
                       <MarketplaceProductCard
                         key={`${section.title}-${product._id}`}
@@ -255,9 +277,32 @@ const StorePage = () => {
                       />
                     ))}
                   </div>
+                  <div className="storefront-inline-arrows">
+                    <button type="button" onClick={() => scrollRail(railRefs.current[section.title], "left")} aria-label={`Scroll ${section.title} left`}><ArrowBackIosNewOutlinedIcon /></button>
+                    <button type="button" onClick={() => scrollRail(railRefs.current[section.title], "right")} aria-label={`Scroll ${section.title} right`}><ArrowForwardIosOutlinedIcon /></button>
+                  </div>
                 </section>
               );
             })}
+
+            <section className="storefront-carousel-section">
+              <div className="storefront-section-head">
+                <div><h2>Maximize your savings</h2><p>Real products, rotating offers, and Pi-friendly value.</p></div>
+              </div>
+              <div className="storefront-offer-rail" ref={(node) => setRailRef("offers", node)}>
+                {storeOfferCards.map((offer) => (
+                  <button type="button" key={offer.title} className="storefront-offer-card" onClick={() => setSearch(offer.search)}>
+                    <img src={offer.image} alt={offer.title} />
+                    <strong>{offer.title}</strong>
+                    <span>{offer.description}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="storefront-inline-arrows">
+                <button type="button" onClick={() => scrollRail(railRefs.current.offers, "left")} aria-label="Scroll offers left"><ArrowBackIosNewOutlinedIcon /></button>
+                <button type="button" onClick={() => scrollRail(railRefs.current.offers, "right")} aria-label="Scroll offers right"><ArrowForwardIosOutlinedIcon /></button>
+              </div>
+            </section>
 
             <section className="storefront-carousel-section">
               <div className="storefront-section-head">
@@ -278,19 +323,24 @@ const StorePage = () => {
               </div>
             </section>
 
-            {sectionCategories.map((tile) => (
-              <section className="storefront-carousel-section" key={tile.name}>
+            {storeCategoryShowcases.map((section) => (
+              <section className="storefront-carousel-section" key={section.title}>
                 <div className="storefront-section-head">
-                  <div><h2>{tile.name}</h2><p>{tile.hint}</p></div>
-                  <button type="button" className="section-view-all" onClick={() => setSearch(tile.search || tile.name)}>View All</button>
+                  <div><h2>{section.title}</h2><p>Browse curated picks in this department.</p></div>
+                  <button type="button" className="section-view-all" onClick={() => setSearch(section.title)}>View All</button>
                 </div>
-                <div className="storefront-category-rail compact-rail">
-                  {pickProducts(homepageProducts, { search: tile.search || tile.name }, 8).map((product) => (
-                    <button type="button" key={`${tile.name}-${product._id}`} className="storefront-mini-card" onClick={() => goToCheckout(product)}>
-                      <img src={product.image} alt={product.title} />
-                      <strong>{product.title}</strong>
+                <div className="storefront-showcase-rail" ref={(node) => setRailRef(section.title, node)}>
+                  {section.items.map((item) => (
+                    <button type="button" key={`${section.title}-${item.name}`} className="storefront-showcase-card" onClick={() => setSearch(item.search || item.name)}>
+                      <img src={item.image} alt={item.name} />
+                      <strong>{item.name}</strong>
+                      <span>{item.hint}</span>
                     </button>
                   ))}
+                </div>
+                <div className="storefront-inline-arrows">
+                  <button type="button" onClick={() => scrollRail(railRefs.current[section.title], "left")} aria-label={`Scroll ${section.title} left`}><ArrowBackIosNewOutlinedIcon /></button>
+                  <button type="button" onClick={() => scrollRail(railRefs.current[section.title], "right")} aria-label={`Scroll ${section.title} right`}><ArrowForwardIosOutlinedIcon /></button>
                 </div>
               </section>
             ))}
@@ -345,7 +395,7 @@ const StorePage = () => {
                 </article>
               </div>
               <div className="storefront-footer-bottom">
-                <span>SMAJ Store • Powered by Pi</span>
+                <span>SMAJ Store - Powered by Pi</span>
                 <span>© 2026 SMAJ PI HUB. All rights reserved.</span>
                 <span>Part of the SMAJ Ecosystem</span>
               </div>
