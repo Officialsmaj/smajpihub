@@ -2,7 +2,14 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
 
-const STORE_CATEGORIES = ["Electronics", "Fashion", "Vehicles", "Home", "Property", "Phones", "Computers", "Beauty", "Services", "Others"];
+const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
+
+const timelineEntry = (status: string, label: string, note?: string) => ({
+  status,
+  label,
+  note,
+  at: new Date().toISOString(),
+});
 
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
@@ -145,6 +152,11 @@ export default function mountMarketplaceEndpoints(router: Router) {
       paymentTxid: null,
       paidAt: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      timeline: [
+        timelineEntry("pending", "Order Created", "Your SMAJ Store order was created successfully."),
+        timelineEntry("payment_pending", "Payment Pending", "Open Pi Browser to complete payment."),
+      ],
     };
     const result = await req.app.locals.marketplaceOrderCollection.insertOne(order);
     await createNotification(req.app, { userId: product.sellerId, type: "new_order", title: "New order", message: `${order.buyerName} ordered ${product.title}`, relatedId: result.insertedId.toString() });
@@ -182,15 +194,12 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
     }
     const status = req.body?.status;
-    if (!["paid", "completed", "cancelled"].includes(status)) {
+    if (!["paid", "processing", "shipped", "delivered", "completed", "cancelled"].includes(status)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order status" });
     }
     const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id) });
     if (!order || (order.buyerId !== user.uid && order.sellerId !== user.uid)) {
       return res.status(404).json({ error: "not_found", message: "Order not found" });
-    }
-    if (status === "completed" && order.sellerId !== user.uid) {
-      return res.status(403).json({ error: "forbidden", message: "Only the seller can complete an order" });
     }
     if (status === "paid" && order.buyerId !== user.uid) {
       return res.status(403).json({ error: "forbidden", message: "Only the buyer can test-pay this order" });
@@ -198,16 +207,48 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (status === "cancelled" && order.buyerId !== user.uid && order.sellerId !== user.uid) {
       return res.status(403).json({ error: "forbidden", message: "Only the buyer or seller can cancel this order" });
     }
+    if (["processing", "shipped", "delivered", "completed"].includes(status) && order.sellerId !== user.uid) {
+      return res.status(403).json({ error: "forbidden", message: "Only the seller can update fulfillment status" });
+    }
     if (status === "paid" && order.status !== "pending") {
       return res.status(400).json({ error: "bad_request", message: "Only pending orders can be marked paid" });
     }
     if (status === "cancelled" && order.status !== "pending") {
       return res.status(400).json({ error: "bad_request", message: "Only pending orders can be cancelled" });
     }
-    if (status === "completed" && order.status !== "paid") {
-      return res.status(400).json({ error: "bad_request", message: "Only paid orders can be completed" });
+    if (status === "processing" && order.status !== "paid") {
+      return res.status(400).json({ error: "bad_request", message: "Only paid orders can move to processing" });
     }
-    const updates: Record<string, unknown> = { status, updatedAt: new Date() };
+    if (status === "shipped" && order.status !== "processing") {
+      return res.status(400).json({ error: "bad_request", message: "Only processing orders can be marked shipped" });
+    }
+    if (status === "delivered" && order.status !== "shipped") {
+      return res.status(400).json({ error: "bad_request", message: "Only shipped orders can be marked delivered" });
+    }
+    if (status === "completed" && order.status !== "delivered") {
+      return res.status(400).json({ error: "bad_request", message: "Only delivered orders can be completed" });
+    }
+    const labels: Record<string, string> = {
+      paid: "Paid",
+      processing: "Processing",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+    const noteMap: Record<string, string> = {
+      paid: "Pi payment was confirmed successfully.",
+      processing: "Seller started preparing your order.",
+      shipped: "Your SMAJ Store order is on the way.",
+      delivered: "Seller marked the order as delivered.",
+      completed: "Order journey is complete.",
+      cancelled: "The order was cancelled before fulfillment.",
+    };
+    const updates: Record<string, unknown> = {
+      status,
+      updatedAt: new Date(),
+      timeline: [...(Array.isArray(order.timeline) ? order.timeline : []), timelineEntry(status, labels[status], noteMap[status])],
+    };
     if (status === "paid") {
       updates.paymentStatus = "paid";
       updates.paymentId = `test_${order._id.toString()}_${Date.now()}`;
@@ -332,3 +373,18 @@ export default function mountMarketplaceEndpoints(router: Router) {
     return res.status(200).json({ message: "Product deleted" });
   });
 }
+  router.get("/orders/:id", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
+    }
+    const order = await req.app.locals.marketplaceOrderCollection.findOne({
+      _id: new ObjectId(req.params.id),
+      $or: [{ buyerId: user.uid }, { sellerId: user.uid }],
+    });
+    if (!order) {
+      return res.status(404).json({ error: "not_found", message: "Order not found" });
+    }
+    return res.status(200).json({ order: serialize(order) });
+  });

@@ -42,6 +42,7 @@ import HelpCenterPage from "./pages/private/HelpCenterPage";
 import ServiceDetailPage from "./pages/private/ServiceDetailPage";
 import ServiceDiscoveryPage from "./pages/private/ServiceDiscoveryPage";
 import CommerceFlowPage from "./pages/private/CommerceFlowPage";
+import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import ManageAccountPage from "./pages/private/ManageAccountPage";
 import AdminLayout from "./layouts/AdminLayout";
@@ -235,6 +236,10 @@ export const router = createBrowserRouter(
     {
       path: "/orders",
       element: <ProtectedRoute><PrivateLayout><OrdersPage /></PrivateLayout></ProtectedRoute>,
+    },
+    {
+      path: "/orders/:id/track",
+      element: <ProtectedRoute><PrivateLayout><OrderTrackingPage /></PrivateLayout></ProtectedRoute>,
     },
     {
       path: "/messages",

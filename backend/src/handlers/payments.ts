@@ -42,7 +42,10 @@ export default function mountPaymentsEndpoints(router: Router) {
         });
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(order.orderId), buyerId: order.user },
-          { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
+          {
+            $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date(), updatedAt: new Date() },
+            $push: { timeline: { status: "paid", label: "Paid", note: "Pi payment was confirmed successfully.", at: new Date().toISOString() } },
+          },
         );
         if (marketplaceOrder) {
           await createNotification(app, {
@@ -105,7 +108,7 @@ export default function mountPaymentsEndpoints(router: Router) {
 
       await app.locals.marketplaceOrderCollection.updateOne(
         { _id: marketplaceOrder._id },
-        { $set: { paymentStatus: "processing", paymentId } },
+        { $set: { paymentStatus: "processing", paymentId, updatedAt: new Date() } },
       );
 
       await platformAPIClient.post(`/v2/payments/${paymentId}/approve`);
@@ -149,7 +152,10 @@ export default function mountPaymentsEndpoints(router: Router) {
         });
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
-          { $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date() } },
+          {
+            $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date(), updatedAt: new Date() },
+            $push: { timeline: { status: "paid", label: "Paid", note: "Pi payment was confirmed successfully.", at: new Date().toISOString() } },
+          },
         );
         if (marketplaceOrder) {
           await createNotification(app, {
@@ -186,7 +192,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (paymentRecord?.orderId && ObjectId.isValid(paymentRecord.orderId)) {
         await app.locals.marketplaceOrderCollection.updateOne(
           { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
-          { $set: { status: "pending", paymentStatus: "cancelled" } },
+          { $set: { status: "pending", paymentStatus: "cancelled", updatedAt: new Date() } },
         );
       }
       return res.status(200).json({ message: `Cancelled the payment ${paymentId}` });
@@ -206,7 +212,7 @@ export default function mountPaymentsEndpoints(router: Router) {
     }
     await req.app.locals.marketplaceOrderCollection.updateOne(
       { _id: new ObjectId(orderId), buyerId: req.session.currentUser.uid, status: "pending" },
-      { $set: { paymentStatus: "failed" } },
+      { $set: { paymentStatus: "failed", updatedAt: new Date() } },
     );
     return res.status(200).json({ message: "Payment failure recorded" });
   });

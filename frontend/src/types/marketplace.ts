@@ -26,7 +26,14 @@ export type Conversation = { _id: string; buyerId: string; sellerId: string; pro
 export type ChatMessage = { _id: string; conversationId: string; senderId: string; message: string; createdAt: string; readAt?: string };
 export type AppNotification = { _id: string; type: string; title: string; message: string; read: boolean; relatedId?: string; createdAt: string; image?: string };
 
-export type OrderStatus = "pending" | "paid" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "completed" | "cancelled";
+
+export type OrderTimelineItem = {
+  status: OrderStatus | "payment_pending";
+  label: string;
+  note?: string;
+  at: string;
+};
 
 export type Order = {
   _id: string;
@@ -44,4 +51,6 @@ export type Order = {
   paymentStatus?: "pending" | "processing" | "paid" | "failed" | "cancelled";
   paymentTxid?: string | null;
   createdAt: string;
+  updatedAt?: string;
+  timeline?: OrderTimelineItem[];
 };

@@ -1,12 +1,374 @@
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import { isAxiosError } from "axios";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { usePayments } from "../../hooks/usePayments";
+import { axiosClient } from "../../lib/axiosClient";
+import {
+  clearBuyNowItem,
+  getBuyNowItem,
+  getCartItems,
+  removeFromCart,
+  updateCartQuantity,
+} from "../../lib/storeCart";
+import type { Order } from "../../types/marketplace";
 
-const content = {
-  cart: ["Cart / Order", "SMAJ Store uses direct product orders for the MVP.", ShoppingCartOutlinedIcon],
-  checkout: ["Checkout", "Review your order, then continue to the secure Pi payment flow.", ReceiptLongOutlinedIcon],
-  "payment-method": ["Payment Method", "Pi Wallet is the live payment method. USDC Wallet is coming soon.", AccountBalanceWalletOutlinedIcon],
-} as const;
-const CommerceFlowPage = ({ mode }: { mode: keyof typeof content }) => { const [title,description,Icon] = content[mode]; return <main className="private-page"><section className="private-state commerce-flow"><Icon /><p className="private-kicker">SMAJ MARKETPLACE</p><h1>{title}</h1><p>{description}</p><div className="form-actions"><Link className="private-primary-button" to="/orders">Open My Orders</Link><Link className="private-secondary-button" to="/store">Continue Shopping</Link></div></section></main>; };
+const PI_USD = 3.14159;
+
+const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-method" }) => {
+  const { isAuthenticated, requireAuth } = useAuthContext();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState(() => getCartItems());
+  const [buyNowItem, setBuyNowItemState] = useState(() => getBuyNowItem());
+  const [order, setOrder] = useState<Order | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [message, setMessage] = useState((location.state as { message?: string } | null)?.message || "");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCartItems(getCartItems());
+    setBuyNowItemState(getBuyNowItem());
+  }, [mode]);
+
+  const checkoutItem = useMemo(() => buyNowItem || cartItems[0] || null, [buyNowItem, cartItems]);
+  const cartTotalPi = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.pricePi * item.quantity, 0),
+    [cartItems]
+  );
+  const checkoutTotalPi = checkoutItem ? checkoutItem.pricePi * checkoutItem.quantity : 0;
+
+  const reloadOrder = async (orderId: string) => {
+    const { data } = await axiosClient.get<{ order: Order }>(`/marketplace/orders/${orderId}`);
+    setOrder(data.order);
+  };
+
+  const { orderProduct, isLoading: paymentLoading, activeOrderId } = usePayments({
+    isAuthenticated,
+    onRequireAuth: requireAuth,
+    onPaymentStatus: (nextMessage) => {
+      setMessage(nextMessage);
+      setError("");
+    },
+    onPaymentComplete: async () => {
+      if (order?._id) {
+        await reloadOrder(order._id);
+      }
+    },
+  });
+
+  const handleCreateOrder = async () => {
+    if (!checkoutItem) {
+      setError("Add a product first before checking out.");
+      return;
+    }
+
+    setCreating(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { data } = await axiosClient.post<{ order: Order }>("/marketplace/orders", {
+        productId: checkoutItem.productId,
+      });
+
+      setOrder(data.order);
+
+      if (cartItems.some((item) => item.productId === checkoutItem.productId)) {
+        setCartItems(removeFromCart(checkoutItem.productId));
+      }
+
+      clearBuyNowItem();
+      setBuyNowItemState(null);
+      setMessage("Order created successfully");
+    } catch (err: unknown) {
+      setError(
+        isAxiosError<{ message?: string }>(err)
+          ? err.response?.data?.message || "Could not create the order."
+          : "Could not create the order."
+      );
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  if (mode === "payment-method") {
+    return (
+      <main className="private-page commerce-page">
+        <section className="private-page-head">
+          <div>
+            <p className="private-kicker">SMAJ STORE</p>
+            <h1>Payment Method</h1>
+            <p>Pi Wallet is the live payment option for SMAJ Store orders.</p>
+          </div>
+        </section>
+        <section className="commerce-panel">
+          <div className="commerce-method-card active">
+            <AccountBalanceWalletOutlinedIcon />
+            <div>
+              <strong>Pi Wallet</strong>
+              <p>Secure Pi Browser payment for SMAJ Store orders.</p>
+            </div>
+          </div>
+          <div className="commerce-method-card">
+            <ReceiptLongOutlinedIcon />
+            <div>
+              <strong>Payment safety</strong>
+              <p>Orders stay payment pending until Pi payment is confirmed successfully.</p>
+            </div>
+          </div>
+          {!window.Pi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi</div> : null}
+        </section>
+      </main>
+    );
+  }
+
+  if (mode === "cart") {
+    return (
+      <main className="private-page commerce-page">
+        <section className="private-page-head">
+          <div>
+            <p className="private-kicker">SMAJ STORE</p>
+            <h1>Cart</h1>
+            <p>Review saved products and continue to checkout.</p>
+          </div>
+        </section>
+        {message ? <div className="private-alert success">{message}</div> : null}
+        {error ? <div className="private-alert error">{error}</div> : null}
+        {!cartItems.length ? (
+          <section className="private-state commerce-flow">
+            <ShoppingCartOutlinedIcon />
+            <h2>Your cart is empty</h2>
+            <p>Add products from SMAJ Store to continue.</p>
+            <div className="form-actions">
+              <Link className="private-primary-button" to="/store">
+                Continue Shopping
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <section className="commerce-grid">
+            <div className="commerce-panel">
+              {cartItems.map((item) => (
+                <article className="commerce-line-item" key={item.productId}>
+                  <img src={item.image} alt={item.title} />
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>
+                      {item.sellerName} · {item.location}
+                    </p>
+                    <small>{item.pricePi.toFixed(4)} Pi each</small>
+                  </div>
+                  <label className="commerce-qty">
+                    <span>Qty</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(event) => {
+                        const next = Math.max(1, Number(event.target.value) || 1);
+                        setCartItems(updateCartQuantity(item.productId, next));
+                      }}
+                    />
+                  </label>
+                  <strong>{(item.pricePi * item.quantity).toFixed(4)} Pi</strong>
+                  <div className="commerce-line-actions">
+                    <button
+                      type="button"
+                      className="private-secondary-button"
+                      onClick={() => {
+                        window.localStorage.setItem("smaj_store_buy_now", JSON.stringify({ ...item }));
+                        navigate("/checkout");
+                      }}
+                    >
+                      Checkout
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      aria-label="Remove item"
+                      onClick={() => setCartItems(removeFromCart(item.productId))}
+                    >
+                      <DeleteOutlineOutlinedIcon />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <aside className="commerce-summary">
+              <h2>Order summary</h2>
+              <div>
+                <span>Items</span>
+                <strong>{cartItems.length}</strong>
+              </div>
+              <div>
+                <span>Total</span>
+                <strong>{cartTotalPi.toFixed(4)} Pi</strong>
+              </div>
+              <small>approx ${(cartTotalPi * PI_USD).toFixed(5)}</small>
+              <button
+                type="button"
+                className="private-primary-button"
+                onClick={() => {
+                  window.localStorage.setItem("smaj_store_buy_now", JSON.stringify({ ...cartItems[0] }));
+                  navigate("/checkout");
+                }}
+              >
+                Checkout first item
+              </button>
+            </aside>
+          </section>
+        )}
+      </main>
+    );
+  }
+
+  return (
+    <main className="private-page commerce-page">
+      <section className="private-page-head">
+        <div>
+          <p className="private-kicker">SMAJ STORE</p>
+          <h1>Checkout</h1>
+          <p>Review product details, create the order, and pay with Pi.</p>
+        </div>
+      </section>
+      {message ? <div className="private-alert success">{message}</div> : null}
+      {error ? <div className="private-alert error">{error}</div> : null}
+
+      {!checkoutItem && !order ? (
+        <section className="private-state commerce-flow">
+          <ReceiptLongOutlinedIcon />
+          <h2>No product ready for checkout</h2>
+          <p>Choose Buy on a product card or open Cart to continue.</p>
+          <div className="form-actions">
+            <Link className="private-primary-button" to="/store">
+              Go to SMAJ Store
+            </Link>
+            <Link className="private-secondary-button" to="/cart">
+              Open Cart
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <section className="commerce-grid">
+          <div className="commerce-panel">
+            {!order && checkoutItem ? (
+              <>
+                <div className="commerce-section-head">
+                  <div>
+                    <p className="private-kicker">ORDER REVIEW</p>
+                    <h2>Confirm order</h2>
+                  </div>
+                </div>
+                <article className="commerce-checkout-card">
+                  <img src={checkoutItem.image} alt={checkoutItem.title} />
+                  <div>
+                    <strong>{checkoutItem.title}</strong>
+                    <p>
+                      {checkoutItem.sellerName} · {checkoutItem.location}
+                    </p>
+                    <small>{checkoutItem.category}</small>
+                  </div>
+                  <strong>{checkoutTotalPi.toFixed(4)} Pi</strong>
+                </article>
+                <div className="commerce-total-row">
+                  <span>Total</span>
+                  <strong>{checkoutTotalPi.toFixed(4)} Pi</strong>
+                </div>
+                <small className="commerce-usd">approx ${(checkoutTotalPi * PI_USD).toFixed(5)}</small>
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="private-primary-button"
+                    disabled={creating}
+                    onClick={() => void handleCreateOrder()}
+                  >
+                    {creating ? "Creating order..." : "Confirm order"}
+                  </button>
+                  <Link className="private-secondary-button" to="/store">
+                    Back to Store
+                  </Link>
+                </div>
+              </>
+            ) : null}
+
+            {order ? (
+              <>
+                <section className="commerce-success">
+                  <p className="private-kicker">ORDER READY</p>
+                  <h2>Order created successfully</h2>
+                  <p>Your order is waiting for Pi payment confirmation.</p>
+                  <div className="commerce-order-meta">
+                    <span>Order ID</span>
+                    <strong>{order._id}</strong>
+                  </div>
+                  <div className="commerce-order-meta">
+                    <span>Status</span>
+                    <strong>{order.status}</strong>
+                  </div>
+                </section>
+
+                <section className="commerce-panel nested">
+                  <div className="commerce-section-head">
+                    <div>
+                      <p className="private-kicker">PAY WITH PI</p>
+                      <h2>Payment</h2>
+                    </div>
+                  </div>
+                  {!window.Pi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi</div> : null}
+                  <div className="commerce-payment-card">
+                    <div>
+                      <strong>{order.productTitle}</strong>
+                      <span>{order.pricePi.toFixed(4)} Pi</span>
+                      <small>approx ${(order.pricePi * PI_USD).toFixed(5)}</small>
+                    </div>
+                    <div className="commerce-payment-actions">
+                      <button
+                        type="button"
+                        className="private-primary-button pi-payment-button"
+                        disabled={paymentLoading}
+                        onClick={() =>
+                          void orderProduct(`SMAJ Store order: ${order.productTitle}`, order.pricePi, {
+                            productId: order.productId,
+                            orderId: order._id,
+                          })
+                        }
+                      >
+                        {paymentLoading && activeOrderId === order._id ? "Opening Pi payment..." : "Pay with Pi"}
+                      </button>
+                      <Link className="private-secondary-button" to={`/orders/${order._id}/track`}>
+                        Track Order
+                      </Link>
+                    </div>
+                  </div>
+                </section>
+              </>
+            ) : null}
+          </div>
+
+          <aside className="commerce-summary">
+            <h2>Why this is safe</h2>
+            <div>
+              <span>Payment state</span>
+              <strong>{order?.paymentStatus || "pending"}</strong>
+            </div>
+            <div>
+              <span>Order state</span>
+              <strong>{order?.status || "pending"}</strong>
+            </div>
+            <p>SMAJ Store only marks an order paid after Pi payment success is confirmed.</p>
+            <Link className="private-secondary-button" to="/payment-method">
+              View payment method
+            </Link>
+          </aside>
+        </section>
+      )}
+    </main>
+  );
+};
+
 export default CommerceFlowPage;
