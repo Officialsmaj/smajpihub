@@ -6005,6 +6005,10 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   gap: 2px;
 }
 
+.storefront-brand-link {
+  text-decoration: none;
+}
+
 .storefront-brand strong,
 .storefront-section-head h2,
 .storefront-footer-top strong,
@@ -6031,6 +6035,15 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   align-items: center;
   gap: 8px;
   color: var(--smaj-text);
+}
+
+.storefront-location-button {
+  min-height: 42px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
 }
 
 .storefront-search {
@@ -6068,12 +6081,12 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   align-items: center;
   gap: 8px;
   min-height: 42px;
-  padding: 0 14px;
+  padding: 0 10px;
   color: var(--smaj-text);
   text-decoration: none;
-  background: var(--smaj-secondary-bg);
-  border: 1px solid var(--smaj-border);
-  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .storefront-quick-links a span {
@@ -6083,6 +6096,17 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-mobile-top,
 .storefront-mobile-search {
   display: none;
+}
+
+.storefront-mobile-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.storefront-mobile-logo img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
 }
 
 .storefront-category-nav {
@@ -6826,10 +6850,21 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     height: 42px;
     padding: 0;
     justify-content: center;
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
+    border-radius: 50%;
   }
 
   .storefront-mobile-actions a span {
-    display: none;
+    color: #fff;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--smaj-primary), var(--smaj-accent));
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 800;
   }
 
   .storefront-category-nav {

@@ -2,10 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
-import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
@@ -13,6 +10,7 @@ import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
 import { categoryGroups, footerColumns, heroSlides, homeSections, infoItems, popularSearches, promoStripItems, sectionCategories, storeTopNav, vehicleTiles } from "../../content/storefront";
+import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const demoNames = ["Wireless Earbuds", "Smart Watch", "Portable Speaker", "Classic Sneakers", "Travel Backpack", "Android Phone", "Laptop Computer", "Skincare Set", "Modern Sofa", "City Bicycle", "Kitchen Blender", "Office Chair", "Summer Dress", "Gaming Mouse", "Power Bank", "Digital Camera", "Family Sedan", "Graphic Design Service", "Fresh Food Box", "Premium Perfume", "Smart Television", "Gaming Console", "Coffee Maker", "Luxury Handbag", "Sports Shoes", "Road Bicycle", "Baby Stroller", "Noise Cancelling Headphones", "Printer Bundle", "Men Care Kit"];
@@ -137,35 +135,36 @@ const StorePage = () => {
       <section className="storefront-shell">
         <header className="storefront-header">
           <div className="storefront-header-main">
-            <div className="storefront-brand">
+            <Link to="/store" className="storefront-brand storefront-brand-link">
               <strong>SMAJ Store</strong>
-              <small>Powered by Pi inside SMAJ PI HUB</small>
-            </div>
-            <div className="storefront-location"><LocationOnOutlinedIcon /><span>Lagos, Nigeria</span></div>
+            </Link>
+            <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Lagos")}>
+              <LocationOnOutlinedIcon />
+              <span>Location</span>
+            </button>
             <label className="storefront-search">
               <SearchOutlinedIcon />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, brands, and categories" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
             </label>
             <nav className="storefront-quick-links">
-              <Link to="/orders"><Inventory2OutlinedIcon /><span>Orders</span></Link>
-              <Link to="/saved"><FavoriteBorderOutlinedIcon /><span>Wishlist</span></Link>
-              <Link to="/cart"><ShoppingCartOutlinedIcon /><span>Cart</span></Link>
-              <Link to="/profile"><PersonOutlineOutlinedIcon /><span>Profile</span></Link>
+              <Link to="/orders"><span>Orders</span></Link>
+              <Link to="/saved"><span>Wishlist</span></Link>
+              <Link to="/cart"><span>Cart</span></Link>
+              <Link to="/profile"><span>Profile</span></Link>
             </nav>
           </div>
           <div className="storefront-mobile-top">
-            <div className="storefront-brand">
-              <strong>SMAJ Store</strong>
-              <small>Inside SMAJ PI HUB</small>
-            </div>
+            <Link to="/store" className="storefront-mobile-logo" aria-label="SMAJ Store">
+              <img src={logoImage} alt="SMAJ Store" />
+            </Link>
             <div className="storefront-mobile-actions">
               <Link to="/cart" aria-label="Cart"><ShoppingCartOutlinedIcon /></Link>
-              <Link to="/profile" aria-label="Profile"><PersonOutlineOutlinedIcon /></Link>
+              <Link to="/profile" aria-label="Profile"><span>P</span></Link>
             </div>
           </div>
           <label className="storefront-search storefront-mobile-search">
             <SearchOutlinedIcon />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search SMAJ Store" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
           </label>
           <nav className="storefront-category-nav">
             {storeTopNav.map((item) => <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => updateCategory(item === "More" ? "All" : item)}>{item}</button>)}
