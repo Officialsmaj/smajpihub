@@ -68,6 +68,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const isStoreShell = location.pathname === "/store";
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
     : location.pathname.startsWith("/app/services/") ? "Service"
     : location.pathname.startsWith("/edit-product/") ? "Edit Product"
@@ -110,7 +111,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
   return (
-    <div className={`private-shell ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
