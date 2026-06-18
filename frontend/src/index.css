@@ -6337,6 +6337,17 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+@media (max-width: 767px) {
+  .mobile-home-shell .desktop-private-home,
+  .mobile-home-shell .desktop-feed-home {
+    display: none !important;
+  }
+
+  .mobile-home-shell .mobile-super-home {
+    display: block !important;
+  }
+}
+
 /* SMAJ Store layout */
 .storefront-page {
   width: 100%;
