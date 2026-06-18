@@ -5583,6 +5583,46 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 }
 
+.legacy-mobile-home {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobile-home-shell .desktop-feed-home,
+  .mobile-home-shell .mobile-super-home {
+    display: none !important;
+  }
+
+  .mobile-home-shell .legacy-mobile-home {
+    display: block !important;
+  }
+
+  .mobile-home-shell .private-header {
+    position: fixed !important;
+    color: var(--smaj-text) !important;
+    background: var(--smaj-card) !important;
+    border-bottom: 1px solid var(--smaj-border) !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .08) !important;
+  }
+
+  .mobile-home-shell .mobile-private-icon,
+  .mobile-home-shell .mobile-private-avatar,
+  .mobile-home-shell .mobile-private-icon svg {
+    color: var(--smaj-text) !important;
+    background: var(--smaj-secondary-bg);
+    filter: none;
+  }
+
+  .mobile-home-shell .private-body,
+  .mobile-home-shell .private-body.private-body-collapsed {
+    padding-top: 68px !important;
+  }
+
+  .mobile-home-shell .private-home {
+    margin-top: 0;
+  }
+}
+
 /* Private discovery routes for Trending, Lifestyle, and Categories. */
 .service-discovery-page {
   max-width: 760px;
