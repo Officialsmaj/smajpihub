@@ -5941,11 +5941,17 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-page {
   width: 100%;
   max-width: none;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .storefront-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: grid;
   gap: 0;
+  overflow-x: clip;
 }
 
 .store-private-shell .private-header {
@@ -5954,10 +5960,12 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .store-private-shell .private-body {
   min-height: 100vh;
+  width: 100%;
   max-width: none;
   margin: 0;
   grid-template-columns: minmax(0, 1fr);
   padding-top: 0;
+  overflow-x: clip;
 }
 
 .store-private-shell .private-body.private-body-collapsed {
@@ -5969,7 +5977,11 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 }
 
 .store-private-shell .private-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0;
+  overflow-x: clip;
 }
 
 .storefront-header,
@@ -5981,12 +5993,17 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-info,
 .storefront-search-results,
 .storefront-footer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: var(--smaj-card);
   border: 1px solid var(--smaj-border);
   border-radius: 24px;
 }
 
 .storefront-header {
+  inline-size: 100%;
+  max-inline-size: 100%;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -5995,23 +6012,26 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .storefront-header-main {
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
   min-height: 60px;
-  padding: 0 24px;
+  padding: 0 clamp(12px, 1.8vw, 24px);
   display: grid;
-  grid-template-columns: auto auto minmax(320px, 525px) minmax(0, 1fr);
+  grid-template-columns: minmax(116px, auto) minmax(92px, auto) minmax(180px, 1fr) auto;
   align-items: center;
-  gap: 18px;
+  gap: clamp(8px, 1.2vw, 18px);
   background: #feee00;
 }
 
 .storefront-brand {
   display: inline-flex;
   align-items: center;
-  min-width: 86px;
+  min-width: 0;
 }
 
 .storefront-brand-link {
@@ -6029,10 +6049,11 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-brand strong {
   color: #061128;
-  font-size: 32px;
+  font-size: clamp(18px, 1.7vw, 24px);
   line-height: 1;
   font-weight: 900;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .storefront-brand small,
@@ -6056,7 +6077,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-location-button {
   min-height: 42px;
-  max-width: 190px;
+  min-width: 0;
+  max-width: 150px;
   padding: 0;
   background: transparent;
   border: 0;
@@ -6083,8 +6105,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-search {
   width: 100%;
-  min-width: 320px;
-  max-width: 525px;
+  min-width: 0;
+  max-width: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -6118,7 +6140,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-quick-links {
   min-width: 0;
   justify-content: flex-end;
-  overflow: hidden;
+  overflow: visible;
   white-space: nowrap;
 }
 
@@ -6133,7 +6155,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   align-items: center;
   gap: 8px;
   min-height: 42px;
-  padding: 0 10px;
+  padding: 0 clamp(5px, .7vw, 10px);
   color: var(--smaj-text);
   text-decoration: none;
   background: transparent;
@@ -6144,6 +6166,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-quick-links a {
   flex: 0 0 auto;
   color: #061128;
+  font-size: clamp(12px, 1vw, 14px);
   font-weight: 800;
 }
 
@@ -6196,6 +6219,23 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   color: #061128;
   background: transparent;
   border-color: transparent;
+}
+
+@media (max-width: 1200px) {
+  .storefront-header-main {
+    grid-template-columns: minmax(106px, auto) minmax(86px, auto) minmax(150px, 1fr) minmax(190px, auto);
+    gap: 8px;
+  }
+
+  .storefront-quick-links {
+    max-width: 32vw;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .storefront-quick-links::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .storefront-promo-strip {
@@ -6354,11 +6394,15 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 }
 
 .storefront-category-page {
+  min-width: 0;
   display: grid;
   gap: 14px;
 }
 
 .storefront-category-rail {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(160px, 180px);
@@ -6372,6 +6416,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 }
 
 .storefront-category-rail-grid {
+  min-width: 0;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-auto-flow: unset;
   grid-auto-columns: unset;
@@ -6805,11 +6850,22 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 
   .storefront-header-main {
-    grid-template-columns: auto auto minmax(260px, 1fr);
+    grid-template-columns: auto auto minmax(0, 1fr);
     gap: 12px;
   }
 
   .storefront-quick-links {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-start;
+    gap: 4px;
+    max-width: 100%;
+    padding-bottom: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .storefront-quick-links::-webkit-scrollbar {
     display: none;
   }
 
@@ -6818,12 +6874,12 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 
   .storefront-location {
-    order: 3;
+    order: 0;
   }
 
   .storefront-search {
-    order: 4;
-    grid-column: 1 / -1;
+    order: 3;
+    grid-column: auto;
     max-width: none;
     min-width: 0;
   }
@@ -6901,7 +6957,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
   .storefront-mobile-search {
     display: flex;
-    margin: 0;
+    width: calc(100% - 28px);
+    margin: 0 14px 10px;
     max-width: none;
     min-width: 0;
     border-radius: 10px;
@@ -6942,6 +6999,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 
   .storefront-category-nav {
+    width: 100%;
+    max-width: 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
     padding: 0 14px;
@@ -7059,6 +7118,9 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 .storefront-product-rail,
 .storefront-showcase-rail,
 .storefront-offer-rail {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: grid;
   gap: 16px;
   overflow-x: auto;
@@ -7108,6 +7170,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-product-card {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   min-height: 100%;
   display: grid;
   grid-template-rows: auto auto;
@@ -7250,6 +7314,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-offer-card,
 .storefront-showcase-card {
+  min-width: 0;
+  max-width: 100%;
   padding: 14px;
   display: grid;
   gap: 12px;

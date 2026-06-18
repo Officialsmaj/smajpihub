@@ -98,7 +98,9 @@ export const router = createBrowserRouter(
     },
     ...platformDefinitions.map((platform) => ({
       path: `/services/${platform.routeSegment}`,
-      element: (
+      element: platform.routeSegment === "store" ? (
+        <Navigate to="/store" replace />
+      ) : (
         <GenericPage
           title={platform.name}
           description={`${platform.description} Access with one Pi wallet login through SMAJ PI HUB.`}
@@ -107,7 +109,7 @@ export const router = createBrowserRouter(
     })),
     {
       path: "/smaj-store",
-      element: <Navigate to="/services/store" replace />,
+      element: <Navigate to="/store" replace />,
     },
     {
       path: "/smaj-food-delivery",
