@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
@@ -26,6 +28,8 @@ import {
 import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
+const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion", "Kids Fashion", "Home, Kitchen & Appliances", "Beauty & Fragrance", "Toys", "Baby", "Health & Nutrition"];
+const electronicsSubcategories = ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"];
 const demoNames = ["Wireless Earbuds", "Smart Watch", "Portable Speaker", "Classic Sneakers", "Travel Backpack", "Android Phone", "Laptop Computer", "Skincare Set", "Modern Sofa", "City Bicycle", "Kitchen Blender", "Office Chair", "Summer Dress", "Gaming Mouse", "Power Bank", "Digital Camera", "Family Sedan", "Graphic Design Service", "Fresh Food Box", "Premium Perfume", "Smart Television", "Gaming Console", "Coffee Maker", "Luxury Handbag", "Sports Shoes", "Road Bicycle", "Baby Stroller", "Noise Cancelling Headphones", "Printer Bundle", "Men Care Kit"];
 const demoLocations = ["Lagos, Nigeria", "Abuja, Nigeria", "Kano, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Dakar, Senegal", "Johannesburg, South Africa", "London, UK"];
 const demoImageKeyword: Record<string, string> = { Deals: "shopping", Grocery: "grocery", Electronics: "electronics", Mobiles: "smartphone", Laptops: "laptop", Fashion: "fashion", Beauty: "beauty", Home: "furniture", Vehicles: "car", Accessories: "accessories" };
@@ -79,6 +83,8 @@ const StorePage = () => {
   const [heroIndex, setHeroIndex] = useState(0);
   const [categoryPage, setCategoryPage] = useState(0);
   const [infoOpen, setInfoOpen] = useState<string>(infoItems[0].title);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "electronics">("categories");
   const vehiclesRef = useRef<HTMLDivElement>(null);
   const railRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -152,6 +158,23 @@ const StorePage = () => {
     });
   };
 
+  const chooseMobileCategory = (value: string) => {
+    if (value === "Electronics") {
+      setMobileMenuPanel("electronics");
+      return;
+    }
+    setSearch(value);
+    if (STORE_CATEGORIES.includes(value)) updateCategory(value);
+    setMobileMenuOpen(false);
+  };
+
+  const chooseElectronicsSubcategory = (value: string) => {
+    setSearch(value);
+    updateCategory("Electronics");
+    setMobileMenuOpen(false);
+    setMobileMenuPanel("categories");
+  };
+
   return (
     <main className="private-page storefront-page">
       <section className="storefront-shell">
@@ -178,6 +201,9 @@ const StorePage = () => {
           </div>
 
           <div className="storefront-mobile-top">
+            <button type="button" className="storefront-mobile-menu-button" aria-label="Open categories menu" onClick={() => { setMobileMenuPanel("categories"); setMobileMenuOpen(true); }}>
+              <MenuOutlinedIcon />
+            </button>
             <Link to="/store" className="storefront-mobile-logo" aria-label="SMAJ Store">
               <img src={logoImage} alt="SMAJ Store" />
             </Link>
@@ -199,6 +225,46 @@ const StorePage = () => {
               </button>
             ))}
           </nav>
+
+          {mobileMenuOpen ? (
+            <div className="storefront-mobile-drawer-wrap">
+              <button type="button" className="storefront-mobile-drawer-backdrop" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} />
+              <aside className="storefront-mobile-drawer" aria-label="SMAJ Store categories menu">
+                <div className="storefront-mobile-drawer-panels" style={{ transform: mobileMenuPanel === "electronics" ? "translateX(-50%)" : "translateX(0)" }}>
+                  <section className="storefront-mobile-drawer-panel">
+                    <header>
+                      <Link to="/store" aria-label="SMAJ Store" onClick={() => setMobileMenuOpen(false)}><img src={logoImage} alt="SMAJ Store" /></Link>
+                      <button type="button" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)}><CloseOutlinedIcon /></button>
+                    </header>
+                    <h3>Categories</h3>
+                    <nav>
+                      {mobileMenuCategories.map((item) => (
+                        <button type="button" key={item} onClick={() => chooseMobileCategory(item)}>
+                          <span>{item}</span>
+                          <ArrowForwardIosOutlinedIcon />
+                        </button>
+                      ))}
+                    </nav>
+                  </section>
+                  <section className="storefront-mobile-drawer-panel">
+                    <header>
+                      <button type="button" className="storefront-mobile-drawer-back" aria-label="Back to categories" onClick={() => setMobileMenuPanel("categories")}><ArrowBackIosNewOutlinedIcon /></button>
+                      <h3>Electronics</h3>
+                      <button type="button" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)}><CloseOutlinedIcon /></button>
+                    </header>
+                    <nav>
+                      {electronicsSubcategories.map((item) => (
+                        <button type="button" key={item} onClick={() => chooseElectronicsSubcategory(item)}>
+                          <span>{item}</span>
+                          <ArrowForwardIosOutlinedIcon />
+                        </button>
+                      ))}
+                    </nav>
+                  </section>
+                </div>
+              </aside>
+            </div>
+          ) : null}
         </header>
 
         <section className="storefront-promo-strip" aria-label="Store benefits">
