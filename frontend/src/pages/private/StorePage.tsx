@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
+import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
@@ -157,21 +162,23 @@ const StorePage = () => {
         <header className="storefront-header">
           <div className="storefront-header-main">
             <Link to="/store" className="storefront-brand storefront-brand-link">
-              <strong>SMAJ Store</strong>
+              <strong>smaj</strong>
             </Link>
             <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Lagos")}>
               <LocationOnOutlinedIcon />
-              <span>Location</span>
+              <span>Other &middot; Lagos</span>
+              <KeyboardArrowDownOutlinedIcon className="storefront-location-chevron" />
             </button>
             <label className="storefront-search">
               <SearchOutlinedIcon />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for products, brands and more" />
             </label>
             <nav className="storefront-quick-links">
-              <Link to="/orders"><span>Orders</span></Link>
-              <Link to="/saved"><span>Wishlist</span></Link>
-              <Link to="/cart"><span>Cart</span></Link>
-              <Link to="/profile"><span>Profile</span></Link>
+              <Link to="/settings"><LanguageOutlinedIcon /><span>العربية</span></Link>
+              <Link to="/profile"><PersonOutlineOutlinedIcon /><span>Log in</span></Link>
+              <Link to="/orders"><Inventory2OutlinedIcon /><span>Orders</span></Link>
+              <Link to="/saved"><FavoriteBorderOutlinedIcon /><span>Wishlist</span></Link>
+              <Link to="/cart"><ShoppingCartOutlinedIcon /><span>Cart</span></Link>
             </nav>
           </div>
 
@@ -187,7 +194,7 @@ const StorePage = () => {
 
           <label className="storefront-search storefront-mobile-search">
             <SearchOutlinedIcon />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for products, brands and more" />
           </label>
 
           <nav className="storefront-category-nav">
