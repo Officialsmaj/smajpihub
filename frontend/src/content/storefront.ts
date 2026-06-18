@@ -146,10 +146,10 @@ export const categoryTiles: StoreCategoryTile[] = [
 
 export const categoryGroups: StoreCategoryGroup[] = [
   { id: "group-1", items: categoryTiles.slice(0, 12) },
-  { id: "group-2", items: categoryTiles.slice(12, 23) },
-  { id: "group-3", items: categoryTiles.slice(23, 33) },
-  { id: "group-4", items: categoryTiles.slice(33, 44) },
-  { id: "group-5", items: categoryTiles.slice(44, 54) },
+  { id: "group-2", items: categoryTiles.slice(12, 24) },
+  { id: "group-3", items: categoryTiles.slice(24, 36) },
+  { id: "group-4", items: categoryTiles.slice(36, 48) },
+  { id: "group-5", items: categoryTiles.slice(48, 60) },
 ];
 
 export const vehicleTiles: StoreCategoryTile[] = [

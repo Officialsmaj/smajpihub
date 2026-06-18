@@ -224,15 +224,12 @@ const StorePage = () => {
           <div className="storefront-hero-dots">{heroSlides.map((slide, index) => <button type="button" key={slide.title} className={heroIndex === index ? "active" : ""} onClick={() => setHeroIndex(index)} aria-label={`Go to ${slide.title}`} />)}</div>
         </section>
 
-        <section className="storefront-carousel-section">
+        <section className="storefront-carousel-section storefront-browse-section">
           <div className="storefront-section-head">
             <div><h2>Browse by category</h2><p>Real products across every SMAJ Store department.</p></div>
-            <div className="storefront-arrow-pair">
-              <button type="button" disabled={categoryPage === 0} onClick={() => setCategoryPage((value) => Math.max(0, value - 1))} aria-label="Show previous categories"><ArrowBackIosNewOutlinedIcon /></button>
-              <button type="button" disabled={categoryPage === categoryGroups.length - 1} onClick={() => setCategoryPage((value) => Math.min(categoryGroups.length - 1, value + 1))} aria-label="Show next categories"><ArrowForwardIosOutlinedIcon /></button>
-            </div>
           </div>
           <div className="storefront-category-page">
+            <button type="button" className="storefront-browse-arrow left" disabled={categoryPage === 0} onClick={() => setCategoryPage((value) => Math.max(0, value - 1))} aria-label="Show previous categories"><ArrowBackIosNewOutlinedIcon /></button>
             <div className="storefront-category-rail storefront-category-rail-grid">
               {activeCategoryItems.map((tile) => (
                 <button type="button" key={tile.name} className="storefront-category-card storefront-browse-card" onClick={() => { if (tile.search) setSearch(tile.search); if (STORE_CATEGORIES.includes(tile.name)) updateCategory(tile.name); }}>
@@ -242,6 +239,7 @@ const StorePage = () => {
                 </button>
               ))}
             </div>
+            <button type="button" className="storefront-browse-arrow right" disabled={categoryPage === categoryGroups.length - 1} onClick={() => setCategoryPage((value) => Math.min(categoryGroups.length - 1, value + 1))} aria-label="Show next categories"><ArrowForwardIosOutlinedIcon /></button>
             <div className="storefront-category-pager" aria-label="Category pages">
               {categoryGroups.map((group, index) => (
                 <button type="button" key={group.id} className={index === categoryPage ? "active" : ""} aria-label={`Open category page ${index + 1}`} onClick={() => setCategoryPage(index)} />
