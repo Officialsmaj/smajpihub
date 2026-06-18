@@ -39,7 +39,7 @@ const ServicesHubPage = () => {
 
     <section className="services-mobile-view">
       <header><h1>Services</h1><p>Access multiple digital services from anywhere you are.</p></header>
-      <div className="mobile-services-grid">{serviceCatalog.map((service) => <Link key={service.slug} to={servicePath(service.slug, service.live)}><ServiceArt index={service.atlasIndex} /><strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></Link>)}</div>
+      <div className="mobile-services-grid">{serviceCatalog.map((service) => <Link key={service.slug} to={servicePath(service.slug, service.live)}><ServiceArt index={service.atlasIndex} />{service.live ? <em className="live-card-badge">LIVE</em> : null}<strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></Link>)}</div>
     </section>
   </main>;
 };

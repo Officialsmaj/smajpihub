@@ -19,6 +19,7 @@ const previewServices = [
     description: "Shop ecosystem products and services with Pi.",
     to: "/services/store",
     icon: <StorefrontOutlinedIcon fontSize="small" />,
+    live: true,
   },
   {
     name: "JOBS",
@@ -127,6 +128,7 @@ const HomePage = () => {
                   <strong>{service.name}</strong>
                 </p>
                 <p>{service.description}</p>
+                {service.live ? <span className="status-chip live-status-chip">LIVE</span> : null}
                 <ActionButton to={service.to} variant="secondary">
                   Explore
                 </ActionButton>

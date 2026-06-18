@@ -53,7 +53,6 @@ const links = [
   { to: "/app/services", label: "Services", icon: <AppsOutlinedIcon /> },
   { to: "/store", label: "Marketplace", icon: <StorefrontOutlinedIcon /> },
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
-  { to: "/notifications", label: "Notifications", icon: <NotificationsNoneOutlinedIcon /> },
 ];
 
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {

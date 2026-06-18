@@ -35,7 +35,7 @@ const ServicesPage = () => {
             {platformDefinitions.map((platform) => (
               <Card key={platform.routeSegment} title={platform.name}>
                 <p>{platform.description}</p>
-                <span className="status-chip">{platform.status}</span>
+                <span className={`status-chip ${platform.status === "Live" ? "live-status-chip" : ""}`}>{platform.status}</span>
                 <p style={{ marginTop: "0.75rem" }}>
                   <ActionButton to={`/services/${platform.routeSegment}`} variant="secondary">
                     View Page

@@ -93,6 +93,7 @@ const WhitePaperPage = () => {
                 <h3>
                   {index + 1}. {platform.name}
                 </h3>
+                {platform.status === "Live" ? <span className="status-chip live-status-chip">LIVE</span> : null}
               </article>
             ))}
           </div>

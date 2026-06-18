@@ -2,11 +2,11 @@ export type PlatformDefinition = {
   name: string;
   routeSegment: string;
   description: string;
-  status: "Ready Now" | "Coming Soon";
+  status: "Live" | "Coming Soon";
 };
 
 export const platformDefinitions: PlatformDefinition[] = [
-  { name: "SMAJ Store", routeSegment: "store", description: "Shop products and services with Pi.", status: "Ready Now" },
+  { name: "SMAJ Store", routeSegment: "store", description: "Shop products and services with Pi.", status: "Live" },
   {
     name: "SMAJ Food Delivery",
     routeSegment: "food-delivery",

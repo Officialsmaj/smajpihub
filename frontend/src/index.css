@@ -2261,6 +2261,42 @@ body {
   background: #eff6ff;
 }
 
+.status-chip.live-status-chip,
+.live-card-badge,
+.live-rating-badge {
+  color: #047857 !important;
+  background: #d1fae5 !important;
+}
+
+.live-card-badge,
+.live-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  border-radius: 999px;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.live-card-badge {
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.experience-live-badge,
+.feature-live-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+}
+
+.mobile-services-grid .live-card-badge {
+  margin-top: 7px;
+}
+
 .contact-form input,
 .contact-form textarea {
   color: var(--smaj-text);
@@ -5934,6 +5970,370 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .private-shell:has(.messages-page.conversation-selected) .mobile-ai-fab {
     display: none;
+  }
+}
+
+/* Desktop home feed */
+.desktop-feed-home {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+}
+
+.desktop-feed-hero,
+.desktop-feed-section,
+.desktop-feed-side section,
+.desktop-feed-experience {
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 18px;
+}
+
+.desktop-feed-hero {
+  min-height: 330px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, .82fr);
+  align-items: center;
+  gap: 30px;
+  padding: clamp(28px, 4vw, 52px);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--smaj-primary) 10%, var(--smaj-card)), color-mix(in srgb, var(--smaj-accent) 8%, var(--smaj-card)));
+}
+
+.desktop-feed-hero h1 {
+  max-width: 720px;
+  margin: 8px 0 16px;
+  font-size: clamp(2.6rem, 5vw, 4.8rem);
+  line-height: .98;
+  letter-spacing: 0;
+}
+
+.desktop-feed-hero p {
+  color: var(--smaj-text-secondary);
+  font-size: 1.05rem;
+}
+
+.desktop-feed-hero-actions,
+.desktop-feed-tabs,
+.desktop-feed-section-head {
+  display: flex;
+  gap: 10px;
+}
+
+.desktop-feed-hero-actions {
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.desktop-feed-hero-icons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.desktop-feed-hero-icons a {
+  position: relative;
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 18px;
+}
+
+.desktop-feed-hero-icons .service-art {
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
+}
+
+.desktop-feed-hero-icons em {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 7px;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 999px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.desktop-feed-tabs {
+  position: sticky;
+  top: 68px;
+  z-index: 12;
+  padding: 8px;
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 14px;
+}
+
+.desktop-feed-tabs a {
+  min-height: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--smaj-text-secondary);
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.desktop-feed-tabs a.active {
+  color: #fff;
+  background: var(--smaj-primary);
+}
+
+.desktop-feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 22px;
+  align-items: start;
+}
+
+.desktop-feed-main,
+.desktop-feed-side {
+  min-width: 0;
+  display: grid;
+  gap: 22px;
+}
+
+.desktop-feed-side {
+  position: sticky;
+  top: 128px;
+}
+
+.desktop-feed-section,
+.desktop-feed-side section,
+.desktop-feed-experience {
+  padding: 22px;
+}
+
+.desktop-feed-section-head {
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.desktop-feed-section-head h2,
+.desktop-feed-section-head p {
+  margin: 0;
+}
+
+.desktop-feed-section-head p,
+.desktop-feed-side small,
+.desktop-feed-experience p {
+  color: var(--smaj-text-secondary);
+}
+
+.desktop-feed-section-head > a {
+  color: var(--smaj-primary);
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.desktop-suggested-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.desktop-service-app {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.desktop-service-app .service-art {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+
+.desktop-service-app div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.desktop-service-app strong,
+.desktop-service-app span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-service-app span {
+  color: var(--smaj-text-secondary);
+  font-size: 12px;
+}
+
+.desktop-service-app small {
+  padding: 5px 7px;
+  color: var(--smaj-primary);
+  background: color-mix(in srgb, var(--smaj-primary) 9%, transparent);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.desktop-feature-grid,
+.desktop-media-grid,
+.desktop-feed-experience > div:last-child {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.desktop-feature-card,
+.desktop-media-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--smaj-text);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 16px;
+  text-decoration: none;
+}
+
+.desktop-feature-card img,
+.desktop-media-card img {
+  width: 100%;
+  height: 150px;
+  display: block;
+  object-fit: cover;
+}
+
+.desktop-feature-card > div,
+.desktop-media-card > div {
+  padding: 14px;
+}
+
+.desktop-feature-card h3,
+.desktop-feature-card p {
+  margin: 0;
+}
+
+.desktop-feature-card p {
+  margin: 7px 0 12px;
+  color: var(--smaj-text-secondary);
+  font-size: 13px;
+}
+
+.desktop-feature-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--smaj-primary);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.desktop-media-card b {
+  display: inline-flex;
+  width: max-content;
+  margin-bottom: 8px;
+  padding: 4px 7px;
+  color: var(--smaj-primary);
+  background: color-mix(in srgb, var(--smaj-primary) 10%, transparent);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.desktop-media-card span,
+.desktop-media-card small {
+  display: block;
+}
+
+.desktop-media-card small {
+  margin-top: 4px;
+  color: var(--smaj-text-secondary);
+}
+
+.desktop-feed-side section > strong {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.desktop-feed-side section > div {
+  display: grid;
+  gap: 10px;
+}
+
+.desktop-feed-side a,
+.desktop-feed-side article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--smaj-text);
+  text-decoration: none;
+}
+
+.desktop-feed-side svg {
+  color: var(--smaj-primary);
+}
+
+.desktop-feed-side span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.desktop-feed-experience {
+  display: grid;
+  grid-template-columns: minmax(0, .75fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.desktop-feed-experience article {
+  padding: 16px;
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 16px;
+}
+
+.desktop-feed-experience .service-art {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+
+.desktop-feed-experience h2,
+.desktop-feed-experience h3,
+.desktop-feed-experience p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 1100px) {
+  .desktop-feed-layout,
+  .desktop-feed-hero,
+  .desktop-feed-experience {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-feed-side {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .desktop-feature-grid,
+  .desktop-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -60,8 +60,8 @@ const MobileHome = () => {
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><nav className="mobile-home-tabs" aria-label="Discover SMAJ PI HUB">{discoveryTabs.map(([label,to]) => <Link key={label} className={label === "For you" ? "active" : ""} to={to}>{label}</Link>)}</nav></div>
 
     <>
-      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Suggested for you</h2><Link to="/app/services">See all</Link></div><div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" • ")}</span><small>{serviceRatings[service.slug]}★</small></div></Link>)}</div>)}</div></section>
-      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Discover what's new</h2></div><div className="mobile-feature-strip">{featureCards.map((card) => <Link className="mobile-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" /><div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
+      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Suggested for you</h2><Link to="/app/services">See all</Link></div><div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" • ")}</span><small className={service.live ? "live-rating-badge" : undefined}>{service.live ? "LIVE" : `${serviceRatings[service.slug]}★`}</small></div></Link>)}</div>)}</div></section>
+      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Discover what's new</h2></div><div className="mobile-feature-strip">{featureCards.map((card) => <Link className="mobile-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" />{card.slug === "store" ? <b className="live-card-badge feature-live-badge">LIVE</b> : null}<div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
       {mediaSections.map((section) => <section className="mobile-feed-section" key={section.slug}><div className="mobile-section-heading"><h2>{section.title}</h2></div><div className="mobile-media-strip">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="mobile-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>{section.slug === "stream" ? "SMAJ Stream" : section.slug === "sports" ? "SMAJ Sports" : "SMAJ Events"}</small></div></Link>)}</div></section>)}
       <section className="mobile-feed-section mobile-experience"><div className="mobile-section-heading"><div><h2>Experience SMAJ PI HUB</h2><p>Everything connected in one simple experience.</p></div></div><div className="mobile-phone-strip">{[["Discover","Explore services in one place"],["Connect","Use services and manage activities"],["Manage","Your profile, wallet and settings"]].map(([title,text]) => <article key={title}><div className="mobile-phone-screen"><i /><i /><i /></div><h3>{title}</h3><p>{text}</p></article>)}</div></section>
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Need help?</h2></div><div className="mobile-help-grid">{support.map(([Icon,title,,items,to]) => <Link to={to} key={title}><Icon /><div><strong>{title}</strong><span>{items.slice(0,3).join(" • ")}</span></div><ArrowForwardOutlinedIcon /></Link>)}</div></section>
@@ -71,12 +71,66 @@ const MobileHome = () => {
 };
 
 const DesktopHome = () => <div className="desktop-private-home"><section className="ecosystem-hero"><div><p className="private-kicker">SMAJ PI HUB</p><h1>Everything you need.<br />One place.</h1><p>Discover services built for everyday life.</p><Link className="private-primary-button" to="/app/services">Explore Services <ArrowForwardOutlinedIcon /></Link></div><div className="ecosystem-hero-art">{serviceCatalog.slice(0,6).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}</div></section>
-  <section className="ecosystem-section"><div className="ecosystem-section-head"><p className="private-kicker">SUPER APP EXPERIENCES</p><h2>Built around everyday life</h2><p>Choose an experience and discover everything connected to it.</p></div><div className="experience-grid">{serviceCatalog.map((service) => <Link className={`experience-card experience-${service.atlasIndex % 5}`} key={service.slug} to={servicePath(service)}><ServiceArt index={service.atlasIndex} /><div><span>{service.name}</span><h3>{service.experience}</h3><ul>{service.items.map((item) => <li key={item}>{item}</li>)}</ul></div><i><ArrowForwardOutlinedIcon /></i></Link>)}</div></section>
+  <section className="ecosystem-section"><div className="ecosystem-section-head"><p className="private-kicker">SUPER APP EXPERIENCES</p><h2>Built around everyday life</h2><p>Choose an experience and discover everything connected to it.</p></div><div className="experience-grid">{serviceCatalog.map((service) => <Link className={`experience-card experience-${service.atlasIndex % 5}`} key={service.slug} to={servicePath(service)}><ServiceArt index={service.atlasIndex} />{service.live ? <em className="live-card-badge experience-live-badge">LIVE</em> : null}<div><span>{service.name}</span><h3>{service.experience}</h3><ul>{service.items.map((item) => <li key={item}>{item}</li>)}</ul></div><i><ArrowForwardOutlinedIcon /></i></Link>)}</div></section>
   <section className="ecosystem-section"><div className="ecosystem-section-head"><h2>Why SMAJ PI HUB?</h2></div><div className="why-grid">{why.map(([Icon,title,text]) => <article key={title}><Icon /><h3>{title}</h3><p>{text}</p></article>)}</div></section>
   <section className="experience-showcase"><div><p className="private-kicker">ONE SIMPLE EXPERIENCE</p><h2>Experience SMAJ PI HUB</h2><p>Everything connected in one simple experience.</p></div><div className="phone-carousel"><article><div className="phone-screen"><ServiceArt index={0} /><span>Discover</span></div><h3>Discover</h3><p>Explore all SMAJ PI HUB services</p></article><article><div className="phone-screen"><ServiceArt index={8} /><span>Connect</span></div><h3>Connect</h3><p>Access services and communities</p></article><article><div className="phone-screen"><ServiceArt index={14} /><span>Manage</span></div><h3>Manage</h3><p>Your account, wallet, and settings</p></article></div></section>
   <section className="ecosystem-section"><div className="ecosystem-section-head"><h2>Building the future of digital access</h2></div><div className="trust-growth-grid"><article><strong>Global Vision</strong><p>Connecting users and services worldwide</p></article><article><strong>Trusted Experience</strong><p>Designed with safety and transparency</p></article><article><strong>Continuous Growth</strong><p>New services and improvements over time</p></article></div></section>
   <section className="ecosystem-section"><div className="ecosystem-section-head"><h2>Need help?</h2><p>We are here for you.</p></div><div className="support-grid">{support.map(([Icon,title,text,items,to]) => <Link key={title} to={to}><Icon /><h3>{title}</h3><p>{text}</p><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></Link>)}</div></section>
   <footer className="private-home-footer"><div><strong>SMAJ PI HUB</strong><p>Connecting everyday services in one platform.</p></div><nav><Link to="/about">About</Link><Link to="/app/services">Services</Link><Link to="/help">Help Center</Link><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link><Link to="/contact">Contact</Link></nav><div><span>Part of the SMAJ Ecosystem</span><span>© 2026 SMAJ PI HUB. All rights reserved.</span></div></footer></div>;
 
-const DashboardPage = () => <main className="private-home"><DesktopHome /><MobileHome /></main>;
+const DesktopFeedHome = () => <div className="desktop-private-home desktop-feed-home">
+  <section className="desktop-feed-hero">
+    <div>
+      <p className="private-kicker">SMAJ PI HUB</p>
+      <h1>Everything you need.<br />One place.</h1>
+      <p>Discover services, products, media, support, and everyday tools from one connected dashboard.</p>
+      <div className="desktop-feed-hero-actions">
+        <Link className="private-primary-button" to="/app/services">Explore Services <ArrowForwardOutlinedIcon /></Link>
+        <Link className="private-secondary-button" to="/store">Open SMAJ Store</Link>
+      </div>
+    </div>
+    <div className="desktop-feed-hero-icons">{serviceCatalog.slice(0, 6).map((service) => <Link key={service.slug} to={servicePath(service)} title={service.name}><ServiceArt index={service.atlasIndex} />{service.live ? <em>LIVE</em> : null}</Link>)}</div>
+  </section>
+
+  <nav className="desktop-feed-tabs" aria-label="Discover SMAJ PI HUB">{discoveryTabs.map(([label, to]) => <Link key={label} className={label === "For you" ? "active" : ""} to={to}>{label}</Link>)}</nav>
+
+  <div className="desktop-feed-layout">
+    <div className="desktop-feed-main">
+      <section className="desktop-feed-section">
+        <div className="desktop-feed-section-head"><div><h2>Suggested for you</h2><p>Fast access to the core SMAJ services.</p></div><Link to="/app/services">See all</Link></div>
+        <div className="desktop-suggested-grid">{serviceCatalog.slice(0, 6).map((service) => <Link to={servicePath(service)} className="desktop-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" • ")}</span></div><small className={service.live ? "live-rating-badge" : undefined}>{service.live ? "LIVE" : `${serviceRatings[service.slug]}★`}</small></Link>)}</div>
+      </section>
+
+      <section className="desktop-feed-section">
+        <div className="desktop-feed-section-head"><div><h2>Discover what's new</h2><p>Fresh entry points into useful services.</p></div></div>
+        <div className="desktop-feature-grid">{featureCards.map((card) => <Link className="desktop-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" />{card.slug === "store" ? <b className="live-card-badge feature-live-badge">LIVE</b> : null}<div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div>
+      </section>
+
+      {mediaSections.map((section) => <section className="desktop-feed-section" key={section.slug}>
+        <div className="desktop-feed-section-head"><div><h2>{section.title}</h2><p>{section.slug === "stream" ? "Entertainment picks across the ecosystem." : section.slug === "sports" ? "Scores, activities, and sports communities." : "Tickets, events, and local experiences."}</p></div></div>
+        <div className="desktop-media-grid">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="desktop-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>{section.slug === "stream" ? "SMAJ Stream" : section.slug === "sports" ? "SMAJ Sports" : "SMAJ Events"}</small></div></Link>)}</div>
+      </section>)}
+    </div>
+
+    <aside className="desktop-feed-side">
+      <section>
+        <strong>Need help?</strong>
+        <div>{support.map(([Icon, title, text, , to]) => <Link to={to} key={title}><Icon /><span><b>{title}</b><small>{text}</small></span></Link>)}</div>
+      </section>
+      <section>
+        <strong>Why SMAJ PI HUB?</strong>
+        <div>{why.map(([Icon, title, text]) => <article key={title}><Icon /><span><b>{title}</b><small>{text}</small></span></article>)}</div>
+      </section>
+    </aside>
+  </div>
+
+  <section className="desktop-feed-experience">
+    <div><p className="private-kicker">ONE SIMPLE EXPERIENCE</p><h2>Experience SMAJ PI HUB</h2><p>Everything connected in one simple experience.</p></div>
+    <div>{[["Discover", "Explore services in one place"], ["Connect", "Use services and manage activities"], ["Manage", "Your profile, wallet, and settings"]].map(([title, text], index) => <article key={title}><ServiceArt index={[0, 8, 14][index]} /><h3>{title}</h3><p>{text}</p></article>)}</div>
+  </section>
+
+  <footer className="private-home-footer"><div><strong>SMAJ PI HUB</strong><p>Connecting everyday services in one platform.</p></div><nav><Link to="/about">About</Link><Link to="/app/services">Services</Link><Link to="/help">Help Center</Link><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link><Link to="/contact">Contact</Link></nav><div><span>Part of the SMAJ Ecosystem</span><span>Â© 2026 SMAJ PI HUB. All rights reserved.</span></div></footer>
+</div>;
+
+const DashboardPage = () => <main className="private-home">{false ? <DesktopHome /> : null}<DesktopFeedHome /><MobileHome /></main>;
 export default DashboardPage;
