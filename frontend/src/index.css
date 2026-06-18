@@ -7682,21 +7682,39 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 
   .storefront-category-rail-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: unset;
+    grid-template-rows: repeat(2, auto);
     overflow-x: auto;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(116px, 34vw);
-    padding-bottom: 4px;
+    grid-auto-columns: minmax(72px, calc((100vw - 68px) / 4));
+    align-items: start;
+    gap: 10px 8px;
+    padding: 0 2px 8px;
+    scroll-snap-type: x proximity;
   }
 
   .storefront-browse-card {
-    min-height: 172px;
-    padding: 12px 10px;
+    min-height: 92px;
+    padding: 0 2px;
+    gap: 3px;
+    scroll-snap-align: start;
   }
 
   .storefront-browse-card img {
-    max-width: 82px;
-    height: 82px;
+    max-width: 64px;
+    height: 58px;
+    padding: 4px;
+    border-radius: 12px;
+  }
+
+  .storefront-browse-card strong {
+    max-width: 78px;
+    font-size: 10px;
+    line-height: 1.05;
+  }
+
+  .storefront-browse-card span {
+    display: none;
   }
 
   .storefront-deal-grid,
