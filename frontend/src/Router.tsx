@@ -304,10 +304,8 @@ export const router = createBrowserRouter(
       path: "*",
       element: <NotFoundPage />,
     },
-  ],
-  {
-    basename: import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL,
-  },
+  ]
 );
 
 export default router;
+

@@ -2,6 +2,7 @@
   "name": "demo-app",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://smajpihub.com",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -44,3 +45,5 @@
     "@mui/styled-engine": "@mui/styled-engine-sc"
   }
 }
+
+

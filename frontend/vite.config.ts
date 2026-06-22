@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
   };
   return {
     root: rootDir,
-    base: isPublicBuild ? "/smajpihub/" : "/",
+    base: "/",
     plugins: [
       react(),
       legacy({
@@ -78,3 +78,4 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
+
