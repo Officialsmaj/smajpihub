@@ -108,7 +108,7 @@ const Footer = () => {
       <div className={styles.footerBottomBar}>
         <div className={styles.poweredBy}>
           <a href="https://smaj.org" className={styles.logoLink} aria-label="SMAJ Ecosystem">
-            <img src="/smajpihub/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
+            <img src="/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
           </a>
           <p className={styles.poweredText}>
             <span style={{ fontWeight: "bold", fontSize: "1rem" }}></span>

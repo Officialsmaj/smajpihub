@@ -132,5 +132,5 @@ const DesktopFeedHome = () => <div className="desktop-private-home desktop-feed-
   <footer className="private-home-footer"><div><strong>SMAJ PI HUB</strong><p>Connecting everyday services in one platform.</p></div><nav><Link to="/about">About</Link><Link to="/app/services">Services</Link><Link to="/help">Help Center</Link><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link><Link to="/contact">Contact</Link></nav><div><span>Part of the SMAJ Ecosystem</span><span>Â© 2026 SMAJ PI HUB. All rights reserved.</span></div></footer>
 </div>;
 
-const DashboardPage = () => <main className="private-home">{false ? <DesktopHome /> : null}<DesktopFeedHome /><MobileHome /></main>;
+const DashboardPage = () => <main className="private-home"><DesktopFeedHome /><MobileHome /></main>;
 export default DashboardPage;
