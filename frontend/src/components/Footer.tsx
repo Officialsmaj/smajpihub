@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import Tooltip from "@mui/material/Tooltip"; // Import Tooltip
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import FacebookIcon from "@mui/icons-material/Facebook";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
@@ -83,19 +83,19 @@ const Footer = () => {
         <div>
           <h4>Social</h4>
           <div className={styles.socialRow} aria-label="Social links">
-            <a className={styles.socialIcon} href="/" aria-label="Facebook">
-              <FacebookIcon fontSize="small" />
+            <a className={styles.socialIcon} href="https://www.linkedin.com/company/smajecosystem" aria-label="LinkedIn" target="_blank" rel="noreferrer">
+              <LinkedInIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="/" aria-label="Instagram">
+            <a className={styles.socialIcon} href="https://instagram.com/smajecosystem" aria-label="Instagram" target="_blank" rel="noreferrer">
               <InstagramIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="/" aria-label="X">
+            <a className={styles.socialIcon} href="https://x.com/smajecosystem" aria-label="X" target="_blank" rel="noreferrer">
               <XIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="/" aria-label="YouTube">
+            <a className={styles.socialIcon} href="https://youtube.com/@smajecosystem" aria-label="YouTube" target="_blank" rel="noreferrer">
               <YouTubeIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="/" aria-label="Telegram">
+            <a className={styles.socialIcon} href="https://t.me/smajecosystem" aria-label="Telegram" target="_blank" rel="noreferrer">
               <TelegramIcon fontSize="small" />
             </a>
           </div>
@@ -112,7 +112,7 @@ const Footer = () => {
           </a>
           <p className={styles.poweredText}>
             <span style={{ fontWeight: "bold", fontSize: "1rem" }}></span>
-            <span>Part of the SMAJ Ecosystem • Powered by SMAJ</span>
+            <span>Part of the SMAJ Ecosystem � Powered by SMAJ</span>
           </p>
         </div>
 
@@ -147,3 +147,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
