@@ -328,4 +328,4 @@ Prospective participants should do their own due diligence and consult qualified
 
 Participation in cryptocurrency ecosystems carries inherent risks. SMAJ operates as a digital marketplace and does not act as a financial institution.
 
-For inquiries, contact the SMAJ team directly. officialsmaj@gmail.com
+For inquiries, contact the SMAJ team directly at contact@smaj.org.

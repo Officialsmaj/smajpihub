@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import AppLayout from "../layouts/AppLayout";
 
+const companyEmail = "contact@smaj.org";
+
 const ContactPage = () => {
   const [message, setMessage] = useState("");
 
@@ -34,7 +36,9 @@ const ContactPage = () => {
 
           <aside className="home-highlight-card">
             <h3>Other Ways to Reach Us</h3>
-            <p>Email: smajpihub@gmail.com</p>
+            <p>
+              Email: <a href={`mailto:${companyEmail}`}>{companyEmail}</a>
+            </p>
             <p>Office Hours: Mon - Sat, 9:00 AM to 6:00 PM</p>
           </aside>
         </section>

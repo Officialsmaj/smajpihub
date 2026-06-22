@@ -22,6 +22,8 @@ import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import ArrowUpwardOutlinedIcon from "@mui/icons-material/ArrowUpwardOutlined";
 import styles from "./Footer.module.css";
 
+const companyEmail = "contact@smaj.org";
+
 const Footer = () => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -82,6 +84,7 @@ const Footer = () => {
         </div>
         <div>
           <h4>Social</h4>
+          <a href={`mailto:${companyEmail}`}><MailOutlineOutlinedIcon fontSize="small" />{companyEmail}</a>
           <div className={styles.socialRow} aria-label="Social links">
             <a className={styles.socialIcon} href="https://www.linkedin.com/company/smajecosystem" aria-label="LinkedIn" target="_blank" rel="noreferrer">
               <LinkedInIcon fontSize="small" />
