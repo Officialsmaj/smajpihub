@@ -26,6 +26,7 @@ import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
 const publicServicePath = (service: ServiceDefinition) =>
   `/services/${service.slug === "food" ? "food-delivery" : service.slug}`;
+const publicServiceGroups = Array.from({ length: 5 }, (_, index) => serviceCatalog.slice(index * 3, index * 3 + 3));
 
 const heroOrbitServices = [
   ["Store", StorefrontOutlinedIcon],
@@ -176,22 +177,21 @@ const HomePage = () => {
             </p>
           </div>
           <div className="public-home-service-grid">
-            {serviceCatalog.map((service) => (
-              <Link to={publicServicePath(service)} key={service.slug} className="home-service-card public-home-service-card">
-                <ServiceArt index={service.atlasIndex} />
-                <span className={`service-status ${service.live ? "live" : "soon"}`}>
-                  {service.live ? "MVP LIVE" : "Coming Soon"}
-                </span>
-                <div>
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <ul>
-                    {service.items.slice(0, 3).map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </Link>
+            {publicServiceGroups.map((group, groupIndex) => (
+              <div className="public-home-service-group" key={groupIndex}>
+                {group.map((service) => (
+                  <Link to={publicServicePath(service)} key={service.slug} className="public-home-service-card">
+                    <ServiceArt index={service.atlasIndex} />
+                    <div>
+                      <h3>{service.name}</h3>
+                      <p>{service.items.slice(0, 2).join(" • ")}</p>
+                    </div>
+                    <small className={service.live ? "live-rating-badge" : undefined}>
+                      {service.live ? "LIVE" : "SOON"}
+                    </small>
+                  </Link>
+                ))}
+              </div>
             ))}
           </div>
         </section>
