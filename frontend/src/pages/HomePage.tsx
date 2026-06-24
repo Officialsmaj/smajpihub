@@ -1,54 +1,31 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import AppLayout from "../layouts/AppLayout";
-import { platformDefinitions } from "../content/platforms";
+import ServiceArt from "../components/ServiceArt";
+import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import AgricultureOutlinedIcon from "@mui/icons-material/AgricultureOutlined";
-import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
-import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
-import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
-import RestaurantOutlinedIcon from "@mui/icons-material/RestaurantOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import SwapHorizOutlinedIcon from "@mui/icons-material/SwapHorizOutlined";
-import TokenOutlinedIcon from "@mui/icons-material/TokenOutlined";
 import TravelExploreOutlinedIcon from "@mui/icons-material/TravelExploreOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
-import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
 import WalletOutlinedIcon from "@mui/icons-material/WalletOutlined";
 import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
-const serviceIconMap = {
-  store: StorefrontOutlinedIcon,
-  "food-delivery": RestaurantOutlinedIcon,
-  jobs: WorkOutlineOutlinedIcon,
-  health: LocalHospitalOutlinedIcon,
-  education: SchoolOutlinedIcon,
-  transport: LocalShippingOutlinedIcon,
-  agro: AgricultureOutlinedIcon,
-  energy: BoltOutlinedIcon,
-  charity: VolunteerActivismOutlinedIcon,
-  housing: HomeWorkOutlinedIcon,
-  events: EventOutlinedIcon,
-  swap: SwapHorizOutlinedIcon,
-  stream: VideoLibraryOutlinedIcon,
-  sports: SportsSoccerOutlinedIcon,
-  token: TokenOutlinedIcon,
-};
+const publicServicePath = (service: ServiceDefinition) =>
+  `/services/${service.slug === "food" ? "food-delivery" : service.slug}`;
 
 const heroOrbitServices = [
   ["Store", StorefrontOutlinedIcon],
@@ -199,28 +176,23 @@ const HomePage = () => {
             </p>
           </div>
           <div className="public-home-service-grid">
-            {platformDefinitions.map((platform) => {
-              const Icon = serviceIconMap[platform.routeSegment as keyof typeof serviceIconMap] ?? HubOutlinedIcon;
-
-              return (
-                <Link
-                  to={`/services/${platform.routeSegment}`}
-                  key={platform.routeSegment}
-                  className="home-service-card public-home-service-card"
-                >
-                  <span className="public-home-card-icon">
-                    <Icon />
-                  </span>
-                  <div>
-                    <h3>{platform.name}</h3>
-                    <p>{platform.description}</p>
-                  </div>
-                  <span className={platform.status === "Live" ? "status-chip live-status-chip" : "status-chip"}>
-                    {platform.status === "Live" ? "MVP LIVE" : "COMING SOON"}
-                  </span>
-                </Link>
-              );
-            })}
+            {serviceCatalog.map((service) => (
+              <Link to={publicServicePath(service)} key={service.slug} className="home-service-card public-home-service-card">
+                <ServiceArt index={service.atlasIndex} />
+                <span className={`service-status ${service.live ? "live" : "soon"}`}>
+                  {service.live ? "MVP LIVE" : "Coming Soon"}
+                </span>
+                <div>
+                  <h3>{service.name}</h3>
+                  <p>{service.description}</p>
+                  <ul>
+                    {service.items.slice(0, 3).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 

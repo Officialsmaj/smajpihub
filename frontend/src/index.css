@@ -1212,17 +1212,24 @@ h4, h5, h6 {
 
 .public-home-service-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .public-home-service-card {
-  min-height: 220px;
+  position: relative;
+  min-height: 300px;
   display: grid;
+  grid-template-rows: auto 1fr;
   align-content: start;
-  gap: 12px;
+  gap: 14px;
+  padding: 18px;
   color: inherit;
+  background: #223047;
+  border: 1px solid #33455f;
+  border-radius: 20px;
   text-decoration: none;
+  overflow: hidden;
   transition: border-color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
 }
 
@@ -1232,19 +1239,46 @@ h4, h5, h6 {
   background: #25344b;
 }
 
+.public-home-service-card .service-art {
+  width: 100%;
+  aspect-ratio: 2 / 1.12;
+  border-radius: 16px;
+  box-shadow: 0 16px 32px rgba(3, 8, 20, 0.22);
+}
+
 .public-home-service-card h3 {
   margin: 0 0 8px;
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .public-home-service-card p {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
-.public-home-service-card .status-chip {
-  width: fit-content;
-  margin-top: auto;
+.public-home-service-card ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-home-service-card li {
+  padding: 5px 9px;
+  color: #c8d0dc;
+  background: #1a2435;
+  border: 1px solid #33455f;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.public-home-service-card .service-status {
+  position: absolute;
+  top: 30px;
+  right: 30px;
 }
 
 .public-home-mvp-section {
@@ -1367,7 +1401,7 @@ h4, h5, h6 {
 
 @media (max-width: 1100px) {
   .public-home-service-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .public-home-hero-grid,
@@ -1433,6 +1467,20 @@ h4, h5, h6 {
   .public-home-service-card,
   .public-home-steps article {
     min-height: auto;
+  }
+
+  .public-home-service-card {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .public-home-service-card .service-art {
+    border-radius: 14px;
+  }
+
+  .public-home-service-card .service-status {
+    top: 24px;
+    right: 24px;
   }
 }
 
