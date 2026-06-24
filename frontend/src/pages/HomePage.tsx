@@ -9,7 +9,6 @@ import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
 import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
-import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
 
@@ -69,7 +68,7 @@ const HomePage = () => {
               <span className="home-kicker">15+ PLATFORMS CONNECTED</span>
               <h1>The Unified Pi-Powered Digital Ecosystem</h1>
               <p>
-                Access shopping, jobs, healthcare, education, transport, entertainment and more — all with one Pi
+                Access shopping, jobs, healthcare, education, transport, entertainment and more - all with one Pi
                 login.
               </p>
               <div className="home-hero-cta">
@@ -83,29 +82,25 @@ const HomePage = () => {
               <div className="home-proof">
                 <div className="home-proof-award">
                   <div className="home-laurel-badge">
-                    <SpaOutlinedIcon className="home-laurel-icon" />
                     <div className="home-laurel-content">
-                      <strong>No.1</strong>
-                      <span>Unified Access</span>
+                      <strong>Phase 1</strong>
+                      <span>SMAJ Store MVP</span>
                     </div>
-                    <SpaOutlinedIcon className="home-laurel-icon home-laurel-icon-mirrored" />
                   </div>
-                  <span>15+ Services</span>
+                  <span>Live marketplace focus</span>
                 </div>
                 <div className="home-proof-award">
                   <div className="home-laurel-badge">
-                    <SpaOutlinedIcon className="home-laurel-icon" />
                     <div className="home-laurel-content">
-                      <strong>No.1</strong>
-                      <span>Pi Utility Ecosystem</span>
+                      <strong>Pi Login</strong>
+                      <span>Wallet-first access</span>
                     </div>
-                    <SpaOutlinedIcon className="home-laurel-icon home-laurel-icon-mirrored" />
                   </div>
-                  <span>Global Vision</span>
+                  <span>Unified identity</span>
                 </div>
                 <div>
-                  <strong>250K+ Users</strong>
-                  <span>40K+ Transactions • 12K+ Verified Providers</span>
+                  <strong>15 Platforms</strong>
+                  <span>Roadmap-backed ecosystem</span>
                 </div>
               </div>
             </div>
@@ -152,7 +147,7 @@ const HomePage = () => {
             </article>
             <article className="home-highlight-card">
               <h3>Verified Escrow System</h3>
-              <p>Secure transactions with built-in escrow protection.</p>
+              <p>Order tracking and payment confirmation designed for safer marketplace transactions.</p>
             </article>
             <article className="home-highlight-card">
               <h3>Pi-Powered Utility</h3>

@@ -120,6 +120,22 @@ export default function mountMarketplaceEndpoints(router: Router) {
     return res.status(200).json({ orders: orders.map(serialize) });
   });
 
+  router.get("/orders/:id", async (req, res) => {
+    const user = requireUser(req, res);
+    if (!user) return;
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
+    }
+    const order = await req.app.locals.marketplaceOrderCollection.findOne({
+      _id: new ObjectId(req.params.id),
+      $or: [{ buyerId: user.uid }, { sellerId: user.uid }],
+    });
+    if (!order) {
+      return res.status(404).json({ error: "not_found", message: "Order not found" });
+    }
+    return res.status(200).json({ order: serialize(order) });
+  });
+
   router.post("/orders", async (req, res) => {
     const user = requireUser(req, res);
     if (!user) return;
@@ -373,18 +389,3 @@ export default function mountMarketplaceEndpoints(router: Router) {
     return res.status(200).json({ message: "Product deleted" });
   });
 }
-  router.get("/orders/:id", async (req, res) => {
-    const user = requireUser(req, res);
-    if (!user) return;
-    if (!ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
-    }
-    const order = await req.app.locals.marketplaceOrderCollection.findOne({
-      _id: new ObjectId(req.params.id),
-      $or: [{ buyerId: user.uid }, { sellerId: user.uid }],
-    });
-    if (!order) {
-      return res.status(404).json({ error: "not_found", message: "Order not found" });
-    }
-    return res.status(200).json({ order: serialize(order) });
-  });
