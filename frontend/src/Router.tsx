@@ -6,7 +6,6 @@ import GenericPage from "./pages/GenericPage.tsx";
 import AboutPage from "./pages/AboutPage.tsx";
 import ServicesPage from "./pages/ServicesPage.tsx";
 import HowItWorksPage from "./pages/HowItWorksPage.tsx";
-import PricingPage from "./pages/PricingPage.tsx";
 import FaqPage from "./pages/FaqPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import WhitePaperPage from "./pages/WhitePaperPage.tsx";
@@ -83,10 +82,6 @@ export const router = createBrowserRouter(
     {
       path: "/how-it-works",
       element: <HowItWorksPage />,
-    },
-    {
-      path: "/pricing",
-      element: <PricingPage />,
     },
     {
       path: "/faq",

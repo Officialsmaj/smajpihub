@@ -11,8 +11,6 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 
 import DesignServicesOutlinedIcon from "@mui/icons-material/DesignServicesOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import Diversity3OutlinedIcon from "@mui/icons-material/Diversity3Outlined";
@@ -60,8 +58,6 @@ const Footer = () => {
           <Link to="/about"><InfoOutlinedIcon fontSize="small" />About</Link>
           <Link to="/services"><DesignServicesOutlinedIcon fontSize="small" />Services</Link>
           <Link to="/white-paper"><DescriptionOutlinedIcon fontSize="small" />White Paper</Link>
-          <Link to="/pricing"><SellOutlinedIcon fontSize="small" />Pricing</Link>
-          <Link to="/faq"><HelpOutlineOutlinedIcon fontSize="small" />FAQ</Link>
           <Link to="/contact"><MailOutlineOutlinedIcon fontSize="small" />Contact</Link>
         </div>
         <div>
@@ -114,8 +110,7 @@ const Footer = () => {
             <img src="/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
           </a>
           <p className={styles.poweredText}>
-            <span style={{ fontWeight: "bold", fontSize: "1rem" }}></span>
-            <span>Part of the SMAJ Ecosystem � Powered by SMAJ</span>
+            <span>Powered by SMAJ</span>
           </p>
         </div>
 

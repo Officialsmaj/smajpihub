@@ -16,7 +16,6 @@ import logoImage from "/logo.png";
 const navItems = [
   { to: "/white-paper", label: "White Paper" },
   { to: "/how-it-works", label: "How It Works" },
-  { to: "/pricing", label: "Pricing" },
   { to: "/contact", label: "Contact" },
 ];
 
