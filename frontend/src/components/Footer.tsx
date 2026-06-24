@@ -110,7 +110,7 @@ const Footer = () => {
             <img src="/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
           </a>
           <p className={styles.poweredText}>
-            <span>Powered by SMAJ</span>
+            <span>Powered By SMAJ Ecosystem</span>
           </p>
         </div>
 
