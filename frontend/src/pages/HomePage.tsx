@@ -1,75 +1,126 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import AppLayout from "../layouts/AppLayout";
-import ActionButton from "../components/ActionButton";
-import heroImage from "/smaj-hero.png";
-import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
-import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
-import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
-import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
-import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
+import { platformDefinitions } from "../content/platforms";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import AgricultureOutlinedIcon from "@mui/icons-material/AgricultureOutlined";
+import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
+import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import RestaurantOutlinedIcon from "@mui/icons-material/RestaurantOutlined";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
+import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import SwapHorizOutlinedIcon from "@mui/icons-material/SwapHorizOutlined";
+import TokenOutlinedIcon from "@mui/icons-material/TokenOutlined";
+import TravelExploreOutlinedIcon from "@mui/icons-material/TravelExploreOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
+import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
+import WalletOutlinedIcon from "@mui/icons-material/WalletOutlined";
+import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
-const previewServices = [
+const serviceIconMap = {
+  store: StorefrontOutlinedIcon,
+  "food-delivery": RestaurantOutlinedIcon,
+  jobs: WorkOutlineOutlinedIcon,
+  health: LocalHospitalOutlinedIcon,
+  education: SchoolOutlinedIcon,
+  transport: LocalShippingOutlinedIcon,
+  agro: AgricultureOutlinedIcon,
+  energy: BoltOutlinedIcon,
+  charity: VolunteerActivismOutlinedIcon,
+  housing: HomeWorkOutlinedIcon,
+  events: EventOutlinedIcon,
+  swap: SwapHorizOutlinedIcon,
+  stream: VideoLibraryOutlinedIcon,
+  sports: SportsSoccerOutlinedIcon,
+  token: TokenOutlinedIcon,
+};
+
+const heroOrbitServices = [
+  ["Store", StorefrontOutlinedIcon],
+  ["Jobs", WorkOutlineOutlinedIcon],
+  ["Health", LocalHospitalOutlinedIcon],
+  ["Edu", SchoolOutlinedIcon],
+  ["Sports", SportsSoccerOutlinedIcon],
+  ["Stream", VideoLibraryOutlinedIcon],
+] as const;
+
+const valuePillars = [
   {
-    name: "STORE",
-    description: "Shop ecosystem products and services with Pi.",
-    to: "/services/store",
-    icon: <StorefrontOutlinedIcon fontSize="small" />,
-    live: true,
+    title: "One Pi Identity",
+    text: "Users enter through a verified Pi-first identity layer instead of repeating account setup across services.",
+    Icon: AccountCircleOutlinedIcon,
   },
   {
-    name: "JOBS",
-    description: "Find opportunities and verified freelance work.",
-    to: "/services/jobs",
-    icon: <WorkOutlineOutlinedIcon fontSize="small" />,
+    title: "One Pi Wallet",
+    text: "Marketplace and service flows are designed around Pi wallet access, Pi pricing, and Pi utility.",
+    Icon: WalletOutlinedIcon,
   },
   {
-    name: "HEALTH",
-    description: "Discover care options and booking tools.",
-    to: "/services/health",
-    icon: <LocalHospitalOutlinedIcon fontSize="small" />,
-  },
-  {
-    name: "EDU",
-    description: "Access courses, mentorship, and upskilling.",
-    to: "/services/education",
-    icon: <SchoolOutlinedIcon fontSize="small" />,
-  },
-  {
-    name: "SPORTS",
-    description: "Engage with fan utilities and sports services.",
-    to: "/services/sports",
-    icon: <SportsSoccerOutlinedIcon fontSize="small" />,
-  },
-  {
-    name: "STREAM",
-    description: "Watch and support creator-first streaming.",
-    to: "/services/stream",
-    icon: <LiveTvOutlinedIcon fontSize="small" />,
+    title: "Multiple Services",
+    text: "Commerce, jobs, health, education, transport, housing, media, and more connect through one hub.",
+    Icon: HubOutlinedIcon,
   },
 ];
+
+const howItWorks = [
+  ["Connect", "Login with Pi and enter the SMAJ PI HUB experience.", AccountCircleOutlinedIcon],
+  ["Verify", "Use identity and seller/provider checks to build trust.", VerifiedUserOutlinedIcon],
+  ["Choose", "Open marketplace, jobs, health, education, housing, media, or other services.", TravelExploreOutlinedIcon],
+  ["Use Pi", "Buy, sell, access services, and follow trusted platform flows.", PaymentsOutlinedIcon],
+] as const;
+
+const trustFeatures = [
+  ["Verified Access", "Pi-first identity and account signals reduce fake participation.", ShieldOutlinedIcon],
+  ["Marketplace Safety", "Escrow logic, reviews, ratings, and dispute support shape the MVP marketplace.", LockOutlinedIcon],
+  ["AI Guidance", "A platform assistant helps users find services and understand next steps.", SmartToyOutlinedIcon],
+  ["Clear Status", "Live and planned services are labeled so users know what is ready now.", CheckCircleOutlineOutlinedIcon],
+] as const;
+
+const mvpFeatures = [
+  ["Product Listings", ShoppingCartOutlinedIcon],
+  ["Buyer/Seller Chat", ChatOutlinedIcon],
+  ["Pi Payment Flow", PaymentsOutlinedIcon],
+  ["Escrow Logic", LockOutlinedIcon],
+  ["Reviews & Ratings", CheckCircleOutlineOutlinedIcon],
+  ["Dispute Support", ShieldOutlinedIcon],
+] as const;
 
 const HomePage = () => {
   const { isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
-  useEffect(() => { if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true }); }, [isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true });
+  }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading || isAuthenticated) return null;
 
   return (
     <AppLayout>
-      <main className="home-page">
-        <section className="home-hero">
-          <div className="home-hero-grid">
+      <main className="home-page public-home-page">
+        <section className="home-hero public-home-hero">
+          <div className="home-hero-grid public-home-hero-grid">
             <div>
-              <span className="home-kicker">15+ PLATFORMS CONNECTED</span>
-              <h1>The Unified Pi-Powered Digital Ecosystem</h1>
+              <span className="home-kicker">ONE PI IDENTITY. ONE WALLET. MULTIPLE SERVICES.</span>
+              <h1>The Pi-Powered Super App for Real-World Utility</h1>
               <p>
-                Access shopping, jobs, healthcare, education, transport, entertainment and more - all with one Pi
-                login.
+                SMAJ PI HUB connects verified users to marketplace, services, opportunities, and daily digital tools
+                through one Pi identity and one Pi wallet.
               </p>
               <div className="home-hero-cta">
                 <LoginWithPiButton className="home-hero-primary-btn">
@@ -78,109 +129,170 @@ const HomePage = () => {
                 <Link to="/services" className="home-hero-secondary-btn">
                   Explore Services
                 </Link>
+                <Link to="/white-paper" className="home-hero-secondary-btn public-home-outline-btn">
+                  Read White Paper
+                </Link>
               </div>
-              <div className="home-proof">
-                <div className="home-proof-award">
-                  <div className="home-laurel-badge">
-                    <div className="home-laurel-content">
-                      <strong>Phase 1</strong>
-                      <span>SMAJ Store MVP</span>
-                    </div>
-                  </div>
-                  <span>Live marketplace focus</span>
-                </div>
-                <div className="home-proof-award">
-                  <div className="home-laurel-badge">
-                    <div className="home-laurel-content">
-                      <strong>Pi Login</strong>
-                      <span>Wallet-first access</span>
-                    </div>
-                  </div>
-                  <span>Unified identity</span>
+              <div className="home-proof public-home-proof">
+                <div>
+                  <strong>SMAJ Store</strong>
+                  <span>MVP marketplace focus</span>
                 </div>
                 <div>
-                  <strong>15 Platforms</strong>
+                  <strong>Pi Login</strong>
+                  <span>Wallet-first access</span>
+                </div>
+                <div>
+                  <strong>15 Services</strong>
                   <span>Roadmap-backed ecosystem</span>
                 </div>
               </div>
             </div>
-            <article className="home-hero-card">
-              <img src={heroImage} alt="SMAJ PI HUB dashboard preview" />
-            </article>
+
+            <aside className="public-home-orbit" aria-label="SMAJ PI HUB connected services animation">
+              <div className="public-home-orbit-ring public-home-orbit-ring-one" />
+              <div className="public-home-orbit-ring public-home-orbit-ring-two" />
+              <div className="public-home-orbit-core">
+                <HubOutlinedIcon />
+                <strong>SMAJ PI HUB</strong>
+                <span>Pi Utility Gateway</span>
+              </div>
+              {heroOrbitServices.map(([label, Icon], index) => (
+                <div key={label} className={`public-home-orbit-node public-home-orbit-node-${index + 1}`}>
+                  <Icon />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </aside>
           </div>
         </section>
 
-        <section className="home-section">
-          <div className="home-section-head">
-            <h2>Services Preview</h2>
-            <p>A quick look at key platforms in the SMAJ PI HUB ecosystem.</p>
+        <section className="home-section public-home-section">
+          <div className="home-section-head public-home-section-head">
+            <span className="home-kicker">CLEAR PRODUCT PROMISE</span>
+            <h2>One Access Point for Real Pi Utility</h2>
+            <p>
+              The public page explains the platform. The private dashboard becomes the workspace where users actually
+              explore, manage, and use SMAJ services.
+            </p>
           </div>
-          <div className="home-service-grid">
-            {previewServices.map((service) => (
-              <article key={service.name} className="home-service-card">
-                <p style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.6rem", color: "#d4dbea" }}>
-                  {service.icon}
-                  <strong>{service.name}</strong>
-                </p>
-                <p>{service.description}</p>
-                {service.live ? <span className="status-chip live-status-chip">LIVE</span> : null}
-                <ActionButton to={service.to} variant="secondary">
-                  Explore
-                </ActionButton>
+          <div className="home-highlight-grid public-home-pillar-grid">
+            {valuePillars.map(({ title, text, Icon }) => (
+              <article key={title} className="home-highlight-card public-home-icon-card">
+                <span className="public-home-card-icon">
+                  <Icon />
+                </span>
+                <h3>{title}</h3>
+                <p>{text}</p>
               </article>
             ))}
           </div>
-          <p style={{ marginTop: "1rem" }}>
-            <Link to="/services">View All Services &rarr;</Link>
-          </p>
         </section>
 
-        <section className="home-section">
-          <div className="home-section-head">
-            <h2>Why Users Trust SMAJ PI HUB</h2>
-            <p>Designed for clarity, security, and real Pi utility.</p>
-          </div>
-          <div className="home-highlight-grid">
-            <article className="home-highlight-card">
-              <h3>Unified Wallet</h3>
-              <p>Connect your Pi wallet once to access ecosystem services.</p>
-            </article>
-            <article className="home-highlight-card">
-              <h3>Verified Escrow System</h3>
-              <p>Order tracking and payment confirmation designed for safer marketplace transactions.</p>
-            </article>
-            <article className="home-highlight-card">
-              <h3>Pi-Powered Utility</h3>
-              <p>Services and products payable in Pi.</p>
-            </article>
-            <article className="home-highlight-card">
-              <h3>Global Access</h3>
-              <p>Access services from anywhere.</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="home-section">
-          <div className="home-section-head">
-            <h2>Trust & Verification</h2>
+        <section className="home-section public-home-section">
+          <div className="home-section-head public-home-section-head">
+            <span className="home-kicker">SMAJ PI HUB SERVICES</span>
+            <h2>15 Connected Services, One Familiar Direction</h2>
             <p>
-              A multi-layered verification model is planned to reduce fraud, improve safety, and help users transact
-              with confidence across the ecosystem.
+              Users should instantly understand what each platform does, which service is live, and how everything fits
+              into the Pi-powered hub.
+            </p>
+          </div>
+          <div className="public-home-service-grid">
+            {platformDefinitions.map((platform) => {
+              const Icon = serviceIconMap[platform.routeSegment as keyof typeof serviceIconMap] ?? HubOutlinedIcon;
+
+              return (
+                <Link
+                  to={`/services/${platform.routeSegment}`}
+                  key={platform.routeSegment}
+                  className="home-service-card public-home-service-card"
+                >
+                  <span className="public-home-card-icon">
+                    <Icon />
+                  </span>
+                  <div>
+                    <h3>{platform.name}</h3>
+                    <p>{platform.description}</p>
+                  </div>
+                  <span className={platform.status === "Live" ? "status-chip live-status-chip" : "status-chip"}>
+                    {platform.status === "Live" ? "MVP LIVE" : "COMING SOON"}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="home-section public-home-section public-home-mvp-section">
+          <div className="public-home-mvp-copy">
+            <span className="home-kicker">MVP STARTS HERE</span>
+            <h2>SMAJ Store Is the First Marketplace Layer</h2>
+            <p>
+              The launch focus is a trusted marketplace where users can discover products, sellers can list items, and
+              Pi-powered payments can become practical inside a real service flow.
+            </p>
+            <Link to="/services/store" className="home-hero-secondary-btn">
+              View Store Service
+            </Link>
+          </div>
+          <div className="public-home-mvp-grid">
+            {mvpFeatures.map(([title, Icon]) => (
+              <article key={title} className="public-home-mini-card">
+                <Icon />
+                <strong>{title}</strong>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="home-section public-home-section">
+          <div className="home-section-head public-home-section-head">
+            <span className="home-kicker">HOW IT WORKS</span>
+            <h2>A Simple Flow Users Can Follow</h2>
+          </div>
+          <div className="public-home-steps">
+            {howItWorks.map(([title, text, Icon], index) => (
+              <article key={title}>
+                <span>{index + 1}</span>
+                <Icon />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="home-section public-home-section">
+          <div className="home-section-head public-home-section-head">
+            <span className="home-kicker">TRUST LAYER</span>
+            <h2>Built Around Verified Participation</h2>
+            <p>
+              The platform message stays practical: trust, clear service access, marketplace safety, and real-world Pi
+              utility.
             </p>
           </div>
           <div className="home-trust-grid">
-            <article className="home-trust-card">
-              <h3>KYC + Account Signals</h3>
-              <p>Identity and account-level checks to strengthen platform credibility.</p>
-            </article>
-            <article className="home-trust-card">
-              <h3>Escrow-First Payments</h3>
-              <p>Transaction protection with milestone-based fund release patterns.</p>
-            </article>
-            <article className="home-trust-card">
-              <h3>Reputation Layer</h3>
-              <p>Ratings and history to help users choose reliable sellers and service providers.</p>
-            </article>
+            {trustFeatures.map(([title, text, Icon]) => (
+              <article key={title} className="home-trust-card public-home-icon-card">
+                <span className="public-home-card-icon">
+                  <Icon />
+                </span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="home-section public-home-section public-home-final-cta">
+          <span className="home-kicker">SMAJ PI HUB</span>
+          <h2>One Pi Identity. One Wallet. Multiple Services. Real Utility.</h2>
+          <div className="home-hero-cta">
+            <LoginWithPiButton className="home-hero-primary-btn">Login with Pi</LoginWithPiButton>
+            <Link to="/white-paper" className="home-hero-secondary-btn">
+              Read White Paper
+            </Link>
           </div>
         </section>
       </main>
