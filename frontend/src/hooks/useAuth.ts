@@ -144,6 +144,42 @@ export const useAuth = () => {
     setIsLoading(true);
     setAuthFeedback(null);
     if (!window.Pi) {
+      if (import.meta.env.DEV && getBaseURL()) {
+        try {
+          const response = await axiosClient.post<SignInResponse>("/user/dev-signin");
+          const devFallback: User = {
+            uid: response.data.user?.uid || "local-dev-user",
+            username: response.data.user?.username || "localdev",
+            roles: response.data.user?.roles || ["seller"],
+            piUsername: response.data.user?.piUsername || "localdev",
+            displayName: response.data.user?.displayName || "Local Dev Seller",
+            country: response.data.user?.country || "Local",
+            role: (response.data.user?.role as User["role"]) || "seller",
+            contactPhone: response.data.user?.contactPhone || "@localdev",
+            avatar: response.data.user?.avatar || "",
+            coverImage: response.data.user?.coverImage || "",
+            bio: response.data.user?.bio || "",
+            language: response.data.user?.language || "English",
+            sellerActive: true,
+            blocked: false,
+            verificationLevel: response.data.user?.verificationLevel || "trusted_seller",
+            verificationRequested: false,
+            settings: response.data.user?.settings || { theme: "light", language: "English", notifications: true },
+            accessToken: "dev-token",
+          };
+          setUser(storeUser(toUser(response.data.user, devFallback)));
+          setShowSignIn(false);
+          setAuthFeedback({ type: "success", message: "Signed in with local development account." });
+          window.location.replace(getDashboardUrl());
+          return true;
+        } catch (err) {
+          console.error("Development login failed:", err);
+          setAuthFeedback({ type: "error", message: "Local development login failed. Check backend DEV_AUTH and VITE_BACKEND_URL." });
+          return false;
+        } finally {
+          setIsLoading(false);
+        }
+      }
       const message = "Please open SMAJ PI HUB inside Pi Browser to login.";
       setAuthFeedback({ type: "error", message });
       alert(message);

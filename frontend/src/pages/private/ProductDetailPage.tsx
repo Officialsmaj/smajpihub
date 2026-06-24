@@ -38,24 +38,6 @@ const ProductDetailPage = () => {
         window.localStorage.setItem("smaj_last_viewed_product", data.product._id);
       })
       .catch(() => {
-        try {
-          const cached = window.localStorage.getItem(`smaj_${id}`);
-          if (cached) {
-            const demo = JSON.parse(cached) as Product;
-            setProduct(demo);
-            setSelectedImage(demo.images?.[0] || demo.image);
-            setSeller({
-              uid: demo.sellerId,
-              displayName: demo.sellerName,
-              piUsername: demo.piUsername,
-              verificationLevel: "trusted_seller",
-              averageRating: demo.rating || 4.7,
-            });
-            return;
-          }
-        } catch {
-          // Ignore invalid cached demo data.
-        }
         setError("Product not found.");
       });
   }, [id]);
@@ -67,20 +49,6 @@ const ProductDetailPage = () => {
     setError("");
 
     try {
-      if (product._id.startsWith("demo-product-")) {
-        if (kind === "order") {
-          setBuyNowItem(product);
-          navigate("/checkout");
-        } else if (kind === "favorite") {
-          setSaved((value) => !value);
-        } else if (kind === "message") {
-          navigate("/messages?conversation=demo-ahmed");
-        } else {
-          setMessage("Demo product report recorded for preview.");
-        }
-        return;
-      }
-
       if (kind === "order") {
         setBuyNowItem(product);
         navigate("/checkout");

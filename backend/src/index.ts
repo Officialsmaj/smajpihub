@@ -19,16 +19,22 @@ import mountNotificationEndpoints from "./handlers/notifications";
 import mountMarketplaceEndpoints from "./handlers/marketplace";
 import mountAdminEndpoints from "./handlers/admin";
 import mountMessageEndpoints from "./handlers/messages";
+import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
 const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
-const mongoClientOptions = {
-  authSource: "admin",
-  auth: {
-    username: env.mongo_user,
-    password: env.mongo_password,
-  },
-};
+const baseMongoClientOptions = { serverSelectionTimeoutMS: 5000 };
+const mongoClientOptions =
+  env.mongo_user && env.mongo_password
+    ? {
+        ...baseMongoClientOptions,
+        authSource: "admin",
+        auth: {
+          username: env.mongo_user,
+          password: env.mongo_password,
+        },
+      }
+    : baseMongoClientOptions;
 
 //
 // I. Initialize and set up the express app and various middlewares and packages:
@@ -93,12 +99,16 @@ app.use(
     secret: env.session_secret,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: mongoUri,
-      mongoOptions: mongoClientOptions,
-      dbName: dbName,
-      collectionName: "user_sessions",
-    }),
+    ...(env.use_memory_db
+      ? {}
+      : {
+          store: MongoStore.create({
+            mongoUrl: mongoUri,
+            mongoOptions: mongoClientOptions,
+            dbName: dbName,
+            collectionName: "user_sessions",
+          }),
+        }),
   }) as unknown as express.RequestHandler,
 );
 
@@ -145,18 +155,23 @@ app.get("/", async (_, res) => {
 
 const start = async () => {
   try {
-    const client = await MongoClient.connect(mongoUri, mongoClientOptions);
-    const db = client.db(dbName);
-    app.locals.paymentCollection = db.collection("pi_payments");
-    app.locals.marketplaceOrderCollection = db.collection("orders");
-    app.locals.productCollection = db.collection("products");
-    app.locals.userCollection = db.collection("users");
-    app.locals.reportCollection = db.collection("reports");
-    app.locals.favoriteCollection = db.collection("favorites");
-    app.locals.reviewCollection = db.collection("reviews");
-    app.locals.conversationCollection = db.collection("conversations");
-    app.locals.messageCollection = db.collection("messages");
-    app.locals.notificationCollection = db.collection("notifications");
+    if (env.use_memory_db) {
+      Object.assign(app.locals, createMemoryCollections());
+      console.warn("Using in-memory development database. Data resets when the backend stops.");
+    } else {
+      const client = await MongoClient.connect(mongoUri, mongoClientOptions);
+      const db = client.db(dbName);
+      app.locals.paymentCollection = db.collection("pi_payments");
+      app.locals.marketplaceOrderCollection = db.collection("orders");
+      app.locals.productCollection = db.collection("products");
+      app.locals.userCollection = db.collection("users");
+      app.locals.reportCollection = db.collection("reports");
+      app.locals.favoriteCollection = db.collection("favorites");
+      app.locals.reviewCollection = db.collection("reviews");
+      app.locals.conversationCollection = db.collection("conversations");
+      app.locals.messageCollection = db.collection("messages");
+      app.locals.notificationCollection = db.collection("notifications");
+    }
 
     const demoSellerId = "smaj-demo-store";
     await app.locals.userCollection.updateOne({ uid: demoSellerId }, { $setOnInsert: { uid: demoSellerId, username: "smajmarket", piUsername: "smajmarket", displayName: "SMAJ Market", country: "Nigeria", contactPhone: "@smajmarket", role: "seller", roles: ["seller"], blocked: false, verificationLevel: "trusted_seller", settings: { theme: "light", language: "English", notifications: true }, createdAt: new Date("2025-01-15") } }, { upsert: true });
@@ -169,7 +184,7 @@ const start = async () => {
       const products = Array.from({ length: needed }, (_, offset) => { const index = productCount + offset; const title = `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`; const image = `https://picsum.photos/seed/smaj-product-${index}/800/620`; const pricePi = Number((0.0005 + ((index * 137) % 145) / 10000).toFixed(4)); return { sellerId: demoSellerId, sellerName: "SMAJ Market", piUsername: "smajmarket", title, image, images: [image, `https://picsum.photos/seed/smaj-product-${index}-detail/800/620`], pricePi, description: `${title} offered by a trusted SMAJ PI HUB marketplace seller. Contact the seller for availability and delivery details.`, category: categories[index % categories.length], location: locations[index % locations.length], sellerContact: "@smajmarket", active: true, approved: true, hidden: false, createdAt: new Date(Date.now() - index * 3600000) }; });
       await app.locals.productCollection.insertMany(products);
     }
-    console.log("Connected to MongoDB on: ", mongoUri);
+    console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${mongoUri}`);
 
     app.listen(env.port, () => {
       console.log(`App platform demo app - Backend listening on port ${env.port}!`);

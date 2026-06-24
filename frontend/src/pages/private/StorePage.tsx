@@ -30,36 +30,6 @@ import logoImage from "/logo.png";
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion", "Kids Fashion", "Home, Kitchen & Appliances", "Beauty & Fragrance", "Toys", "Baby", "Health & Nutrition"];
 const electronicsSubcategories = ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"];
-const demoNames = ["Wireless Earbuds", "Smart Watch", "Portable Speaker", "Classic Sneakers", "Travel Backpack", "Android Phone", "Laptop Computer", "Skincare Set", "Modern Sofa", "City Bicycle", "Kitchen Blender", "Office Chair", "Summer Dress", "Gaming Mouse", "Power Bank", "Digital Camera", "Family Sedan", "Graphic Design Service", "Fresh Food Box", "Premium Perfume", "Smart Television", "Gaming Console", "Coffee Maker", "Luxury Handbag", "Sports Shoes", "Road Bicycle", "Baby Stroller", "Noise Cancelling Headphones", "Printer Bundle", "Men Care Kit"];
-const demoLocations = ["Lagos, Nigeria", "Abuja, Nigeria", "Kano, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Dakar, Senegal", "Johannesburg, South Africa", "London, UK"];
-const demoImageKeyword: Record<string, string> = { Deals: "shopping", Grocery: "grocery", Electronics: "electronics", Mobiles: "smartphone", Laptops: "laptop", Fashion: "fashion", Beauty: "beauty", Home: "furniture", Vehicles: "car", Accessories: "accessories" };
-
-const DEMO_PRODUCTS: Product[] = Array.from({ length: 500 }, (_, index) => {
-  const category = STORE_CATEGORIES[index % STORE_CATEGORIES.length];
-  const title = `${demoNames[index % demoNames.length]} ${Math.floor(index / demoNames.length) + 1}`;
-  const pricePi = Number((0.0005 + ((index * 137) % 145) / 10000).toFixed(4));
-  return {
-    _id: `demo-product-${index + 1}`,
-    sellerId: "smaj-demo-store",
-    sellerName: ["SMAJ Market", "Amina Store", "Ahmed Electronics", "Musa Gadgets"][index % 4],
-    piUsername: "smajmarket",
-    title,
-    image: `https://loremflickr.com/640/480/${demoImageKeyword[category]}?lock=${index + 1}`,
-    images: [
-      `https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 1}`,
-      `https://loremflickr.com/900/700/${demoImageKeyword[category]}?lock=${index + 501}`,
-    ],
-    pricePi,
-    description: `${title} from a trusted SMAJ PI HUB demo seller. Contact the seller for availability and delivery details.`,
-    category,
-    location: demoLocations[index % demoLocations.length],
-    sellerContact: "@smajmarket",
-    active: true,
-    approved: true,
-    createdAt: new Date(Date.now() - index * 3600000).toISOString(),
-    rating: Number((4.1 + (index % 9) / 10).toFixed(1)),
-  };
-});
 
 const scrollRail = (target: HTMLDivElement | null, direction: "left" | "right") => {
   if (!target) return;
@@ -77,7 +47,7 @@ const StorePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const [category, setCategory] = useState(params.get("category") || "All");
   const [heroIndex, setHeroIndex] = useState(0);
@@ -90,18 +60,19 @@ const StorePage = () => {
 
   useEffect(() => {
     Promise.all([
-      axiosClient.get<{ latest?: Product[]; recommended?: Product[]; savedIds?: string[]; products?: Product[] }>("/marketplace/feed").catch(() => null),
-      axiosClient.get<{ products: Product[] }>("/marketplace/products").catch(() => null),
+      axiosClient.get<{ latest?: Product[]; recommended?: Product[]; savedIds?: string[]; products?: Product[] }>("/marketplace/feed"),
+      axiosClient.get<{ products: Product[] }>("/marketplace/products"),
       axiosClient.get<{ products: Product[] }>("/marketplace/saved").catch(() => null),
     ]).then(([feed, all, saved]) => {
       const live = feed?.data?.latest?.length ? [...(feed.data.recommended || []), ...(feed.data.latest || [])] : all?.data?.products || [];
-      const unique = Array.from(new Map((live.length ? live : DEMO_PRODUCTS).map((item) => [item._id, item])).values());
-      setProducts(unique.length ? unique : DEMO_PRODUCTS);
+      const unique = Array.from(new Map(live.map((item) => [item._id, item])).values());
+      setProducts(unique);
       setSavedIds(feed?.data?.savedIds || saved?.data?.products.map((item) => item._id) || []);
-      setUsingFallback(!live.length);
+      setCatalogError(live.length ? "" : "No live products are available yet. Add a seller product to open the marketplace.");
     }).catch(() => {
-      setProducts(DEMO_PRODUCTS);
-      setUsingFallback(true);
+      setProducts([]);
+      setSavedIds([]);
+      setCatalogError("SMAJ Store cannot reach the live catalog. Check the backend, MongoDB, session, and CORS settings.");
     }).finally(() => setLoading(false));
   }, []);
 
@@ -130,10 +101,6 @@ const StorePage = () => {
   };
 
   const toggleFavorite = async (product: Product) => {
-    if (product._id.startsWith("demo-product-")) {
-      setSavedIds((current) => current.includes(product._id) ? current.filter((id) => id !== product._id) : [...current, product._id]);
-      return;
-    }
     const { data } = await axiosClient.post<{ saved: boolean }>(`/marketplace/products/${product._id}/favorite`);
     setSavedIds((current) => data.saved ? [...new Set([...current, product._id])] : current.filter((id) => id !== product._id));
   };
@@ -318,12 +285,22 @@ const StorePage = () => {
           {dealCards.map((card) => <article key={card.title}><strong>{card.title}</strong><p>{card.body}</p></article>)}
         </section>
 
-        {usingFallback ? <div className="private-alert">Showing SMAJ Store demo products while the live catalog reconnects.</div> : null}
+        {catalogError ? <div className="private-alert error">{catalogError}</div> : null}
         {loading ? <div className="private-state">Loading SMAJ Store...</div> : null}
+        {!loading && !products.length ? (
+          <section className="private-state">
+            <h2>Live catalog is empty</h2>
+            <p>Add the first seller product or reconnect the backend catalog before testing checkout.</p>
+            <div className="form-actions">
+              <Link className="private-primary-button" to="/add-product">Add Product</Link>
+              <Link className="private-secondary-button" to="/seller">Open Seller Dashboard</Link>
+            </div>
+          </section>
+        ) : null}
 
         {!loading ? (
           <>
-            {homeSections.filter((section) => section.title !== "Vehicle Deals").map((section) => {
+            {products.length ? homeSections.filter((section) => section.title !== "Vehicle Deals").map((section) => {
               const sectionProducts = pickProducts(homepageProducts, section);
               return (
                 <section className="storefront-product-section" key={section.title}>
@@ -349,7 +326,7 @@ const StorePage = () => {
                   </div>
                 </section>
               );
-            })}
+            }) : null}
 
             <section className="storefront-carousel-section">
               <div className="storefront-section-head">
@@ -462,7 +439,7 @@ const StorePage = () => {
               </div>
               <div className="storefront-footer-bottom">
                 <span>SMAJ Store - Powered by Pi</span>
-                <span>© 2026 SMAJ PI HUB. All rights reserved.</span>
+                <span>(c) 2026 SMAJ PI HUB. All rights reserved.</span>
                 <span>Part of the SMAJ Ecosystem</span>
               </div>
             </footer>
@@ -494,3 +471,4 @@ const StorePage = () => {
 };
 
 export default StorePage;
+

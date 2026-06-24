@@ -25,6 +25,8 @@ interface Environment {
   mongo_user: string;
   mongo_password: string;
   frontend_url: string;
+  use_memory_db: boolean;
+  dev_auth: boolean;
 }
 
 const sandboxSDK = String(process.env.SANDBOX_SDK || "false").toLowerCase() === "true";
@@ -41,6 +43,8 @@ const env: Environment = {
   mongo_user: process.env.MONGODB_USERNAME || "",
   mongo_password: process.env.MONGODB_PASSWORD || "",
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3314",
+  use_memory_db: String(process.env.USE_MEMORY_DB || "false").toLowerCase() === "true",
+  dev_auth: String(process.env.DEV_AUTH || "false").toLowerCase() === "true",
 };
 
 export default env;

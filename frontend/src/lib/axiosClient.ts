@@ -12,6 +12,10 @@ export const getBaseURL = () => {
     return buildURL;
   }
 
+  if (import.meta.env.DEV) {
+    return "http://127.0.0.1:8000";
+  }
+
   return undefined;
 };
 

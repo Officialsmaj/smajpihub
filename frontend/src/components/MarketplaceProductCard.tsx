@@ -34,11 +34,6 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
 
       <Link
         to={`/product/${product._id}`}
-        onClick={() => {
-          if (product._id.startsWith("demo-product-")) {
-            window.localStorage.setItem(`smaj_${product._id}`, JSON.stringify(product));
-          }
-        }}
         aria-label={`View ${product.title}`}
       >
         <div className="product-image-wrap storefront-product-image-wrap">
@@ -48,7 +43,7 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
         <div className="product-card-body storefront-product-body">
           <h2>{product.title}</h2>
           <div className="storefront-product-rating">
-            <span>{(product.rating || 4.7).toFixed(1)}★</span>
+            <span>{(product.rating || 4.7).toFixed(1)} star</span>
             <small>({reviewCount} reviews)</small>
           </div>
           <div className="storefront-price-stack">

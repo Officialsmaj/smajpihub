@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 
+import { ObjectId } from "mongodb";
 import platformAPIClient from "../services/platformAPIClient";
+import env from "../environments";
 
 type VerifiedPiUser = {
   uid?: string;
@@ -140,6 +142,42 @@ export const handleSignIn = async (req: Request, res: Response) => {
 };
 
 export default function mountUserEndpoints(router: Router) {
+  router.post("/dev-signin", async (req: Request, res: Response) => {
+    if (!env.dev_auth || process.env.NODE_ENV === "production") {
+      return res.status(404).json({ error: "not_found", message: "Development sign-in is disabled" });
+    }
+
+    const uid = "local-dev-user";
+    const userCollection = req.app.locals.userCollection;
+    await userCollection.updateOne(
+      { uid },
+      {
+        $setOnInsert: {
+          _id: new ObjectId(),
+          username: "localdev",
+          piUsername: "localdev",
+          uid,
+          displayName: "Local Dev Seller",
+          country: "Local",
+          contactPhone: "@localdev",
+          role: "seller",
+          roles: ["seller"],
+          sellerActive: true,
+          blocked: false,
+          verificationLevel: "trusted_seller",
+          verificationRequested: false,
+          settings: { theme: "light", language: "English", notifications: true },
+          createdAt: new Date(),
+          accessToken: "dev-token",
+        },
+      },
+      { upsert: true },
+    );
+    const currentUser = await userCollection.findOne({ uid });
+    req.session.currentUser = currentUser;
+    return res.status(200).json({ message: "Development user signed in", user: toClientUser(currentUser) });
+  });
+
   // POST /user/signin
   router.post("/signin", handleSignIn);
 
