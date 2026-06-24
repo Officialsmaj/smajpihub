@@ -166,7 +166,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="home-section public-home-section">
+        <section className="home-section public-home-section public-home-services-section">
           <div className="home-section-head public-home-section-head">
             <span className="home-kicker">SMAJ PI HUB SERVICES</span>
             <h2>15 Connected Services, One Familiar Direction</h2>

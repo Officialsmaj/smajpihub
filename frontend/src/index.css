@@ -1216,6 +1216,22 @@ h4, h5, h6 {
   gap: 14px;
 }
 
+.public-home-services-section {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(135deg, #8350ed, #6530d2);
+  border-color: rgba(203, 185, 255, 0.32);
+}
+
+.public-home-services-section .home-kicker,
+.public-home-services-section h2 {
+  color: #ffffff;
+}
+
+.public-home-services-section .home-section-head p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
 .public-home-service-card {
   position: relative;
   min-height: 300px;
@@ -1225,18 +1241,19 @@ h4, h5, h6 {
   gap: 14px;
   padding: 18px;
   color: inherit;
-  background: #223047;
-  border: 1px solid #33455f;
+  background: rgba(26, 36, 53, 0.9);
+  border: 1px solid rgba(203, 185, 255, 0.26);
   border-radius: 20px;
   text-decoration: none;
   overflow: hidden;
+  box-shadow: 0 18px 42px rgba(20, 10, 48, 0.22);
   transition: border-color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
 }
 
 .public-home-service-card:hover {
   transform: translateY(-3px);
-  border-color: #6b3fe6;
-  background: #25344b;
+  border-color: rgba(255, 255, 255, 0.58);
+  background: rgba(34, 48, 71, 0.94);
 }
 
 .public-home-service-card .service-art {
@@ -1401,7 +1418,7 @@ h4, h5, h6 {
 
 @media (max-width: 1100px) {
   .public-home-service-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .public-home-hero-grid,
@@ -1421,10 +1438,14 @@ h4, h5, h6 {
 
   .public-home-proof,
   .public-home-pillar-grid,
-  .public-home-service-grid,
   .public-home-mvp-grid,
   .public-home-steps {
     grid-template-columns: 1fr;
+  }
+
+  .public-home-service-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .public-home-orbit {
@@ -1470,17 +1491,58 @@ h4, h5, h6 {
   }
 
   .public-home-service-card {
-    border-radius: 16px;
-    padding: 14px;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 0.82;
+    padding: 10px 7px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 0;
+    border-radius: 18px;
+    text-align: center;
   }
 
   .public-home-service-card .service-art {
-    border-radius: 14px;
+    width: clamp(52px, 16vw, 66px);
+    height: clamp(52px, 16vw, 66px);
+    flex: 0 0 auto;
+    aspect-ratio: 1;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  }
+
+  .public-home-service-card h3 {
+    width: 100%;
+    margin: 9px 0 0;
+    overflow: hidden;
+    font-size: clamp(11px, 3.2vw, 13px);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .public-home-service-card p {
+    width: 100%;
+    margin-top: 4px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: clamp(8px, 2.45vw, 10px);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .public-home-service-card ul {
+    display: none;
   }
 
   .public-home-service-card .service-status {
-    top: 24px;
-    right: 24px;
+    position: static;
+    margin-top: 7px;
+    padding: 4px 7px;
+    font-size: 9px;
   }
 }
 
