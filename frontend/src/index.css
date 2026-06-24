@@ -8431,6 +8431,75 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   white-space: pre;
 }
 
+.whitepaper-data-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e4d9ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.whitepaper-data-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  color: #332943;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.whitepaper-data-table th,
+.whitepaper-data-table td {
+  padding: 13px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #eee7f5;
+}
+
+.whitepaper-data-table thead th {
+  color: #26173f;
+  background: #fbf8ff;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.whitepaper-data-table tbody th {
+  width: 190px;
+  color: #3f2a70;
+  font-weight: 850;
+}
+
+.whitepaper-data-table tbody td:nth-child(2) {
+  width: 150px;
+  color: #7c5a13;
+  font-weight: 750;
+}
+
+.whitepaper-data-table tbody tr:last-child th,
+.whitepaper-data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.whitepaper-data-table tbody tr:nth-child(even) {
+  background: #fdfbff;
+}
+
+.whitepaper-roadmap-table tbody th {
+  width: 110px;
+}
+
+.whitepaper-roadmap-table tbody td:nth-child(2) {
+  width: 130px;
+}
+
+.whitepaper-roadmap-table tbody td:nth-child(3) {
+  width: 190px;
+  color: #3f2a70;
+  font-weight: 800;
+}
+
 .whitepaper-line-space {
   display: block;
   min-height: 4px;

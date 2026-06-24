@@ -9,6 +9,33 @@ type WhitePaperSection = {
   lines: string[];
 };
 
+const platformRows = [
+  ["SMAJ STORE", "Commerce", "A blockchain-based e-commerce marketplace featuring vendor verification, escrow services, and seamless Pi cryptocurrency payments. It aims to provide a secure and transparent environment for buying and selling goods."],
+  ["SMAJ FOOD DELIVERY", "Daily Life", "A direct-to-customer food delivery service connecting users with verified restaurants. Features include real-time tracking, loyalty rewards, and efficient logistics powered by Pi payments."],
+  ["SMAJ PI JOBS", "Economy", "A comprehensive freelance and job platform offering secure payments, verified professional profiles, and smart contract support for agreements. It connects talent with opportunities within the Pi ecosystem."],
+  ["SMAJ PI HEALTH", "Health", "A telemedicine platform providing access to verified healthcare providers, secure management of health records, and virtual consultations. It aims to make healthcare more accessible and efficient."],
+  ["SMAJ PI EDU", "Education", "A decentralized learning platform offering verified courses, certifications, and AI-guided learning paths. It empowers individuals with accessible and quality education."],
+  ["SMAJ PI TRANSPORT", "Mobility", "A coordinated transport and delivery service featuring route optimization, verified drivers, and crypto payments. This includes ride-sharing, car rentals, and potentially flight booking integrations."],
+  ["SMAJ PI AGRO", "Agriculture", "A marketplace designed to connect farmers directly with buyers and suppliers, ensuring transparent pricing and efficient transactions. It aims to modernize agricultural trade."],
+  ["SMAJ PI ENERGY", "Utilities", "A unified utility payment flow for essential services like electricity, water, and gas, complete with usage tracking and simplified billing."],
+  ["SMAJ PI CHARITY", "Social Good", "A transparent and traceable donation infrastructure for verified non-governmental organizations (NGOs), providing clear impact reporting and fostering trust in charitable giving."],
+  ["SMAJ PI HOUSING", "Real Estate", "A verified housing and property marketplace offering anti-fraud protections and secure escrow deposits for rentals and sales. It aims to simplify real estate transactions."],
+  ["SMAJ PI EVENTS", "Leisure", "A platform for event discovery, secure ticketing, and organizer verification. It explores NFT-based ticket potential to combat fraud and enhance event experiences."],
+  ["SMAJ PI SWAP", "Circular Economy", "A second-hand and peer-to-peer exchange platform supporting sustainable consumption and circular economy behaviors within the community."],
+  ["SMAJ PI STREAM", "Entertainment", "A premium content streaming service, offering movies, series, and documentaries. It provides a seamless entertainment experience integrated within the SMAJ PI HUB."],
+  ["SMAJ PI SPORTS", "Sports", "A dedicated platform for live sports broadcasting, real-time scores, news, and community engagement. It aims to be the go-to hub for sports enthusiasts within the Pi Network."],
+  ["SMAJ TOKEN", "Governance & Utility", "The native utility asset powering rewards, governance voting rights, staking opportunities, loyalty/cashback programs, and service fee discounts."],
+];
+
+const roadmapRows = [
+  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, escrow logic, reviews, ratings, dispute support, and initial AI assistant deployment."],
+  ["Phase 2", "Q3 2026", "Marketplace & Employment", "Expansion of SMAJ STORE features and vendor onboarding. Launch of SMAJ PI JOBS for freelancers and employers within the Pi ecosystem."],
+  ["Phase 3", "Q4 2026", "Essential Services", "Launch of SMAJ FOOD DELIVERY and SMAJ PI HEALTH, providing critical daily services to the community."],
+  ["Phase 4", "Q1 2027", "Mobility & Social Impact", "Introduction of SMAJ PI TRANSPORT and SMAJ PI CHARITY, expanding the hub's utility into mobility and social good."],
+  ["Phase 5", "Q2 2027", "Entertainment & Circular Economy", "Launch of SMAJ PI STREAM, SMAJ PI SPORTS, and SMAJ PI SWAP, enriching the user experience with entertainment and sustainable exchange options."],
+  ["Phase 6", "Q3-Q4 2027", "Token Utility & Global Scaling", "Full SMAJ TOKEN utility integration, global scaling, localization, developer ecosystem expansion, and launch of SMAJ PI EDU, SMAJ PI AGRO, SMAJ PI ENERGY, SMAJ PI HOUSING, and SMAJ PI EVENTS."],
+];
+
 const headingPattern = /^(?:#{2,3}\s*)?\d+(?:\.\d+)*\.?\s+.+$/;
 
 const createSlug = (value: string) =>
@@ -108,6 +135,82 @@ const renderLine = (line: string, sectionId: string, index: number) => {
   return <p key={`${sectionId}-line-${index}`}>{renderInlineText(line)}</p>;
 };
 
+const renderPlatformTable = () => (
+  <div className="whitepaper-data-table-wrap">
+    <table className="whitepaper-data-table">
+      <thead>
+        <tr>
+          <th scope="col">Platform Name</th>
+          <th scope="col">Category</th>
+          <th scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {platformRows.map(([name, category, description]) => (
+          <tr key={name}>
+            <th scope="row">{name}</th>
+            <td>{category}</td>
+            <td>{description}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const renderRoadmapTable = () => (
+  <div className="whitepaper-data-table-wrap">
+    <table className="whitepaper-data-table whitepaper-roadmap-table">
+      <thead>
+        <tr>
+          <th scope="col">Phase</th>
+          <th scope="col">Timeline</th>
+          <th scope="col">Focus</th>
+          <th scope="col">Key Deliverables</th>
+        </tr>
+      </thead>
+      <tbody>
+        {roadmapRows.map(([phase, timeline, focus, deliverables]) => (
+          <tr key={phase}>
+            <th scope="row">{phase}</th>
+            <td>{timeline}</td>
+            <td>{focus}</td>
+            <td>{deliverables}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const renderSectionBody = (section: WhitePaperSection) => {
+  if (section.id.startsWith("9-the-15-integrated-platforms")) {
+    return (
+      <>
+        <p>
+          The SMAJ PI HUB is comprised of 15 interconnected platforms, each designed to address specific real-world
+          needs while benefiting from the unified identity and payment system.
+        </p>
+        {renderPlatformTable()}
+      </>
+    );
+  }
+
+  if (section.id.startsWith("12-roadmap")) {
+    return (
+      <>
+        <p>
+          The development and deployment of SMAJ PI HUB will follow a strategic, phased approach to ensure stability,
+          security, and user adoption.
+        </p>
+        {renderRoadmapTable()}
+      </>
+    );
+  }
+
+  return section.lines.map((line, index) => renderLine(line, section.id, index));
+};
+
 const sections = buildSections(whitePaperText);
 const tocSections = sections.filter((section) => section.id !== "opening");
 
@@ -163,7 +266,7 @@ const WhitePaperPage = () => {
                     <h2>{section.title}</h2>
                   )}
                   <div className="whitepaper-section-body">
-                    {section.lines.map((line, index) => renderLine(line, section.id, index))}
+                    {renderSectionBody(section)}
                   </div>
                   {section.id !== sections[sections.length - 1]?.id ? (
                     <a className="whitepaper-scroll-link" href="#opening">
