@@ -99,7 +99,7 @@ const HomePage = () => {
               <div className="public-home-phone-glow" />
               <img src="/assets/smaj-hero-hand-phone.png" alt="Hand holding a premium phone showing a mobile app" />
               <div className="public-home-infinity-orbit" aria-hidden="true">
-                {serviceCatalog.slice(0, 10).map((service, index) => (
+                {serviceCatalog.map((service, index) => (
                   <span key={service.slug} className={`public-home-floating-service public-home-floating-service-${index + 1}`}>
                     <ServiceArt index={service.atlasIndex} />
                   </span>
