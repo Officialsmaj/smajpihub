@@ -11,17 +11,17 @@ const steps = [
   {
     label: "Step 01",
     title: "Mission",
-    text: "Turn Pi from something people talk about into something people actually use for everyday services.",
+    text: "Make Pi useful in real life, not just something people explain for 40 minutes at the worst possible time.",
   },
   {
     label: "Step 02",
     title: "Vision",
-    text: "Build a trusted Pi-powered super app where one identity and one wallet open many useful doors.",
+    text: "Build one trusted Pi-powered place where your identity, wallet, and services stop running in different directions.",
   },
   {
     label: "Step 03",
     title: "Promise",
-    text: "Keep the experience simple, useful, and honest. No confusing maze. No drama. Just clear utility.",
+    text: "Keep things simple, useful, and honest. No mystery buttons. No app jungle. No stress Olympics.",
   },
 ];
 
