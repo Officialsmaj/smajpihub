@@ -1243,17 +1243,18 @@ h4, h5, h6 {
   position: relative;
   min-height: 520px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .public-home-phone-glow {
   position: absolute;
-  width: 76%;
+  width: 78%;
   aspect-ratio: 1;
-  right: 2%;
-  bottom: 4%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -44%);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(107, 63, 230, 0.28), transparent 68%);
   filter: blur(10px);
@@ -1262,16 +1263,78 @@ h4, h5, h6 {
 
 .public-home-phone-visual img {
   position: relative;
-  z-index: 1;
-  width: min(620px, 112%);
+  z-index: 3;
+  width: min(330px, 68vw);
   height: 520px;
-  object-fit: cover;
-  object-position: 76% 50%;
-  mix-blend-mode: screen;
-  filter: contrast(1.05) saturate(0.92) drop-shadow(0 32px 50px rgba(2, 6, 18, 0.46));
-  transform: translate(18px, 24px) rotate(-1deg);
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: normal;
+  filter: contrast(1.04) saturate(0.95) drop-shadow(0 34px 46px rgba(2, 6, 18, 0.5));
+  transform: translateY(10px) rotate(-1deg);
   animation: publicPhoneFloat 5.4s ease-in-out infinite;
 }
+
+.public-home-infinity-orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.public-home-infinity-orbit::before,
+.public-home-infinity-orbit::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(360px, 74%);
+  height: min(210px, 42%);
+  border: 1px solid rgba(203, 185, 255, 0.18);
+  border-radius: 50%;
+  transform: translate(-50%, -46%) rotate(28deg);
+}
+
+.public-home-infinity-orbit::after {
+  transform: translate(-50%, -46%) rotate(-28deg);
+}
+
+.public-home-floating-service {
+  --x: 0px;
+  --y: 0px;
+  --delay: 0s;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(203, 185, 255, 0.45);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(2, 6, 18, 0.24);
+  transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
+  animation: publicInfinityFloat 5.8s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.public-home-floating-service .service-art {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+}
+
+.public-home-floating-service-1 { --x: -220px; --y: -86px; --delay: -0.2s; }
+.public-home-floating-service-2 { --x: -120px; --y: -148px; --delay: -0.8s; }
+.public-home-floating-service-3 { --x: 126px; --y: -144px; --delay: -1.4s; }
+.public-home-floating-service-4 { --x: 224px; --y: -70px; --delay: -2s; }
+.public-home-floating-service-5 { --x: 210px; --y: 76px; --delay: -2.6s; }
+.public-home-floating-service-6 { --x: 96px; --y: 144px; --delay: -3.2s; }
+.public-home-floating-service-7 { --x: -96px; --y: 142px; --delay: -3.8s; }
+.public-home-floating-service-8 { --x: -214px; --y: 68px; --delay: -4.4s; }
+.public-home-floating-service-9 { --x: -32px; --y: -205px; --delay: -5s; }
+.public-home-floating-service-10 { --x: 34px; --y: 204px; --delay: -5.6s; }
 
 .public-home-proof div {
   min-height: 96px;
@@ -1641,8 +1704,17 @@ h4, h5, h6 {
 }
 
 @keyframes publicPhoneFloat {
-  0%, 100% { transform: translate(18px, 24px) rotate(-1deg); }
-  50% { transform: translate(18px, 10px) rotate(0.6deg); }
+  0%, 100% { transform: translateY(10px) rotate(-1deg); }
+  50% { transform: translateY(-5px) rotate(0.6deg); }
+}
+
+@keyframes publicInfinityFloat {
+  0%, 100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) translateY(0) scale(1);
+  }
+  50% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) translateY(-12px) scale(1.04);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -1664,9 +1736,26 @@ h4, h5, h6 {
   }
 
   .public-home-phone-visual img {
-    width: min(620px, 100%);
+    width: min(300px, 68vw);
     height: 450px;
   }
+
+  .public-home-floating-service {
+    width: 58px;
+    height: 58px;
+    border-radius: 15px;
+  }
+
+  .public-home-floating-service-1 { --x: -174px; --y: -72px; }
+  .public-home-floating-service-2 { --x: -94px; --y: -126px; }
+  .public-home-floating-service-3 { --x: 96px; --y: -126px; }
+  .public-home-floating-service-4 { --x: 174px; --y: -58px; }
+  .public-home-floating-service-5 { --x: 164px; --y: 68px; }
+  .public-home-floating-service-6 { --x: 82px; --y: 122px; }
+  .public-home-floating-service-7 { --x: -82px; --y: 122px; }
+  .public-home-floating-service-8 { --x: -164px; --y: 62px; }
+  .public-home-floating-service-9 { --x: -28px; --y: -170px; }
+  .public-home-floating-service-10 { --x: 28px; --y: 168px; }
 }
 
 @media (max-width: 768px) {
@@ -1709,15 +1798,43 @@ h4, h5, h6 {
   }
 
   .public-home-phone-visual {
-    min-height: 330px;
+    min-height: 350px;
     margin-top: 4px;
+    overflow: hidden;
   }
 
   .public-home-phone-visual img {
-    width: 112%;
-    height: 330px;
-    object-position: 75% 52%;
-    transform: translate(4px, 14px) rotate(-1deg);
+    width: min(235px, 62vw);
+    height: 350px;
+    object-position: center;
+  }
+
+  .public-home-floating-service {
+    width: 46px;
+    height: 46px;
+    padding: 4px;
+    border-radius: 12px;
+  }
+
+  .public-home-floating-service .service-art {
+    border-radius: 9px;
+  }
+
+  .public-home-floating-service-1 { --x: -126px; --y: -54px; }
+  .public-home-floating-service-2 { --x: -72px; --y: -98px; }
+  .public-home-floating-service-3 { --x: 72px; --y: -98px; }
+  .public-home-floating-service-4 { --x: 126px; --y: -48px; }
+  .public-home-floating-service-5 { --x: 118px; --y: 54px; }
+  .public-home-floating-service-6 { --x: 62px; --y: 96px; }
+  .public-home-floating-service-7 { --x: -62px; --y: 96px; }
+  .public-home-floating-service-8 { --x: -118px; --y: 54px; }
+  .public-home-floating-service-9 { --x: -20px; --y: -132px; }
+  .public-home-floating-service-10 { --x: 20px; --y: 132px; }
+
+  .public-home-infinity-orbit::before,
+  .public-home-infinity-orbit::after {
+    width: 250px;
+    height: 148px;
   }
 
   .public-home-service-card,
