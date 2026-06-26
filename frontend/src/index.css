@@ -1024,6 +1024,9 @@ h4, h5, h6 {
 .public-home-hero {
   overflow: hidden;
   position: relative;
+  background:
+    linear-gradient(135deg, rgba(24, 31, 45, 0.96), rgba(15, 22, 34, 0.98)),
+    #121a28;
 }
 
 .public-home-hero::before {
@@ -1031,8 +1034,20 @@ h4, h5, h6 {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 76% 30%, rgba(107, 63, 230, 0.28), transparent 34%),
-    radial-gradient(circle at 90% 76%, rgba(245, 195, 36, 0.12), transparent 30%);
+    linear-gradient(115deg, transparent 0 28%, rgba(107, 63, 230, 0.14) 28% 29%, transparent 29% 100%),
+    radial-gradient(circle at 74% 30%, rgba(107, 63, 230, 0.34), transparent 32%),
+    radial-gradient(circle at 88% 78%, rgba(245, 195, 36, 0.14), transparent 30%);
+  pointer-events: none;
+  animation: publicHeroBgMove 11s ease-in-out infinite alternate;
+}
+
+.public-home-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -36% 38%;
+  height: 54%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12), transparent 64%);
+  filter: blur(18px);
   pointer-events: none;
 }
 
@@ -1058,6 +1073,40 @@ h4, h5, h6 {
   color: #f5f7fb !important;
   background: transparent !important;
   border: 1px solid #425875 !important;
+}
+
+.public-home-phone-visual {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.public-home-phone-glow {
+  position: absolute;
+  width: 76%;
+  aspect-ratio: 1;
+  right: 2%;
+  bottom: 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(107, 63, 230, 0.28), transparent 68%);
+  filter: blur(10px);
+  animation: publicCoreFloat 5.5s ease-in-out infinite;
+}
+
+.public-home-phone-visual img {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 112%);
+  height: 520px;
+  object-fit: cover;
+  object-position: 76% 50%;
+  mix-blend-mode: screen;
+  filter: contrast(1.05) saturate(0.92) drop-shadow(0 32px 50px rgba(2, 6, 18, 0.46));
+  transform: translate(18px, 24px) rotate(-1deg);
+  animation: publicPhoneFloat 5.4s ease-in-out infinite;
 }
 
 .public-home-proof div {
@@ -1422,6 +1471,16 @@ h4, h5, h6 {
   50% { margin-top: -10px; }
 }
 
+@keyframes publicHeroBgMove {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: 0.92; }
+  to { transform: translate3d(-18px, 10px, 0) scale(1.03); opacity: 1; }
+}
+
+@keyframes publicPhoneFloat {
+  0%, 100% { transform: translate(18px, 24px) rotate(-1deg); }
+  50% { transform: translate(18px, 10px) rotate(0.6deg); }
+}
+
 @media (max-width: 1100px) {
   .public-home-service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1434,6 +1493,15 @@ h4, h5, h6 {
 
   .public-home-orbit {
     min-height: 380px;
+  }
+
+  .public-home-phone-visual {
+    min-height: 450px;
+  }
+
+  .public-home-phone-visual img {
+    width: min(620px, 100%);
+    height: 450px;
   }
 }
 
@@ -1476,42 +1544,17 @@ h4, h5, h6 {
     scroll-snap-align: start;
   }
 
-  .public-home-orbit {
+  .public-home-phone-visual {
     min-height: 330px;
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
-  .public-home-orbit-ring-one {
-    width: 250px;
-    height: 250px;
+  .public-home-phone-visual img {
+    width: 112%;
+    height: 330px;
+    object-position: 75% 52%;
+    transform: translate(4px, 14px) rotate(-1deg);
   }
-
-  .public-home-orbit-ring-two {
-    width: 200px;
-    height: 200px;
-  }
-
-  .public-home-orbit-core {
-    width: 148px;
-    height: 148px;
-  }
-
-  .public-home-orbit-node {
-    width: 78px;
-    min-height: 72px;
-    border-radius: 12px;
-  }
-
-  .public-home-orbit-node svg {
-    font-size: 22px;
-  }
-
-  .public-home-orbit-node-1 { top: 18px; }
-  .public-home-orbit-node-2 { top: 84px; right: 4px; }
-  .public-home-orbit-node-3 { right: 8px; bottom: 70px; }
-  .public-home-orbit-node-4 { bottom: 18px; }
-  .public-home-orbit-node-5 { bottom: 76px; left: 6px; }
-  .public-home-orbit-node-6 { top: 88px; left: 0; }
 
   .public-home-service-card,
   .public-home-steps article {

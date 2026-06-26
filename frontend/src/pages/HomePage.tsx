@@ -9,33 +9,18 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
-import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
-import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
-import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
-import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import TravelExploreOutlinedIcon from "@mui/icons-material/TravelExploreOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
-import VideoLibraryOutlinedIcon from "@mui/icons-material/VideoLibraryOutlined";
 import WalletOutlinedIcon from "@mui/icons-material/WalletOutlined";
-import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 
 const publicServicePath = (service: ServiceDefinition) =>
   `/services/${service.slug === "food" ? "food-delivery" : service.slug}`;
 const publicServiceGroups = Array.from({ length: 5 }, (_, index) => serviceCatalog.slice(index * 3, index * 3 + 3));
-
-const heroOrbitServices = [
-  ["Store", StorefrontOutlinedIcon],
-  ["Jobs", WorkOutlineOutlinedIcon],
-  ["Health", LocalHospitalOutlinedIcon],
-  ["Edu", SchoolOutlinedIcon],
-  ["Sports", SportsSoccerOutlinedIcon],
-  ["Stream", VideoLibraryOutlinedIcon],
-] as const;
 
 const valuePillars = [
   {
@@ -107,40 +92,12 @@ const HomePage = () => {
                 <Link to="/services" className="home-hero-secondary-btn">
                   Explore Services
                 </Link>
-                <Link to="/white-paper" className="home-hero-secondary-btn public-home-outline-btn">
-                  Read White Paper
-                </Link>
-              </div>
-              <div className="home-proof public-home-proof">
-                <div>
-                  <strong>SMAJ Store</strong>
-                  <span>MVP marketplace focus</span>
-                </div>
-                <div>
-                  <strong>Pi Login</strong>
-                  <span>Wallet-first access</span>
-                </div>
-                <div>
-                  <strong>15 Services</strong>
-                  <span>Roadmap-backed ecosystem</span>
-                </div>
               </div>
             </div>
 
-            <aside className="public-home-orbit" aria-label="SMAJ PI HUB connected services animation">
-              <div className="public-home-orbit-ring public-home-orbit-ring-one" />
-              <div className="public-home-orbit-ring public-home-orbit-ring-two" />
-              <div className="public-home-orbit-core">
-                <HubOutlinedIcon />
-                <strong>SMAJ PI HUB</strong>
-                <span>Pi Utility Gateway</span>
-              </div>
-              {heroOrbitServices.map(([label, Icon], index) => (
-                <div key={label} className={`public-home-orbit-node public-home-orbit-node-${index + 1}`}>
-                  <Icon />
-                  <span>{label}</span>
-                </div>
-              ))}
+            <aside className="public-home-phone-visual" aria-label="SMAJ PI HUB mobile app preview">
+              <div className="public-home-phone-glow" />
+              <img src="/assets/smaj-hero-hand-phone.jpg" alt="Hand holding a premium phone showing a mobile app" />
             </aside>
           </div>
         </section>
