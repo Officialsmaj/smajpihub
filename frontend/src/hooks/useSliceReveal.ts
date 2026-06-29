@@ -35,6 +35,11 @@ const revealSelector = [
   ".program-card-grid > *",
   ".program-thread-grid > *",
   ".program-process-panel li",
+  ".public-store-feature-grid > *",
+  ".public-store-flow-panel li",
+  ".legal-policy-panel",
+  ".legal-policy-panel li",
+  ".legal-report-card",
 ].join(", ");
 
 const useSliceReveal = () => {

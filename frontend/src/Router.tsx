@@ -16,6 +16,7 @@ import DevelopersPage from "./pages/DevelopersPage.tsx";
 import PartnersPage from "./pages/PartnersPage.tsx";
 import AffiliatePage from "./pages/AffiliatePage.tsx";
 import CollaboratePage from "./pages/CollaboratePage.tsx";
+import PublicStorePage from "./pages/PublicStorePage.tsx";
 import BlogPage from "./pages/BlogPage.tsx";
 import BlogPostPage from "./pages/BlogPostPage.tsx";
 import { CookiesPage, PrivacyPage, ReportAbusePage, TermsPage } from "./pages/LegalPages.tsx";
@@ -106,7 +107,7 @@ export const router = createBrowserRouter(
     ...platformDefinitions.map((platform) => ({
       path: `/services/${platform.routeSegment}`,
       element: platform.routeSegment === "store" ? (
-        <Navigate to="/store" replace />
+        <PublicStorePage />
       ) : (
         <GenericPage
           title={platform.name}
