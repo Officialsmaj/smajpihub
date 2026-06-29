@@ -25,6 +25,13 @@ const revealSelector = [
   ".services-directory-grid > *",
   ".how-step-grid > *",
   ".contact-route-grid > *",
+  ".service-detail-feature-grid > *",
+  ".service-detail-trust > *",
+  ".trust-layer-grid > *",
+  ".company-profile-grid > *",
+  ".company-official-links a",
+  ".partner-type-grid > *",
+  ".partner-onboarding-panel li",
 ].join(", ");
 
 const useSliceReveal = () => {

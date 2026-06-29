@@ -9,6 +9,8 @@ import HowItWorksPage from "./pages/HowItWorksPage.tsx";
 import FaqPage from "./pages/FaqPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import WhitePaperPage from "./pages/WhitePaperPage.tsx";
+import TrustPage from "./pages/TrustPage.tsx";
+import CompanyPage from "./pages/CompanyPage.tsx";
 import CommunityPage from "./pages/CommunityPage.tsx";
 import DevelopersPage from "./pages/DevelopersPage.tsx";
 import PartnersPage from "./pages/PartnersPage.tsx";
@@ -91,6 +93,14 @@ export const router = createBrowserRouter(
       path: "/contact",
       element: <ContactPage />,
     },
+    {
+      path: "/trust",
+      element: <TrustPage />,
+    },
+    {
+      path: "/company",
+      element: <CompanyPage />,
+    },
     ...platformDefinitions.map((platform) => ({
       path: `/services/${platform.routeSegment}`,
       element: platform.routeSegment === "store" ? (
@@ -99,6 +109,8 @@ export const router = createBrowserRouter(
         <GenericPage
           title={platform.name}
           description={`${platform.description} Access with one Pi wallet login through SMAJ PI HUB.`}
+          routeSegment={platform.routeSegment}
+          status={platform.status}
         />
       ),
     })),

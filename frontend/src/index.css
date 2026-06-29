@@ -10806,3 +10806,275 @@ select,
   opacity: 1 !important;
   transform: none !important;
 }
+
+/* Real company public pages */
+.service-detail-hero,
+.trust-company-hero,
+.company-profile-hero,
+.partner-company-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.service-detail-status-card,
+.trust-hero-card,
+.company-profile-card,
+.partner-hero-card {
+  min-height: 270px;
+  padding: 26px;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  color: var(--text);
+  background:
+    linear-gradient(135deg, var(--primary-soft), var(--accent-soft)),
+    var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+}
+
+.service-detail-status-card .service-art {
+  width: 118px;
+  aspect-ratio: 1;
+  border-radius: 24px;
+}
+
+.service-detail-status-card > svg,
+.trust-hero-card svg,
+.company-profile-card svg,
+.partner-hero-card svg {
+  color: var(--accent);
+  font-size: 54px;
+}
+
+.service-detail-status-card strong,
+.trust-hero-card strong,
+.company-profile-card strong,
+.partner-hero-card strong {
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1.05;
+}
+
+.service-detail-status-card p,
+.service-detail-status-card span,
+.trust-hero-card span,
+.company-profile-card span,
+.partner-hero-card span {
+  color: var(--muted);
+}
+
+.service-detail-feature-grid,
+.trust-layer-grid,
+.company-profile-grid,
+.partner-type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.service-detail-feature-grid article,
+.service-detail-trust article,
+.trust-layer-grid article,
+.company-profile-grid article,
+.partner-type-grid article {
+  min-height: 190px;
+  padding: 18px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.service-detail-feature-grid svg,
+.service-detail-trust svg,
+.trust-layer-grid svg,
+.company-profile-grid svg,
+.partner-type-grid svg,
+.trust-policy-panel svg,
+.partner-onboarding-panel svg {
+  color: var(--accent);
+  font-size: 30px;
+}
+
+.service-detail-feature-grid h3,
+.service-detail-trust h3,
+.trust-layer-grid h3,
+.company-profile-grid h3,
+.partner-type-grid h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.service-detail-feature-grid p,
+.service-detail-trust p,
+.trust-layer-grid p,
+.company-profile-grid p,
+.partner-type-grid p,
+.trust-policy-panel p,
+.partner-onboarding-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.service-detail-trust {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.service-detail-cta,
+.trust-policy-panel,
+.company-official-links,
+.partner-onboarding-panel {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 22px;
+  align-items: center;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+.service-detail-cta > a {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 17px;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 13px;
+  text-decoration: none;
+  font-weight: 850;
+}
+
+.trust-policy-panel ul,
+.partner-onboarding-panel ol {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trust-policy-panel li,
+.partner-onboarding-panel li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--muted);
+}
+
+.company-official-links > div:last-child {
+  display: grid;
+  gap: 10px;
+}
+
+.company-official-links a {
+  display: grid;
+  grid-template-columns: auto 90px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  color: var(--text);
+  background: var(--soft-bg);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  text-decoration: none;
+}
+
+.company-official-links svg {
+  color: var(--accent);
+}
+
+.company-official-links span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.company-official-links strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.faq-list {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-question {
+  width: 100%;
+  padding: 18px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.faq-question[aria-expanded="true"] {
+  color: #ffffff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.faq-answer {
+  margin-top: 8px;
+  padding: 18px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+}
+
+.faq-answer p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.faq-answer a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: var(--primary);
+  font-weight: 850;
+}
+
+@media (max-width: 900px) {
+  .service-detail-hero,
+  .trust-company-hero,
+  .company-profile-hero,
+  .partner-company-hero,
+  .service-detail-feature-grid,
+  .trust-layer-grid,
+  .company-profile-grid,
+  .partner-type-grid,
+  .service-detail-trust,
+  .service-detail-cta,
+  .trust-policy-panel,
+  .company-official-links,
+  .partner-onboarding-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .service-detail-cta > a {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}
