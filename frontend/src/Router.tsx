@@ -14,6 +14,8 @@ import CompanyPage from "./pages/CompanyPage.tsx";
 import CommunityPage from "./pages/CommunityPage.tsx";
 import DevelopersPage from "./pages/DevelopersPage.tsx";
 import PartnersPage from "./pages/PartnersPage.tsx";
+import AffiliatePage from "./pages/AffiliatePage.tsx";
+import CollaboratePage from "./pages/CollaboratePage.tsx";
 import BlogPage from "./pages/BlogPage.tsx";
 import BlogPostPage from "./pages/BlogPostPage.tsx";
 import { CookiesPage, PrivacyPage, ReportAbusePage, TermsPage } from "./pages/LegalPages.tsx";
@@ -180,11 +182,11 @@ export const router = createBrowserRouter(
     },
     {
       path: "/affiliate",
-      element: <GenericPage title="Affiliate Program" description="Affiliate page conversion is in progress." />,
+      element: <AffiliatePage />,
     },
     {
       path: "/collaborate",
-      element: <GenericPage title="Collaborate With Us" description="Collaboration page conversion is in progress." />,
+      element: <CollaboratePage />,
     },
     {
       path: "/partners",

@@ -1,50 +1,80 @@
+import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
+import ApiOutlinedIcon from "@mui/icons-material/ApiOutlined";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import IntegrationInstructionsOutlinedIcon from "@mui/icons-material/IntegrationInstructionsOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 
-const pillars = [
-  "Wallet-connected identity",
-  "Trust and verification",
-  "Interoperable services",
-  "Growth analytics",
+const developerBlocks = [
+  ["Pi Identity Hooks", "Build user flows around Pi-first identity and account access.", HubOutlinedIcon],
+  ["Service Modules", "Prepare modular service experiences that can connect into the hub.", IntegrationInstructionsOutlinedIcon],
+  ["API Readiness", "Plan endpoints for listings, profiles, status, search, support, and events.", ApiOutlinedIcon],
+  ["Trust Standards", "Align integrations with verification, safety, privacy, and clear status rules.", SecurityOutlinedIcon],
+] as const;
+
+const integrationSteps = [
+  "Submit project or integration interest.",
+  "Define service category, user flow, and data needs.",
+  "Review trust, safety, and Pi wallet requirements.",
+  "Prepare sandbox testing and launch readiness plan.",
 ];
 
 const DevelopersPage = () => {
   return (
     <AppLayout>
-      <main className="home-page">
-        <section className="home-hero">
-          <div className="content-hero-grid">
-            <div>
-              <span className="home-kicker">SMAJ PI HUB BUILDERS</span>
-              <h1>Developer Hub for Pi-Powered Products and Integrations</h1>
-              <p>
-                Build and connect modules into the ecosystem using shared wallet flow, trust standards, and service-first
-                architecture patterns.
-              </p>
+      <main className="home-page program-page">
+        <section className="home-hero program-hero">
+          <div>
+            <span className="home-kicker">DEVELOPER PROGRAM</span>
+            <h1>Build Pi-powered services that can connect into SMAJ PI HUB.</h1>
+            <p>
+              The developer program is for builders preparing modules, APIs, tools, and integrations that support
+              marketplace activity, service discovery, trusted identity, and real Pi utility.
+            </p>
+            <div className="home-hero-cta">
+              <Link to="/contact" className="home-hero-primary-btn">Contact Developer Team</Link>
+              <Link to="/white-paper" className="home-hero-secondary-btn">Read Architecture</Link>
             </div>
-            <aside className="content-panel">
-              <h3>Integration Flow</h3>
-              <ol>
-                <li>Register project endpoints.</li>
-                <li>Connect wallet-auth profile hooks.</li>
-                <li>Map lifecycle status events.</li>
-                <li>Publish module for discovery.</li>
-              </ol>
-            </aside>
           </div>
+          <aside className="program-hero-card">
+            <CodeOutlinedIcon />
+            <strong>Developer-ready ecosystem</strong>
+            <span>Identity, services, APIs, trust, and modular growth.</span>
+          </aside>
         </section>
 
-        <section className="home-section">
+        <section className="home-section program-section">
           <div className="home-section-head">
-            <h2>Core Building Blocks</h2>
-            <p>Keep every module consistent and trusted.</p>
+            <span className="home-kicker">BUILDING BLOCKS</span>
+            <h2>What developers should prepare for.</h2>
           </div>
-          <div className="home-service-grid">
-            {pillars.map((pillar) => (
-              <article key={pillar} className="home-service-card">
-                <h3>{pillar}</h3>
+          <div className="program-card-grid">
+            {developerBlocks.map(([title, text, Icon]) => (
+              <article key={title}>
+                <Icon />
+                <h3>{title}</h3>
+                <p>{text}</p>
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="home-section program-section program-process-panel">
+          <div>
+            <span className="home-kicker">INTEGRATION FLOW</span>
+            <h2>A careful path from idea to module.</h2>
+            <p>Developer access will expand as the MVP matures and integration standards become stable.</p>
+          </div>
+          <ol>
+            {integrationSteps.map((step) => (
+              <li key={step}>
+                <CheckCircleOutlineOutlinedIcon />
+                {step}
+              </li>
+            ))}
+          </ol>
         </section>
       </main>
     </AppLayout>

@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
+import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import { useEventTracking } from "../hooks/useEventTracking";
 
 type ThreadCategory = "ecosystem" | "marketplace" | "security" | "guides" | "community";
@@ -7,6 +13,7 @@ type ThreadCategory = "ecosystem" | "marketplace" | "security" | "guides" | "com
 type Thread = {
   id: string;
   title: string;
+  description: string;
   category: ThreadCategory;
 };
 
@@ -19,30 +26,42 @@ const threadCategories: Array<{ key: "all" | ThreadCategory; label: string }> = 
   { key: "community", label: "Community" },
 ];
 
+const communityTracks = [
+  ["Marketplace Education", "Help buyers and sellers understand listings, reviews, service status, and safe use.", StorefrontOutlinedIcon],
+  ["Trust Awareness", "Share responsible guidance about Pi Browser, wallet safety, and platform disclaimers.", SecurityOutlinedIcon],
+  ["Regional Growth", "Support local conversations, service ideas, merchant discovery, and provider interest.", GroupsOutlinedIcon],
+  ["Community Campaigns", "Promote official updates, launch milestones, and real utility stories.", CampaignOutlinedIcon],
+] as const;
+
 const threads: Thread[] = [
   {
     id: "thread-1",
-    title: "How SMAJ PI HUB makes multi-project access easier for daily users",
+    title: "How SMAJ PI HUB makes multi-service access easier",
+    description: "A simple explanation of identity, wallet, services, and marketplace access.",
     category: "ecosystem",
   },
   {
     id: "thread-2",
     title: "Trusted marketplace checklist for Pi buyers and sellers",
+    description: "What users should check before buying, selling, or contacting a provider.",
     category: "marketplace",
   },
   {
     id: "thread-3",
-    title: "Wallet safety thread: verification steps every pioneer should follow",
+    title: "Wallet safety and Pi Browser login guidance",
+    description: "Why Pi login works in Pi Browser and how users should protect wallet actions.",
     category: "security",
   },
   {
     id: "thread-4",
-    title: "New user onboarding guide: from first visit to first Pi transaction",
+    title: "New user guide: from first visit to first service",
+    description: "A beginner-friendly path through Home, Services, Store, and Contact.",
     category: "guides",
   },
   {
     id: "thread-5",
-    title: "Regional ambassador thread: local growth ideas and outreach plans",
+    title: "Regional community ideas for real Pi utility",
+    description: "Ways local communities can identify sellers, services, and provider opportunities.",
     category: "community",
   },
 ];
@@ -52,39 +71,55 @@ const CommunityPage = () => {
   const trackEvent = useEventTracking();
 
   const filteredThreads = useMemo(() => {
-    if (activeCategory === "all") {
-      return threads;
-    }
-
+    if (activeCategory === "all") return threads;
     return threads.filter((thread) => thread.category === activeCategory);
   }, [activeCategory]);
 
   return (
     <AppLayout>
-      <main className="home-page">
-        <section className="home-hero">
-          <div className="content-hero-grid">
-            <div>
-              <span className="home-kicker">GLOBAL PIONEER NETWORK</span>
-              <h1>Build, Learn, and Grow with the SMAJ PI HUB Community</h1>
-              <p>
-                Join discussions, discover real Pi utility updates, and collaborate with pioneers, merchants, and
-                contributors across the ecosystem.
-              </p>
+      <main className="home-page program-page">
+        <section className="home-hero program-hero">
+          <div>
+            <span className="home-kicker">COMMUNITY PROGRAM</span>
+            <h1>Help the Pi community understand and use real services.</h1>
+            <p>
+              SMAJ PI HUB community work is focused on education, trusted onboarding, seller/provider discovery,
+              local utility ideas, and responsible platform awareness.
+            </p>
+            <div className="home-hero-cta">
+              <Link to="/contact" className="home-hero-primary-btn">Join Community Work</Link>
+              <Link to="/trust" className="home-hero-secondary-btn">Trust Guidelines</Link>
             </div>
-            <aside className="content-panel">
-              <h3>Community Snapshot</h3>
-              <p>30K+ members, 120+ weekly threads, and always-on peer support.</p>
-            </aside>
+          </div>
+          <aside className="program-hero-card">
+            <HandshakeOutlinedIcon />
+            <strong>Community with purpose</strong>
+            <span>Education, onboarding, real services, and responsible Pi utility.</span>
+          </aside>
+        </section>
+
+        <section className="home-section program-section">
+          <div className="home-section-head">
+            <span className="home-kicker">COMMUNITY TRACKS</span>
+            <h2>Where community builders can help.</h2>
+          </div>
+          <div className="program-card-grid">
+            {communityTracks.map(([title, text, Icon]) => (
+              <article key={title}>
+                <Icon />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="home-section">
+        <section className="home-section program-section">
           <div className="home-section-head">
-            <h2>Explore Conversations</h2>
-            <p>Filter trending threads by category.</p>
+            <span className="home-kicker">DISCUSSION THEMES</span>
+            <h2>Useful topics for public education.</h2>
           </div>
-          <div className="home-hero-cta" role="tablist" aria-label="Thread categories">
+          <div className="home-hero-cta program-filter-row" role="tablist" aria-label="Thread categories">
             {threadCategories.map((category) => {
               const isActive = activeCategory === category.key;
               return (
@@ -94,10 +129,7 @@ const CommunityPage = () => {
                   aria-pressed={isActive}
                   onClick={() => {
                     setActiveCategory(category.key);
-                    trackEvent({
-                      event: "community_category_filter",
-                      payload: { category: category.key },
-                    });
+                    trackEvent({ event: "community_category_filter", payload: { category: category.key } });
                   }}
                 >
                   {category.label}
@@ -105,17 +137,12 @@ const CommunityPage = () => {
               );
             })}
           </div>
-        </section>
-
-        <section className="home-section">
-          <div className="home-section-head">
-            <h2>Latest Threads</h2>
-          </div>
-          <div className="home-service-grid">
+          <div className="program-thread-grid">
             {filteredThreads.map((thread) => (
-              <article key={thread.id} className="home-highlight-card">
-                <p className="home-kicker">{thread.category}</p>
+              <article key={thread.id}>
+                <span className="home-kicker">{thread.category}</span>
                 <h3>{thread.title}</h3>
+                <p>{thread.description}</p>
               </article>
             ))}
           </div>

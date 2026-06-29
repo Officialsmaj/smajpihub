@@ -32,6 +32,9 @@ const revealSelector = [
   ".company-official-links a",
   ".partner-type-grid > *",
   ".partner-onboarding-panel li",
+  ".program-card-grid > *",
+  ".program-thread-grid > *",
+  ".program-process-panel li",
 ].join(", ");
 
 const useSliceReveal = () => {
