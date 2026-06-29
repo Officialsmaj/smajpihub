@@ -10,7 +10,7 @@ type WhitePaperSection = {
 };
 
 const platformRows = [
-  ["SMAJ STORE", "Commerce", "A blockchain-based e-commerce marketplace featuring vendor verification, escrow services, and seamless Pi cryptocurrency payments. It aims to provide a secure and transparent environment for buying and selling goods."],
+  ["SMAJ STORE", "Commerce", "A Pi-powered e-commerce marketplace featuring vendor verification, payment confirmation, dispute support, and seamless Pi cryptocurrency payments. It aims to provide a secure and transparent environment for buying and selling goods."],
   ["SMAJ FOOD DELIVERY", "Daily Life", "A direct-to-customer food delivery service connecting users with verified restaurants. Features include real-time tracking, loyalty rewards, and efficient logistics powered by Pi payments."],
   ["SMAJ PI JOBS", "Economy", "A comprehensive freelance and job platform offering secure payments, verified professional profiles, and smart contract support for agreements. It connects talent with opportunities within the Pi ecosystem."],
   ["SMAJ PI HEALTH", "Health", "A telemedicine platform providing access to verified healthcare providers, secure management of health records, and virtual consultations. It aims to make healthcare more accessible and efficient."],
@@ -19,7 +19,7 @@ const platformRows = [
   ["SMAJ PI AGRO", "Agriculture", "A marketplace designed to connect farmers directly with buyers and suppliers, ensuring transparent pricing and efficient transactions. It aims to modernize agricultural trade."],
   ["SMAJ PI ENERGY", "Utilities", "A unified utility payment flow for essential services like electricity, water, and gas, complete with usage tracking and simplified billing."],
   ["SMAJ PI CHARITY", "Social Good", "A transparent and traceable donation infrastructure for verified non-governmental organizations (NGOs), providing clear impact reporting and fostering trust in charitable giving."],
-  ["SMAJ PI HOUSING", "Real Estate", "A verified housing and property marketplace offering anti-fraud protections and secure escrow deposits for rentals and sales. It aims to simplify real estate transactions."],
+  ["SMAJ PI HOUSING", "Real Estate", "A verified housing and property marketplace offering anti-fraud protections, provider checks, and dispute-support direction for rentals and sales. It aims to simplify real estate transactions."],
   ["SMAJ PI EVENTS", "Leisure", "A platform for event discovery, secure ticketing, and organizer verification. It explores NFT-based ticket potential to combat fraud and enhance event experiences."],
   ["SMAJ PI SWAP", "Circular Economy", "A second-hand and peer-to-peer exchange platform supporting sustainable consumption and circular economy behaviors within the community."],
   ["SMAJ PI STREAM", "Entertainment", "A premium content streaming service, offering movies, series, and documentaries. It provides a seamless entertainment experience integrated within the SMAJ PI HUB."],
@@ -28,7 +28,7 @@ const platformRows = [
 ];
 
 const roadmapRows = [
-  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, escrow logic, reviews, ratings, dispute support, and initial AI assistant deployment."],
+  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, payment confirmation, reviews, ratings, dispute support, and initial AI assistant deployment."],
   ["Phase 2", "Q3 2026", "Marketplace & Employment", "Expansion of SMAJ STORE features and vendor onboarding. Launch of SMAJ PI JOBS for freelancers and employers within the Pi ecosystem."],
   ["Phase 3", "Q4 2026", "Essential Services", "Launch of SMAJ FOOD DELIVERY and SMAJ PI HEALTH, providing critical daily services to the community."],
   ["Phase 4", "Q1 2027", "Mobility & Social Impact", "Introduction of SMAJ PI TRANSPORT and SMAJ PI CHARITY, expanding the hub's utility into mobility and social good."],

@@ -17,7 +17,7 @@ const officialLinks = [
 
 const profileFacts = [
   ["Company Focus", "Pi-powered marketplace and service infrastructure.", HubOutlinedIcon],
-  ["MVP", "SMAJ Store with listings, chat, Pi payments, reviews, escrow logic, and support.", RocketLaunchOutlinedIcon],
+  ["MVP", "SMAJ Store with listings, chat, Pi payments, reviews, payment confirmation, and support.", RocketLaunchOutlinedIcon],
   ["Audience", "Pi users, sellers, service providers, partners, and ecosystem communities.", PublicOutlinedIcon],
   ["Position", "Digital marketplace and service platform, not a financial institution.", VerifiedOutlinedIcon],
 ] as const;

@@ -12,7 +12,7 @@ const steps = [
   ["01", "Login with Pi", "Use your Pi identity to enter SMAJ PI HUB once.", AccountCircleOutlinedIcon],
   ["02", "Choose a service", "Open SMAJ Store or explore jobs, health, learning, transport, housing, and more.", SearchOutlinedIcon],
   ["03", "Talk and confirm", "Chat with sellers or providers, check details, and understand the service status.", ChatOutlinedIcon],
-  ["04", "Use Pi safely", "Follow the Pi payment flow, reviews, escrow logic, and support process where available.", PaymentsOutlinedIcon],
+  ["04", "Use Pi safely", "Follow the Pi payment flow, reviews, payment confirmation, and support process where available.", PaymentsOutlinedIcon],
 ] as const;
 
 const phoneItems = ["Pi Login", "SMAJ Store", "Verified Seller", "Pi Payment"];
@@ -73,7 +73,7 @@ const HowItWorksPage = () => {
             <VerifiedUserOutlinedIcon />
             <h2>Trust is part of the flow.</h2>
             <p>
-              The company direction includes verified users, seller/provider checks, clear service status, escrow logic,
+              The company direction includes verified users, seller/provider checks, clear service status, dispute support,
               reviews, dispute support, and platform guidance so people know what is live and what is coming next.
             </p>
           </div>

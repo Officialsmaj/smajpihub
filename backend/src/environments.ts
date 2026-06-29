@@ -39,7 +39,7 @@ const env: Environment = {
   platform_api_url:
     process.env.PLATFORM_API_URL || (sandboxSDK ? "https://api.sandbox.minepi.com" : "https://api.minepi.com"),
   mongo_host: process.env.MONGO_HOST || "localhost:27017",
-  mongo_db_name: process.env.MONGODB_DATABASE_NAME || "demo-app",
+  mongo_db_name: process.env.MONGODB_DATABASE_NAME || "smajpihub",
   mongo_user: process.env.MONGODB_USERNAME || "",
   mongo_password: process.env.MONGODB_PASSWORD || "",
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3314",

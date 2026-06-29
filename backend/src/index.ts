@@ -173,21 +173,10 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
     }
 
-    const demoSellerId = "smaj-demo-store";
-    await app.locals.userCollection.updateOne({ uid: demoSellerId }, { $setOnInsert: { uid: demoSellerId, username: "smajmarket", piUsername: "smajmarket", displayName: "SMAJ Market", country: "Nigeria", contactPhone: "@smajmarket", role: "seller", roles: ["seller"], blocked: false, verificationLevel: "trusted_seller", settings: { theme: "light", language: "English", notifications: true }, createdAt: new Date("2025-01-15") } }, { upsert: true });
-    const productCount = await app.locals.productCollection.countDocuments();
-    if (productCount < 210) {
-      const categories = ["Electronics", "Fashion", "Vehicles", "Home", "Property", "Phones", "Computers", "Beauty", "Services", "Others"];
-      const names = ["Wireless Headphones", "Smart Watch", "Everyday Backpack", "Running Shoes", "Android Phone", "Office Laptop", "Home Blender", "Skincare Set", "City Bicycle", "Portable Speaker", "Desk Lamp", "Coffee Maker", "Phone Case", "Digital Service", "Modern Chair"];
-      const locations = ["Lagos, Nigeria", "Abuja, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Cape Town, South Africa", "Online"];
-      const needed = 210 - productCount;
-      const products = Array.from({ length: needed }, (_, offset) => { const index = productCount + offset; const title = `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`; const image = `https://picsum.photos/seed/smaj-product-${index}/800/620`; const pricePi = Number((0.0005 + ((index * 137) % 145) / 10000).toFixed(4)); return { sellerId: demoSellerId, sellerName: "SMAJ Market", piUsername: "smajmarket", title, image, images: [image, `https://picsum.photos/seed/smaj-product-${index}-detail/800/620`], pricePi, description: `${title} offered by a trusted SMAJ PI HUB marketplace seller. Contact the seller for availability and delivery details.`, category: categories[index % categories.length], location: locations[index % locations.length], sellerContact: "@smajmarket", active: true, approved: true, hidden: false, createdAt: new Date(Date.now() - index * 3600000) }; });
-      await app.locals.productCollection.insertMany(products);
-    }
     console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${mongoUri}`);
 
     app.listen(env.port, () => {
-      console.log(`App platform demo app - Backend listening on port ${env.port}!`);
+      console.log(`SMAJ PI HUB backend listening on port ${env.port}!`);
       console.log(`CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`);
     });
   } catch (err) {

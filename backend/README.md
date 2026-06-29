@@ -39,8 +39,8 @@ The default MongoDB port is `27017`. Update your `.env` file if you use differen
 #### Option A: Using Docker (recommended)
 
 ```sh
-docker run --name demoapp-mongo -d \
-  -e MONGO_INITDB_ROOT_USERNAME=demoapp \
+docker run --name smajpihub-mongo -d \
+  -e MONGO_INITDB_ROOT_USERNAME=smajpihub \
   -e MONGO_INITDB_ROOT_PASSWORD=dev_password \
   -p 27017:27017 mongo:7.0
 ```
@@ -48,9 +48,9 @@ docker run --name demoapp-mongo -d \
 Manage the container:
 
 ```sh
-docker stop demoapp-mongo   # Stop
-docker start demoapp-mongo  # Start
-docker rm -f demoapp-mongo  # Remove (deletes all data)
+docker stop smajpihub-mongo   # Stop
+docker start smajpihub-mongo  # Start
+docker rm -f smajpihub-mongo  # Remove (deletes all data)
 ```
 
 #### Option B: Install MongoDB locally
@@ -60,8 +60,8 @@ Install MongoDB Community from the [official documentation](https://www.mongodb.
 Then create a user via `mongosh`:
 
 ```javascript
-var MONGODB_DATABASE_NAME = "demoapp-development";
-var MONGODB_USERNAME = "demoapp";
+var MONGODB_DATABASE_NAME = "smajpihub-development";
+var MONGODB_USERNAME = "smajpihub";
 var MONGODB_PASSWORD = "dev_password";
 
 db.getSiblingDB("admin").createUser({
@@ -81,8 +81,8 @@ If configured correctly, you should see:
 
 ```
 NODE_ENV: development
-Connected to MongoDB on: mongodb://localhost:27017/demoapp-development
-App platform demo app - Backend listening on port 8000!
+Connected to MongoDB on: mongodb://localhost:27017/smajpihub-development
+SMAJ PI HUB backend listening on port 8000!
 CORS config: configured to respond to a frontend hosted on http://localhost:3314
 ```
 

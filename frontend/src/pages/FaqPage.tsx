@@ -50,7 +50,7 @@ const faqItems: FaqItem[] = [
   {
     id: "trust",
     question: "How does SMAJ PI HUB handle trust and safety?",
-    answer: "The trust model includes Pi identity, seller/provider verification, reviews, escrow logic, dispute support, clear service labels, and ongoing fraud prevention improvements.",
+    answer: "The trust model includes Pi identity, seller/provider verification, reviews, payment confirmation, dispute support, clear service labels, and ongoing fraud prevention improvements.",
   },
   {
     id: "finance",

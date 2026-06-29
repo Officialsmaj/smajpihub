@@ -62,7 +62,7 @@ const platformLayers = [
   ["Marketplace Layer", "SMAJ Store starts the ecosystem with product discovery, seller profiles, chat, reviews, and dispute support.", StorefrontOutlinedIcon],
   ["Service Layer", "Fifteen connected service categories expand the hub from commerce into daily life.", AppsOutlinedIcon],
   ["AI Guidance", "SMAJ AI Assistant helps users find services, understand flows, and move faster inside the platform.", AutoAwesomeOutlinedIcon],
-  ["Trust Layer", "Verification, provider checks, escrow logic, fraud prevention, and clear service status shape safer participation.", SecurityOutlinedIcon],
+  ["Trust Layer", "Verification, provider checks, dispute support, fraud prevention, and clear service status shape safer participation.", SecurityOutlinedIcon],
 ] as const;
 
 const audiences = [
@@ -266,7 +266,7 @@ const AboutPage = () => {
             <article>
               <StorefrontOutlinedIcon />
               <strong>MVP Marketplace</strong>
-              <span>Store, listings, chat, payments, reviews, escrow logic.</span>
+              <span>Store, listings, chat, payments, reviews, support.</span>
             </article>
             <article>
               <PaymentsOutlinedIcon />

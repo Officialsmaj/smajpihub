@@ -11,7 +11,7 @@ const trustLayers = [
   ["Pi Identity", "Users enter through Pi-first identity access where supported.", VerifiedUserOutlinedIcon],
   ["Seller / Provider Checks", "Marketplace and service providers can be reviewed through verification and quality signals.", CheckCircleOutlineOutlinedIcon],
   ["Wallet Awareness", "Pi wallet flows are designed to keep users aware of payment actions and service status.", AccountBalanceWalletOutlinedIcon],
-  ["Marketplace Safety", "Reviews, dispute support, escrow logic, and clear listings shape safer commerce.", SecurityOutlinedIcon],
+  ["Marketplace Safety", "Reviews, dispute support, payment confirmation, and clear listings shape safer commerce.", SecurityOutlinedIcon],
 ] as const;
 
 const policies = [

@@ -60,7 +60,7 @@ const mvpFeatures = [
   ["Product Listings", ShoppingCartOutlinedIcon],
   ["Buyer/Seller Chat", ChatOutlinedIcon],
   ["Pi Payment Flow", PaymentsOutlinedIcon],
-  ["Escrow Logic", LockOutlinedIcon],
+  ["Dispute Support", LockOutlinedIcon],
   ["Reviews & Ratings", CheckCircleOutlineOutlinedIcon],
   ["Dispute Support", ShieldOutlinedIcon],
 ] as const;

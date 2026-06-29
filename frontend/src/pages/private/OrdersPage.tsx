@@ -52,11 +52,7 @@ const OrdersPage = () => {
     setUpdatingId(orderId);
     try {
       await axiosClient.patch(`/marketplace/orders/${orderId}/status`, { status });
-      setMessage(
-        status === "paid"
-          ? "Fake payment successful. Test payment details were saved."
-          : `Order marked ${status}.`
-      );
+      setMessage(`Order marked ${status}.`);
       await loadOrders();
     } catch (err: unknown) {
       setMessage(
@@ -125,15 +121,6 @@ const OrdersPage = () => {
               }
             >
               {isPaying ? "Opening Pi payment..." : "Pay with Pi Browser"}
-            </button>
-          ) : null}
-          {mode === "buyer" && order.status === "pending" ? (
-            <button
-              disabled={updatingId === order._id || paymentLoading}
-              className="secondary pi-payment-button"
-              onClick={() => void updateStatus(order._id, "paid")}
-            >
-              Fake Pay
             </button>
           ) : null}
           {order.status === "pending" ? (

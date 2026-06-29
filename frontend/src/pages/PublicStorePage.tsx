@@ -13,7 +13,7 @@ const storeFeatures = [
   ["Product Listings", "Sellers can prepare clear products, categories, images, and marketplace details.", StorefrontOutlinedIcon],
   ["Buyer / Seller Chat", "Users can ask questions and confirm service details before moving forward.", ChatOutlinedIcon],
   ["Pi Payment Flow", "Marketplace flows are designed around Pi wallet access and Pi-denominated utility.", PaymentsOutlinedIcon],
-  ["Escrow Logic", "The product direction includes safer transaction handling and dispute support.", LockOutlinedIcon],
+  ["Dispute Support", "The product direction includes payment confirmation, support review, and safer transaction handling.", LockOutlinedIcon],
   ["Reviews & Ratings", "Trust signals help buyers and sellers build credible marketplace history.", RateReviewOutlinedIcon],
   ["Verified Sellers", "Provider checks and profile signals support safer participation.", VerifiedUserOutlinedIcon],
 ] as const;
@@ -34,7 +34,7 @@ const PublicStorePage = () => (
           <h1>The first marketplace layer of SMAJ PI HUB.</h1>
           <p>
             SMAJ Store is the MVP starting point for real Pi utility: product discovery, seller profiles,
-            buyer/seller chat, Pi payment flow, escrow logic, reviews, and marketplace support.
+            buyer/seller chat, Pi payment flow, payment confirmation, reviews, and marketplace support.
           </p>
           <div className="home-hero-cta">
             <LoginWithPiButton className="home-hero-primary-btn">Login with Pi</LoginWithPiButton>
