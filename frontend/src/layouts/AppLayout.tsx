@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SignIn from "../components/SignIn";
 import { useNavigate } from "react-router-dom";
+import useRouteScrollTop from "../hooks/useRouteScrollTop";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -11,6 +12,7 @@ type AppLayoutProps = {
 };
 
 const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
+  useRouteScrollTop();
   const { showSignIn, closeSignIn, isLoading, signIn } = useAuthContext();
   const navigate = useNavigate();
   const login = async () => {

@@ -24,6 +24,7 @@ import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 import logoImage from "/logo.png";
 import { serviceCatalog } from "../content/serviceCatalog";
+import useRouteScrollTop from "../hooks/useRouteScrollTop";
 
 type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
@@ -55,6 +56,7 @@ const links = [
 ];
 
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
+  useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
