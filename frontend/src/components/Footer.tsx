@@ -1,22 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import Tooltip from "@mui/material/Tooltip"; // Import Tooltip
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import TelegramIcon from "@mui/icons-material/Telegram";
-
-import DesignServicesOutlinedIcon from "@mui/icons-material/DesignServicesOutlined";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
-import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
-import Diversity3OutlinedIcon from "@mui/icons-material/Diversity3Outlined";
-import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
-import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
 import ArrowUpwardOutlinedIcon from "@mui/icons-material/ArrowUpwardOutlined";
 import styles from "./Footer.module.css";
 
@@ -54,19 +44,19 @@ const Footer = () => {
         </div>
         <div>
           <h4>Platform</h4>
-          <Link to="/home"><HomeOutlinedIcon fontSize="small" />Home</Link>
-          <Link to="/about"><InfoOutlinedIcon fontSize="small" />About</Link>
-          <Link to="/services"><DesignServicesOutlinedIcon fontSize="small" />Services</Link>
-          <Link to="/white-paper"><DescriptionOutlinedIcon fontSize="small" />White Paper</Link>
-          <Link to="/contact"><MailOutlineOutlinedIcon fontSize="small" />Contact</Link>
+          <Link to="/home">Home</Link>
+          <Link to="/about">About</Link>
+          <Link to="/services">Services</Link>
+          <Link to="/white-paper">White Paper</Link>
+          <Link to="/contact">Contact</Link>
         </div>
         <div>
           <h4>Programs</h4>
-          <Link to="/affiliate"><GroupAddOutlinedIcon fontSize="small" />Affiliate Program</Link>
-          <Link to="/collaborate"><Diversity3OutlinedIcon fontSize="small" />Collaborate With Us</Link>
-          <Link to="/partners"><HandshakeOutlinedIcon fontSize="small" />Partners</Link>
-          <Link to="/community"><ForumOutlinedIcon fontSize="small" />Community</Link>
-          <Link to="/developers"><CodeOutlinedIcon fontSize="small" />Developers</Link>
+          <Link to="/affiliate">Affiliate Program</Link>
+          <Link to="/collaborate">Collaborate With Us</Link>
+          <Link to="/partners">Partners</Link>
+          <Link to="/community">Community</Link>
+          <Link to="/developers">Developers</Link>
         </div>
         <div>
           <h4>Key Services</h4>
@@ -82,20 +72,20 @@ const Footer = () => {
           <h4>Social</h4>
           <a href={`mailto:${companyEmail}`}><MailOutlineOutlinedIcon fontSize="small" />{companyEmail}</a>
           <div className={styles.socialRow} aria-label="Social links">
-            <a className={styles.socialIcon} href="https://www.linkedin.com/company/smajecosystem" aria-label="LinkedIn" target="_blank" rel="noreferrer">
-              <LinkedInIcon fontSize="small" />
+            <a className={styles.socialIcon} href="https://x.com/smajecosystem" aria-label="X" target="_blank" rel="noreferrer">
+              <XIcon fontSize="small" />
+            </a>
+            <a className={styles.socialIcon} href="https://t.me/smajecosystem" aria-label="Telegram" target="_blank" rel="noreferrer">
+              <TelegramIcon fontSize="small" />
             </a>
             <a className={styles.socialIcon} href="https://instagram.com/smajecosystem" aria-label="Instagram" target="_blank" rel="noreferrer">
               <InstagramIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://x.com/smajecosystem" aria-label="X" target="_blank" rel="noreferrer">
-              <XIcon fontSize="small" />
-            </a>
             <a className={styles.socialIcon} href="https://youtube.com/@smajecosystem" aria-label="YouTube" target="_blank" rel="noreferrer">
               <YouTubeIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://t.me/smajecosystem" aria-label="Telegram" target="_blank" rel="noreferrer">
-              <TelegramIcon fontSize="small" />
+            <a className={styles.socialIcon} href="https://www.tiktok.com/@smajecosystem" aria-label="TikTok" target="_blank" rel="noreferrer">
+              <MusicNoteOutlinedIcon fontSize="small" />
             </a>
           </div>
         </div>

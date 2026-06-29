@@ -1,45 +1,105 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import AppLayout from "../layouts/AppLayout";
+import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
+import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 
 const companyEmail = "contact@smaj.org";
+
+const contactRoutes = [
+  ["Support", "Questions about using SMAJ PI HUB, account access, or service navigation.", SupportAgentOutlinedIcon],
+  ["Providers", "Sellers, service providers, merchants, and local operators who want to join.", VerifiedUserOutlinedIcon],
+  ["Partnerships", "Ecosystem, community, infrastructure, and business collaboration requests.", HandshakeOutlinedIcon],
+  ["Company", "Media, legal, compliance, product, and general company inquiries.", BusinessCenterOutlinedIcon],
+] as const;
 
 const ContactPage = () => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setMessage("Thanks. Your message has been recorded for the support team.");
+    setMessage("Thanks. Your message has been recorded for the SMAJ PI HUB team.");
   };
 
   return (
     <AppLayout>
-      <main className="home-page">
-        <section className="home-hero">
-          <span className="home-kicker">GET IN TOUCH</span>
-          <h1>Contact SMAJ PI HUB</h1>
-          <p>Ask a question or share feedback and we will reply quickly.</p>
+      <main className="home-page contact-company-page">
+        <section className="home-hero contact-company-hero">
+          <div>
+            <span className="home-kicker">CONTACT SMAJ PI HUB</span>
+            <h1>Talk to the team building real Pi utility.</h1>
+            <p>
+              Contact SMAJ PI HUB for support, seller/provider onboarding, ecosystem partnerships, product feedback,
+              media, or company inquiries.
+            </p>
+          </div>
+          <aside className="contact-company-card">
+            <EmailOutlinedIcon />
+            <strong>{companyEmail}</strong>
+            <span>Official company contact email</span>
+          </aside>
         </section>
 
-        <section className="home-section contact-grid">
+        <section className="home-section contact-company-section">
+          <div className="home-section-head">
+            <span className="home-kicker">CONTACT ROUTES</span>
+            <h2>Send the right message to the right team.</h2>
+          </div>
+          <div className="contact-route-grid">
+            {contactRoutes.map(([title, text, Icon]) => (
+              <article key={title}>
+                <Icon />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="home-section contact-company-section contact-grid">
           <form onSubmit={handleSubmit} className="contact-form">
             <h2>Send a Message</h2>
             <label htmlFor="name">Name</label>
             <input id="name" type="text" required />
             <label htmlFor="email">Email</label>
             <input id="email" type="email" required />
+            <label htmlFor="topic">Topic</label>
+            <select id="topic" required defaultValue="">
+              <option value="" disabled>Select a topic</option>
+              <option>Support</option>
+              <option>Seller / Provider onboarding</option>
+              <option>Partnership</option>
+              <option>Company inquiry</option>
+            </select>
             <label htmlFor="contact-message">Message</label>
             <textarea id="contact-message" rows={6} required />
             <button type="submit">Send Message</button>
             {message ? <p>{message}</p> : null}
           </form>
 
-          <aside className="home-highlight-card">
-            <h3>Other Ways to Reach Us</h3>
+          <aside className="contact-info-panel">
+            <h3>Company Information</h3>
             <p>
-              Email: <a href={`mailto:${companyEmail}`}>{companyEmail}</a>
+              SMAJ PI HUB is a digital marketplace and service platform building real-world utility for the Pi Network
+              ecosystem.
             </p>
-            <p>Office Hours: Mon - Sat, 9:00 AM to 6:00 PM</p>
+            <dl>
+              <div>
+                <dt>Email</dt>
+                <dd><a href={`mailto:${companyEmail}`}>{companyEmail}</a></dd>
+              </div>
+              <div>
+                <dt>Office Hours</dt>
+                <dd>Monday to Saturday, 9:00 AM to 6:00 PM</dd>
+              </div>
+              <div>
+                <dt>Response Focus</dt>
+                <dd>Support, services, onboarding, partnerships, and company inquiries.</dd>
+              </div>
+            </dl>
           </aside>
         </section>
       </main>

@@ -1,50 +1,96 @@
+import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
-import Card from "../components/Card";
-import Section from "../components/Section";
-import ActionButton from "../components/ActionButton";
+import ServiceArt from "../components/ServiceArt";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { platformDefinitions } from "../content/platforms";
+import { serviceCatalog } from "../content/serviceCatalog";
+
+const servicePath = (routeSegment: string) => `/services/${routeSegment}`;
+
+const servicePrinciples = [
+  ["Verified access", "Pi identity and provider checks create stronger trust signals.", VerifiedUserOutlinedIcon],
+  ["Pi wallet flow", "Services are designed around one wallet access point.", AccountBalanceWalletOutlinedIcon],
+  ["Marketplace first", "SMAJ Store is the launch layer for practical Pi commerce.", StorefrontOutlinedIcon],
+  ["Partner ready", "Each service can grow with providers, merchants, and communities.", GroupsOutlinedIcon],
+] as const;
 
 const ServicesPage = () => {
   return (
     <AppLayout>
-      <main className="home-page">
-        <Section variant="hero" className="home-hero">
-          <div className="content-hero-grid">
-            <div>
-              <span className="home-kicker">ALL-IN-ONE PI SERVICE HUB</span>
-              <h1>Access Every SMAJ Platform From One Place</h1>
-              <p>Connect your wallet once and unlock all 15 SMAJ ecosystem platforms from one trusted gateway.</p>
-              <div className="home-hero-cta">
-                <ActionButton to="/dashboard">
-                  Open Unified Dashboard
-                </ActionButton>
-                <ActionButton to="/how-it-works" variant="secondary">
-                  How It Works
-                </ActionButton>
-              </div>
+      <main className="home-page services-company-page">
+        <section className="home-hero services-company-hero">
+          <div>
+            <span className="home-kicker">SMAJ PI HUB SERVICES</span>
+            <h1>One company hub for real Pi-powered services.</h1>
+            <p>
+              SMAJ PI HUB connects marketplace, jobs, education, health, transport, housing, entertainment, utility
+              tools, and partner services through one familiar Pi-first experience.
+            </p>
+            <div className="home-hero-cta">
+              <Link to="/services/store" className="home-hero-primary-btn">
+                Start with SMAJ Store
+              </Link>
+              <Link to="/how-it-works" className="home-hero-secondary-btn">
+                See How It Works
+              </Link>
             </div>
-            <aside className="content-panel">
-              <h3>Cross-Platform Access</h3>
-              <p>One wallet, one identity, one user journey across connected SMAJ services.</p>
-            </aside>
           </div>
-        </Section>
+          <aside className="services-company-hero-card">
+            <SecurityOutlinedIcon />
+            <strong>Built for trusted utility</strong>
+            <span>One Pi identity, one wallet, multiple service paths.</span>
+          </aside>
+        </section>
 
-        <Section className="home-section" title="Platform Directory" description="Choose where to go next.">
-          <div className="home-service-grid">
-            {platformDefinitions.map((platform) => (
-              <Card key={platform.routeSegment} title={platform.name}>
-                <p>{platform.description}</p>
-                <span className={`status-chip ${platform.status === "Live" ? "live-status-chip" : ""}`}>{platform.status}</span>
-                <p style={{ marginTop: "0.75rem" }}>
-                  <ActionButton to={`/services/${platform.routeSegment}`} variant="secondary">
-                    View Page
-                  </ActionButton>
-                </p>
-              </Card>
+        <section className="home-section services-company-section">
+          <div className="home-section-head">
+            <span className="home-kicker">SERVICE MODEL</span>
+            <h2>Simple enough for users. Structured enough for a real company.</h2>
+          </div>
+          <div className="services-principle-grid">
+            {servicePrinciples.map(([title, text, Icon]) => (
+              <article key={title}>
+                <Icon />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
             ))}
           </div>
-        </Section>
+        </section>
+
+        <section className="home-section services-company-section">
+          <div className="home-section-head">
+            <span className="home-kicker">PLATFORM DIRECTORY</span>
+            <h2>15 connected services, clean status, clear next step.</h2>
+            <p>
+              SMAJ Store is live as the marketplace starting point. Other services are staged for expansion as the hub
+              grows with providers, safety systems, and real demand.
+            </p>
+          </div>
+          <div className="services-directory-grid">
+            {platformDefinitions.map((platform, index) => {
+              const catalogItem = serviceCatalog[index];
+              const isLive = platform.status === "Live" || platform.routeSegment === "store";
+
+              return (
+                <Link to={servicePath(platform.routeSegment)} key={platform.routeSegment} className="services-directory-card">
+                  {catalogItem ? <ServiceArt index={catalogItem.atlasIndex} /> : <StorefrontOutlinedIcon />}
+                  <div>
+                    <span className={isLive ? "live-rating-badge" : "status-chip"}>{isLive ? "LIVE" : "SOON"}</span>
+                    <h3>{platform.name}</h3>
+                    <p>{platform.description}</p>
+                  </div>
+                  <ArrowForwardOutlinedIcon />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       </main>
     </AppLayout>
   );

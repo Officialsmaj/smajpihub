@@ -10049,3 +10049,396 @@ select,
 .public-home-mini-card svg {
   color: var(--accent) !important;
 }
+
+/* Public page polish and theme corrections */
+.public-home-steps article,
+.content-step-grid .home-highlight-card,
+.home-highlight-card,
+.home-service-card,
+.home-trust-card,
+.public-home-mini-card,
+.contact-info-panel,
+.services-company-hero-card,
+.services-principle-grid article,
+.services-directory-card,
+.how-step-grid article,
+.how-company-explain,
+.how-store-callout,
+.contact-company-card,
+.contact-route-grid article {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.public-home-steps h3,
+.public-home-steps p,
+.public-home-mini-card strong,
+.public-home-mini-card p {
+  color: var(--text) !important;
+}
+
+.public-home-steps p,
+.public-home-mini-card p {
+  color: var(--muted) !important;
+}
+
+.public-home-steps svg,
+.about-reason-list svg,
+.about-trust-grid svg,
+.contact-route-grid svg,
+.services-principle-grid svg,
+.how-step-grid svg,
+.how-company-explain svg,
+.how-store-callout > svg {
+  color: var(--accent) !important;
+}
+
+.public-home-steps article > span,
+.about-step-card span {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.public-home-service-card .live-rating-badge,
+.services-directory-card .live-rating-badge {
+  min-width: 44px;
+  color: #ffffff !important;
+  background: var(--primary) !important;
+}
+
+.about-clean-snapshot {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border-color: color-mix(in srgb, var(--primary) 72%, var(--border)) !important;
+}
+
+.about-clean-snapshot svg,
+.about-clean-snapshot strong,
+.about-clean-snapshot span {
+  color: #ffffff !important;
+}
+
+.about-step-card:nth-child(1) {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+}
+
+.about-step-card:nth-child(2) {
+  color: #241a06 !important;
+  background: linear-gradient(135deg, var(--accent), #ffd76f) !important;
+}
+
+.about-step-card:nth-child(3) {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+}
+
+.about-step-card:nth-child(1) h3,
+.about-step-card:nth-child(1) p {
+  color: var(--text) !important;
+}
+
+.about-step-card:nth-child(2) h3,
+.about-step-card:nth-child(2) p {
+  color: #241a06 !important;
+}
+
+.about-step-card:nth-child(3) h3,
+.about-step-card:nth-child(3) p {
+  color: #ffffff !important;
+}
+
+.about-final-cta .home-hero-primary-btn,
+.contact-form button,
+.services-company-page .home-hero-primary-btn,
+.how-company-page .home-hero-primary-btn {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.whitepaper-hero {
+  padding: clamp(32px, 6vw, 70px) clamp(18px, 4vw, 42px) 34px !important;
+  background:
+    linear-gradient(135deg, var(--primary-soft), var(--accent-soft)),
+    var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 26px;
+  box-shadow: var(--shadow-soft);
+}
+
+.whitepaper-hero h1 {
+  max-width: 980px !important;
+  color: var(--text) !important;
+  font-size: clamp(42px, 7vw, 82px) !important;
+  line-height: 0.95 !important;
+  letter-spacing: 0 !important;
+}
+
+.whitepaper-hero p,
+.whitepaper-meta-row span {
+  color: var(--muted) !important;
+}
+
+.whitepaper-kicker {
+  color: var(--primary) !important;
+}
+
+.services-company-hero,
+.how-company-hero,
+.contact-company-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.services-company-hero-card,
+.contact-company-card {
+  min-height: 260px;
+  padding: 26px;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  border-radius: 24px;
+}
+
+.services-company-hero-card svg,
+.contact-company-card svg {
+  color: var(--accent);
+  font-size: 52px;
+}
+
+.services-company-hero-card strong,
+.contact-company-card strong {
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1.05;
+}
+
+.services-company-hero-card span,
+.contact-company-card span {
+  color: var(--muted);
+}
+
+.services-principle-grid,
+.contact-route-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.services-principle-grid article,
+.contact-route-grid article {
+  min-height: 190px;
+  padding: 18px;
+  border-radius: 18px;
+}
+
+.services-principle-grid h3,
+.contact-route-grid h3,
+.services-directory-card h3,
+.how-step-grid h3 {
+  color: var(--text);
+}
+
+.services-principle-grid p,
+.contact-route-grid p,
+.services-directory-card p,
+.how-step-grid p,
+.contact-info-panel p,
+.contact-info-panel dd {
+  color: var(--muted);
+}
+
+.services-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.services-directory-card {
+  min-height: 250px;
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  border-radius: 20px;
+  text-decoration: none;
+}
+
+.services-directory-card .service-art {
+  width: 100%;
+  aspect-ratio: 2 / 1.15;
+  border-radius: 16px;
+}
+
+.services-directory-card > svg:last-child {
+  justify-self: end;
+  color: var(--primary);
+}
+
+.how-phone-mockup {
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+}
+
+.how-phone-screen {
+  width: min(260px, 72vw);
+  min-height: 420px;
+  padding: 24px 18px;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  color: #ffffff;
+  background: linear-gradient(160deg, #07111f, #172846);
+  border: 10px solid #111827;
+  border-radius: 42px;
+  box-shadow: 0 28px 58px rgba(15, 23, 42, 0.28);
+  animation: howPhoneFloat 4.5s ease-in-out infinite;
+}
+
+.how-phone-screen span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.how-phone-screen strong {
+  color: #ffffff;
+  font-size: 26px;
+  line-height: 1.05;
+}
+
+.how-phone-screen div {
+  display: grid;
+  gap: 10px;
+}
+
+.how-phone-screen p {
+  margin: 0;
+  padding: 12px;
+  color: #0f172a;
+  background: #ffffff;
+  border-radius: 14px;
+  animation: howPhoneItem 3.8s ease-in-out infinite;
+}
+
+.how-phone-screen p:nth-child(2) { animation-delay: 0.25s; }
+.how-phone-screen p:nth-child(3) { animation-delay: 0.5s; }
+.how-phone-screen p:nth-child(4) { animation-delay: 0.75s; }
+
+.how-step-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.how-step-grid article {
+  min-height: 220px;
+  padding: 18px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border-radius: 18px;
+}
+
+.how-step-grid article > span {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 12px;
+  font-weight: 850;
+}
+
+.how-company-explain,
+.how-store-callout {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  border-radius: 20px;
+}
+
+.how-company-explain a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  background: var(--primary);
+  border-radius: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.how-store-callout {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.how-store-callout > svg {
+  font-size: 54px;
+}
+
+.contact-route-grid article {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.contact-info-panel {
+  padding: 24px;
+  border-radius: 20px;
+}
+
+.contact-info-panel dl {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.contact-info-panel div {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.contact-info-panel dt {
+  color: var(--text);
+  font-weight: 850;
+}
+
+.contact-info-panel dd {
+  margin: 4px 0 0;
+}
+
+@keyframes howPhoneFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(1deg); }
+}
+
+@keyframes howPhoneItem {
+  0%, 100% { transform: translateX(0); opacity: 0.88; }
+  50% { transform: translateX(8px); opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .services-company-hero,
+  .how-company-hero,
+  .contact-company-hero,
+  .services-principle-grid,
+  .services-directory-grid,
+  .contact-route-grid,
+  .how-step-grid,
+  .how-company-explain,
+  .how-store-callout {
+    grid-template-columns: 1fr;
+  }
+}

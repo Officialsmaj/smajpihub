@@ -100,6 +100,7 @@ const HomePage = () => {
   const goToPreviousServicesPage = () => setServicesPage((currentPage) => Math.max(currentPage - 1, 0));
   const goToNextServicesPage = () =>
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
+  const getServiceStatus = (service: ServiceDefinition) => service.live || service.slug === "store";
 
   if (isLoading || isAuthenticated) return null;
 
@@ -209,8 +210,8 @@ const HomePage = () => {
                               <h3>{service.name}</h3>
                               <p>{service.items.slice(0, 2).join(" • ")}</p>
                             </div>
-                            <small className={service.live ? "live-rating-badge" : undefined}>
-                              {service.live ? "LIVE" : "SOON"}
+                            <small className={getServiceStatus(service) ? "live-rating-badge" : undefined}>
+                              {getServiceStatus(service) ? "LIVE" : "SOON"}
                             </small>
                           </Link>
                         ))}
