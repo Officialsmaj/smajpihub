@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppLayout from "../layouts/AppLayout";
 import ServiceArt from "../components/ServiceArt";
 import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
+import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
@@ -66,10 +68,38 @@ const mvpFeatures = [
 const HomePage = () => {
   const { isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
+  const [servicesPage, setServicesPage] = useState(0);
+  const [isMobileServices, setIsMobileServices] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true });
   }, [isAuthenticated, isLoading, navigate]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 768px)");
+    const updateServicesMode = () => setIsMobileServices(media.matches);
+
+    updateServicesMode();
+    media.addEventListener("change", updateServicesMode);
+    return () => media.removeEventListener("change", updateServicesMode);
+  }, []);
+
+  const serviceCarouselPages = useMemo(() => {
+    if (isMobileServices) return publicServiceGroups.map((group) => [group]);
+    return Array.from({ length: Math.ceil(publicServiceGroups.length / 2) }, (_, index) =>
+      publicServiceGroups.slice(index * 2, index * 2 + 2),
+    );
+  }, [isMobileServices]);
+
+  useEffect(() => {
+    setServicesPage((currentPage) => Math.min(currentPage, Math.max(serviceCarouselPages.length - 1, 0)));
+  }, [serviceCarouselPages.length]);
+
+  const isFirstServicesPage = servicesPage === 0;
+  const isLastServicesPage = servicesPage >= serviceCarouselPages.length - 1;
+  const goToPreviousServicesPage = () => setServicesPage((currentPage) => Math.max(currentPage - 1, 0));
+  const goToNextServicesPage = () =>
+    setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
 
   if (isLoading || isAuthenticated) return null;
 
@@ -140,23 +170,56 @@ const HomePage = () => {
               into the Pi-powered hub.
             </p>
           </div>
-          <div className="public-home-service-grid">
-            {publicServiceGroups.map((group, groupIndex) => (
-              <div className="public-home-service-group" key={groupIndex}>
-                {group.map((service) => (
-                  <Link to={publicServicePath(service)} key={service.slug} className="public-home-service-card">
-                    <ServiceArt index={service.atlasIndex} />
-                    <div>
-                      <h3>{service.name}</h3>
-                      <p>{service.items.slice(0, 2).join(" • ")}</p>
-                    </div>
-                    <small className={service.live ? "live-rating-badge" : undefined}>
-                      {service.live ? "LIVE" : "SOON"}
-                    </small>
-                  </Link>
+          <div className="public-home-service-carousel">
+            <div className="public-home-service-carousel-top">
+              <span>
+                {servicesPage + 1} / {serviceCarouselPages.length}
+              </span>
+              <div>
+                <button
+                  type="button"
+                  className="public-home-service-arrow"
+                  onClick={goToPreviousServicesPage}
+                  disabled={isFirstServicesPage}
+                  aria-label="Show previous services"
+                >
+                  <ArrowBackIosNewOutlinedIcon />
+                </button>
+                <button
+                  type="button"
+                  className="public-home-service-arrow"
+                  onClick={goToNextServicesPage}
+                  disabled={isLastServicesPage}
+                  aria-label="Show next services"
+                >
+                  <ArrowForwardIosOutlinedIcon />
+                </button>
+              </div>
+            </div>
+            <div className="public-home-service-viewport">
+              <div className="public-home-service-track" style={{ transform: `translateX(-${servicesPage * 100}%)` }}>
+                {serviceCarouselPages.map((page, pageIndex) => (
+                  <div className="public-home-service-grid" key={pageIndex}>
+                    {page.map((group, groupIndex) => (
+                      <div className="public-home-service-group" key={`${pageIndex}-${groupIndex}`}>
+                        {group.map((service) => (
+                          <Link to={publicServicePath(service)} key={service.slug} className="public-home-service-card">
+                            <ServiceArt index={service.atlasIndex} />
+                            <div>
+                              <h3>{service.name}</h3>
+                              <p>{service.items.slice(0, 2).join(" • ")}</p>
+                            </div>
+                            <small className={service.live ? "live-rating-badge" : undefined}>
+                              {service.live ? "LIVE" : "SOON"}
+                            </small>
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
           </div>
         </section>
 

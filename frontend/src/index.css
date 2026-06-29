@@ -1285,6 +1285,8 @@ h4, h5, h6 {
 }
 
 .public-home-phone-visual {
+  --phone-drop: 80px;
+  --phone-float-drop: 65px;
   position: relative;
   min-height: 520px;
   display: flex;
@@ -1300,7 +1302,7 @@ h4, h5, h6 {
   width: min(154px, 32vw);
   height: min(318px, 62vw);
   left: 50%;
-  top: 50%;
+  top: calc(50% + var(--phone-drop));
   transform: translate(-50%, -48%) rotate(-1deg);
   border-radius: 30px;
   background:
@@ -1318,7 +1320,7 @@ h4, h5, h6 {
   width: 78%;
   aspect-ratio: 1;
   left: 50%;
-  top: 50%;
+  top: calc(50% + var(--phone-drop));
   transform: translate(-50%, -44%);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(107, 63, 230, 0.28), transparent 68%);
@@ -1335,7 +1337,7 @@ h4, h5, h6 {
   object-position: center;
   mix-blend-mode: normal;
   filter: contrast(1.04) saturate(0.95) drop-shadow(0 34px 46px rgba(2, 6, 18, 0.5));
-  transform: translateY(10px) rotate(-1deg);
+  transform: translateY(var(--phone-drop)) rotate(-1deg);
   animation: publicPhoneFloat 5.4s ease-in-out infinite;
 }
 
@@ -1344,6 +1346,7 @@ h4, h5, h6 {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  transform: translateY(var(--phone-drop));
 }
 
 .public-home-infinity-orbit::before,
@@ -1557,7 +1560,71 @@ h4, h5, h6 {
   font-size: 26px;
 }
 
+.public-home-service-carousel {
+  display: grid;
+  gap: 14px;
+}
+
+.public-home-service-carousel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-home-service-carousel-top span {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.public-home-service-carousel-top div {
+  display: flex;
+  gap: 8px;
+}
+
+.public-home-service-arrow {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #6530d2;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(20, 10, 48, 0.16);
+  cursor: pointer;
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.public-home-service-arrow:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(20, 10, 48, 0.22);
+}
+
+.public-home-service-arrow:disabled {
+  cursor: default;
+  opacity: 0.38;
+  box-shadow: none;
+}
+
+.public-home-service-arrow svg {
+  font-size: 18px;
+}
+
+.public-home-service-viewport {
+  overflow: hidden;
+}
+
+.public-home-service-track {
+  display: flex;
+  transition: transform 0.42s ease;
+  will-change: transform;
+}
+
 .public-home-service-grid {
+  min-width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
@@ -1784,8 +1851,8 @@ h4, h5, h6 {
 }
 
 @keyframes publicPhoneFloat {
-  0%, 100% { transform: translateY(10px) rotate(-1deg); }
-  50% { transform: translateY(-5px) rotate(0.6deg); }
+  0%, 100% { transform: translateY(var(--phone-drop)) rotate(-1deg); }
+  50% { transform: translateY(var(--phone-float-drop)) rotate(0.6deg); }
 }
 
 @keyframes publicPhoneScreenPulse {
@@ -1884,23 +1951,28 @@ h4, h5, h6 {
     grid-template-columns: 1fr;
   }
 
-  .public-home-service-grid {
-    margin-right: -16px;
-    display: flex;
-    gap: 13px;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+  .public-home-service-carousel-top {
+    align-items: center;
   }
 
-  .public-home-service-grid::-webkit-scrollbar {
-    display: none;
+  .public-home-service-carousel-top span {
+    font-size: 12px;
+  }
+
+  .public-home-service-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .public-home-service-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .public-home-service-group {
-    width: calc(100vw - 32px);
-    min-width: calc(100vw - 32px);
+    width: 100%;
+    min-width: 0;
     display: grid;
     gap: 0;
     overflow: hidden;
@@ -1908,10 +1980,11 @@ h4, h5, h6 {
     border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 18px;
     box-shadow: 0 7px 22px rgba(15, 23, 42, 0.12);
-    scroll-snap-align: start;
   }
 
   .public-home-phone-visual {
+    --phone-drop: 60px;
+    --phone-float-drop: 48px;
     min-height: 350px;
     margin-top: 4px;
     overflow: hidden;
