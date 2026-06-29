@@ -7,7 +7,7 @@ import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
 import SupportAgentOutlinedIcon from "@mui/icons-material/SupportAgentOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 
-const companyEmail = "contact@smaj.org";
+const companyEmail = "info@smajpihub.com";
 
 const contactRoutes = [
   ["Support", "Questions about using SMAJ PI HUB, account access, or service navigation.", SupportAgentOutlinedIcon],

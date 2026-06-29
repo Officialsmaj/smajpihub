@@ -10,7 +10,7 @@ import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
 import ArrowUpwardOutlinedIcon from "@mui/icons-material/ArrowUpwardOutlined";
 import styles from "./Footer.module.css";
 
-const companyEmail = "contact@smaj.org";
+const companyEmail = "info@smajpihub.com";
 
 const Footer = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -72,19 +72,19 @@ const Footer = () => {
           <h4>Social</h4>
           <a href={`mailto:${companyEmail}`}><MailOutlineOutlinedIcon fontSize="small" />{companyEmail}</a>
           <div className={styles.socialRow} aria-label="Social links">
-            <a className={styles.socialIcon} href="https://x.com/smajecosystem" aria-label="X" target="_blank" rel="noreferrer">
+            <a className={styles.socialIcon} href="https://x.com/smajpihub" aria-label="X" target="_blank" rel="noreferrer">
               <XIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://t.me/smajecosystem" aria-label="Telegram" target="_blank" rel="noreferrer">
+            <a className={styles.socialIcon} href="https://t.me/smajpihub" aria-label="Telegram" target="_blank" rel="noreferrer">
               <TelegramIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://instagram.com/smajecosystem" aria-label="Instagram" target="_blank" rel="noreferrer">
+            <a className={styles.socialIcon} href="https://instagram.com/smajpihub" aria-label="Instagram" target="_blank" rel="noreferrer">
               <InstagramIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://youtube.com/@smajecosystem" aria-label="YouTube" target="_blank" rel="noreferrer">
+            <a className={styles.socialIcon} href="https://youtube.com/@smajpihub" aria-label="YouTube" target="_blank" rel="noreferrer">
               <YouTubeIcon fontSize="small" />
             </a>
-            <a className={styles.socialIcon} href="https://www.tiktok.com/@smajecosystem" aria-label="TikTok" target="_blank" rel="noreferrer">
+            <a className={styles.socialIcon} href="https://www.tiktok.com/@smajpihub" aria-label="TikTok" target="_blank" rel="noreferrer">
               <MusicNoteOutlinedIcon fontSize="small" />
             </a>
           </div>

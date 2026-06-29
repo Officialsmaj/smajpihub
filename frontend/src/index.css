@@ -10799,3 +10799,10 @@ select,
     width: 100%;
   }
 }
+
+/* White paper must always remain readable even if scroll animation is delayed. */
+.whitepaper-hero,
+.whitepaper-layout {
+  opacity: 1 !important;
+  transform: none !important;
+}

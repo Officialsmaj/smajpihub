@@ -141,10 +141,10 @@ export const useAuth = () => {
   }, []);
 
   const loginWithPi = useCallback(async () => {
-    setIsLoading(true);
     setAuthFeedback(null);
     if (!window.Pi) {
       if (import.meta.env.DEV && getBaseURL()) {
+        setIsLoading(true);
         try {
           const response = await axiosClient.post<SignInResponse>("/user/dev-signin");
           const devFallback: User = {
@@ -180,12 +180,11 @@ export const useAuth = () => {
           setIsLoading(false);
         }
       }
-      const message = "Please open SMAJ PI HUB inside Pi Browser to login.";
+      const message = "Login with Pi works inside Pi Browser. Please open SMAJ PI HUB in Pi Browser and try again.";
       setAuthFeedback({ type: "error", message });
-      alert(message);
-      setIsLoading(false);
       return false;
     }
+    setIsLoading(true);
     try {
       const authResult = await authenticateWithTimeout(["username", "payments", "wallet_address"]);
       await signInUser(authResult);
