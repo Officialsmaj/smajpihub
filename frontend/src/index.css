@@ -1114,6 +1114,117 @@ h4, h5, h6 {
   font-size: 20px;
 }
 
+.about-fact-grid,
+.about-layer-grid,
+.about-audience-grid,
+.about-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.about-layer-grid,
+.about-audience-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-fact-grid article,
+.about-layer-grid article,
+.about-audience-grid article,
+.about-principle-list article,
+.about-status-grid article {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.about-fact-grid article {
+  min-height: 150px;
+  padding: 18px;
+}
+
+.about-fact-grid strong,
+.about-status-grid strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.about-fact-grid p,
+.about-layer-grid p,
+.about-audience-grid p,
+.about-principle-list p,
+.about-status-grid span {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.about-layer-grid article,
+.about-audience-grid article {
+  min-height: 220px;
+  padding: 20px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.about-layer-grid svg,
+.about-audience-grid svg,
+.about-principle-list svg,
+.about-status-grid svg {
+  color: var(--primary);
+  font-size: 32px;
+}
+
+.about-layer-grid h3,
+.about-audience-grid h3,
+.about-principle-list h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.about-principle-list {
+  display: grid;
+  gap: 12px;
+}
+
+.about-principle-list article {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.about-company-status {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.about-company-status > div:first-child p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.about-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.about-status-grid article {
+  min-height: 160px;
+  padding: 18px;
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+
 .about-final-cta {
   display: grid;
   justify-items: center;
@@ -9587,7 +9698,12 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   .about-clean-hero,
   .about-step-grid,
   .about-reason-list,
-  .about-trust-grid {
+  .about-trust-grid,
+  .about-fact-grid,
+  .about-layer-grid,
+  .about-audience-grid,
+  .about-company-status,
+  .about-status-grid {
     grid-template-columns: 1fr;
   }
 
@@ -9748,6 +9864,11 @@ body {
 .about-step-card,
 .about-reason-list article,
 .about-trust-card,
+.about-fact-grid article,
+.about-layer-grid article,
+.about-audience-grid article,
+.about-principle-list article,
+.about-status-grid article,
 .dashboard-card,
 .private-state,
 .store-tools,
