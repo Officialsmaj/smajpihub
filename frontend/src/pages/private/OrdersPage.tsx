@@ -15,6 +15,9 @@ const OrdersPage = () => {
   const [message, setMessage] = useState((location.state as { message?: string } | null)?.message || "");
   const [updatingId, setUpdatingId] = useState("");
   const [error, setError] = useState("");
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewMessage, setReviewMessage] = useState("");
 
   const loadOrders = useCallback(async () => {
     try {
@@ -70,12 +73,18 @@ const OrdersPage = () => {
     navigate(`/messages?conversation=${data.conversation._id}`);
   };
 
-  const rateSeller = async (orderId: string) => {
-    const rating = Number(window.prompt("Rate this seller from 1 to 5", "5"));
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return;
-    const review = window.prompt("Add a short review", "Great transaction") || "";
-    await axiosClient.post(`/marketplace/orders/${orderId}/review`, { rating, message: review });
+  const submitReview = async () => {
+    if (!reviewOrder) return;
+    await axiosClient.post(`/marketplace/orders/${reviewOrder._id}/review`, { rating: reviewRating, message: reviewMessage });
     setMessage("Thanks. Your seller review was saved.");
+    setReviewOrder(null);
+    setReviewMessage("");
+  };
+
+  const openReview = (order: Order) => {
+    setReviewOrder(order);
+    setReviewRating(5);
+    setReviewMessage("");
   };
 
   const renderOrder = (order: Order, mode: "buyer" | "seller") => {
@@ -147,8 +156,13 @@ const OrdersPage = () => {
               Mark Delivered
             </button>
           ) : null}
+          {mode === "buyer" && order.status === "delivered" ? (
+            <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>
+              Complete Order
+            </button>
+          ) : null}
           {mode === "buyer" && order.status === "completed" ? (
-            <button onClick={() => void rateSeller(order._id)}>Rate Seller</button>
+            <button onClick={() => openReview(order)}>Rate Seller</button>
           ) : null}
         </div>
         {order.paymentStatus ? (
@@ -211,6 +225,28 @@ const OrdersPage = () => {
           {orderSection("Buyer Orders", "Products you ordered from SMAJ sellers.", buyerOrders, "buyer")}
           {orderSection("Seller Orders", "Orders customers placed for your products.", sellerOrders, "seller")}
         </>
+      ) : null}
+      {reviewOrder ? (
+        <div className="service-modal-backdrop" onMouseDown={() => setReviewOrder(null)}>
+          <form className="service-modal marketplace-action-modal" onSubmit={(event) => { event.preventDefault(); void submitReview(); }} onMouseDown={(event) => event.stopPropagation()}>
+            <h2>Rate Seller</h2>
+            <p>Share a short review for {reviewOrder.sellerName} after completing your order.</p>
+            <label>
+              Rating
+              <select value={reviewRating} onChange={(event) => setReviewRating(Number(event.target.value))}>
+                {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} stars</option>)}
+              </select>
+            </label>
+            <label>
+              Review
+              <textarea rows={4} maxLength={300} value={reviewMessage} onChange={(event) => setReviewMessage(event.target.value)} placeholder="Describe your experience..." />
+            </label>
+            <div className="confirm-modal-actions">
+              <button type="button" className="modal-cancel-button" onClick={() => setReviewOrder(null)}>Cancel</button>
+              <button type="submit" className="private-primary-button">Submit Review</button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </main>
   );

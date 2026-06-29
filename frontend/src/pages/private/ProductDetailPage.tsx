@@ -25,6 +25,8 @@ const ProductDetailPage = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("Misleading or inappropriate listing");
 
   useEffect(() => {
     axiosClient
@@ -58,23 +60,32 @@ const ProductDetailPage = () => {
       } else if (kind === "message") {
         const { data } = await axiosClient.post("/messages/start", { productId: product._id });
         navigate(`/messages?conversation=${data.conversation._id}`);
-      } else {
-        const reason = window.prompt(
-          "Why are you reporting this product?",
-          "Misleading or inappropriate listing"
-        );
-        if (reason?.trim()) {
-          await axiosClient.post(`/marketplace/products/${product._id}/report`, {
-            reason: reason.trim(),
-          });
-          setMessage("Product report submitted for admin review.");
-        }
       }
     } catch (err: unknown) {
       setError(
         isAxiosError<{ message?: string }>(err)
           ? err.response?.data?.message || "Action could not be completed."
           : "Action could not be completed."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitReport = async () => {
+    if (!product || !reportReason.trim()) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      await axiosClient.post(`/marketplace/products/${product._id}/report`, { reason: reportReason.trim() });
+      setMessage("Product report submitted for admin review.");
+      setReportOpen(false);
+      setReportReason("Misleading or inappropriate listing");
+    } catch (err: unknown) {
+      setError(
+        isAxiosError<{ message?: string }>(err)
+          ? err.response?.data?.message || "Report could not be submitted."
+          : "Report could not be submitted."
       );
     } finally {
       setSubmitting(false);
@@ -154,7 +165,7 @@ const ProductDetailPage = () => {
                 {saved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                 {saved ? "Saved" : "Save"}
               </button>
-              <button className="private-secondary-button" onClick={() => void action("report")}>
+              <button className="private-secondary-button" onClick={() => setReportOpen(true)}>
                 <FlagOutlinedIcon /> Report
               </button>
             </div>
@@ -176,6 +187,22 @@ const ProductDetailPage = () => {
             ))}
           </section>
         </>
+      ) : null}
+      {reportOpen ? (
+        <div className="service-modal-backdrop" onMouseDown={() => setReportOpen(false)}>
+          <form className="service-modal marketplace-action-modal" onSubmit={(event) => { event.preventDefault(); void submitReport(); }} onMouseDown={(event) => event.stopPropagation()}>
+            <h2>Report Product</h2>
+            <p>Tell the SMAJ PI HUB team what looks unsafe, misleading, or abusive.</p>
+            <label>
+              Reason
+              <textarea rows={5} maxLength={300} value={reportReason} onChange={(event) => setReportReason(event.target.value)} required />
+            </label>
+            <div className="confirm-modal-actions">
+              <button type="button" className="modal-cancel-button" onClick={() => setReportOpen(false)}>Cancel</button>
+              <button type="submit" className="modal-signout-button" disabled={submitting}>{submitting ? "Submitting..." : "Submit Report"}</button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </main>
   );

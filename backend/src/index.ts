@@ -19,6 +19,7 @@ import mountNotificationEndpoints from "./handlers/notifications";
 import mountMarketplaceEndpoints from "./handlers/marketplace";
 import mountAdminEndpoints from "./handlers/admin";
 import mountMessageEndpoints from "./handlers/messages";
+import mountOnboardingEndpoints from "./handlers/onboarding";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -146,6 +147,10 @@ const messageRouter = express.Router();
 mountMessageEndpoints(messageRouter);
 app.use("/messages", messageRouter);
 
+const onboardingRouter = express.Router();
+mountOnboardingEndpoints(onboardingRouter);
+app.use("/onboarding", onboardingRouter);
+
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
   res.status(200).send({ message: "Hello, World!" });
@@ -171,6 +176,7 @@ const start = async () => {
       app.locals.conversationCollection = db.collection("conversations");
       app.locals.messageCollection = db.collection("messages");
       app.locals.notificationCollection = db.collection("notifications");
+      app.locals.onboardingCollection = db.collection("onboarding_applications");
     }
 
     console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${mongoUri}`);

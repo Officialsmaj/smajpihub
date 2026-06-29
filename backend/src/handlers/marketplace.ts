@@ -102,7 +102,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       image: images[0],
       images,
       active: true,
-      approved: true,
+      approved: false,
       hidden: false,
       createdAt: new Date(),
     };
@@ -210,24 +210,21 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
     }
     const status = req.body?.status;
-    if (!["paid", "processing", "shipped", "delivered", "completed", "cancelled"].includes(status)) {
+    if (!["processing", "shipped", "delivered", "completed", "cancelled"].includes(status)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order status" });
     }
     const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id) });
     if (!order || (order.buyerId !== user.uid && order.sellerId !== user.uid)) {
       return res.status(404).json({ error: "not_found", message: "Order not found" });
     }
-    if (status === "paid" && order.buyerId !== user.uid) {
-      return res.status(403).json({ error: "forbidden", message: "Only the buyer can test-pay this order" });
-    }
     if (status === "cancelled" && order.buyerId !== user.uid && order.sellerId !== user.uid) {
       return res.status(403).json({ error: "forbidden", message: "Only the buyer or seller can cancel this order" });
     }
-    if (["processing", "shipped", "delivered", "completed"].includes(status) && order.sellerId !== user.uid) {
+    if (["processing", "shipped", "delivered"].includes(status) && order.sellerId !== user.uid) {
       return res.status(403).json({ error: "forbidden", message: "Only the seller can update fulfillment status" });
     }
-    if (status === "paid" && order.status !== "pending") {
-      return res.status(400).json({ error: "bad_request", message: "Only pending orders can be marked paid" });
+    if (status === "completed" && order.buyerId !== user.uid) {
+      return res.status(403).json({ error: "forbidden", message: "Only the buyer can complete this order" });
     }
     if (status === "cancelled" && order.status !== "pending") {
       return res.status(400).json({ error: "bad_request", message: "Only pending orders can be cancelled" });
@@ -245,7 +242,6 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Only delivered orders can be completed" });
     }
     const labels: Record<string, string> = {
-      paid: "Paid",
       processing: "Processing",
       shipped: "Shipped",
       delivered: "Delivered",
@@ -253,7 +249,6 @@ export default function mountMarketplaceEndpoints(router: Router) {
       cancelled: "Cancelled",
     };
     const noteMap: Record<string, string> = {
-      paid: "Pi payment was confirmed successfully.",
       processing: "Seller started preparing your order.",
       shipped: "Your SMAJ Store order is on the way.",
       delivered: "Seller marked the order as delivered.",
@@ -265,14 +260,9 @@ export default function mountMarketplaceEndpoints(router: Router) {
       updatedAt: new Date(),
       timeline: [...(Array.isArray(order.timeline) ? order.timeline : []), timelineEntry(status, labels[status], noteMap[status])],
     };
-    if (status === "paid") {
-      updates.paymentStatus = "paid";
-      updates.paymentId = `test_${order._id.toString()}_${Date.now()}`;
-      updates.paidAt = new Date();
-    }
     await req.app.locals.marketplaceOrderCollection.updateOne({ _id: order._id }, { $set: updates });
     const receiverId = order.buyerId === user.uid ? order.sellerId : order.buyerId;
-    await createNotification(req.app, { userId: receiverId, type: status === "completed" ? "order_completed" : status === "paid" ? "order_paid" : "order_update", title: `Order ${status}`, message: `${order.productTitle} was marked ${status}`, relatedId: order._id.toString() });
+    await createNotification(req.app, { userId: receiverId, type: status === "completed" ? "order_completed" : "order_update", title: `Order ${status}`, message: `${order.productTitle} was marked ${status}`, relatedId: order._id.toString() });
     return res.status(200).json({ message: `Order marked ${status}` });
   });
 
@@ -359,7 +349,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!validProduct(fields)) return res.status(400).json({ error: "bad_request", message: "Complete all required product fields" });
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
-      { $set: { ...fields, updatedAt: new Date() } },
+      { $set: { ...fields, approved: false, hidden: false, updatedAt: new Date() } },
     );
     if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });

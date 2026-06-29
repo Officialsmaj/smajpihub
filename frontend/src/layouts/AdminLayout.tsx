@@ -3,6 +3,7 @@ import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -19,6 +20,7 @@ const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const links = [
   ["/admin", "Dashboard", <DashboardOutlinedIcon />],
   ["/admin/users", "Users", <PeopleOutlineIcon />],
+  ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],
   ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
   ["/admin/reports", "Reports", <ReportProblemOutlinedIcon />],

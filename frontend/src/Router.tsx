@@ -51,7 +51,7 @@ import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import ManageAccountPage from "./pages/private/ManageAccountPage";
 import AdminLayout from "./layouts/AdminLayout";
-import { AdminDashboardPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
+import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
 const buildPrivatePageElement = (title: string, description: string, roles?: string[]) => {
   const page = <PrivatePage title={title} description={description} />;
@@ -290,6 +290,7 @@ export const router = createBrowserRouter(
     { path: "/app/wallet", element: <ProtectedRoute><PrivateLayout><WalletPage /></PrivateLayout></ProtectedRoute> },
     { path: "/admin", element: <ProtectedRoute><AdminLayout><AdminDashboardPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/users", element: <ProtectedRoute><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute> },
+    { path: "/admin/onboarding", element: <ProtectedRoute><AdminLayout><AdminOnboardingPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/products", element: <ProtectedRoute><AdminLayout><AdminProductsPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/orders", element: <ProtectedRoute><AdminLayout><AdminOrdersPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/reports", element: <ProtectedRoute><AdminLayout><AdminReportsPage /></AdminLayout></ProtectedRoute> },

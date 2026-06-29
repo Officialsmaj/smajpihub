@@ -47,7 +47,7 @@ const SellerPage = () => {
             {data.products.length === 0 ? <div className="private-state">You have not published a product yet.</div> : <div className="management-list">{data.products.map((product) => (
               <article className="management-row" key={product._id}>
                 <img src={product.image} alt="" /><div className="management-main"><h3>{product.title}</h3><p>{product.pricePi} Pi · {product.category}</p></div>
-                <span className={`availability ${product.active ? "available" : "sold"}`}>{product.active ? "Available" : "Sold out"}</span>
+                <span className={`availability ${product.hidden || !product.active || product.approved === false ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.approved === false ? "Pending Review" : product.active ? "Visible" : "Sold out"}</span>
                 <div className="row-actions"><Link to={`/edit-product/${product._id}`}>Edit</Link><button onClick={() => void availability(product)}>{product.active ? "Sold out" : "Available"}</button><button className="danger" onClick={() => void remove(product)}>Delete</button></div>
               </article>
             ))}</div>}

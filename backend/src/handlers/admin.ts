@@ -20,15 +20,17 @@ export default function mountAdminEndpoints(router: Router) {
   router.use((req, res, next) => { if (requireAdmin(req, res)) next(); });
 
   router.get("/stats", async (req, res) => {
-    const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts] = await Promise.all([
+    const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, pendingOnboarding, pendingProducts] = await Promise.all([
       req.app.locals.userCollection.countDocuments(),
       req.app.locals.productCollection.countDocuments(),
       req.app.locals.marketplaceOrderCollection.countDocuments(),
       req.app.locals.marketplaceOrderCollection.countDocuments({ status: "pending" }),
       req.app.locals.marketplaceOrderCollection.countDocuments({ status: { $in: ["paid", "completed"] } }),
       req.app.locals.reportCollection.countDocuments({ resolved: { $ne: true }, targetType: "product" }),
+      req.app.locals.onboardingCollection.countDocuments({ status: "pending" }),
+      req.app.locals.productCollection.countDocuments({ approved: false, hidden: { $ne: true } }),
     ]);
-    return res.status(200).json({ stats: { totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts } });
+    return res.status(200).json({ stats: { totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, pendingOnboarding, pendingProducts } });
   });
 
   router.get("/users", async (req, res) => {
@@ -74,6 +76,24 @@ export default function mountAdminEndpoints(router: Router) {
     if (product && typeof req.body?.approved === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_approved", title: "Product approved", message: `${product.title} is approved for the Store`, relatedId: req.params.id });
     if (product && typeof req.body?.hidden === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_hidden", title: req.body.hidden ? "Product hidden" : "Product visible", message: `${product.title} visibility was updated`, relatedId: req.params.id });
     return res.status(200).json({ message: "Product updated" });
+  });
+
+  router.get("/onboarding", async (req, res) => {
+    const applications = await req.app.locals.onboardingCollection.find({}).sort({ createdAt: -1 }).toArray();
+    return res.status(200).json({ applications: applications.map(serialize) });
+  });
+
+  router.patch("/onboarding/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid application id" });
+    const status = req.body?.status;
+    if (!["pending", "approved", "rejected", "contacted"].includes(status)) {
+      return res.status(400).json({ error: "bad_request", message: "Invalid application status" });
+    }
+    await req.app.locals.onboardingCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { status, reviewedAt: new Date(), reviewedBy: req.session.currentUser?.uid, updatedAt: new Date() } },
+    );
+    return res.status(200).json({ message: "Application updated" });
   });
 
   router.delete("/products/:id", async (req, res) => {

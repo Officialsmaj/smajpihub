@@ -10,7 +10,7 @@ const Notice = ({ text }: { text: string }) => text ? <div className="private-al
 export const AdminDashboardPage = () => {
   const [stats, setStats] = useState<Record<string, number> | null>(null);
   useEffect(() => { axiosClient.get("/admin/stats").then(({ data }) => setStats(data.stats)); }, []);
-  const cards = [["totalUsers", "Total Users", "/admin/users"], ["totalProducts", "Total Products", "/admin/products"], ["totalOrders", "Total Orders", "/admin/orders"], ["pendingOrders", "Pending Orders", "/admin/orders"], ["paidOrders", "Paid Orders", "/admin/orders"], ["reportedProducts", "Reported Products", "/admin/reports"]];
+  const cards = [["totalUsers", "Total Users", "/admin/users"], ["totalProducts", "Total Products", "/admin/products"], ["pendingProducts", "Pending Products", "/admin/products"], ["pendingOnboarding", "Onboarding", "/admin/onboarding"], ["totalOrders", "Total Orders", "/admin/orders"], ["reportedProducts", "Reports", "/admin/reports"]];
   return <main className="private-page"><Head title="Admin Dashboard" description="Platform health, moderation, and marketplace operations." />{!stats ? <div className="private-state">Loading platform totals...</div> : <section className="stats-grid admin-stats">{cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key]}</strong></Link>)}</section>}</main>;
 };
 
@@ -22,12 +22,36 @@ export const AdminUsersPage = () => {
   return <main className="private-page"><Head title="Users" description="Manage access, roles, and seller verification requests." /><Notice text={message} /><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Role</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead><tbody>{users.map((user) => <tr key={user._id}><td><strong>{user.displayName}</strong><small>@{user.piUsername || user.username}{user.verificationRequested ? " · Requested trust review" : ""}</small></td><td><select value={user.role} onChange={(event) => void update(user._id, { role: event.target.value })}><option>buyer</option><option>seller</option><option>admin</option></select></td><td><select value={user.verificationLevel || "basic"} onChange={(event) => void update(user._id, { verificationLevel: event.target.value })}><option value="basic">Basic</option><option value="verified">Verified</option><option value="trusted_seller">Trusted Seller</option></select></td><td>{user.blocked ? "Blocked" : "Active"}</td><td><button onClick={() => void update(user._id, { blocked: !user.blocked })}>{user.blocked ? "Unblock" : "Block"}</button></td></tr>)}</tbody></table></div></main>;
 };
 
+type OnboardingApplication = {
+  _id: string;
+  fullName: string;
+  email: string;
+  applicationType: string;
+  location: string;
+  details: string;
+  status: "pending" | "approved" | "rejected" | "contacted";
+  createdAt: string;
+};
+
+export const AdminOnboardingPage = () => {
+  const [applications, setApplications] = useState<OnboardingApplication[]>([]);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => setApplications((await axiosClient.get("/admin/onboarding")).data.applications), []);
+  useEffect(() => { void load(); }, [load]);
+  const update = async (id: string, status: OnboardingApplication["status"]) => {
+    await axiosClient.patch(`/admin/onboarding/${id}`, { status });
+    setMessage(`Application marked ${status}.`);
+    await load();
+  };
+  return <main className="private-page"><Head title="Onboarding Applications" description="Review sellers, service providers, partners, and community contributors." /><Notice text={message} />{applications.length ? <div className="management-list">{applications.map((item) => <article className="report-card onboarding-admin-card" key={item._id}><div><span>{item.applicationType} - {item.status}</span><h3>{item.fullName}</h3><p>{item.email} - {item.location}</p><p>{item.details}</p><small>{new Date(item.createdAt).toLocaleString()}</small></div><strong className={item.status === "approved" ? "resolved" : "open"}>{item.status}</strong><div className="row-actions"><button onClick={() => void update(item._id, "contacted")}>Contacted</button><button onClick={() => void update(item._id, "approved")}>Approve</button><button className="danger" onClick={() => void update(item._id, "rejected")}>Reject</button></div></article>)}</div> : <div className="private-state"><h2>No onboarding applications yet</h2><p>Seller and provider applications submitted from the public site will appear here.</p></div>}</main>;
+};
+
 export const AdminProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]); const [message, setMessage] = useState("");
   const load = useCallback(async () => setProducts((await axiosClient.get("/admin/products")).data.products), []); useEffect(() => { axiosClient.get("/admin/products").then(({ data }) => setProducts(data.products)); }, []);
   const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/products/${id}`, body); setMessage("Product updated."); await load(); };
   const remove = async (id: string) => { if (!window.confirm("Delete this product permanently?")) return; await axiosClient.delete(`/admin/products/${id}`); setMessage("Product deleted."); await load(); };
-  return <main className="private-page"><Head title="Products" description="Approve, hide, or remove marketplace listings." /><Notice text={message} /><div className="management-list">{products.map((product) => <article className="management-row" key={product._id}><img src={product.image} alt="" /><div className="management-main"><h3>{product.title}</h3><p>{product.sellerName} · {product.pricePi} Pi</p></div><span className={`availability ${product.hidden ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.approved === false ? "Pending" : "Visible"}</span><div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div></article>)}</div></main>;
+  return <main className="private-page"><Head title="Products" description="Approve, hide, or remove marketplace listings." /><Notice text={message} /><div className="management-list">{products.map((product) => <article className="management-row" key={product._id}><img src={product.image} alt="" /><div className="management-main"><h3>{product.title}</h3><p>{product.sellerName} · {product.pricePi} Pi</p></div><span className={`availability ${product.hidden || product.approved === false ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.approved === false ? "Pending" : "Visible"}</span><div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div></article>)}</div></main>;
 };
 
 export const AdminOrdersPage = () => {

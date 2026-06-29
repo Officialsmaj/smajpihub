@@ -34,8 +34,8 @@ const AddProductPage = () => {
     setSubmitting(true);
     try {
       await axiosClient.post("/marketplace/products", { ...form, title: form.title.trim(), description: form.description.trim(), category: form.category.trim(), location: form.location.trim(), sellerContact: form.sellerContact.trim(), pricePi });
-      setSuccess("Product published successfully. Redirecting to the Store...");
-      window.setTimeout(() => navigate("/store"), 700);
+      setSuccess("Product submitted for admin review. It will appear in SMAJ Store after approval.");
+      window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : "Could not add product.");
     } finally {

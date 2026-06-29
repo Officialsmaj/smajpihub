@@ -10787,6 +10787,39 @@ select,
   font-weight: 800;
 }
 
+.contact-form-success.error {
+  background: linear-gradient(135deg, #dc2626, #f97316);
+}
+
+.marketplace-action-modal {
+  display: grid;
+  gap: 14px;
+  text-align: left;
+}
+
+.marketplace-action-modal label {
+  display: grid;
+  gap: 7px;
+  color: var(--smaj-text);
+  font-weight: 800;
+}
+
+.marketplace-action-modal select,
+.marketplace-action-modal textarea {
+  width: 100%;
+  padding: 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-input);
+  border: 1px solid var(--smaj-border);
+  border-radius: 12px;
+  font: inherit;
+  outline: 0;
+}
+
+.marketplace-action-modal textarea {
+  resize: vertical;
+}
+
 .contact-info-panel {
   background:
     linear-gradient(135deg, var(--primary-soft), transparent 48%),

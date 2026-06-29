@@ -154,6 +154,11 @@ const OrderTrackingPage = () => {
                 Mark Delivered
               </button>
             ) : null}
+            {isBuyer && order.status === "delivered" ? (
+              <button type="button" className="private-primary-button" disabled={updating} onClick={() => void updateStatus("completed")}>
+                Complete Order
+              </button>
+            ) : null}
             <button type="button" className="private-secondary-button" onClick={() => navigate("/orders")}>
               Back to Orders
             </button>
