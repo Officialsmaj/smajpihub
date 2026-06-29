@@ -61,23 +61,37 @@ const ContactPage = () => {
 
         <section className="home-section contact-company-section contact-grid">
           <form onSubmit={handleSubmit} className="contact-form">
-            <h2>Send a Message</h2>
-            <label htmlFor="name">Name</label>
-            <input id="name" type="text" required />
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" required />
-            <label htmlFor="topic">Topic</label>
-            <select id="topic" required defaultValue="">
-              <option value="" disabled>Select a topic</option>
-              <option>Support</option>
-              <option>Seller / Provider onboarding</option>
-              <option>Partnership</option>
-              <option>Company inquiry</option>
-            </select>
-            <label htmlFor="contact-message">Message</label>
-            <textarea id="contact-message" rows={6} required />
+            <div className="contact-form-head">
+              <span className="home-kicker">DIRECT MESSAGE</span>
+              <h2>Send a Message</h2>
+              <p>Tell us who you are, what you need, and how the SMAJ PI HUB team can help.</p>
+            </div>
+            <div className="contact-field-row">
+              <label htmlFor="name">
+                <span>Name</span>
+                <input id="name" type="text" placeholder="Your full name" required />
+              </label>
+              <label htmlFor="email">
+                <span>Email</span>
+                <input id="email" type="email" placeholder="you@example.com" required />
+              </label>
+            </div>
+            <label htmlFor="topic">
+              <span>Topic</span>
+              <select id="topic" required defaultValue="">
+                <option value="" disabled>Select a topic</option>
+                <option>Support</option>
+                <option>Seller / Provider onboarding</option>
+                <option>Partnership</option>
+                <option>Company inquiry</option>
+              </select>
+            </label>
+            <label htmlFor="contact-message">
+              <span>Message</span>
+              <textarea id="contact-message" rows={6} placeholder="Write your message here..." required />
+            </label>
             <button type="submit">Send Message</button>
-            {message ? <p>{message}</p> : null}
+            {message ? <p className="contact-form-success">{message}</p> : null}
           </form>
 
           <aside className="contact-info-panel">
