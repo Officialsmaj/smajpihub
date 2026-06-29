@@ -4,6 +4,7 @@ import AppLayout from "../layouts/AppLayout";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { axiosClient } from "../lib/axiosClient";
 
 const legalEmail = "info@smajpihub.com";
 
@@ -139,10 +140,26 @@ export const CookiesPage = () => (
 
 export const ReportAbusePage = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+    const form = new FormData(event.currentTarget);
+    setSubmitted(false);
+    setError("");
+    try {
+      await axiosClient.post("/support", {
+        source: "report-abuse",
+        name: String(form.get("name") || ""),
+        email: String(form.get("email") || ""),
+        topic: String(form.get("type") || ""),
+        message: String(form.get("details") || ""),
+      });
+      event.currentTarget.reset();
+      setSubmitted(true);
+    } catch {
+      setError("Could not submit this report. Please email info@smajpihub.com.");
+    }
   };
 
   return (
@@ -160,15 +177,15 @@ export const ReportAbusePage = () => {
           </div>
           <label htmlFor="report-name">
             <span>Name</span>
-            <input id="report-name" type="text" placeholder="Your full name" required />
+            <input id="report-name" name="name" type="text" placeholder="Your full name" required />
           </label>
           <label htmlFor="report-email">
             <span>Email</span>
-            <input id="report-email" type="email" placeholder="you@example.com" required />
+            <input id="report-email" name="email" type="email" placeholder="you@example.com" required />
           </label>
           <label htmlFor="report-type">
             <span>Report Type</span>
-            <select id="report-type" required defaultValue="">
+            <select id="report-type" name="type" required defaultValue="">
               <option value="" disabled>Select report type</option>
               <option>Fake seller or provider</option>
               <option>Scam or suspicious payment request</option>
@@ -179,10 +196,11 @@ export const ReportAbusePage = () => {
           </label>
           <label htmlFor="report-details">
             <span>Report Details</span>
-            <textarea id="report-details" rows={6} placeholder="Describe what happened..." required />
+            <textarea id="report-details" name="details" rows={6} placeholder="Describe what happened..." required />
           </label>
           <button type="submit">Submit Report</button>
           {submitted ? <p className="contact-form-success">Thank you. Your report has been recorded for review.</p> : null}
+          {error ? <p className="contact-form-success error">{error}</p> : null}
         </form>
         <aside className="legal-report-card">
           <ReportProblemOutlinedIcon />

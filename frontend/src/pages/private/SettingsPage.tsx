@@ -1,20 +1,154 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../contexts/AuthContext";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { axiosClient } from "../../lib/axiosClient";
 
-const SettingsPage = () => { const { user, updateSettings, updateProfile, signOut } = useAuthContext(); const navigate = useNavigate(); const [appearance, setAppearance] = useState<"light" | "dark" | "system">(() => (window.localStorage.getItem("smaj_private_theme_mode") as "light" | "dark" | "system") || user?.settings?.theme || "light"); const [language, setLanguage] = useState(user?.settings?.language || "English"); const [country, setCountry] = useState(user?.country || ""); const [messageNotifications, setMessageNotifications] = useState(user?.settings?.notifications ?? true); const [orderNotifications, setOrderNotifications] = useState(user?.settings?.notifications ?? true); const [paymentNotifications, setPaymentNotifications] = useState(true); const [updateNotifications, setUpdateNotifications] = useState(true); const [securityNotifications, setSecurityNotifications] = useState(true); const [profileVisibility, setProfileVisibility] = useState("Public"); const [whoCanMessage, setWhoCanMessage] = useState("Everyone"); const [hideBalance, setHideBalance] = useState(true); const [message, setMessage] = useState(""); const [showSignOut, setShowSignOut] = useState(false); const [confirmDelete, setConfirmDelete] = useState(false);
-  useEffect(() => { const media = window.matchMedia("(prefers-color-scheme: dark)"); const apply = () => { const resolved = appearance === "system" ? (media.matches ? "dark" : "light") : appearance; document.documentElement.dataset.privateTheme = resolved; }; apply(); window.localStorage.setItem("smaj_private_theme_mode", appearance); media.addEventListener("change", apply); return () => media.removeEventListener("change", apply); }, [appearance]);
-  const save = async (event: FormEvent) => { event.preventDefault(); try { const resolved = appearance === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : appearance; window.localStorage.setItem("smaj_private_theme_mode", appearance); await Promise.all([updateSettings({ theme: resolved, language, notifications: messageNotifications || orderNotifications || paymentNotifications || updateNotifications || securityNotifications }), updateProfile({ displayName: user?.displayName || user?.username || "Pi user", country, contactPhone: user?.contactPhone || "", role: user?.role || "buyer", avatar: user?.avatar, coverImage: user?.coverImage, bio: user?.bio, language, sellerActive: user?.sellerActive })]); setMessage("Settings saved."); } catch { setMessage("Could not save settings."); } };
-  const logout = async () => { await signOut(); navigate("/home", { replace: true }); };
-  return <main className="private-page"><section className="private-page-head"><div><p className="private-kicker">ACCOUNT</p><h1>Settings</h1><p>Manage account, security, notifications, appearance, and data preferences.</p></div></section><form className="settings-sections" onSubmit={(event) => void save(event)}>
-    <section><h2>Account</h2><p>Personal information and regional preferences.</p><label>Display name<input value={user?.displayName || user?.username || ""} disabled /></label><div className="private-form-row"><label>Language<select value={language} onChange={(event) => setLanguage(event.target.value)}><option>English</option><option>French</option><option>Spanish</option><option>Portuguese</option><option>Arabic</option></select></label><label>Country<input value={country} onChange={(event) => setCountry(event.target.value)} /></label></div></section>
-    <section><h2>Security</h2><p>Review and protect your Pi-authenticated session.</p><div className="settings-info-row"><span>Login activity</span><strong>Current Pi Browser session</strong></div><div className="settings-info-row"><span>Connected devices</span><strong>This device</strong></div><div className="settings-info-row"><span>Change PIN / password</span><button type="button" className="private-secondary-button" onClick={() => setMessage("Pi authentication manages login credentials.")}>Review</button></div><label className="setting-line"><span><strong>Security alerts</strong><small>Important access and account protection notices.</small></span><input type="checkbox" checked={securityNotifications} onChange={(event) => setSecurityNotifications(event.target.checked)} /></label></section>
-    <section><h2>Privacy</h2><label>Profile visibility<select value={profileVisibility} onChange={(event) => setProfileVisibility(event.target.value)}><option>Public</option><option>Marketplace only</option><option>Private</option></select></label><label>Who can message me<select value={whoCanMessage} onChange={(event) => setWhoCanMessage(event.target.value)}><option>Everyone</option><option>Order contacts only</option><option>No one</option></select></label><div className="settings-info-row"><span>Blocked users</span><button type="button" className="private-secondary-button">Manage</button></div><div className="settings-info-row"><span>Data permissions</span><strong>Essential services</strong></div></section>
-    <section><h2>Notifications</h2>{[["Messages",messageNotifications,setMessageNotifications],["Orders",orderNotifications,setOrderNotifications],["Payments",paymentNotifications,setPaymentNotifications],["Updates",updateNotifications,setUpdateNotifications],["Security alerts",securityNotifications,setSecurityNotifications]].map(([label,value,setter]) => <label className="setting-line" key={String(label)}><span><strong>{String(label)}</strong><small>Receive {String(label).toLowerCase()} notifications.</small></span><input type="checkbox" checked={Boolean(value)} onChange={(event) => (setter as (value:boolean)=>void)(event.target.checked)} /></label>)}</section>
-    <section><h2>Wallet preferences</h2><label className="setting-line"><span><strong>Hide balance by default</strong><small>Keep wallet amounts private on screen.</small></span><input type="checkbox" checked={hideBalance} onChange={(event) => setHideBalance(event.target.checked)} /></label><div className="settings-info-row"><span>Payment settings</span><button type="button" className="private-secondary-button" onClick={() => navigate("/payment-method")}>Open</button></div><div className="settings-info-row"><span>Connected wallets</span><button type="button" className="private-secondary-button" onClick={() => navigate("/wallet")}>Manage</button></div></section>
-    <section><h2>Appearance</h2><div className="appearance-options">{(["light", "dark", "system"] as const).map((mode) => <button type="button" className={appearance === mode ? "active" : ""} key={mode} onClick={() => setAppearance(mode)}>{mode}</button>)}</div></section>
-    <section><h2>Language & Region</h2><div className="private-form-row"><label>Language<select value={language} onChange={(event) => setLanguage(event.target.value)}><option>English</option><option>French</option><option>Spanish</option><option>Portuguese</option><option>Arabic</option></select></label><label>Country / region<input value={country} onChange={(event) => setCountry(event.target.value)} /></label></div><label>Currency display<select><option>Pi + USD</option><option>Pi only</option></select></label></section>
-    <section><h2>Data & Account</h2><div className="settings-info-row"><span>Download my data</span><button type="button" className="private-secondary-button" onClick={() => setMessage("Account data export request recorded.")}>Download</button></div><div className="settings-info-row"><span>Clear cache</span><button type="button" className="private-secondary-button" onClick={() => setMessage("Local app cache cleared.")}>Clear</button></div><div className="settings-info-row"><span>Deactivate account</span><button type="button" className="private-secondary-button danger">Request</button></div><div className="settings-info-row"><span>Delete account request</span><button type="button" className="private-secondary-button danger" onClick={() => setConfirmDelete(true)}>Request deletion</button></div></section>
-    {message ? <div className="private-alert">{message}</div> : null}<button className="private-primary-button">Save Settings</button></form><section className="danger-card"><div><h2>Logout</h2><p>End this session on the current device.</p></div><button className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button></section><ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />{confirmDelete ? <div className="confirm-modal-backdrop"><section className="confirm-modal"><h2>Request account deletion?</h2><p>This request will require identity and support review.</p><div className="confirm-modal-actions"><button className="modal-cancel-button" onClick={() => setConfirmDelete(false)}>Cancel</button><button className="modal-signout-button" onClick={() => { setConfirmDelete(false); setMessage("Account deletion request submitted for review."); }}>Request deletion</button></div></section></div> : null}</main>;
-}; export default SettingsPage;
+const languages = ["English", "French", "Spanish", "Portuguese", "Arabic"];
+
+const SettingsPage = () => {
+  const { user, updateSettings, updateProfile, signOut } = useAuthContext();
+  const navigate = useNavigate();
+  const [appearance, setAppearance] = useState<"light" | "dark" | "system">(
+    () => (window.localStorage.getItem("smaj_private_theme_mode") as "light" | "dark" | "system") || user?.settings?.theme || "light",
+  );
+  const [language, setLanguage] = useState(user?.settings?.language || "English");
+  const [country, setCountry] = useState(user?.country || "");
+  const [notifications, setNotifications] = useState(user?.settings?.notifications ?? true);
+  const [message, setMessage] = useState("");
+  const [showSignOut, setShowSignOut] = useState(false);
+  const [deleteRequested, setDeleteRequested] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const resolved = appearance === "system" ? (media.matches ? "dark" : "light") : appearance;
+      document.documentElement.dataset.privateTheme = resolved;
+    };
+    apply();
+    window.localStorage.setItem("smaj_private_theme_mode", appearance);
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [appearance]);
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    setMessage("");
+    try {
+      const resolved = appearance === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : appearance;
+      await Promise.all([
+        updateSettings({ theme: resolved, language, notifications }),
+        updateProfile({
+          displayName: user?.displayName || user?.username || "Pi user",
+          country,
+          contactPhone: user?.contactPhone || "",
+          role: user?.role || "buyer",
+          avatar: user?.avatar,
+          coverImage: user?.coverImage,
+          bio: user?.bio,
+          language,
+          sellerActive: user?.sellerActive,
+        }),
+      ]);
+      setMessage("Settings saved.");
+    } catch {
+      setMessage("Could not save settings.");
+    }
+  };
+
+  const requestDeletion = async () => {
+    await axiosClient.post("/support", {
+      source: "account",
+      topic: "Account deletion request",
+      name: user?.displayName || user?.username || "Pi user",
+      message: "User requested account deletion review from Settings.",
+    });
+    setDeleteRequested(false);
+    setMessage("Account deletion request submitted for support review.");
+  };
+
+  const logout = async () => {
+    await signOut();
+    navigate("/home", { replace: true });
+  };
+
+  return (
+    <main className="private-page settings-page">
+      <section className="private-page-head">
+        <div>
+          <p className="private-kicker">ACCOUNT</p>
+          <h1>Settings</h1>
+          <p>Manage real account preferences saved to your SMAJ PI HUB profile.</p>
+        </div>
+      </section>
+
+      <form className="settings-sections" onSubmit={(event) => void save(event)}>
+        <section>
+          <h2>Account Preferences</h2>
+          <p>Language, region, and notifications are saved to your account.</p>
+          <div className="private-form-row">
+            <label>Language<select value={language} onChange={(event) => setLanguage(event.target.value)}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label>Country / region<input value={country} onChange={(event) => setCountry(event.target.value)} placeholder="Country or region" /></label>
+          </div>
+          <label className="setting-line">
+            <span><strong>Notifications</strong><small>Receive account, order, payment, message, and security notifications.</small></span>
+            <input type="checkbox" checked={notifications} onChange={(event) => setNotifications(event.target.checked)} />
+          </label>
+        </section>
+
+        <section>
+          <h2>Appearance</h2>
+          <p>Choose how the private app appears on this device.</p>
+          <div className="appearance-options">
+            {(["light", "dark", "system"] as const).map((mode) => (
+              <button type="button" className={appearance === mode ? "active" : ""} key={mode} onClick={() => setAppearance(mode)}>
+                {mode}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2>Security</h2>
+          <div className="settings-info-row"><span>Login method</span><strong>Pi Browser authentication</strong></div>
+          <div className="settings-info-row"><span>Active session</span><strong>Current device</strong></div>
+          <div className="settings-info-row"><span>Wallet keys</span><strong>Never stored by SMAJ PI HUB</strong></div>
+        </section>
+
+        <section>
+          <h2>Account Actions</h2>
+          <div className="settings-info-row"><span>Payment method</span><button type="button" className="private-secondary-button" onClick={() => navigate("/payment-method")}>Open</button></div>
+          <div className="settings-info-row"><span>Wallet page</span><button type="button" className="private-secondary-button" onClick={() => navigate("/wallet")}>Open</button></div>
+          <div className="settings-info-row"><span>Account deletion</span><button type="button" className="private-secondary-button danger" onClick={() => setDeleteRequested(true)}>Request review</button></div>
+        </section>
+
+        {message ? <div className={`private-alert ${message.includes("Could") ? "error" : "success"}`}>{message}</div> : null}
+        <button className="private-primary-button">Save Settings</button>
+      </form>
+
+      <section className="danger-card">
+        <div>
+          <h2>Logout</h2>
+          <p>End this session on the current device.</p>
+        </div>
+        <button className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
+      </section>
+
+      <ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
+      {deleteRequested ? (
+        <div className="confirm-modal-backdrop">
+          <section className="confirm-modal">
+            <h2>Request account deletion?</h2>
+            <p>The SMAJ support team will review the request before any account action is taken.</p>
+            <div className="confirm-modal-actions">
+              <button className="modal-cancel-button" onClick={() => setDeleteRequested(false)}>Cancel</button>
+              <button className="modal-signout-button" onClick={() => void requestDeletion()}>Submit Request</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </main>
+  );
+};
+
+export default SettingsPage;

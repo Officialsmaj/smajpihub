@@ -1,11 +1,71 @@
-import { useState } from "react";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { Link } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
 
-const PI_USD = 3.14159;
-const WalletPage = () => { const { user } = useAuthContext(); const [connected, setConnected] = useState(true); const [hidden, setHidden] = useState(true); const [refreshing, setRefreshing] = useState(false); const [disconnecting, setDisconnecting] = useState(false); const balance = 15; const refresh = () => { setRefreshing(true); window.setTimeout(() => setRefreshing(false), 900); }; const address = user?.wallet_address ? `${user.wallet_address.slice(0,7)}...${user.wallet_address.slice(-5)}` : "GABC123...SMAJ9"; return <main className="private-page wallet-page"><section className="private-page-head"><div><p className="private-kicker">SMAJ PI HUB WALLET</p><h1>Wallet</h1><p>Review connection status, payment methods, and recent activity.</p></div><span className={connected ? "wallet-connected-chip" : "wallet-disconnected-chip"}>{connected ? "Connected" : "Not Connected"}</span></section><section className="wallet-hero-card"><div><span>Available balance</span><strong>{hidden ? "•••••• Pi" : `${balance.toFixed(2)} Pi`}</strong><small>{hidden ? "≈ ••••••" : `≈ $${(balance * PI_USD).toFixed(5)}`}</small><button onClick={() => setHidden((value) => !value)}>{hidden ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />}{hidden ? "Show balance" : "Hide balance"}</button></div><AccountBalanceWalletOutlinedIcon /></section><section className="wallet-panel"><div><span>Pi Wallet</span><strong>{connected ? address : "Not connected"}</strong><p>No full wallet address or sensitive key is displayed.</p></div><div className="form-actions">{!connected ? <button className="private-primary-button" onClick={() => setConnected(true)}>Connect Wallet</button> : <><button className="private-secondary-button" onClick={refresh}><RefreshOutlinedIcon />{refreshing ? "Refreshing..." : "Refresh balance"}</button><button className="private-secondary-button danger" onClick={() => setDisconnecting(true)}>Disconnect Wallet</button></>}</div></section><section className="wallet-grid"><article><h2>Payment methods</h2><div className="payment-method active"><AccountBalanceWalletOutlinedIcon /><span><strong>Pi Wallet</strong><small>{connected ? "Connected" : "Not connected"}</small></span></div><div className="payment-method"><span className="usdc-mark">$</span><span><strong>USDC Wallet</strong><small>Coming soon</small></span></div></article><article><h2>Wallet security</h2><div className="security-line"><ShieldOutlinedIcon /><span><strong>Protect wallet</strong><small>Never share keys or passphrases.</small></span></div><div className="security-line"><ShieldOutlinedIcon /><span><strong>Connection permissions</strong><small>SMAJ only requests approved Pi permissions.</small></span></div><div className="security-line"><ShieldOutlinedIcon /><span><strong>Trusted devices</strong><small>This active Pi Browser session.</small></span></div></article></section><section className="wallet-transactions"><h2>Transactions</h2>{[["Payment received","+0.0045 Pi","≈ $0.01414","Today"],["Product purchase","-0.0023 Pi","≈ $0.00723","Yesterday"],["Refund","+0.0012 Pi","≈ $0.00377","June 10"],["Wallet connected","—","Pi Wallet","June 8"]].map((row) => <article key={row[0]}><div><strong>{row[0]}</strong><small>{row[3]}</small></div><div><strong>{row[1]}</strong><small>{row[2]}</small></div></article>)}</section>{disconnecting ? <div className="confirm-modal-backdrop"><section className="confirm-modal"><h2>Disconnect wallet?</h2><p>Payments will be unavailable until you reconnect.</p><div className="confirm-modal-actions"><button className="modal-cancel-button" onClick={() => setDisconnecting(false)}>Cancel</button><button className="modal-signout-button" onClick={() => { setConnected(false); setDisconnecting(false); }}>Disconnect</button></div></section></div> : null}</main>; };
+const maskAddress = (address?: string) => address ? `${address.slice(0, 7)}...${address.slice(-5)}` : "Available after Pi login permission";
+
+const WalletPage = () => {
+  const { user } = useAuthContext();
+  const hasPi = Boolean(window.Pi);
+  const address = maskAddress(user?.wallet_address);
+
+  return (
+    <main className="private-page wallet-page">
+      <section className="private-page-head">
+        <div>
+          <p className="private-kicker">SMAJ PI HUB WALLET</p>
+          <h1>Wallet</h1>
+          <p>Review wallet connection status and Pi payment readiness. SMAJ PI HUB never stores private keys.</p>
+        </div>
+        <span className={hasPi ? "wallet-connected-chip" : "wallet-disconnected-chip"}>{hasPi ? "Pi Browser Ready" : "Open in Pi Browser"}</span>
+      </section>
+
+      <section className="wallet-hero-card real-wallet-card">
+        <div>
+          <span>Pi Wallet Status</span>
+          <strong>{hasPi ? "Ready for Pi payments" : "Pi Browser required"}</strong>
+          <small>Balance display depends on Pi ecosystem permissions and is not estimated by SMAJ PI HUB.</small>
+          <Link className="private-primary-button" to="/payment-method">View Payment Method</Link>
+        </div>
+        <AccountBalanceWalletOutlinedIcon />
+      </section>
+
+      <section className="wallet-panel">
+        <div>
+          <span>Wallet address</span>
+          <strong>{address}</strong>
+          <p>Only a masked wallet identifier is shown when available. No passphrases or private keys are stored.</p>
+        </div>
+      </section>
+
+      <section className="wallet-grid">
+        <article>
+          <h2>Payment Method</h2>
+          <div className="payment-method active">
+            <PaymentsOutlinedIcon />
+            <span><strong>Pi Wallet</strong><small>{hasPi ? "Available inside Pi Browser" : "Open the app in Pi Browser to pay"}</small></span>
+          </div>
+        </article>
+        <article>
+          <h2>Wallet Safety</h2>
+          <div className="security-line"><ShieldOutlinedIcon /><span><strong>No custody</strong><small>SMAJ PI HUB does not hold user Pi or private keys.</small></span></div>
+          <div className="security-line"><ShieldOutlinedIcon /><span><strong>Payment confirmation</strong><small>Orders update only after Pi payment confirmation callbacks.</small></span></div>
+          <div className="security-line"><ShieldOutlinedIcon /><span><strong>User control</strong><small>Always review wallet prompts before confirming a payment.</small></span></div>
+        </article>
+      </section>
+
+      <section className="wallet-transactions">
+        <h2>Transactions</h2>
+        <div className="private-state compact">
+          <h3>No wallet transaction feed yet</h3>
+          <p>Confirmed SMAJ Store payments appear in Orders. A full wallet ledger will be added when supported by the production integration.</p>
+          <Link className="private-secondary-button" to="/orders">View Orders</Link>
+        </div>
+      </section>
+    </main>
+  );
+};
+
 export default WalletPage;

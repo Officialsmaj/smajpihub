@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { axiosClient } from "../lib/axiosClient";
 import AppLayout from "../layouts/AppLayout";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
@@ -18,10 +19,26 @@ const contactRoutes = [
 
 const ContactPage = () => {
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setMessage("Thanks. Your message has been recorded for the SMAJ PI HUB team.");
+    const form = new FormData(event.currentTarget);
+    setError("");
+    setMessage("");
+    try {
+      await axiosClient.post("/support", {
+        source: "contact",
+        name: String(form.get("name") || ""),
+        email: String(form.get("email") || ""),
+        topic: String(form.get("topic") || ""),
+        message: String(form.get("message") || ""),
+      });
+      event.currentTarget.reset();
+      setMessage("Thanks. Your message has been recorded for the SMAJ PI HUB team.");
+    } catch {
+      setError("Could not send your message. Please email info@smajpihub.com.");
+    }
   };
 
   return (
@@ -69,16 +86,16 @@ const ContactPage = () => {
             <div className="contact-field-row">
               <label htmlFor="name">
                 <span>Name</span>
-                <input id="name" type="text" placeholder="Your full name" required />
+                <input id="name" name="name" type="text" placeholder="Your full name" required />
               </label>
               <label htmlFor="email">
                 <span>Email</span>
-                <input id="email" type="email" placeholder="you@example.com" required />
+                <input id="email" name="email" type="email" placeholder="you@example.com" required />
               </label>
             </div>
             <label htmlFor="topic">
               <span>Topic</span>
-              <select id="topic" required defaultValue="">
+              <select id="topic" name="topic" required defaultValue="">
                 <option value="" disabled>Select a topic</option>
                 <option>Support</option>
                 <option>Seller / Provider onboarding</option>
@@ -88,10 +105,11 @@ const ContactPage = () => {
             </label>
             <label htmlFor="contact-message">
               <span>Message</span>
-              <textarea id="contact-message" rows={6} placeholder="Write your message here..." required />
+              <textarea id="contact-message" name="message" rows={6} placeholder="Write your message here..." required />
             </label>
             <button type="submit">Send Message</button>
             {message ? <p className="contact-form-success">{message}</p> : null}
+            {error ? <p className="contact-form-success error">{error}</p> : null}
           </form>
 
           <aside className="contact-info-panel">

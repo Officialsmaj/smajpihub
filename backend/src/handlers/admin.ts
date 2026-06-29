@@ -20,17 +20,18 @@ export default function mountAdminEndpoints(router: Router) {
   router.use((req, res, next) => { if (requireAdmin(req, res)) next(); });
 
   router.get("/stats", async (req, res) => {
-    const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, pendingOnboarding, pendingProducts] = await Promise.all([
+    const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, supportRequests, pendingOnboarding, pendingProducts] = await Promise.all([
       req.app.locals.userCollection.countDocuments(),
       req.app.locals.productCollection.countDocuments(),
       req.app.locals.marketplaceOrderCollection.countDocuments(),
       req.app.locals.marketplaceOrderCollection.countDocuments({ status: "pending" }),
       req.app.locals.marketplaceOrderCollection.countDocuments({ status: { $in: ["paid", "completed"] } }),
       req.app.locals.reportCollection.countDocuments({ resolved: { $ne: true }, targetType: "product" }),
+      req.app.locals.supportCollection.countDocuments({ resolved: { $ne: true } }),
       req.app.locals.onboardingCollection.countDocuments({ status: "pending" }),
       req.app.locals.productCollection.countDocuments({ approved: false, hidden: { $ne: true } }),
     ]);
-    return res.status(200).json({ stats: { totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, pendingOnboarding, pendingProducts } });
+    return res.status(200).json({ stats: { totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, supportRequests, pendingOnboarding, pendingProducts } });
   });
 
   router.get("/users", async (req, res) => {
@@ -108,7 +109,7 @@ export default function mountAdminEndpoints(router: Router) {
   });
 
   router.patch("/orders/:id", async (req, res) => {
-    if (!ObjectId.isValid(req.params.id) || !["pending", "paid", "completed", "cancelled"].includes(req.body?.status)) {
+    if (!ObjectId.isValid(req.params.id) || !["pending", "processing", "shipped", "delivered", "completed", "cancelled"].includes(req.body?.status)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order update" });
     }
     await req.app.locals.marketplaceOrderCollection.updateOne(
@@ -119,8 +120,24 @@ export default function mountAdminEndpoints(router: Router) {
   });
 
   router.get("/reports", async (req, res) => {
-    const reports = await req.app.locals.reportCollection.find({}).sort({ createdAt: -1 }).toArray();
-    return res.status(200).json({ reports: reports.map(serialize) });
+    const [productReports, supportRequests] = await Promise.all([
+      req.app.locals.reportCollection.find({}).sort({ createdAt: -1 }).toArray(),
+      req.app.locals.supportCollection.find({}).sort({ createdAt: -1 }).toArray(),
+    ]);
+    const reports = [
+      ...productReports.map((report: Record<string, any>) => ({ ...serialize(report), source: "marketplace" })),
+      ...supportRequests.map((request: Record<string, any>) => ({
+        ...serialize(request),
+        targetType: request.source || "support",
+        targetId: request.userId || request.email || "public",
+        reason: request.topic,
+        details: request.message,
+        reportedBy: request.userId,
+        reporterName: request.name,
+        source: "support",
+      })),
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return res.status(200).json({ reports });
   });
 
   router.patch("/reports/:id/resolve", async (req, res) => {
@@ -132,5 +149,14 @@ export default function mountAdminEndpoints(router: Router) {
     );
     if (report?.reportedBy) await createNotification(req.app, { userId: report.reportedBy, type: "report_update", title: "Report resolved", message: `Your report about ${report.targetName || report.targetType} was reviewed`, relatedId: req.params.id });
     return res.status(200).json({ message: "Report resolved" });
+  });
+
+  router.patch("/support/:id/resolve", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid support request id" });
+    await req.app.locals.supportCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { resolved: true, status: "resolved", resolvedAt: new Date(), resolvedBy: req.session.currentUser?.uid, updatedAt: new Date() } },
+    );
+    return res.status(200).json({ message: "Support request resolved" });
   });
 }
