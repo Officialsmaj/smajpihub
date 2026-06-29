@@ -9605,3 +9605,326 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     transform: none;
   }
 }
+
+/* Global SMAJ PI HUB theme system */
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #6f35ff;
+  --accent: #f5a623;
+  --border: #e5e7eb;
+  --soft-bg: #f8fafc;
+  --primary-soft: rgba(111, 53, 255, 0.1);
+  --accent-soft: rgba(245, 166, 35, 0.14);
+  --shadow-soft: 0 18px 44px rgba(15, 23, 42, 0.08);
+  --smaj-primary: var(--primary);
+  --smaj-primary-hover: #5b25dd;
+  --smaj-accent: var(--accent);
+  --smaj-bg: var(--bg);
+  --smaj-bg-secondary: var(--soft-bg);
+  --smaj-secondary-bg: var(--soft-bg);
+  --smaj-card: var(--surface);
+  --smaj-border: var(--border);
+  --smaj-text: var(--text);
+  --smaj-text-secondary: var(--muted);
+  --smaj-input: var(--soft-bg);
+}
+
+:root[data-theme="dark"] {
+  --bg: #07111f;
+  --surface: #101c2e;
+  --text: #ffffff;
+  --muted: #cbd5e1;
+  --primary: #8b5cf6;
+  --accent: #f5a623;
+  --border: rgba(255,255,255,0.12);
+  --soft-bg: #0b1728;
+  --primary-soft: rgba(139, 92, 246, 0.18);
+  --accent-soft: rgba(245, 166, 35, 0.16);
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.28);
+  --smaj-primary-hover: #7c3aed;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  color: var(--text) !important;
+  background: var(--bg) !important;
+}
+
+body {
+  color: var(--text) !important;
+  background: var(--bg) !important;
+}
+
+.home-page,
+.public-home-page,
+.private-shell,
+.private-content,
+.admin-shell,
+.content-page,
+.whitepaper-page,
+.whitepaper-shell,
+.about-page,
+.services-page {
+  color: var(--text) !important;
+  background: var(--bg) !important;
+}
+
+.smaj-header,
+.private-header,
+.private-sidebar,
+.smaj-services-dropdown,
+.smaj-public-search-dropdown,
+.smaj-public-search-mobile-card,
+.smaj-mobile-auth-sheet,
+.private-search-results {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.smaj-nav a,
+.smaj-nav a.active,
+.smaj-services-trigger,
+.smaj-auth-search-btn,
+.smaj-utility-icon-btn,
+.smaj-username,
+.private-header-brand,
+.private-header-title,
+.private-sidebar nav a,
+.private-sidebar-logout {
+  color: var(--text) !important;
+}
+
+.home-hero,
+.public-home-hero,
+.about-hero,
+.about-clean-hero,
+.home-section,
+.public-home-section,
+.content-panel,
+.whitepaper-article,
+.whitepaper-toc,
+.private-welcome,
+.private-page-head,
+.ecosystem-hero,
+.ecosystem-section,
+.experience-showcase,
+.help-hero {
+  color: var(--text) !important;
+  background:
+    radial-gradient(circle at 82% 10%, var(--primary-soft), transparent 28%),
+    var(--bg) !important;
+  border-color: var(--border) !important;
+}
+
+.public-home-services-section,
+.public-home-mvp-section,
+.about-promise-card,
+.about-step-card,
+.about-clean-snapshot,
+.wallet-hero-card {
+  color: var(--text) !important;
+  background:
+    linear-gradient(135deg, var(--primary-soft), var(--accent-soft)),
+    var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+.home-hero-card,
+.home-proof div,
+.home-service-card,
+.home-highlight-card,
+.home-trust-card,
+.faq-item,
+.public-home-service-group,
+.public-home-mini-card,
+.public-home-icon-card,
+.public-home-service-card,
+.about-step-card,
+.about-reason-list article,
+.about-trust-card,
+.dashboard-card,
+.private-state,
+.store-tools,
+.product-card,
+.product-detail,
+.private-form,
+.order-card,
+.profile-card,
+.stats-grid article,
+.stats-grid > a,
+.management-row,
+.admin-table-wrap,
+.report-card,
+.detail-panel,
+.home-command-hero,
+.home-activity-grid a,
+.continue-grid a,
+.recommended-services a,
+.updates-list article,
+.services-hub-grid > a,
+.services-hub-grid > button,
+.service-page-header,
+.service-modal,
+.wallet-panel,
+.wallet-grid > article,
+.wallet-transactions,
+.help-grid a,
+.settings-sections > section,
+.notification-list > article,
+.help-accordion > article,
+.support-form-section,
+.assistant-layout,
+.assistant-messages article,
+.experience-card,
+.why-grid article,
+.trust-growth-grid article,
+.support-grid a,
+.profile-overview article,
+.whitepaper-data-table,
+.whitepaper-data-table th,
+.whitepaper-data-table td {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft);
+}
+
+.home-hero h1,
+.home-hero h2,
+.home-hero h3,
+.home-section h2,
+.home-section h3,
+.content-panel h1,
+.content-panel h2,
+.content-panel h3,
+.private-shell h1,
+.private-shell h2,
+.private-shell h3,
+.whitepaper-article h1,
+.whitepaper-article h2,
+.whitepaper-article h3,
+.about-clean-hero h1,
+.about-clean-hero h2,
+.about-clean-hero h3 {
+  color: var(--text) !important;
+}
+
+.home-hero p,
+.home-section p,
+.content-panel p,
+.content-panel li,
+.private-shell p,
+.private-shell small,
+.private-shell span,
+.whitepaper-article p,
+.whitepaper-article li,
+.whitepaper-toc a,
+.about-clean-hero p,
+.about-step-card p,
+.about-reason-list p,
+.about-trust-card p,
+.public-home-service-card p {
+  color: var(--muted) !important;
+}
+
+.home-kicker,
+.private-kicker,
+.section-title a,
+.row-actions a,
+.private-back-link,
+.report-card span,
+.whitepaper-scroll-link,
+.public-home-service-carousel-top span,
+.public-home-service-card small {
+  color: var(--primary) !important;
+}
+
+.smaj-login-btn,
+.home-hero-primary-btn,
+.private-primary-button,
+.product-view-button,
+.row-actions button,
+.admin-table button,
+.report-card button,
+.detail-panel button,
+.contact-form button,
+.global-search button,
+.appearance-options button.active,
+.notification-tabs button.active,
+.public-home-service-arrow:hover:not(:disabled) {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.home-hero-secondary-btn,
+.private-secondary-button,
+.order-actions button.secondary,
+.smaj-signout-btn,
+.smaj-menu-toggle,
+.smaj-public-search-mobile-toggle,
+.smaj-public-search-nav-toggle,
+.public-home-service-arrow,
+.status-chip,
+.service-preview-tabs span,
+.appearance-options button,
+.notification-tabs button {
+  color: var(--primary) !important;
+  background: var(--primary-soft) !important;
+  border-color: var(--border) !important;
+}
+
+input,
+textarea,
+select,
+.private-global-search,
+.services-search,
+.help-hero label,
+.contact-form input,
+.contact-form textarea,
+.store-tools input,
+.store-tools select,
+.private-form input,
+.private-form textarea,
+.private-form select,
+.admin-table select,
+.product-upload-preview,
+.product-detail-image,
+.profile-readonly {
+  color: var(--text) !important;
+  background: var(--soft-bg) !important;
+  border-color: var(--border) !important;
+}
+
+.smaj-nav a::after,
+.private-sidebar nav a.active,
+.product-category,
+.service-status.live,
+.live-card-badge,
+.live-rating-badge {
+  background: var(--primary) !important;
+}
+
+.live-card-badge,
+.live-rating-badge,
+.service-status.live,
+.status-chip.live-status-chip {
+  color: #ffffff !important;
+}
+
+.wallet-card > svg,
+.product-card-foot strong,
+.product-detail-price,
+.order-price,
+.order-image,
+.order-main small,
+.public-home-card-icon,
+.public-home-mini-card svg {
+  color: var(--accent) !important;
+}

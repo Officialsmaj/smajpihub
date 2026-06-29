@@ -19,7 +19,6 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import SettingsBrightnessOutlinedIcon from "@mui/icons-material/SettingsBrightnessOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -61,7 +60,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState<"light" | "dark" | "system">(() => (window.localStorage.getItem("smaj_private_theme_mode") as "light" | "dark" | "system") || user?.settings?.theme || "light");
+  const [themeMode, setThemeMode] = useState<"light" | "dark">(() => window.localStorage.getItem("smaj_public_theme") === "dark" ? "dark" : "light");
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -74,12 +73,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => { document.documentElement.dataset.privateTheme = themeMode === "system" ? (media.matches ? "dark" : "light") : themeMode; };
-    apply();
-    window.localStorage.setItem("smaj_private_theme_mode", themeMode);
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
+    document.documentElement.dataset.theme = themeMode;
+    window.localStorage.setItem("smaj_public_theme", themeMode);
   }, [themeMode]);
 
   useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
@@ -100,12 +95,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   const toggleTheme = async () => {
     const settings = user?.settings || { theme: "light" as const, language: "English", notifications: true };
-    const next = themeMode === "light" ? "dark" : themeMode === "dark" ? "system" : "light";
+    const next = themeMode === "light" ? "dark" : "light";
     setThemeMode(next);
-    const resolved = next === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : next;
-    await updateSettings({ ...settings, theme: resolved }).catch(() => undefined);
+    await updateSettings({ ...settings, theme: next }).catch(() => undefined);
   };
-  const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : themeMode === "system" ? <SettingsBrightnessOutlinedIcon /> : <DarkModeOutlinedIcon />;
+  const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
   const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
 
