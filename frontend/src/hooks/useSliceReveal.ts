@@ -40,6 +40,8 @@ const revealSelector = [
   ".legal-policy-panel",
   ".legal-policy-panel li",
   ".legal-report-card",
+  ".onboarding-track-grid > *",
+  ".onboarding-readiness-card li",
 ].join(", ");
 
 const useSliceReveal = () => {

@@ -16,6 +16,7 @@ import logoImage from "/logo.png";
 const navItems = [
   { to: "/white-paper", label: "White Paper" },
   { to: "/how-it-works", label: "How It Works" },
+  { to: "/onboarding", label: "Onboarding" },
   { to: "/contact", label: "Contact" },
 ];
 
@@ -37,6 +38,7 @@ const publicSearchItems = [
   { label: "Health Services", to: "/services/health", keywords: ["health", "clinic", "care", "book"] },
   { label: "Events", to: "/services/events", keywords: ["events", "tickets"] },
   { label: "Help / FAQ", to: "/faq", keywords: ["help", "faq", "support"] },
+  { label: "Seller Onboarding", to: "/onboarding", keywords: ["seller", "provider", "partner", "join", "apply"] },
   { label: "White Paper Topics", to: "/white-paper", keywords: ["white paper", "token", "roadmap", "ecosystem"] },
 ];
 

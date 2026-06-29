@@ -17,6 +17,7 @@ import PartnersPage from "./pages/PartnersPage.tsx";
 import AffiliatePage from "./pages/AffiliatePage.tsx";
 import CollaboratePage from "./pages/CollaboratePage.tsx";
 import PublicStorePage from "./pages/PublicStorePage.tsx";
+import OnboardingPage from "./pages/OnboardingPage.tsx";
 import BlogPage from "./pages/BlogPage.tsx";
 import BlogPostPage from "./pages/BlogPostPage.tsx";
 import { CookiesPage, PrivacyPage, ReportAbusePage, TermsPage } from "./pages/LegalPages.tsx";
@@ -95,6 +96,10 @@ export const router = createBrowserRouter(
     {
       path: "/contact",
       element: <ContactPage />,
+    },
+    {
+      path: "/onboarding",
+      element: <OnboardingPage />,
     },
     {
       path: "/trust",

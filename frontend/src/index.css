@@ -11392,3 +11392,142 @@ select,
     min-height: 220px;
   }
 }
+
+/* Seller and provider onboarding */
+.onboarding-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.68fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.onboarding-hero-card,
+.onboarding-readiness-card {
+  padding: 26px;
+  display: grid;
+  gap: 14px;
+  color: var(--text);
+  background:
+    linear-gradient(135deg, var(--primary-soft), var(--accent-soft)),
+    var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+}
+
+.onboarding-hero-card {
+  min-height: 290px;
+  align-content: center;
+}
+
+.onboarding-hero-card svg,
+.onboarding-track-grid svg,
+.onboarding-readiness-card svg {
+  color: var(--accent);
+}
+
+.onboarding-hero-card svg {
+  font-size: 58px;
+}
+
+.onboarding-hero-card strong {
+  color: var(--text);
+  font-size: 30px;
+  line-height: 1.05;
+}
+
+.onboarding-hero-card span {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.onboarding-track-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.onboarding-track-grid article {
+  min-height: 220px;
+  padding: 20px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.onboarding-track-grid svg {
+  font-size: 34px;
+}
+
+.onboarding-track-grid h3,
+.onboarding-readiness-card h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.onboarding-track-grid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.onboarding-form-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.72fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.onboarding-form {
+  margin: 0;
+}
+
+.onboarding-readiness-card {
+  position: sticky;
+  top: 96px;
+}
+
+.onboarding-readiness-card ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-readiness-card li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+@media (max-width: 1100px) {
+  .onboarding-track-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .onboarding-hero,
+  .onboarding-form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-readiness-card {
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  .onboarding-track-grid {
+    grid-template-columns: 1fr;
+  }
+}

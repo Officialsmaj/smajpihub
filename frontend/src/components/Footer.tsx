@@ -55,6 +55,7 @@ const Footer = () => {
         <div>
           <h4>Programs</h4>
           <Link to="/affiliate">Affiliate Program</Link>
+          <Link to="/onboarding">Seller Onboarding</Link>
           <Link to="/collaborate">Collaborate With Us</Link>
           <Link to="/partners">Partners</Link>
           <Link to="/community">Community</Link>
