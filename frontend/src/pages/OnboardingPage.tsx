@@ -78,11 +78,11 @@ const OnboardingPage = () => {
       <main className="home-page onboarding-page">
         <section className="home-hero onboarding-hero">
           <div>
-            <span className="home-kicker">SELLER & PROVIDER ONBOARDING</span>
-            <h1>Join the SMAJ PI HUB launch network.</h1>
+            <span className="home-kicker">APPLY TO JOIN</span>
+            <h1>Apply to Join SMAJ PI HUB</h1>
             <p>
-              Apply as a seller, service provider, partner, or community contributor. SMAJ PI HUB starts with
-              marketplace utility and expands into connected real-world services for Pi users.
+              Join the SMAJ PI HUB ecosystem as a seller, service provider, partner, or community contributor.
+              Help build real-world Pi utility from day one.
             </p>
             <div className="home-hero-cta">
               <a href="#onboarding-form" className="home-hero-primary-btn">Start Application</a>

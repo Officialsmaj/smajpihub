@@ -5,7 +5,8 @@ import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutl
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import type { Product } from "../types/marketplace";
 
-const usd = (pi: number) => (pi * 3.14159).toFixed(5);
+const PI_USDT_RATE = 3141.59;
+const usdt = (product: Product) => (product.priceUsdt ?? product.pricePi * PI_USDT_RATE).toFixed(2);
 
 type MarketplaceProductCardProps = {
   product: Product;
@@ -47,12 +48,20 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
             <small>({reviewCount} reviews)</small>
           </div>
           <div className="storefront-price-stack">
-            <strong>{product.pricePi.toFixed(4)} Pi</strong>
-            <small>${usd(product.pricePi)}</small>
+            <strong>{usdt(product)} USDT</strong>
+            <small>{product.pricePi.toFixed(5)} Pi</small>
           </div>
           <div className="storefront-product-meta">
-            <span className="storefront-product-discount">{discount}% off</span>
+            <span className="storefront-product-discount">{product.condition || `${discount}% off`}</span>
+            <small>{product.location}</small>
+          </div>
+          <div className="storefront-product-meta">
+            <small>{product.sellerName}</small>
             <small>{deliveryLabel}</small>
+          </div>
+          <div className="storefront-product-meta">
+            <small>{product.quantity ? `${product.quantity} in stock` : "Stock updates in app"}</small>
+            <small>{product.deliveryOption || "Delivery updates in app"}</small>
           </div>
         </div>
       </Link>

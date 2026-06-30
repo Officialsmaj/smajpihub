@@ -17,7 +17,7 @@ import {
 } from "../../lib/storeCart";
 import type { Order } from "../../types/marketplace";
 
-const PI_USD = 3.14159;
+const PI_USD = 3141.59;
 
 const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-method" }) => {
   const { isAuthenticated, requireAuth } = useAuthContext();

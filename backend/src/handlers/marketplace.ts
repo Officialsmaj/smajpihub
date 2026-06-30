@@ -30,12 +30,24 @@ const productFields = (body: any) => ({
   location: String(body?.location || "").trim(),
   sellerContact: String(body?.sellerContact || "").trim(),
   pricePi: Number(body?.pricePi),
+  priceUsdt: Number(body?.priceUsdt),
+  condition: String(body?.condition || "").trim(),
+  quantity: Number(body?.quantity || 1),
+  deliveryOption: String(body?.deliveryOption || "").trim(),
+  country: String(body?.country || "").trim(),
+  stateRegion: String(body?.stateRegion || "").trim(),
+  city: String(body?.city || "").trim(),
+  areaAddress: String(body?.areaAddress || "").trim(),
+  sellerAgreementAccepted: Boolean(body?.sellerAgreementAccepted),
   images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
 });
 
 const validProduct = (product: ReturnType<typeof productFields>) =>
   product.title && product.image && product.description && product.category && product.location && product.sellerContact
-  && Number.isFinite(product.pricePi) && product.pricePi > 0;
+  && Number.isFinite(product.pricePi) && product.pricePi > 0
+  && Number.isFinite(product.priceUsdt) && product.priceUsdt > 0
+  && product.condition && product.deliveryOption && product.country && product.stateRegion && product.city && product.areaAddress
+  && Number.isFinite(product.quantity) && product.quantity > 0 && product.sellerAgreementAccepted;
 
 export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/products", async (req, res) => {

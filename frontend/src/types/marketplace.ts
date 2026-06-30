@@ -7,9 +7,18 @@ export type Product = {
   image: string;
   images?: string[];
   pricePi: number;
+  priceUsdt?: number;
   description: string;
   category: string;
   location: string;
+  condition?: string;
+  quantity?: number;
+  deliveryOption?: string;
+  country?: string;
+  stateRegion?: string;
+  city?: string;
+  areaAddress?: string;
+  sellerAgreementAccepted?: boolean;
   sellerContact: string;
   active: boolean;
   approved?: boolean;

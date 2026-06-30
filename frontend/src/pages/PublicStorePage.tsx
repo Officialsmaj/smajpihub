@@ -38,7 +38,7 @@ const PublicStorePage = () => (
           </p>
           <div className="home-hero-cta">
             <LoginWithPiButton className="home-hero-primary-btn">Login with Pi</LoginWithPiButton>
-            <Link to="/onboarding" className="home-hero-secondary-btn">Seller Onboarding</Link>
+            <Link to="/onboarding" className="home-hero-secondary-btn">Apply to Join</Link>
           </div>
         </div>
         <aside className="public-store-status-card">
