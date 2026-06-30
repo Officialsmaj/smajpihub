@@ -5,7 +5,7 @@ import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutl
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import type { Product } from "../types/marketplace";
 
-const PI_USDT_RATE = 3141.59;
+const PI_USDT_RATE = 314159;
 const usdt = (product: Product) => (product.priceUsdt ?? product.pricePi * PI_USDT_RATE).toFixed(2);
 
 type MarketplaceProductCardProps = {

@@ -4,7 +4,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 
-const PI_USDT_RATE = 3141.59;
+const PI_USDT_RATE = 314159;
 const initialForm = {
   title: "",
   image: "",
@@ -139,7 +139,7 @@ const AddProductPage = () => {
           <label>Price currency<select required value={form.priceCurrency} onChange={(event) => setForm({ ...form, priceCurrency: event.target.value as "USDT" | "Pi" })}><option>USDT</option><option>Pi</option></select></label>
         </div>
         <div className="private-alert success">
-          1 Pi = 3,141.59 USDT. This listing will show {Number.isFinite(priceUsdt) && priceUsdt > 0 ? priceUsdt.toFixed(2) : "0.00"} USDT and {Number.isFinite(pricePi) && pricePi > 0 ? pricePi.toFixed(5) : "0.00000"} Pi.
+          1 Pi = $314,159. This listing will show {Number.isFinite(priceUsdt) && priceUsdt > 0 ? priceUsdt.toFixed(2) : "0.00"} USDT and {Number.isFinite(pricePi) && pricePi > 0 ? pricePi.toFixed(5) : "0.00000"} Pi.
         </div>
         <div className="private-form-row">
           <label>Category<select required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"].map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -151,15 +151,15 @@ const AddProductPage = () => {
         </div>
         <label>Description<textarea required minLength={20} maxLength={1500} rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /><small className="form-help">{form.description.length}/1500 characters</small></label>
         <div className="private-form-row">
-          <label>Country<input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="Nigeria" /></label>
-          <label>State/Region<input required value={form.stateRegion} onChange={(event) => setForm({ ...form, stateRegion: event.target.value })} placeholder="Borno" /></label>
+          <label>Country<input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="United Arab Emirates" /></label>
+          <label>State/Region<input required value={form.stateRegion} onChange={(event) => setForm({ ...form, stateRegion: event.target.value })} placeholder="Abu Dhabi" /></label>
         </div>
         <div className="private-form-row">
-          <label>City<input required value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} placeholder="Maiduguri" /></label>
-          <label>Area/Address summary<input required value={form.areaAddress} onChange={(event) => setForm({ ...form, areaAddress: event.target.value })} placeholder="Monday Market area" /></label>
+          <label>City<input required value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} placeholder="Abu Dhabi" /></label>
+          <label>Area/Address summary<input required value={form.areaAddress} onChange={(event) => setForm({ ...form, areaAddress: event.target.value })} placeholder="Al Reem Island" /></label>
         </div>
         <div className="private-form-row">
-          <label>Seller contact<input required placeholder="Email, phone, or Pi username" value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label>
+          <label>Seller contact<input required placeholder="+971 50 123 4567, email, or Pi username" value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label>
         </div>
         <label className="setting-line">
           <span><strong>Seller agreement</strong><small>I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.</small></span>

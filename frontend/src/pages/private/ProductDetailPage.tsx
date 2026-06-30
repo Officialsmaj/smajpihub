@@ -132,7 +132,7 @@ const ProductDetailPage = () => {
           <span className="product-category inline">{product.category}</span>
           <h1>{product.title}</h1>
           <p className="product-detail-price">
-            {(product.priceUsdt ?? product.pricePi * 3141.59).toFixed(2)} USDT <small>{product.pricePi.toFixed(5)} Pi</small>
+            {(product.priceUsdt ?? product.pricePi * 314159).toFixed(2)} USDT <small>{product.pricePi.toFixed(5)} Pi</small>
           </p>
           <p>{product.description}</p>
 

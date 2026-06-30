@@ -127,9 +127,9 @@ const SettingsPage = () => {
           </div>
           <div className="private-form-row">
             <label>Email<input type="email" value={form.email} onChange={(event) => setField("email", event.target.value)} placeholder="info@smajpihub.com" /></label>
-            <label>Phone number<input value={form.phone} onChange={(event) => setField("phone", event.target.value)} placeholder="+234..." /></label>
+            <label>Phone number<input value={form.phone} onChange={(event) => setField("phone", event.target.value)} placeholder="+971 50 123 4567" /></label>
           </div>
-          <label>Location<input value={form.location} onChange={(event) => setField("location", event.target.value)} placeholder="City, country" /></label>
+          <label>Location<input value={form.location} onChange={(event) => setField("location", event.target.value)} placeholder="Abu Dhabi, United Arab Emirates" /></label>
         </section>
 
         <section>

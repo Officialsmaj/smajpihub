@@ -4,7 +4,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
 import { isAxiosError } from "axios";
 
-const PI_USDT_RATE = 3141.59;
+const PI_USDT_RATE = 314159;
 
 const EditProductPage = () => {
   const { id } = useParams();
@@ -99,7 +99,7 @@ const EditProductPage = () => {
       <label>Description<textarea required rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
       <div className="private-form-row"><label>Country<input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} /></label><label>State/Region<input required value={form.stateRegion} onChange={(event) => setForm({ ...form, stateRegion: event.target.value })} /></label></div>
       <div className="private-form-row"><label>City<input required value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} /></label><label>Area/Address summary<input required value={form.areaAddress} onChange={(event) => setForm({ ...form, areaAddress: event.target.value })} /></label></div>
-      <div className="private-form-row"><label>Seller contact<input required value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label></div>
+      <div className="private-form-row"><label>Seller contact<input required placeholder="+971 50 123 4567, email, or Pi username" value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label></div>
       <label className="setting-line"><span><strong>Seller agreement</strong><small>I confirm this listing remains real, accurate, and review-ready.</small></span><input type="checkbox" checked={form.sellerAgreementAccepted} onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })} /></label>
       {error ? <div className="private-alert error">{error}</div> : null}<button className="private-primary-button" disabled={saving}>{saving ? "Saving..." : "Save Product"}</button>
     </form></main>;

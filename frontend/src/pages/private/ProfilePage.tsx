@@ -200,7 +200,7 @@ const ProfilePage = () => {
               <label>Country<input maxLength={80} value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} /></label>
               <label>Language<select value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
-            <label>Phone / WhatsApp<input maxLength={40} value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} /></label>
+            <label>Phone / WhatsApp<input maxLength={40} value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} placeholder="+971 50 123 4567" /></label>
           </section>
 
           <label className="setting-line">

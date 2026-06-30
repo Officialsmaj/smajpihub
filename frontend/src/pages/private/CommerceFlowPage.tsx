@@ -17,7 +17,7 @@ import {
 } from "../../lib/storeCart";
 import type { Order } from "../../types/marketplace";
 
-const PI_USD = 3141.59;
+const PI_USD = 314159;
 
 const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-method" }) => {
   const { isAuthenticated, requireAuth } = useAuthContext();
@@ -209,7 +209,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                 <span>Total</span>
                 <strong>{cartTotalPi.toFixed(4)} Pi</strong>
               </div>
-              <small>approx ${(cartTotalPi * PI_USD).toFixed(5)}</small>
+              <small>approx ${(cartTotalPi * PI_USD).toFixed(2)}</small>
               <button
                 type="button"
                 className="private-primary-button"
@@ -279,7 +279,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                   <span>Total</span>
                   <strong>{checkoutTotalPi.toFixed(4)} Pi</strong>
                 </div>
-                <small className="commerce-usd">approx ${(checkoutTotalPi * PI_USD).toFixed(5)}</small>
+                <small className="commerce-usd">approx ${(checkoutTotalPi * PI_USD).toFixed(2)}</small>
                 <div className="form-actions">
                   <button
                     type="button"
@@ -324,7 +324,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <div>
                       <strong>{order.productTitle}</strong>
                       <span>{order.pricePi.toFixed(4)} Pi</span>
-                      <small>approx ${(order.pricePi * PI_USD).toFixed(5)}</small>
+                      <small>approx ${(order.pricePi * PI_USD).toFixed(2)}</small>
                     </div>
                     <div className="commerce-payment-actions">
                       <button
