@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
+import { useAuthContext } from "../../contexts/AuthContext";
 
 const PI_USDT_RATE = 3141.59;
 const initialForm = {
@@ -25,14 +26,17 @@ const initialForm = {
 
 const AddProductPage = () => {
   const navigate = useNavigate();
+  const { user, updateProfile } = useAuthContext();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
+  const [activatingSeller, setActivatingSeller] = useState(false);
   const priceValue = Number(form.priceInput);
   const pricePi = form.priceCurrency === "Pi" ? priceValue : priceValue / PI_USDT_RATE;
   const priceUsdt = form.priceCurrency === "USDT" ? priceValue : priceValue * PI_USDT_RATE;
   const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
+  const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
 
   const selectImages = (files?: FileList | null) => {
     setError("");
@@ -46,6 +50,7 @@ const AddProductPage = () => {
     event.preventDefault();
     setError("");
     setSuccess("");
+    if (!sellerActive) return setError("Activate seller tools before submitting a product.");
     const quantity = Number(form.quantity);
     if (form.title.trim().length < 3) return setError("Product title must be at least 3 characters.");
     if (!form.image) return setError("Choose a product image before publishing.");
@@ -86,9 +91,45 @@ const AddProductPage = () => {
     }
   };
 
+  const activateSeller = async () => {
+    if (!user) return;
+    setActivatingSeller(true);
+    setError("");
+    try {
+      await updateProfile({
+        displayName: user.displayName || user.username || "Pi User",
+        country: user.country || "",
+        contactPhone: user.contactPhone || "",
+        avatar: user.avatar || "",
+        coverImage: user.coverImage || "",
+        bio: user.bio || "",
+        language: user.language || user.settings?.language || "English",
+        sellerActive: true,
+        role: user.role === "admin" ? "admin" : "seller",
+      });
+      setSuccess("Seller tools activated. You can now submit real products for review.");
+    } catch {
+      setError("Could not activate seller tools. Please complete your profile and try again.");
+    } finally {
+      setActivatingSeller(false);
+    }
+  };
+
   return (
     <main className="private-page">
       <section className="private-page-head"><div><p className="private-kicker">SELLER TOOLS</p><h1>List Product</h1><p>Create a real product listing with live USDT and Pi marketplace pricing.</p></div></section>
+      {!sellerActive ? (
+        <section className="private-form seller-activation-panel">
+          <div>
+            <p className="private-kicker">SELLER ACCESS REQUIRED</p>
+            <h2>Activate seller tools first</h2>
+            <p>Product listing is only available for seller accounts. Activation connects your listing activity to your verified Pi identity.</p>
+          </div>
+          <button className="private-primary-button" type="button" disabled={activatingSeller} onClick={() => void activateSeller()}>
+            {activatingSeller ? "Activating..." : "Activate Seller Tools"}
+          </button>
+        </section>
+      ) : null}
       <form className="private-form" onSubmit={(event) => void submit(event)}>
         <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
         <label>Product gallery (up to 5 images)<input required multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>

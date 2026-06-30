@@ -73,8 +73,8 @@ const ProfilePage = () => {
       });
       setMessage("Profile saved.");
       setEditing(false);
-    } catch {
-      setMessage("Could not save profile.");
+    } catch (err) {
+      setMessage("Could not save profile. Check image size and required details.");
     }
   };
 
@@ -82,8 +82,14 @@ const ProfilePage = () => {
     const next = !sellerActive;
     const nextForm = { ...form, sellerActive: next };
     setForm(nextForm);
-    await updateProfile({ ...nextForm, role: next ? "seller" : "buyer" });
-    setMessage(next ? "Seller tools activated." : "Seller tools deactivated.");
+    setMessage("");
+    try {
+      await updateProfile({ ...nextForm, role: next ? "seller" : "buyer" });
+      setMessage(next ? "Seller tools activated." : "Seller tools deactivated.");
+    } catch {
+      setForm(form);
+      setMessage("Could not update seller tools. Complete your profile and try again.");
+    }
   };
 
   return (

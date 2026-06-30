@@ -56,12 +56,20 @@ const EditProductPage = () => {
     }).catch(() => setError("Product not found or you do not own it."));
   }, [id]);
 
-  const selectImage = (file?: File) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 2 * 1024 * 1024) { setError("Choose an image up to 2 MB."); return; }
-    const reader = new FileReader();
-    reader.onload = () => setForm((current) => ({ ...current, image: String(reader.result || ""), images: [String(reader.result || "")] }));
-    reader.readAsDataURL(file);
+  const selectImages = (files?: FileList | null) => {
+    setError("");
+    const selected = Array.from(files || []).slice(0, 5);
+    if (!selected.length) return;
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) {
+      setError("Choose up to five images, each 2 MB or smaller.");
+      return;
+    }
+    Promise.all(selected.map((file) => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    }))).then((images) => setForm((current) => ({ ...current, image: images[0], images }))).catch(() => setError("Could not read the selected images."));
   };
 
   const submit = async (event: FormEvent) => {
@@ -84,7 +92,7 @@ const EditProductPage = () => {
   return <main className="private-page"><Link className="private-back-link" to="/seller">Back to Seller Dashboard</Link><section className="private-page-head"><div><p className="private-kicker">PRODUCT MANAGEMENT</p><h1>Edit Product</h1><p>Update listing details, price, image, and contact information.</p></div></section>
     <form className="private-form" onSubmit={(event) => void submit(event)}>
       <label>Product title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-      <label>Replace image<input type="file" accept="image/*" onChange={(event) => selectImage(event.target.files?.[0])} /></label>{form.image ? <div className="product-upload-preview"><img src={form.image} alt="Preview" /></div> : null}
+      <label>Replace gallery<input multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>{form.images.length ? <div className="product-upload-preview gallery-preview">{form.images.map((image) => <img src={image} alt="Product preview" key={image.slice(-30)} />)}</div> : null}
       <div className="private-form-row"><label>USDT price<input required type="number" min="0.01" step="0.01" value={form.priceUsdt} onChange={(event) => setForm({ ...form, priceUsdt: event.target.value, pricePi: String(Number(event.target.value) / PI_USDT_RATE) })} /></label><label>Pi price<input required type="number" min="0.00001" step="0.00001" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value, priceUsdt: String(Number(event.target.value) * PI_USDT_RATE) })} /></label></div>
       <div className="private-form-row"><label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label><label>Condition<input required value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })} /></label></div>
       <div className="private-form-row"><label>Quantity<input required type="number" min="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /></label><label>Delivery option<input required value={form.deliveryOption} onChange={(event) => setForm({ ...form, deliveryOption: event.target.value })} /></label></div>
