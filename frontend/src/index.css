@@ -1142,6 +1142,20 @@ h4, h5, h6 {
     position: relative;
     z-index: 0;
   }
+
+  .private-header {
+    overflow: visible !important;
+    z-index: 3000 !important;
+  }
+
+  .private-header-actions,
+  .private-header-profile {
+    overflow: visible !important;
+  }
+
+  .private-header-profile-menu {
+    z-index: 3100 !important;
+  }
 }
 
 .about-service-strip svg {
@@ -7332,9 +7346,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   gap: 30px;
   padding: clamp(28px, 4vw, 52px);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--smaj-card) 92%, transparent), color-mix(in srgb, var(--smaj-card) 70%, transparent) 42%, color-mix(in srgb, var(--smaj-card) 44%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--smaj-primary) 14%, transparent), color-mix(in srgb, var(--smaj-accent) 10%, transparent)),
-    url("/assets/smaj-mobile-hero-v2%20copy.png") center center / cover no-repeat,
+    radial-gradient(circle at 78% 28%, color-mix(in srgb, var(--smaj-primary) 22%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--smaj-accent) 18%, transparent), transparent 30%),
     linear-gradient(135deg, color-mix(in srgb, var(--smaj-primary) 10%, var(--smaj-card)), color-mix(in srgb, var(--smaj-accent) 8%, var(--smaj-card)));
 }
 
