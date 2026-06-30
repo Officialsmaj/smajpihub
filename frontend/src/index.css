@@ -7384,24 +7384,32 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 }
 
 .desktop-feed-tabs {
-  position: sticky;
-  top: 68px;
-  z-index: 12;
-  padding: 8px;
+  position: static;
+  z-index: 1;
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  margin: -4px 0 0;
   background: var(--smaj-card);
   border: 1px solid var(--smaj-border);
-  border-radius: 14px;
+  border-radius: 13px;
+  box-shadow: var(--shadow-soft);
+  overflow-x: auto;
 }
 
 .desktop-feed-tabs a {
-  min-height: 38px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 14px;
   display: inline-flex;
   align-items: center;
   color: var(--smaj-text-secondary);
-  border-radius: 10px;
+  border-radius: 9px;
   text-decoration: none;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .desktop-feed-tabs a.active {
