@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
@@ -11,11 +12,27 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 import { axiosClient } from "../../lib/axiosClient";
 
-const languages = ["English", "French", "Spanish", "Portuguese", "Arabic"];
+const countryCodes = ["AE","US","GB","NG","IN","CN","ID","VN","PH","PK","BD","BR","TR","RU","KR","JP","DE","FR","IT","ES","NL","CA","AU","SA","ZA","EG","MA","KE","GH","CM","CI","SN","TZ","UG","ET","RW","DZ","TN","LY","SD","SS","AO","BJ","BW","BF","BI","CV","CF","TD","KM","CG","CD","DJ","GQ","ER","SZ","GA","GM","GN","GW","LS","LR","MG","MW","ML","MR","MU","MZ","NA","NE","SC","SL","SO","TG","ZM","ZW","AF","AL","AD","AR","AM","AT","AZ","BS","BH","BB","BY","BE","BZ","BT","BO","BA","BN","BG","KH","CL","CO","CR","HR","CY","CZ","DK","DO","EC","SV","EE","FJ","FI","GE","GR","GT","GY","HN","HK","HU","IS","IE","IL","JM","JO","KZ","KW","KG","LA","LV","LB","LI","LT","LU","MO","MY","MV","MT","MX","MD","MC","MN","ME","MM","NP","NZ","NI","MK","NO","OM","PA","PY","PE","PL","PT","QA","RO","RS","SG","SK","SI","LK","SE","CH","TW","TJ","TH","UA","UY","UZ","VA","VE"] as const;
+const priorityCountries = new Set(["AE","US","GB","NG","IN","ID","VN","PH","PK","BD","BR","TR"]);
+const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countries = countryCodes.map((code) => ({
+  code,
+  name: countryNames.of(code) || code,
+  flag: code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0))),
+})).sort((a, b) => Number(priorityCountries.has(b.code)) - Number(priorityCountries.has(a.code)) || a.name.localeCompare(b.name));
 
-const readImage = (file: File, onLoad: (value: string) => void, onError: (message: string) => void) => {
-  if (!file.type.startsWith("image/") || file.size > 2 * 1024 * 1024) {
-    onError("Choose an image up to 2 MB.");
+const languages = ["English","Arabic","French","Spanish","Portuguese","Hindi","Urdu","Bengali","Indonesian","Vietnamese","Filipino","Chinese","Japanese","Korean","German","Italian","Dutch","Russian","Turkish","Swahili","Hausa","Yoruba","Igbo","Amharic","Somali","Persian","Thai","Malay","Tamil","Telugu","Marathi","Gujarati","Punjabi","Polish","Romanian","Ukrainian","Greek","Czech","Swedish","Norwegian","Danish","Finnish","Hebrew"] as const;
+type CropTarget = "avatar" | "cover";
+type CropState = { target: CropTarget; source: string; zoom: number; x: number; y: number };
+
+const cropConfig = {
+  avatar: { width: 512, height: 512, label: "Profile picture" },
+  cover: { width: 1640, height: 624, label: "Profile banner" },
+} as const;
+
+const readImageFile = (file: File, onLoad: (value: string) => void, onError: (message: string) => void) => {
+  if (!file.type.startsWith("image/") || file.size > 4 * 1024 * 1024) {
+    onError("Choose an image up to 4 MB.");
     return;
   }
   const reader = new FileReader();
@@ -24,11 +41,43 @@ const readImage = (file: File, onLoad: (value: string) => void, onError: (messag
   reader.readAsDataURL(file);
 };
 
+const cropImage = (source: string, target: CropTarget, zoom: number, x: number, y: number) => new Promise<string>((resolve, reject) => {
+  const image = new Image();
+  image.onload = () => {
+    const { width, height } = cropConfig[target];
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return reject(new Error("Canvas not available"));
+    const aspect = width / height;
+    let cropWidth = image.naturalWidth / Math.max(1, zoom);
+    let cropHeight = cropWidth / aspect;
+    if (cropHeight > image.naturalHeight / Math.max(1, zoom)) {
+      cropHeight = image.naturalHeight / Math.max(1, zoom);
+      cropWidth = cropHeight * aspect;
+    }
+    const maxX = Math.max(0, image.naturalWidth - cropWidth);
+    const maxY = Math.max(0, image.naturalHeight - cropHeight);
+    const sx = maxX / 2 + (x / 100) * maxX / 2;
+    const sy = maxY / 2 + (y / 100) * maxY / 2;
+    ctx.drawImage(image, sx, sy, cropWidth, cropHeight, 0, 0, width, height);
+    resolve(canvas.toDataURL("image/jpeg", 0.9));
+  };
+  image.onerror = reject;
+  image.src = source;
+});
+
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthContext();
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
+  const [countrySearch, setCountrySearch] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [crop, setCrop] = useState<CropState | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
     displayName: "",
     country: "",
@@ -58,22 +107,59 @@ const ProfilePage = () => {
     axiosClient.get("/user/stats").then(({ data }) => setStats(data.stats)).catch(() => undefined);
   }, []);
 
+  const filteredCountries = useMemo(() => {
+    const query = countrySearch.trim().toLowerCase();
+    return countries.filter((country) => !query || country.name.toLowerCase().includes(query) || country.code.toLowerCase().includes(query)).slice(0, 220);
+  }, [countrySearch]);
+
   const name = form.displayName || user?.displayName || user?.username || "Pi User";
   const username = user?.piUsername || user?.username || "pi-user";
   const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available";
   const sellerActive = Boolean(form.sellerActive || user?.sellerActive || user?.role === "seller");
+  const selectedCountry = countries.find((country) => country.name === form.country);
+
+  const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    readImageFile(file, (source) => {
+      setEditing(true);
+      setCrop({ target, source, zoom: 1.2, x: 0, y: 0 });
+    }, setMessage);
+  };
+
+  const applyCrop = async () => {
+    if (!crop) return;
+    try {
+      const cropped = await cropImage(crop.source, crop.target, crop.zoom, crop.x, crop.y);
+      setForm((current) => crop.target === "avatar" ? { ...current, avatar: cropped } : { ...current, coverImage: cropped });
+      setCrop(null);
+      setMessage(`${cropConfig[crop.target].label} ready. Save changes to update your profile.`);
+    } catch {
+      setMessage("Could not crop image. Please try another file.");
+    }
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setMessage("");
+    if (form.bio.trim().length < 30) {
+      setMessage("Bio/About is required. Please write at least 30 characters.");
+      return;
+    }
+    if (!form.country.trim()) {
+      setMessage("Country is required. Choose your country from the list.");
+      return;
+    }
     try {
       await updateProfile({
         ...form,
+        bio: form.bio.trim(),
         role: user?.role === "admin" ? "admin" : form.sellerActive ? "seller" : "buyer",
       });
-      setMessage("Profile saved.");
+      setMessage("Profile saved successfully.");
       setEditing(false);
-    } catch (err) {
+    } catch {
       setMessage("Could not save profile. Check image size and required details.");
     }
   };
@@ -94,16 +180,20 @@ const ProfilePage = () => {
 
   return (
     <main className="private-page real-profile-page">
+      <input ref={avatarInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
+      <input ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
+
       <section className="real-profile-hero">
         <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}>
-          <button type="button" onClick={() => setEditing(true)}>
-            <EditOutlinedIcon /> Edit
+          <button type="button" onClick={() => coverInputRef.current?.click()}>
+            <EditOutlinedIcon /> Edit Banner
           </button>
         </div>
         <div className="real-profile-identity">
-          <div className="real-profile-avatar">
+          <button className="real-profile-avatar" type="button" onClick={() => avatarInputRef.current?.click()} aria-label="Upload profile picture">
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
-          </div>
+            <span><CameraAltOutlinedIcon /></span>
+          </button>
           <div>
             <p className="private-kicker">SMAJ PI HUB PROFILE</p>
             <h1>{name}</h1>
@@ -122,7 +212,7 @@ const ProfilePage = () => {
         </div>
       </section>
 
-      {message ? <div className={`private-alert ${message.includes("Could") ? "error" : "success"}`}>{message}</div> : null}
+      {message ? <div className={`private-alert ${message.includes("Could") || message.includes("required") ? "error" : "success"}`}>{message}</div> : null}
 
       {!editing ? (
         <>
@@ -134,45 +224,31 @@ const ProfilePage = () => {
 
           <section className="real-profile-grid">
             <article className="real-profile-card real-profile-about">
-              <div className="real-profile-card-head">
-                <AccountCircleOutlinedIcon />
-                <h2>About</h2>
-              </div>
+              <div className="real-profile-card-head"><AccountCircleOutlinedIcon /><h2>About</h2></div>
               <p>{user?.bio || "Add a short bio so buyers, sellers, and partners understand who you are on SMAJ PI HUB."}</p>
             </article>
 
             <article className="real-profile-card">
-              <div className="real-profile-card-head">
-                <BadgeOutlinedIcon />
-                <h2>Account Details</h2>
-              </div>
+              <div className="real-profile-card-head"><BadgeOutlinedIcon /><h2>Account Details</h2></div>
               <dl>
                 <div><dt>Pi Username</dt><dd>@{username}</dd></div>
                 <div><dt>Joined</dt><dd>{joined}</dd></div>
-                <div><dt>Country</dt><dd>{user?.country || "Not set"}</dd></div>
+                <div><dt>Country</dt><dd>{selectedCountry ? `${selectedCountry.flag} ${selectedCountry.name}` : user?.country || "Not set"}</dd></div>
                 <div><dt>Contact</dt><dd>{user?.contactPhone || "Not set"}</dd></div>
               </dl>
             </article>
 
             <article className="real-profile-card">
-              <div className="real-profile-card-head">
-                <StorefrontOutlinedIcon />
-                <h2>Seller Profile</h2>
-              </div>
+              <div className="real-profile-card-head"><StorefrontOutlinedIcon /><h2>Seller Profile</h2></div>
               <p>{sellerActive ? "Seller tools are active. Your listings can be reviewed and approved for SMAJ Store." : "Use one verified Pi identity to activate seller tools when you are ready to list products."}</p>
               <div className="form-actions">
-                <button className="private-secondary-button" type="button" onClick={() => void toggleSeller()}>
-                  {sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}
-                </button>
+                <button className="private-secondary-button" type="button" onClick={() => void toggleSeller()}>{sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
               </div>
             </article>
 
             <article className="real-profile-card">
-              <div className="real-profile-card-head">
-                <LanguageOutlinedIcon />
-                <h2>Preferences</h2>
-              </div>
+              <div className="real-profile-card-head"><LanguageOutlinedIcon /><h2>Preferences</h2></div>
               <dl>
                 <div><dt>Language</dt><dd>{form.language}</dd></div>
                 <div><dt>Account Status</dt><dd>Active</dd></div>
@@ -185,9 +261,9 @@ const ProfilePage = () => {
         <form className="private-form real-profile-form" onSubmit={submit}>
           <section>
             <h2>Profile Media</h2>
-            <div className="private-form-row">
-              <label>Profile picture<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file, (avatar) => setForm({ ...form, avatar }), setMessage); }} /></label>
-              <label>Cover image<input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) readImage(file, (coverImage) => setForm({ ...form, coverImage }), setMessage); }} /></label>
+            <div className="profile-media-actions">
+              <button type="button" className="private-secondary-button" onClick={() => avatarInputRef.current?.click()}>Upload profile picture</button>
+              <button type="button" className="private-secondary-button" onClick={() => coverInputRef.current?.click()}>Upload banner image</button>
             </div>
           </section>
 
@@ -195,18 +271,33 @@ const ProfilePage = () => {
             <h2>Personal Information</h2>
             <label>Display name<input required maxLength={80} value={form.displayName} onChange={(event) => setForm({ ...form, displayName: event.target.value })} /></label>
             <label>Pi username<input value={`@${username}`} disabled /><small>Pi username is managed by Pi authentication.</small></label>
-            <label>Bio / About<textarea maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} /></label>
+            <label>Bio / About<textarea required minLength={30} maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters. Minimum 30 required.</small></label>
             <div className="private-form-row">
-              <label>Country<input maxLength={80} value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} /></label>
+              <label className="country-picker-label">Country
+                <button type="button" className="country-picker-trigger" onClick={() => setCountryOpen((open) => !open)}>
+                  <span>{selectedCountry ? `${selectedCountry.flag} ${selectedCountry.name}` : form.country || "Choose country"}</span>
+                </button>
+                {countryOpen ? (
+                  <div className="country-picker-panel">
+                    <input autoFocus value={countrySearch} onChange={(event) => setCountrySearch(event.target.value)} placeholder="Search country or scroll..." />
+                    <div>
+                      {filteredCountries.map((country) => (
+                        <button type="button" key={country.code} onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); }}>
+                          <span>{country.flag}</span>
+                          <strong>{country.name}</strong>
+                          {priorityCountries.has(country.code) ? <small>High Pi community</small> : null}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </label>
               <label>Language<select value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
             <label>Phone / WhatsApp<input maxLength={40} value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} placeholder="+971 50 123 4567" /></label>
           </section>
 
-          <label className="setting-line">
-            <span><strong>Seller profile</strong><small>Unlock seller tools under this same verified Pi account.</small></span>
-            <input type="checkbox" checked={form.sellerActive} onChange={(event) => setForm({ ...form, sellerActive: event.target.checked })} />
-          </label>
+          <label className="setting-line"><span><strong>Seller profile</strong><small>Unlock seller tools under this same verified Pi account.</small></span><input type="checkbox" checked={form.sellerActive} onChange={(event) => setForm({ ...form, sellerActive: event.target.checked })} /></label>
 
           <div className="form-actions">
             <button className="private-primary-button">Save Changes</button>
@@ -214,6 +305,24 @@ const ProfilePage = () => {
           </div>
         </form>
       )}
+
+      {crop ? (
+        <div className="crop-modal-backdrop">
+          <section className="crop-modal">
+            <h2>Crop {cropConfig[crop.target].label}</h2>
+            <div className={`crop-preview crop-preview-${crop.target}`}>
+              <img src={crop.source} alt="" style={{ transform: `translate(${crop.x / 3}%, ${crop.y / 3}%) scale(${crop.zoom})` }} />
+            </div>
+            <label>Zoom<input type="range" min="1" max="3" step="0.05" value={crop.zoom} onChange={(event) => setCrop({ ...crop, zoom: Number(event.target.value) })} /></label>
+            <label>Move horizontal<input type="range" min="-100" max="100" step="1" value={crop.x} onChange={(event) => setCrop({ ...crop, x: Number(event.target.value) })} /></label>
+            <label>Move vertical<input type="range" min="-100" max="100" step="1" value={crop.y} onChange={(event) => setCrop({ ...crop, y: Number(event.target.value) })} /></label>
+            <div className="form-actions">
+              <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
+              <button type="button" className="private-secondary-button" onClick={() => setCrop(null)}>Cancel</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 };
