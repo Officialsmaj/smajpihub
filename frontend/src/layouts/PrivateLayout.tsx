@@ -124,12 +124,14 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
-          <Link className="private-header-icon" to="/search" aria-label="Search" title="Search"><SearchOutlinedIcon /></Link>
           <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
           <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
             {themeIcon}
           </button>
-          <Link to="/profile" className="private-header-avatar" title="Profile">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</Link>
+          <div className="private-header-profile">
+            {profileMenuOpen ? <div className="private-profile-menu private-header-profile-menu"><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{themeIcon}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+            <button type="button" className="private-header-avatar" title="Profile" aria-label="Open profile menu" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</button>
+          </div>
         </div>
       </header>
 
