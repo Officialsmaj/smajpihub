@@ -62,7 +62,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState<"light" | "dark">(() => window.localStorage.getItem("smaj_public_theme") === "dark" ? "dark" : "light");
+  const [themeMode, setThemeMode] = useState<"light" | "dark">(() => window.localStorage.getItem("smaj_private_theme_mode") === "dark" ? "dark" : "light");
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -77,7 +77,9 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
+    document.documentElement.dataset.privateTheme = themeMode;
     document.documentElement.dataset.theme = themeMode;
+    window.localStorage.setItem("smaj_private_theme_mode", themeMode);
     window.localStorage.setItem("smaj_public_theme", themeMode);
   }, [themeMode]);
 
@@ -137,9 +139,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
           <div className="mobile-private-header-actions">
             <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
-            <Link className="mobile-private-avatar" to="/settings" aria-label="Open settings">
-              {user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}
-            </Link>
           </div>
         </div>
         <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
