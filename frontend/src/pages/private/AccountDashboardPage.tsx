@@ -10,8 +10,8 @@ import TrustBadge from "../../components/TrustBadge";
 
 const quickLinks = [
   ["Profile", "/profile", PersonOutlineOutlinedIcon],
-  ["Wallet", "/wallet", AccountBalanceWalletOutlinedIcon],
-  ["Safety", "/settings", ShieldOutlinedIcon],
+  ["Wallet", "/app/wallet", AccountBalanceWalletOutlinedIcon],
+  ["Safety", "/settings/preferences", ShieldOutlinedIcon],
   ["Inbox", "/messages", InboxOutlinedIcon],
 ] as const;
 
