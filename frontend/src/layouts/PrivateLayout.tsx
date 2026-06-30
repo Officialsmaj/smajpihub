@@ -67,7 +67,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
-  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; right?: number; left?: number }>({ top: 64, right: 16 });
+  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
@@ -112,10 +112,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     const rect = avatar.getBoundingClientRect();
     const width = 220;
     const gutter = 16;
-    const top = Math.min(window.innerHeight - gutter, rect.bottom + 10);
-    const rightAligned = Math.max(gutter, window.innerWidth - rect.right);
-    const left = window.innerWidth - rightAligned - width;
-    setProfileMenuPosition(left < gutter ? { top, left: gutter } : { top, right: rightAligned });
+    const top = Math.max(gutter, Math.min(window.innerHeight - gutter, rect.bottom + 10));
+    const preferredLeft = rect.right - width;
+    const maxLeft = window.innerWidth - width - gutter;
+    const left = Math.max(gutter, Math.min(maxLeft, preferredLeft));
+    setProfileMenuPosition({ top, left });
   };
 
   useEffect(() => {

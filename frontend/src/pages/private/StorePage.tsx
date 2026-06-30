@@ -147,6 +147,10 @@ const StorePage = () => {
       <section className="storefront-shell">
         <header className="storefront-header">
           <div className="storefront-header-main">
+            <Link to="/app/services" className="storefront-back-link">
+              <ArrowBackIosNewOutlinedIcon />
+              <span>Services</span>
+            </Link>
             <Link to="/store" className="storefront-brand storefront-brand-link">
               <strong>SMAJ Store</strong>
             </Link>
