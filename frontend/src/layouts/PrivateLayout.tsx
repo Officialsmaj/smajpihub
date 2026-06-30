@@ -19,6 +19,7 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -55,6 +56,21 @@ const links = [
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
 ];
 
+const backFallbackForPath = (pathname: string) => {
+  if (pathname.startsWith("/product/")) return "/store";
+  if (pathname.startsWith("/edit-product/")) return "/seller";
+  if (pathname.startsWith("/orders/") && pathname.endsWith("/track")) return "/orders";
+  if (pathname.startsWith("/app/services/")) return "/app/services";
+  if (pathname.startsWith("/seller/")) return "/store";
+  if (pathname === "/add-product") return "/seller";
+  if (pathname === "/cart" || pathname === "/checkout" || pathname === "/payment-method") return "/store";
+  if (pathname === "/profile" || pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
+  if (pathname === "/saved" || pathname === "/orders") return "/settings";
+  if (pathname === "/notifications" || pathname === "/app/help-center" || pathname === "/help") return "/dashboard";
+  if (pathname === "/trending" || pathname === "/lifestyle" || pathname === "/categories") return "/dashboard";
+  return "";
+};
+
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
@@ -71,6 +87,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
+  const backFallback = backFallbackForPath(location.pathname);
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
     : location.pathname.startsWith("/app/services/") ? "Service"
     : location.pathname.startsWith("/edit-product/") ? "Edit Product"
@@ -184,7 +201,22 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </div>
         </aside>
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
-        <div className="private-content">{children}</div>
+        <div className="private-content">
+          {backFallback ? (
+            <button
+              className="private-route-back"
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1);
+                else navigate(backFallback, { replace: true });
+              }}
+            >
+              <ArrowBackIosNewOutlinedIcon />
+              <span>Back</span>
+            </button>
+          ) : null}
+          {children}
+        </div>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
         <NavLink to="/dashboard"><DashboardOutlinedIcon /><span>Home</span></NavLink>
