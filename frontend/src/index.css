@@ -1109,6 +1109,22 @@ h4, h5, h6 {
   font-weight: 800;
 }
 
+:root[data-theme="dark"] .about-service-strip span,
+:root[data-theme="dark"] .about-trust-grid article {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme="dark"] .about-service-strip span svg,
+:root[data-theme="dark"] .about-trust-grid article svg {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .about-trust-grid article strong {
+  color: var(--text) !important;
+}
+
 .about-service-strip svg {
   color: #f5c324;
   font-size: 20px;
