@@ -60,7 +60,6 @@ const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/product/")) return "/store";
   if (pathname.startsWith("/edit-product/")) return "/seller";
   if (pathname.startsWith("/orders/") && pathname.endsWith("/track")) return "/orders";
-  if (pathname.startsWith("/app/services/")) return "/app/services";
   if (pathname.startsWith("/seller/")) return "/store";
   if (pathname === "/add-product") return "/seller";
   if (pathname === "/cart" || pathname === "/checkout" || pathname === "/payment-method") return "/store";

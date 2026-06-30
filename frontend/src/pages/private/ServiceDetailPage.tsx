@@ -1,9 +1,34 @@
 import { useMemo, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import { Navigate, useParams } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import { serviceCatalog } from "../../content/serviceCatalog";
 
-const ServiceDetailPage = () => { const { slug } = useParams(); const navigate = useNavigate(); const service = useMemo(() => serviceCatalog.find((item) => item.slug === slug || (slug === "food-delivery" && item.slug === "food")), [slug]); const [search, setSearch] = useState(""); const [notified, setNotified] = useState(false); if (!service) return <Navigate to="/app/services" replace />; if (service.live) return <Navigate to="/store" replace />; const matches = service.items.filter((item) => item.toLowerCase().includes(search.toLowerCase())); return <main className="private-page service-detail-page"><header className="service-page-header"><button onClick={() => navigate("/app/services")}><ArrowBackOutlinedIcon /><span>Back to Services</span></button><div><ServiceArt index={service.atlasIndex} /><strong>{service.name}</strong></div><label><SearchOutlinedIcon /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${service.name}`} /></label></header><section className="service-coming-hero"><ServiceArt index={service.atlasIndex} /><p className="private-kicker">COMING SOON</p><h1>{service.experience}</h1><p>{service.description}</p><button className="private-primary-button" onClick={() => setNotified(true)}>{notified ? "Notification requested" : "Notify Me"}</button></section><section className="service-preview-tabs"><strong>Explore what is coming</strong><div>{matches.map((item) => <span key={item}>{item}</span>)}</div></section><Link className="private-back-link" to="/app/services">View all SMAJ PI HUB services</Link></main>; };
+const ServiceDetailPage = () => {
+  const { slug } = useParams();
+  const service = useMemo(() => serviceCatalog.find((item) => item.slug === slug || (slug === "food-delivery" && item.slug === "food")), [slug]);
+  const [search, setSearch] = useState("");
+  const [notified, setNotified] = useState(false);
+  if (!service) return <Navigate to="/app/services" replace />;
+  if (service.live) return <Navigate to="/store" replace />;
+  const matches = service.items.filter((item) => item.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <main className="private-page service-detail-page">
+      <header className="service-page-header service-page-header-simple">
+        <div><ServiceArt index={service.atlasIndex} /><strong>{service.name}</strong></div>
+        <label><SearchOutlinedIcon /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${service.name}`} /></label>
+      </header>
+      <section className="service-coming-hero">
+        <ServiceArt index={service.atlasIndex} />
+        <p className="private-kicker">COMING SOON</p>
+        <h1>{service.experience}</h1>
+        <p>{service.description}</p>
+        <button className="private-primary-button" onClick={() => setNotified(true)}>{notified ? "Notification requested" : "Notify Me"}</button>
+      </section>
+      <section className="service-preview-tabs"><strong>Explore what is coming</strong><div>{matches.map((item) => <span key={item}>{item}</span>)}</div></section>
+    </main>
+  );
+};
+
 export default ServiceDetailPage;

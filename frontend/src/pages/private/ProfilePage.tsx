@@ -195,7 +195,6 @@ const ProfilePage = () => {
             <span><CameraAltOutlinedIcon /></span>
           </button>
           <div>
-            <p className="private-kicker">SMAJ PI HUB PROFILE</p>
             <h1>{name}</h1>
             <span>@{username}</span>
             <div className="real-profile-badges">

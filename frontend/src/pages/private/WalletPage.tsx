@@ -15,7 +15,6 @@ const WalletPage = () => {
     <main className="private-page wallet-page">
       <section className="private-page-head">
         <div>
-          <p className="private-kicker">SMAJ PI HUB WALLET</p>
           <h1>Wallet</h1>
           <p>Review wallet connection status and Pi payment readiness. SMAJ PI HUB never stores private keys.</p>
         </div>

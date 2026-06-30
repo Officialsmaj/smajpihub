@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
+import TelegramIcon from "@mui/icons-material/Telegram";
+import XIcon from "@mui/icons-material/X";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
@@ -20,6 +25,13 @@ type SavedSettings = {
 };
 
 const STORAGE_KEY = "smaj_account_settings";
+const socialLinks = [
+  ["X", "https://x.com/smajpihub", XIcon],
+  ["Telegram", "https://t.me/smajpihub", TelegramIcon],
+  ["Instagram", "https://instagram.com/smajpihub", InstagramIcon],
+  ["YouTube", "https://youtube.com/@smajpihub", YouTubeIcon],
+  ["TikTok", "https://www.tiktok.com/@smajpihub", MusicNoteOutlinedIcon],
+] as const;
 
 const readSavedSettings = (): Partial<SavedSettings> => {
   try {
@@ -120,16 +132,11 @@ const SettingsPage = () => {
 
       <form className="settings-sections" onSubmit={(event) => void saveSettings(event)}>
         <section>
-          <h2>Profile Settings</h2>
-          <div className="private-form-row">
-            <label>Full name<input value={form.fullName} onChange={(event) => setField("fullName", event.target.value)} placeholder="Your full name" /></label>
-            <label>Username<input value={form.username} onChange={(event) => setField("username", event.target.value)} placeholder="Username" /></label>
-          </div>
-          <div className="private-form-row">
-            <label>Email<input type="email" value={form.email} onChange={(event) => setField("email", event.target.value)} placeholder="info@smajpihub.com" /></label>
-            <label>Phone number<input value={form.phone} onChange={(event) => setField("phone", event.target.value)} placeholder="+971 50 123 4567" /></label>
-          </div>
-          <label>Location<input value={form.location} onChange={(event) => setField("location", event.target.value)} placeholder="Abu Dhabi, United Arab Emirates" /></label>
+          <h2>Identity & Access</h2>
+          <div className="settings-info-row"><span>Account name</span><strong>{form.fullName || user?.displayName || user?.username || "Pi user"}</strong></div>
+          <div className="settings-info-row"><span>Pi username</span><strong>{piAccount}</strong></div>
+          <div className="settings-info-row"><span>Wallet access</span><strong>{user?.wallet_address ? "Connected" : "Requested at Pi login"}</strong></div>
+          <p>Profile name, country, image, banner, and bio are managed from the Profile page so your public marketplace identity stays consistent.</p>
         </section>
 
         <section>
@@ -163,6 +170,18 @@ const SettingsPage = () => {
           <label className="setting-line"><span><strong>Show profile publicly</strong><small>Allow marketplace users to see your public seller or buyer profile.</small></span><input type="checkbox" checked={form.publicProfile} onChange={(event) => setField("publicProfile", event.target.checked)} /></label>
           <label className="setting-line"><span><strong>Allow sellers/buyers to contact me</strong><small>Enable safe marketplace contact for service and order activity.</small></span><input type="checkbox" checked={form.allowContact} onChange={(event) => setField("allowContact", event.target.checked)} /></label>
           <button type="button" className="private-secondary-button danger" onClick={() => setDeleteRequested(true)}>Delete account</button>
+        </section>
+
+        <section>
+          <h2>Official Social Links</h2>
+          <p>Use only official SMAJ PI HUB social channels for announcements, support updates, and ecosystem news.</p>
+          <div className="settings-social-row">
+            {socialLinks.map(([label, href, Icon]) => (
+              <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
+                <Icon fontSize="small" />
+              </a>
+            ))}
+          </div>
         </section>
 
         {message ? <div className={`private-alert ${message.includes("not available") ? "error" : "success"}`}>{message}</div> : null}
