@@ -7313,8 +7313,9 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   gap: 30px;
   padding: clamp(28px, 4vw, 52px);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--smaj-card) 88%, transparent), color-mix(in srgb, var(--smaj-card) 62%, transparent) 48%, color-mix(in srgb, var(--smaj-card) 22%, transparent)),
-    url("/assets/smaj-mobile-hero-v2%20copy.png") right center / auto 112% no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--smaj-card) 92%, transparent), color-mix(in srgb, var(--smaj-card) 70%, transparent) 42%, color-mix(in srgb, var(--smaj-card) 44%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--smaj-primary) 14%, transparent), color-mix(in srgb, var(--smaj-accent) 10%, transparent)),
+    url("/assets/smaj-mobile-hero-v2%20copy.png") center center / cover no-repeat,
     linear-gradient(135deg, color-mix(in srgb, var(--smaj-primary) 10%, var(--smaj-card)), color-mix(in srgb, var(--smaj-accent) 8%, var(--smaj-card)));
 }
 
