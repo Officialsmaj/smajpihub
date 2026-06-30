@@ -35,6 +35,7 @@ import AddProductPage from "./pages/private/AddProductPage";
 import OrdersPage from "./pages/private/OrdersPage";
 import ProfilePage from "./pages/private/ProfilePage";
 import SettingsPage from "./pages/private/SettingsPage";
+import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import SellerPage from "./pages/private/SellerPage";
 import EditProductPage from "./pages/private/EditProductPage";
 import SellerProfilePage from "./pages/private/SellerProfilePage";
@@ -277,6 +278,10 @@ export const router = createBrowserRouter(
     { path: "/help", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
     {
       path: "/settings",
+      element: <ProtectedRoute><PrivateLayout><AccountDashboardPage /></PrivateLayout></ProtectedRoute>,
+    },
+    {
+      path: "/settings/preferences",
       element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,
     },
     { path: "/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
