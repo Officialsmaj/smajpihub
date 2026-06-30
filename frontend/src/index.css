@@ -11843,6 +11843,7 @@ select,
 }
 
 .real-profile-hero {
+  position: relative;
   overflow: hidden;
   color: var(--smaj-text);
   background: var(--smaj-card);
@@ -11880,24 +11881,26 @@ select,
 }
 
 .real-profile-identity {
-  margin-top: -54px;
-  padding: 0 24px 24px;
+  position: relative;
+  z-index: 2;
+  margin-top: -70px;
+  padding: 0 clamp(18px, 4vw, 34px) clamp(24px, 4vw, 34px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 18px;
+  gap: 20px;
   align-items: end;
 }
 
 .real-profile-avatar {
-  width: 118px;
-  height: 118px;
+  width: clamp(112px, 13vw, 148px);
+  height: clamp(112px, 13vw, 148px);
   display: grid;
   place-items: center;
   overflow: hidden;
   color: #ffffff;
   background: linear-gradient(135deg, var(--smaj-primary), var(--smaj-accent));
-  border: 6px solid var(--smaj-card);
-  border-radius: 30px;
+  border: 7px solid var(--smaj-card);
+  border-radius: 34px;
   box-shadow: 0 18px 44px rgba(15, 23, 42, .22);
   font-size: 42px;
   font-weight: 950;
@@ -12098,18 +12101,19 @@ select,
   }
 
   .real-profile-cover {
-    min-height: 150px;
+    min-height: 165px;
   }
 
   .real-profile-identity {
-    margin-top: -42px;
+    margin-top: -58px;
     padding: 0 14px 18px;
     gap: 12px;
   }
 
   .real-profile-avatar {
-    width: 92px;
-    height: 92px;
+    width: 104px;
+    height: 104px;
+    border-width: 6px;
     border-radius: 24px;
     font-size: 32px;
   }
