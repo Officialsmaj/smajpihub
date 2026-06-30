@@ -137,7 +137,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
           <div className="mobile-private-header-actions">
             <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
-            <Link className="mobile-private-avatar" to="/account/manage" aria-label="Manage SMAJ PI HUB Account">
+            <Link className="mobile-private-avatar" to="/settings" aria-label="Open settings">
               {user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}
             </Link>
           </div>
@@ -192,7 +192,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <NavLink to="/app/services"><AppsOutlinedIcon /><span>Services</span></NavLink>
         <NavLink to="/search"><SearchOutlinedIcon /><span>Search</span></NavLink>
         <NavLink to="/messages"><ChatOutlinedIcon /><span>Messages</span></NavLink>
-        <NavLink to="/account"><PersonOutlineIcon /><span>You</span></NavLink>
+        <NavLink to="/settings"><PersonOutlineIcon /><span>You</span></NavLink>
       </nav>
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>

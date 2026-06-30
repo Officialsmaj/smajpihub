@@ -48,8 +48,6 @@ import ServiceDetailPage from "./pages/private/ServiceDetailPage";
 import ServiceDiscoveryPage from "./pages/private/ServiceDiscoveryPage";
 import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
-import AccountDashboardPage from "./pages/private/AccountDashboardPage";
-import ManageAccountPage from "./pages/private/ManageAccountPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 
@@ -263,8 +261,8 @@ export const router = createBrowserRouter(
       element: <ProtectedRoute><PrivateLayout><MessagesPage /></PrivateLayout></ProtectedRoute>,
     },
     { path: "/notifications", element: <ProtectedRoute><PrivateLayout><NotificationsPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/account", element: <ProtectedRoute><PrivateLayout><AccountDashboardPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/account/manage", element: <ProtectedRoute><PrivateLayout><ManageAccountPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/account", element: <Navigate to="/settings" replace /> },
+    { path: "/account/manage", element: <Navigate to="/settings" replace /> },
     { path: "/saved", element: <ProtectedRoute><PrivateLayout><SavedProductsPage /></PrivateLayout></ProtectedRoute> },
     { path: "/cart", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="cart" /></PrivateLayout></ProtectedRoute> },
     { path: "/checkout", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="checkout" /></PrivateLayout></ProtectedRoute> },

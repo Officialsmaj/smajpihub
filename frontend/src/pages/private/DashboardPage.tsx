@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -129,10 +129,7 @@ const DesktopFeedHome = ({ activeTab, onTabChange }: { activeTab: DiscoveryTab; 
 </div>;
 
 const DashboardPage = () => {
-  const [params, setParams] = useSearchParams();
-  const requestedTab = params.get("tab") as DiscoveryTab | null;
-  const activeTab: DiscoveryTab = requestedTab && discoveryTabs.some(([, tab]) => tab === requestedTab) ? requestedTab : "for-you";
-  const setActiveTab = (tab: DiscoveryTab) => setParams(tab === "for-you" ? {} : { tab });
+  const [activeTab, setActiveTab] = useState<DiscoveryTab>("for-you");
   return <main className="private-home"><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} /></main>;
 };
 
