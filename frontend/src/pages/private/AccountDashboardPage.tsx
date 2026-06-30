@@ -39,7 +39,6 @@ const AccountDashboardPage = () => {
           <p>@{user?.piUsername || user?.username}</p>
           <TrustBadge level={user?.verificationLevel} />
         </div>
-        <Link className="private-primary-button" to="/profile">Open Profile</Link>
       </section>
 
       <section className="account-quick-grid">

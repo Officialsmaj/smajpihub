@@ -6257,28 +6257,34 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
   .account-quick-grid {
     display: grid;
-    grid-template-columns: repeat(4,minmax(0,1fr));
-    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .account-quick-grid a {
     min-width: 0;
-    min-height: 84px;
+    min-height: 78px;
+    padding: 10px 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
     color: var(--smaj-text);
-    background: var(--smaj-secondary-bg);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
     border-radius: 16px;
-    font-size: 11px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    font-size: 10px;
     font-weight: 700;
+    line-height: 1.1;
     text-decoration: none;
+    text-align: center;
   }
 
   .account-quick-grid svg {
-    font-size: 25px;
+    flex: 0 0 auto;
+    font-size: 22px;
   }
 
   .account-dashboard-list {
