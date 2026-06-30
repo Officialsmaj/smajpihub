@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -66,6 +66,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
+  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; right?: number; left?: number }>({ top: 64, right: 16 });
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
@@ -104,6 +106,28 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
   const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
+  const positionProfileMenu = () => {
+    const avatar = profileAvatarRef.current;
+    if (!avatar) return;
+    const rect = avatar.getBoundingClientRect();
+    const width = 220;
+    const gutter = 16;
+    const top = Math.min(window.innerHeight - gutter, rect.bottom + 10);
+    const rightAligned = Math.max(gutter, window.innerWidth - rect.right);
+    const left = window.innerWidth - rightAligned - width;
+    setProfileMenuPosition(left < gutter ? { top, left: gutter } : { top, right: rightAligned });
+  };
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    positionProfileMenu();
+    window.addEventListener("resize", positionProfileMenu);
+    window.addEventListener("scroll", positionProfileMenu, true);
+    return () => {
+      window.removeEventListener("resize", positionProfileMenu);
+      window.removeEventListener("scroll", positionProfileMenu, true);
+    };
+  }, [profileMenuOpen]);
 
   return (
     <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
@@ -129,8 +153,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             {themeIcon}
           </button>
           <div className="private-header-profile">
-            {profileMenuOpen ? <div className="private-profile-menu private-header-profile-menu"><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{themeIcon}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
-            <button type="button" className="private-header-avatar" title="Profile" aria-label="Open profile menu" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</button>
+            {profileMenuOpen ? <div className="private-profile-menu private-header-profile-menu" style={profileMenuPosition}><Link to="/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Profile</Link><Link to="/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" onClick={() => void toggleTheme()}>{themeIcon}Theme</button><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+            <button ref={profileAvatarRef} type="button" className="private-header-avatar" title="Profile" aria-label="Open profile menu" aria-expanded={profileMenuOpen} onClick={() => { positionProfileMenu(); setProfileMenuOpen((open) => !open); }}>{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</button>
           </div>
         </div>
       </header>
