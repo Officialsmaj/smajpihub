@@ -240,7 +240,7 @@ const WhitePaperPage = () => {
             <a href="#1-executive-summary">Executive Summary</a>
             <a href="#7-the-smaj-pi-hub-solution-unified-access-and-intelligent-assistance">Unified Access</a>
             <a href="#9-the-15-integrated-platforms-a-comprehensive-hub">15 Platforms</a>
-            <a href="#12-roadmap">Roadmap</a>
+            <a href="#12-roadmap-phased-rollout">Roadmap</a>
           </div>
 
           <div className="whitepaper-layout">
