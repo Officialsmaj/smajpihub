@@ -52,6 +52,7 @@ const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCod
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
 type CropState = { target: CropTarget; source: string };
+type CropAdjust = { zoom: number; x: number; y: number };
 type AlertState = { type: "success" | "error"; text: string };
 
 const cropConfig = {
@@ -70,7 +71,7 @@ const readImageFile = (file: File, onLoad: (value: string) => void, onError: (me
   reader.readAsDataURL(file);
 };
 
-const cropImage = (source: string, target: CropTarget) => new Promise<string>((resolve, reject) => {
+const cropImage = (source: string, target: CropTarget, adjust: CropAdjust) => new Promise<string>((resolve, reject) => {
   const image = new Image();
   image.onload = () => {
     const { width, height } = cropConfig[target];
@@ -86,8 +87,15 @@ const cropImage = (source: string, target: CropTarget) => new Promise<string>((r
       cropHeight = image.naturalHeight;
       cropWidth = cropHeight * aspect;
     }
-    const sx = Math.max(0, (image.naturalWidth - cropWidth) / 2);
-    const sy = Math.max(0, (image.naturalHeight - cropHeight) / 2);
+    const zoom = Math.max(1, Math.min(3, adjust.zoom));
+    cropWidth = cropWidth / zoom;
+    cropHeight = cropHeight / zoom;
+    const maxX = Math.max(0, image.naturalWidth - cropWidth);
+    const maxY = Math.max(0, image.naturalHeight - cropHeight);
+    const centerX = maxX / 2;
+    const centerY = maxY / 2;
+    const sx = Math.max(0, Math.min(maxX, centerX + (adjust.x / 100) * centerX));
+    const sy = Math.max(0, Math.min(maxY, centerY + (adjust.y / 100) * centerY));
     ctx.drawImage(image, sx, sy, cropWidth, cropHeight, 0, 0, width, height);
     resolve(canvas.toDataURL("image/jpeg", 0.9));
   };
@@ -105,6 +113,7 @@ const ProfilePage = () => {
   const [languageSearch, setLanguageSearch] = useState("");
   const [languageOpen, setLanguageOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
+  const [cropAdjust, setCropAdjust] = useState<CropAdjust>({ zoom: 1, x: 0, y: 0 });
   const [saving, setSaving] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
   const [verificationRequested, setVerificationRequested] = useState(false);
@@ -157,7 +166,7 @@ const ProfilePage = () => {
   const name = form.displayName || user?.displayName || user?.username || "Pi User";
   const username = user?.piUsername || user?.username || "pi-user";
   const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available";
-  const sellerActive = Boolean(form.sellerActive || user?.sellerActive || user?.role === "seller");
+  const sellerActive = Boolean(form.sellerActive);
   const selectedCountry = countries.find((country) => country.name === form.country);
   const selectedLanguage = cleanLanguages.find((language) => language.name === form.language) || cleanLanguages[0];
 
@@ -167,6 +176,7 @@ const ProfilePage = () => {
     if (!file) return;
     readImageFile(file, (source) => {
       setEditing(true);
+      setCropAdjust({ zoom: 1, x: 0, y: 0 });
       setCrop({ target, source });
     }, (text) => setAlert({ type: "error", text }));
   };
@@ -174,7 +184,7 @@ const ProfilePage = () => {
   const applyCrop = async () => {
     if (!crop) return;
     try {
-      const cropped = await cropImage(crop.source, crop.target);
+      const cropped = await cropImage(crop.source, crop.target, cropAdjust);
       setForm((current) => crop.target === "avatar" ? { ...current, avatar: cropped } : { ...current, coverImage: cropped });
       setCrop(null);
       setAlert({ type: "success", text: `${cropConfig[crop.target].label} ready. Save changes to update your profile.` });
@@ -385,9 +395,27 @@ const ProfilePage = () => {
           <section className="crop-modal">
             <h2>Crop {cropConfig[crop.target].label}</h2>
             <div className={`crop-preview crop-preview-${crop.target}`}>
-              <img src={crop.source} alt="" />
+              <img
+                src={crop.source}
+                alt=""
+                style={{
+                  transform: `translate(${cropAdjust.x * 0.35}%, ${cropAdjust.y * 0.35}%) scale(${cropAdjust.zoom})`,
+                }}
+              />
+              <span className="crop-frame" aria-hidden="true" />
             </div>
-            <p>{crop.target === "cover" ? "Your banner will be centered and saved at 1640 x 624." : "Your profile picture will be centered and saved as a square image."}</p>
+            <div className="crop-controls">
+              <label>Zoom
+                <input type="range" min="1" max="3" step="0.05" value={cropAdjust.zoom} onChange={(event) => setCropAdjust((current) => ({ ...current, zoom: Number(event.target.value) }))} />
+              </label>
+              <label>Move left/right
+                <input type="range" min="-100" max="100" step="1" value={cropAdjust.x} onChange={(event) => setCropAdjust((current) => ({ ...current, x: Number(event.target.value) }))} />
+              </label>
+              <label>Move up/down
+                <input type="range" min="-100" max="100" step="1" value={cropAdjust.y} onChange={(event) => setCropAdjust((current) => ({ ...current, y: Number(event.target.value) }))} />
+              </label>
+            </div>
+            <p>{crop.target === "cover" ? "Adjust the banner inside the frame. It will save at 1640 x 624." : "Adjust your photo inside the circle frame. It will save as a clean profile picture."}</p>
             <div className="form-actions">
               <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
               <button type="button" className="private-secondary-button" onClick={() => (crop.target === "cover" ? coverInputRef.current : avatarInputRef.current)?.click()}>Choose Another</button>

@@ -12210,6 +12210,10 @@ select,
 .country-picker-label {
   position: relative;
   z-index: 20;
+  width: 100%;
+  min-width: 0;
+  display: grid !important;
+  gap: 7px;
 }
 
 .language-picker-label {
@@ -12218,8 +12222,13 @@ select,
 }
 
 .country-picker-trigger {
+  width: 100%;
   min-height: 45px;
   padding: 11px 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   color: var(--smaj-text);
   background: var(--smaj-input);
   border: 1px solid var(--smaj-border);
@@ -12227,6 +12236,13 @@ select,
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.country-picker-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .language-picker-trigger {
@@ -12510,6 +12526,55 @@ select,
   height: 100%;
   object-fit: cover;
   transform-origin: center;
+}
+
+.crop-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(2, 6, 23, .42);
+}
+
+.crop-preview-avatar::after {
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 999px rgba(2, 6, 23, .42);
+  background: transparent;
+}
+
+.crop-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border: 3px solid rgba(255, 255, 255, .92);
+  box-shadow: 0 0 0 999px rgba(2, 6, 23, .38);
+}
+
+.crop-preview-avatar .crop-frame {
+  border-radius: 50%;
+}
+
+.crop-controls {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 14px;
+}
+
+.crop-controls label {
+  display: grid;
+  gap: 7px;
+  color: var(--smaj-text);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.crop-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--smaj-primary);
 }
 
 .real-account-checkup {

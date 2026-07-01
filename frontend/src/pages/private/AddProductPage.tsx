@@ -36,11 +36,12 @@ const AddProductPage = () => {
   const [success, setSuccess] = useState("");
   const [activatingSeller, setActivatingSeller] = useState(false);
   const [sellerAgreementRead, setSellerAgreementRead] = useState(() => localStorage.getItem(SELLER_AGREEMENT_READ_KEY) === "true");
+  const [sellerActivatedHere, setSellerActivatedHere] = useState(false);
   const priceValue = Number(form.priceInput);
   const pricePi = form.priceCurrency === "Pi" ? priceValue : priceValue / PI_USDT_RATE;
   const priceUsdt = form.priceCurrency === "USDT" ? priceValue : priceValue * PI_USDT_RATE;
   const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
-  const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
+  const sellerActive = Boolean(sellerActivatedHere || user?.sellerActive || user?.role === "seller");
 
   useEffect(() => {
     if (!success && !error) return;
@@ -127,6 +128,7 @@ const AddProductPage = () => {
         sellerActive: true,
         role: user.role === "admin" ? "admin" : "seller",
       });
+      setSellerActivatedHere(true);
       setSuccess("Seller tools activated. You can now submit real products for review.");
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not activate seller tools. Please sign in again and try again." : "Could not activate seller tools. Please complete your profile and try again.");
