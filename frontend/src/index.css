@@ -11952,8 +11952,8 @@ select,
   display: grid;
   place-items: center;
   color: #fff;
-  background: var(--smaj-primary);
-  border: 3px solid var(--smaj-card);
+  background: transparent;
+  border: 0;
   border-radius: 50%;
 }
 
@@ -12269,7 +12269,7 @@ select,
 .country-picker-panel > div {
   max-height: 340px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
