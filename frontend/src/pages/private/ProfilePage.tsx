@@ -55,6 +55,13 @@ type CropState = { target: CropTarget; source: string };
 type CropAdjust = { zoom: number; x: number; y: number };
 type AlertState = { type: "success" | "error"; text: string };
 
+const formatJoinDate = (value?: string) => {
+  if (!value) return "Not available";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not available";
+  return new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric" }).format(date);
+};
+
 const cropConfig = {
   avatar: { width: 512, height: 512, label: "Profile picture" },
   cover: { width: 1640, height: 624, label: "Profile banner" },
@@ -165,7 +172,7 @@ const ProfilePage = () => {
 
   const name = form.displayName || user?.displayName || user?.username || "Pi User";
   const username = user?.piUsername || user?.username || "pi-user";
-  const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available";
+  const joined = formatJoinDate(user?.createdAt);
   const sellerActive = Boolean(form.sellerActive);
   const selectedCountry = countries.find((country) => country.name === form.country);
   const selectedLanguage = cleanLanguages.find((language) => language.name === form.language) || cleanLanguages[0];
