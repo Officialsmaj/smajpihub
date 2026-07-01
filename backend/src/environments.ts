@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
 
-console.log("NODE_ENV: " + process.env.NODE_ENV);
-
 const result = dotenv.config();
 
 if (result.error) {
@@ -15,6 +13,7 @@ if (result.error) {
 }
 
 interface Environment {
+  node_env: string;
   sandbox_sdk: boolean;
   port: number;
   session_secret: string;
@@ -34,11 +33,15 @@ interface Environment {
 }
 
 const sandboxSDK = String(process.env.SANDBOX_SDK || "false").toLowerCase() === "true";
+const nodeEnv = process.env.NODE_ENV || "development";
+const isProduction = nodeEnv === "production";
+const defaultSessionSecret = "This is my session secret";
 
 const env: Environment = {
+  node_env: nodeEnv,
   sandbox_sdk: sandboxSDK,
   port: parseInt(process.env.PORT || "8000"),
-  session_secret: process.env.SESSION_SECRET || "This is my session secret",
+  session_secret: process.env.SESSION_SECRET || defaultSessionSecret,
   pi_api_key: process.env.PI_API_KEY || "",
   platform_api_url:
     process.env.PLATFORM_API_URL || (sandboxSDK ? "https://api.sandbox.minepi.com" : "https://api.minepi.com"),
@@ -58,9 +61,24 @@ const env: Environment = {
   cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
 };
 
-export default env;
-
-
 if (env.sandbox_sdk && env.platform_api_url.includes("api.minepi.com")) {
   console.warn("WARNING: SANDBOX_SDK=true but PLATFORM_API_URL points to production Pi API. Use https://api.sandbox.minepi.com");
 }
+
+if (isProduction) {
+  const missing: string[] = [];
+  if (!process.env.SESSION_SECRET || env.session_secret === defaultSessionSecret) missing.push("SESSION_SECRET");
+  if (!env.pi_api_key) missing.push("PI_API_KEY");
+  if (!process.env.FRONTEND_URL) missing.push("FRONTEND_URL");
+  if (env.use_memory_db) missing.push("USE_MEMORY_DB=false");
+  if (!process.env.MONGO_HOST) missing.push("MONGO_HOST");
+  if (!process.env.MONGODB_DATABASE_NAME) missing.push("MONGODB_DATABASE_NAME");
+  if (!env.cloudinary_cloud_name) missing.push("CLOUDINARY_CLOUD_NAME");
+  if (!env.cloudinary_upload_preset) missing.push("CLOUDINARY_UPLOAD_PRESET");
+
+  if (missing.length) {
+    throw new Error(`Missing or invalid production environment configuration: ${missing.join(", ")}`);
+  }
+}
+
+export default env;

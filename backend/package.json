@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "lint": "tsc --noEmit",
     "start": "ts-node-dev ./src/index.ts"
   },
   "dependencies": {

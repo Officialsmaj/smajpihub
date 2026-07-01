@@ -44,6 +44,7 @@ const mongoClientOptions =
 //
 
 const app: express.Application = express();
+const serviceStartedAt = new Date();
 
 // Log requests to the console in a compact format:
 app.use(logger("dev"));
@@ -93,7 +94,7 @@ app.use(
   }),
 );
 
-// Handle cookies 🍪
+// Handle cookies
 app.use(cookieParser());
 
 // Use sessions:
@@ -160,6 +161,23 @@ app.use("/support", supportRouter);
 const uploadRouter = express.Router();
 mountUploadEndpoints(uploadRouter);
 app.use("/uploads", uploadRouter);
+
+app.get("/health", async (_, res) => {
+  const ready = Boolean(
+    app.locals.userCollection &&
+      app.locals.productCollection &&
+      app.locals.marketplaceOrderCollection &&
+      app.locals.notificationCollection,
+  );
+
+  res.status(ready ? 200 : 503).json({
+    status: ready ? "ok" : "starting",
+    service: "smaj-pi-hub-backend",
+    database: env.use_memory_db ? "memory" : "mongodb",
+    uptimeSeconds: Math.round(process.uptime()),
+    startedAt: serviceStartedAt.toISOString(),
+  });
+});
 
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
