@@ -222,7 +222,8 @@ const ProfilePage = () => {
     setForm(nextForm);
     setAlert(null);
     try {
-      await updateProfile({ ...nextForm, role: next ? "seller" : "buyer" });
+      const updatedUser = await updateProfile({ ...nextForm, role: user?.role === "admin" ? "admin" : next ? "seller" : "buyer" });
+      setForm((current) => ({ ...current, sellerActive: updatedUser ? Boolean(updatedUser.sellerActive || updatedUser.role === "seller") : next }));
       setAlert({ type: "success", text: next ? "Seller tools activated." : "Seller tools deactivated." });
     } catch (err: unknown) {
       setForm(form);

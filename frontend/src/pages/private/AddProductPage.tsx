@@ -117,7 +117,7 @@ const AddProductPage = () => {
     setActivatingSeller(true);
     setError("");
     try {
-      await updateProfile({
+      const updatedUser = await updateProfile({
         displayName: user.displayName || user.username || "Pi User",
         country: user.country || "",
         contactPhone: user.contactPhone || "",
@@ -128,7 +128,7 @@ const AddProductPage = () => {
         sellerActive: true,
         role: user.role === "admin" ? "admin" : "seller",
       });
-      setSellerActivatedHere(true);
+      setSellerActivatedHere(Boolean(updatedUser?.sellerActive || updatedUser?.role === "seller"));
       setSuccess("Seller tools activated. You can now submit real products for review.");
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Seller tools could not be activated. Try again." : "Seller tools could not be activated. Try again.");

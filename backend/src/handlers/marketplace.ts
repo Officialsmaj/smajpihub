@@ -118,8 +118,11 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.post("/products", async (req, res) => {
-    const user = requireUser(req, res);
-    if (!user) return;
+    const sessionUser = requireUser(req, res);
+    if (!sessionUser) return;
+    const freshUser = await req.app.locals.userCollection.findOne({ uid: sessionUser.uid });
+    const user = freshUser || sessionUser;
+    if (freshUser) req.session.currentUser = freshUser;
     if (user.role !== "seller" && !user.sellerActive) {
       return res.status(403).json({ error: "seller_required", message: "Activate seller tools before listing products." });
     }

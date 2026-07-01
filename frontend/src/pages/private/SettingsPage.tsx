@@ -96,7 +96,7 @@ const SettingsPage = () => {
       ]);
       setMessage("Settings saved.");
     } catch {
-      setMessage("Settings saved.");
+      setMessage("Settings could not be saved. Please try again.");
     }
   };
 

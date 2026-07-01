@@ -28,10 +28,11 @@ const productReviewNote = (product: Product) => {
 };
 
 const SellerPage = () => {
-  const { user } = useAuthContext();
+  const { user, updateProfile } = useAuthContext();
   const [data, setData] = useState<SellerData | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [activatingSeller, setActivatingSeller] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
   const [verificationRequested, setVerificationRequested] = useState(false);
 
@@ -91,7 +92,34 @@ const SellerPage = () => {
     }
   };
 
+  const activateSeller = async () => {
+    if (!user) return;
+    setError("");
+    setMessage("");
+    setActivatingSeller(true);
+    try {
+      const updatedUser = await updateProfile({
+        displayName: user.displayName || user.username || "Pi User",
+        country: user.country || "",
+        contactPhone: user.contactPhone || "",
+        avatar: user.avatar || "",
+        coverImage: user.coverImage || "",
+        bio: user.bio || "",
+        language: user.language || user.settings?.language || "English",
+        sellerActive: true,
+        role: user.role === "admin" ? "admin" : "seller",
+      });
+      if (!updatedUser?.sellerActive && updatedUser?.role !== "seller") throw new Error("seller_not_active");
+      setMessage("Seller tools activated. You can now add products.");
+    } catch (err: unknown) {
+      setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Seller tools could not be activated." : "Seller tools could not be activated.");
+    } finally {
+      setActivatingSeller(false);
+    }
+  };
+
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
+  const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
   const verificationText = user?.verificationLevel === "trusted_seller" ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Admin is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
 
   return (
@@ -102,7 +130,7 @@ const SellerPage = () => {
           <h1>Seller Dashboard</h1>
           <p>Manage your own products and monitor incoming orders.</p>
         </div>
-        <Link className="private-primary-button" to="/add-product">Add Product</Link>
+        {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
       </section>
 
       {message ? <div className="private-alert floating-alert success">{message}</div> : null}
@@ -110,6 +138,19 @@ const SellerPage = () => {
 
       {!data ? <div className="private-state">Loading seller dashboard...</div> : (
         <>
+          {!sellerActive ? (
+            <section className="private-form seller-activation-panel">
+              <div>
+                <p className="private-kicker">SELLER ACCESS REQUIRED</p>
+                <h2>Activate seller tools</h2>
+                <p>Activation connects your products and order activity to your verified Pi identity.</p>
+              </div>
+              <button className="private-primary-button" type="button" disabled={activatingSeller} onClick={() => void activateSeller()}>
+                {activatingSeller ? "Activating..." : "Activate Seller Tools"}
+              </button>
+            </section>
+          ) : null}
+
           <section className="seller-verification-card">
             <div>
               <p className="private-kicker">SELLER TRUST</p>
@@ -117,11 +158,11 @@ const SellerPage = () => {
               <p>{verificationText}</p>
               <TrustBadge level={user?.verificationLevel} />
             </div>
-            {user?.verificationLevel === "trusted_seller" ? null : (
+            {sellerActive && user?.verificationLevel !== "trusted_seller" ? (
               <button className="private-primary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>
                 {hasRequestedVerification ? "Review Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller Verification"}
               </button>
-            )}
+            ) : null}
           </section>
 
           <section className="stats-grid">

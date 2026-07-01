@@ -6,6 +6,17 @@ import type { AuthResult, PaymentDTO, User } from "../types/pi";
 type AuthFeedback = { type: "success" | "error"; message: string };
 type BackendErrorBody = { error?: string; message?: string };
 type SignInResponse = { user?: Partial<User> | null };
+type ProfileUpdate = {
+  displayName: string;
+  country: string;
+  role: "buyer" | "seller" | "admin";
+  contactPhone: string;
+  avatar?: string;
+  coverImage?: string;
+  bio?: string;
+  language?: string;
+  sellerActive?: boolean;
+};
 
 const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
@@ -206,9 +217,14 @@ export const useAuth = () => {
     }
   }, [signInUser]);
 
-  const updateProfile = useCallback(async (profile: { displayName: string; country: string; role: "buyer" | "seller" | "admin"; contactPhone: string; avatar?: string; coverImage?: string; bio?: string; language?: string; sellerActive?: boolean }) => {
+  const updateProfile = useCallback(async (profile: ProfileUpdate) => {
     const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
-    if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
+    if (response.data.user && user) {
+      const updatedUser = storeUser(toUser(response.data.user, user));
+      setUser(updatedUser);
+      return updatedUser;
+    }
+    return null;
   }, [user]);
 
   const updateSettings = useCallback(async (settings: { theme: "dark" | "light"; language: string; notifications: boolean }) => {
