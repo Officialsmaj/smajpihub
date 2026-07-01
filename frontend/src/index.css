@@ -7159,6 +7159,19 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   box-shadow: 0 8px 22px rgba(15, 23, 42, .08);
 }
 
+.service-header-back {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--smaj-primary);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 50%;
+  text-decoration: none;
+}
+
 @media (max-width: 767px) {
   .service-detail-page .service-page-header {
     top: 68px;
@@ -7169,6 +7182,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   }
 
   .service-detail-page .service-page-header > button,
+  .service-detail-page .service-header-back,
   .service-detail-page .service-page-header > label {
     width: 42px;
     height: 42px;

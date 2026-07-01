@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import { serviceCatalog } from "../../content/serviceCatalog";
@@ -16,7 +17,13 @@ const ServiceDetailPage = () => {
   return (
     <main className="private-page service-detail-page">
       <header className="service-page-header service-page-header-simple">
-        <div><ServiceArt index={service.atlasIndex} /><strong>{service.name}</strong></div>
+        <div>
+          <Link className="service-header-back" to="/app/services" aria-label="Back to services">
+            <ArrowBackOutlinedIcon />
+          </Link>
+          <ServiceArt index={service.atlasIndex} />
+          <strong>{service.name}</strong>
+        </div>
         <label><SearchOutlinedIcon /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${service.name}`} /></label>
       </header>
       <section className="service-coming-hero">
