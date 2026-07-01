@@ -27,6 +27,10 @@ interface Environment {
   frontend_url: string;
   use_memory_db: boolean;
   dev_auth: boolean;
+  admin_pi_usernames: string[];
+  cloudinary_cloud_name: string;
+  cloudinary_upload_preset: string;
+  cloudinary_folder: string;
 }
 
 const sandboxSDK = String(process.env.SANDBOX_SDK || "false").toLowerCase() === "true";
@@ -45,6 +49,13 @@ const env: Environment = {
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3314",
   use_memory_db: String(process.env.USE_MEMORY_DB || "false").toLowerCase() === "true",
   dev_auth: String(process.env.DEV_AUTH || "false").toLowerCase() === "true",
+  admin_pi_usernames: String(process.env.ADMIN_PI_USERNAMES || "")
+    .split(",")
+    .map((username) => username.trim().toLowerCase())
+    .filter(Boolean),
+  cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinary_upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "",
+  cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
 };
 
 export default env;

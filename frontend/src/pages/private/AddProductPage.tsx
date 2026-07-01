@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { uploadImages } from "../../lib/uploadImage";
 
 const PI_USDT_RATE = 314159;
 const initialForm = {
@@ -63,10 +64,11 @@ const AddProductPage = () => {
     if (!form.sellerAgreementAccepted) return setError("Accept the seller agreement before submitting.");
     setSubmitting(true);
     try {
+      const uploadedImages = await uploadImages(form.images.length ? form.images : [form.image], "products");
       await axiosClient.post("/marketplace/products", {
         title: form.title.trim(),
-        image: form.image,
-        images: form.images,
+        image: uploadedImages[0],
+        images: uploadedImages,
         description: form.description.trim(),
         category: form.category.trim(),
         condition: form.condition,

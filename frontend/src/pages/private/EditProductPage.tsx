@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
 import { isAxiosError } from "axios";
+import { uploadImages } from "../../lib/uploadImage";
 
 const PI_USDT_RATE = 314159;
 
@@ -76,8 +77,11 @@ const EditProductPage = () => {
     event.preventDefault(); setSaving(true); setError("");
     const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
     try {
+      const uploadedImages = await uploadImages(form.images.length ? form.images : [form.image], "products");
       await axiosClient.put(`/marketplace/seller/products/${id}`, {
         ...form,
+        image: uploadedImages[0],
+        images: uploadedImages,
         location,
         pricePi: Number(form.pricePi),
         priceUsdt: Number(form.priceUsdt),

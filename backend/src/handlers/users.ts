@@ -9,6 +9,8 @@ type VerifiedPiUser = {
   username?: string;
 };
 
+const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
+
 const toClientUser = (user: any) => user ? ({
   uid: user.uid,
   username: user.username,
@@ -79,12 +81,13 @@ export const handleSignIn = async (req: Request, res: Response) => {
     username: verifiedUser.username || auth.user.username,
     roles: Array.isArray(auth.user.roles) ? auth.user.roles : [],
   };
+  const isConfiguredAdmin = env.admin_pi_usernames.includes(String(normalizedUser.username || "").toLowerCase());
 
   try {
     let currentUser = await userCollection.findOne({ uid: normalizedUser.uid });
 
     if (currentUser) {
-      const role = ["buyer", "seller", "admin"].includes(currentUser.role) ? currentUser.role : "buyer";
+      const role = isConfiguredAdmin ? "admin" : ["buyer", "seller", "admin"].includes(currentUser.role) ? currentUser.role : "buyer";
       if (currentUser.blocked) {
         return res.status(403).json({ error: "blocked", message: "This SMAJ account has been blocked" });
       }
@@ -113,6 +116,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
 
       currentUser = await userCollection.findOne({ _id: currentUser._id });
     } else {
+      const role = isConfiguredAdmin ? "admin" : "buyer";
       const insertResult = await userCollection.insertOne({
         username: normalizedUser.username,
         piUsername: normalizedUser.username,
@@ -120,8 +124,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         displayName: normalizedUser.username,
         country: "",
         contactPhone: "",
-        role: "buyer",
-        roles: ["buyer"],
+        role,
+        roles: [role],
         blocked: false,
         verificationLevel: "basic",
         verificationRequested: false,
@@ -207,7 +211,7 @@ export default function mountUserEndpoints(router: Router) {
     const requestedRole = req.body?.role;
     const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : requestedRole === "seller" ? "seller" : "buyer";
 
-    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 3_000_000 || coverImage.length > 3_000_000 || (avatar && !avatar.startsWith("data:image/")) || (coverImage && !coverImage.startsWith("data:image/")) || !["buyer", "seller", "admin"].includes(role)) {
+    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 6_500_000 || coverImage.length > 6_500_000 || !isImageReference(avatar) || !isImageReference(coverImage) || !["buyer", "seller", "admin"].includes(role)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid profile details" });
     }
 

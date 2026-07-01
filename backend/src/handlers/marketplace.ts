@@ -52,7 +52,7 @@ const validProduct = (product: ReturnType<typeof productFields>) =>
 export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/products", async (req, res) => {
     if (!requireUser(req, res)) return;
-    const query: Record<string, any> = { active: true, hidden: { $ne: true }, approved: { $ne: false } };
+    const query: Record<string, any> = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
     const search = String(req.query.search || "").trim();
     const category = String(req.query.category || "").trim();
     const location = String(req.query.location || "").trim();
@@ -66,7 +66,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
 
   router.get("/feed", async (req, res) => {
     const user = requireUser(req, res); if (!user) return;
-    const visible = { active: true, hidden: { $ne: true }, approved: { $ne: false } };
+    const visible = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
     const [latest, favorites, orders] = await Promise.all([
       req.app.locals.productCollection.find(visible).sort({ createdAt: -1 }).limit(8).toArray(),
       req.app.locals.favoriteCollection.find({ userId: user.uid }).limit(20).toArray(),
@@ -83,7 +83,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     }
-    const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id), active: true, hidden: { $ne: true }, approved: { $ne: false } });
+    const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id), active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" });
     if (!product) {
       return res.status(404).json({ error: "not_found", message: "Product not found" });
     }
@@ -113,11 +113,14 @@ export default function mountMarketplaceEndpoints(router: Router) {
       sellerId: user.uid,
       sellerName: user.displayName || user.piUsername || user.username,
       piUsername: user.piUsername || user.username,
+      verificationLevel: user.verificationLevel || "basic",
       ...fields,
       image: images[0],
       images,
       active: true,
       approved: false,
+      reviewStatus: "pending",
+      rejectionReason: "",
       hidden: false,
       createdAt: new Date(),
     };
@@ -159,7 +162,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     }
 
-    const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(productId), active: true, hidden: { $ne: true }, approved: { $ne: false } });
+    const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(productId), active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" });
     if (!product) {
       return res.status(404).json({ error: "not_found", message: "Product not found" });
     }
@@ -306,7 +309,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const seller = await req.app.locals.userCollection.findOne({ uid: req.params.id });
     if (!seller) return res.status(404).json({ error: "not_found", message: "Seller not found" });
     const [products, reviews, completedOrders] = await Promise.all([
-      req.app.locals.productCollection.find({ sellerId: seller.uid, hidden: { $ne: true } }).sort({ createdAt: -1 }).toArray(),
+      req.app.locals.productCollection.find({ sellerId: seller.uid, hidden: { $ne: true }, active: true, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).toArray(),
       req.app.locals.reviewCollection.find({ sellerId: seller.uid }).sort({ createdAt: -1 }).toArray(),
       req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: seller.uid, status: "completed" }),
     ]);
@@ -350,7 +353,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!product) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const [seller, related, favorite] = await Promise.all([
       req.app.locals.userCollection.findOne({ uid: product.sellerId }),
-      req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: { $ne: false } }).sort({ createdAt: -1 }).limit(4).toArray(),
+      req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).limit(4).toArray(),
       req.app.locals.favoriteCollection.findOne({ userId: req.session.currentUser!.uid, productId: req.params.id }),
     ]);
     return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
@@ -364,7 +367,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!validProduct(fields)) return res.status(400).json({ error: "bad_request", message: "Complete all required product fields" });
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
-      { $set: { ...fields, approved: false, hidden: false, updatedAt: new Date() } },
+      { $set: { ...fields, approved: false, reviewStatus: "pending", rejectionReason: "", hidden: false, updatedAt: new Date() } },
     );
     if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });

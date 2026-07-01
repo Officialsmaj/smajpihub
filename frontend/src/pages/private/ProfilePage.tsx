@@ -10,6 +10,7 @@ import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 import { axiosClient } from "../../lib/axiosClient";
+import { uploadImage } from "../../lib/uploadImage";
 
 const countryCodes = ["AE","US","GB","NG","IN","CN","ID","VN","PH","PK","BD","BR","TR","RU","KR","JP","DE","FR","IT","ES","NL","CA","AU","SA","ZA","EG","MA","KE","GH","CM","CI","SN","TZ","UG","ET","RW","DZ","TN","LY","SD","SS","AO","BJ","BW","BF","BI","CV","CF","TD","KM","CG","CD","DJ","GQ","ER","SZ","GA","GM","GN","GW","LS","LR","MG","MW","ML","MR","MU","MZ","NA","NE","SC","SL","SO","TG","ZM","ZW","AF","AL","AD","AR","AM","AT","AZ","BS","BH","BB","BY","BE","BZ","BT","BO","BA","BN","BG","KH","CL","CO","CR","HR","CY","CZ","DK","DO","EC","SV","EE","FJ","FI","GE","GR","GT","GY","HN","HK","HU","IS","IE","IL","JM","JO","KZ","KW","KG","LA","LV","LB","LI","LT","LU","MO","MY","MV","MT","MX","MD","MC","MN","ME","MM","NP","NZ","NI","MK","NO","OM","PA","PY","PE","PL","PT","QA","RO","RS","SG","SK","SI","LK","SE","CH","TW","TJ","TH","UA","UY","UZ","VA","VE"] as const;
 const priorityCountries = new Set(["AE","US","GB","NG","IN","ID","VN","PH","PK","BD","BR","TR"]);
@@ -74,6 +75,8 @@ const ProfilePage = () => {
   const [countryOpen, setCountryOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [requestingVerification, setRequestingVerification] = useState(false);
+  const [verificationRequested, setVerificationRequested] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
@@ -151,11 +154,18 @@ const ProfilePage = () => {
     }
     try {
       setSaving(true);
+      const [avatar, coverImage] = await Promise.all([
+        uploadImage(form.avatar, "profile-avatar"),
+        uploadImage(form.coverImage, "profile-banner"),
+      ]);
       await updateProfile({
         ...form,
+        avatar,
+        coverImage,
         bio: form.bio.trim(),
         role: user?.role === "admin" ? "admin" : form.sellerActive ? "seller" : "buyer",
       });
+      setForm((current) => ({ ...current, avatar, coverImage }));
       setMessage("Profile saved successfully.");
       setEditing(false);
     } catch {
@@ -178,6 +188,22 @@ const ProfilePage = () => {
       setMessage("Could not update seller tools. Complete your profile and try again.");
     }
   };
+
+  const requestVerification = async () => {
+    setMessage("");
+    setRequestingVerification(true);
+    try {
+      await axiosClient.post("/user/verification-request");
+      setVerificationRequested(true);
+      setMessage("Trusted seller verification requested. Admin will review your account.");
+    } catch {
+      setMessage("Could not request trusted seller verification. Activate seller tools first.");
+    } finally {
+      setRequestingVerification(false);
+    }
+  };
+
+  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
 
   return (
     <main className="private-page real-profile-page">
@@ -244,6 +270,7 @@ const ProfilePage = () => {
               <div className="form-actions">
                 <button className="private-secondary-button" type="button" onClick={() => void toggleSeller()}>{sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
+                {sellerActive && user?.verificationLevel !== "trusted_seller" ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
               </div>
             </article>
 

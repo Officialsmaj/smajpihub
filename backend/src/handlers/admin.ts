@@ -69,12 +69,24 @@ export default function mountAdminEndpoints(router: Router) {
   router.patch("/products/:id", async (req, res) => {
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const updates: Record<string, unknown> = {};
-    if (typeof req.body?.approved === "boolean") updates.approved = req.body.approved;
+    if (typeof req.body?.approved === "boolean") {
+      updates.approved = req.body.approved;
+      updates.reviewStatus = req.body.approved ? "approved" : "rejected";
+      updates.rejectionReason = req.body.approved ? "" : String(req.body?.rejectionReason || "Product did not meet marketplace review requirements.").trim().slice(0, 500);
+      updates.reviewedAt = new Date();
+      updates.reviewedBy = req.session.currentUser?.uid;
+    }
     if (typeof req.body?.hidden === "boolean") updates.hidden = req.body.hidden;
     if (!Object.keys(updates).length) return res.status(400).json({ error: "bad_request", message: "No valid product update supplied" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });
     await req.app.locals.productCollection.updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
-    if (product && typeof req.body?.approved === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_approved", title: "Product approved", message: `${product.title} is approved for the Store`, relatedId: req.params.id });
+    if (product && typeof req.body?.approved === "boolean") await createNotification(req.app, {
+      userId: product.sellerId,
+      type: req.body.approved ? "product_approved" : "product_rejected",
+      title: req.body.approved ? "Product approved" : "Product needs changes",
+      message: req.body.approved ? `${product.title} is approved for the Store` : `${product.title} was rejected: ${updates.rejectionReason}`,
+      relatedId: req.params.id,
+    });
     if (product && typeof req.body?.hidden === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_hidden", title: req.body.hidden ? "Product hidden" : "Product visible", message: `${product.title} visibility was updated`, relatedId: req.params.id });
     return res.status(200).json({ message: "Product updated" });
   });

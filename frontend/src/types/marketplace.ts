@@ -22,6 +22,8 @@ export type Product = {
   sellerContact: string;
   active: boolean;
   approved?: boolean;
+  reviewStatus?: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
   hidden?: boolean;
   createdAt: string;
   verificationLevel?: VerificationLevel;

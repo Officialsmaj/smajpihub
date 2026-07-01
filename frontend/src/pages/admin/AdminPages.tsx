@@ -121,23 +121,29 @@ export const AdminProductsPage = () => {
   const load = useCallback(async () => setProducts((await axiosClient.get("/admin/products")).data.products), []);
   useEffect(() => { void load(); }, [load]);
   const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/products/${id}`, body); setMessage("Product updated."); await load(); };
+  const reject = async (product: Product) => {
+    const reason = window.prompt(`Why is "${product.title}" rejected?`, product.rejectionReason || "Product photos, price, description, or seller details need review.");
+    if (!reason?.trim()) return;
+    await update(product._id, { approved: false, hidden: false, rejectionReason: reason.trim() });
+  };
   const remove = async (id: string) => { if (!window.confirm("Delete this product permanently?")) return; await axiosClient.delete(`/admin/products/${id}`); setMessage("Product deleted."); await load(); };
-  const visible = useMemo(() => products.filter((product) => filter === "all" || (filter === "pending" && product.approved === false && !product.hidden) || (filter === "visible" && product.approved !== false && !product.hidden) || (filter === "hidden" && product.hidden)), [products, filter]);
+  const visible = useMemo(() => products.filter((product) => filter === "all" || (filter === "pending" && (product.reviewStatus || (product.approved === false ? "pending" : "approved")) === "pending" && !product.hidden) || (filter === "visible" && product.approved === true && product.reviewStatus === "approved" && !product.hidden) || (filter === "rejected" && product.reviewStatus === "rejected") || (filter === "hidden" && product.hidden)), [products, filter]);
 
   return (
     <main className="private-page">
       <Head title="Products" description="Approve, hide, or remove marketplace listings." />
       <Notice text={message} />
       <section className="admin-filter-bar">
-        <label>Status filter<select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">All</option><option value="pending">Pending review</option><option value="visible">Visible</option><option value="hidden">Hidden</option></select></label>
+        <label>Status filter<select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">All</option><option value="pending">Pending review</option><option value="visible">Visible</option><option value="rejected">Rejected</option><option value="hidden">Hidden</option></select></label>
         <span>{visible.length} products</span>
       </section>
       <div className="management-list">{visible.map((product) => (
         <article className="management-row" key={product._id}>
           <img src={product.image} alt="" />
           <div className="management-main"><h3>{product.title}</h3><p>{product.sellerName} - {product.pricePi} Pi</p></div>
-          <span className={`availability ${product.hidden || product.approved === false ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.approved === false ? "Pending" : "Visible"}</span>
-          <div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div>
+          <span className={`availability ${product.hidden || product.reviewStatus !== "approved" ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.reviewStatus === "rejected" ? "Rejected" : product.reviewStatus === "approved" ? "Visible" : "Pending"}</span>
+          {product.rejectionReason ? <small>{product.rejectionReason}</small> : null}
+          <div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void reject(product)}>Reject</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div>
         </article>
       ))}</div>
     </main>

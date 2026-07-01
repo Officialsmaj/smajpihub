@@ -3,6 +3,7 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import TrustBadge from "./TrustBadge";
 import type { Product } from "../types/marketplace";
 
 const PI_USDT_RATE = 314159;
@@ -57,11 +58,11 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
           </div>
           <div className="storefront-product-meta">
             <small>{product.sellerName}</small>
-            <small>{deliveryLabel}</small>
+            <TrustBadge level={product.verificationLevel} />
           </div>
           <div className="storefront-product-meta">
+            <small>{deliveryLabel}</small>
             <small>{product.quantity ? `${product.quantity} in stock` : "Stock updates in app"}</small>
-            <small>{product.deliveryOption || "Delivery updates in app"}</small>
           </div>
         </div>
       </Link>

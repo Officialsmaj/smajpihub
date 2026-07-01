@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
+import { useAuthContext } from "../../contexts/AuthContext";
+import TrustBadge from "../../components/TrustBadge";
 import type { Order, Product } from "../../types/marketplace";
 
 type SellerData = {
@@ -9,10 +11,27 @@ type SellerData = {
   stats: { totalProducts: number; totalOrders: number; pendingOrders: number; paidOrders: number };
 };
 
+const productReviewLabel = (product: Product) => {
+  if (product.hidden) return "Hidden by admin";
+  if (product.reviewStatus === "rejected") return "Rejected";
+  if (product.approved === true && product.reviewStatus === "approved") return product.active ? "Live in Store" : "Sold out";
+  return "Pending Review";
+};
+
+const productReviewNote = (product: Product) => {
+  if (product.hidden) return "This product is not visible in SMAJ Store.";
+  if (product.reviewStatus === "rejected") return product.rejectionReason || "Admin rejected this listing. Edit and resubmit it for review.";
+  if (product.approved === true && product.reviewStatus === "approved") return product.active ? "This product is visible to buyers in SMAJ Store." : "This approved product is currently marked sold out.";
+  return "Saved successfully. It will appear in SMAJ Store after admin approval.";
+};
+
 const SellerPage = () => {
+  const { user } = useAuthContext();
   const [data, setData] = useState<SellerData | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [requestingVerification, setRequestingVerification] = useState(false);
+  const [verificationRequested, setVerificationRequested] = useState(false);
 
   const load = useCallback(async () => {
     const response = await axiosClient.get<SellerData>("/marketplace/seller");
@@ -46,6 +65,24 @@ const SellerPage = () => {
     }
   };
 
+  const requestVerification = async () => {
+    setError("");
+    setMessage("");
+    setRequestingVerification(true);
+    try {
+      await axiosClient.post("/user/verification-request");
+      setVerificationRequested(true);
+      setMessage("Trusted seller verification requested. Admin will review your account.");
+    } catch {
+      setError("Could not request verification. Make sure seller tools are active.");
+    } finally {
+      setRequestingVerification(false);
+    }
+  };
+
+  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
+  const verificationText = user?.verificationLevel === "trusted_seller" ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Admin is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
+
   return (
     <main className="private-page">
       <section className="private-page-head">
@@ -62,6 +99,20 @@ const SellerPage = () => {
 
       {!data ? <div className="private-state">Loading seller dashboard...</div> : (
         <>
+          <section className="seller-verification-card">
+            <div>
+              <p className="private-kicker">SELLER TRUST</p>
+              <h2>Verification Status</h2>
+              <p>{verificationText}</p>
+              <TrustBadge level={user?.verificationLevel} />
+            </div>
+            {user?.verificationLevel === "trusted_seller" ? null : (
+              <button className="private-primary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>
+                {hasRequestedVerification ? "Review Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller Verification"}
+              </button>
+            )}
+          </section>
+
           <section className="stats-grid">
             <article><span>Total products</span><strong>{data.stats.totalProducts}</strong></article>
             <article><span>Total orders</span><strong>{data.stats.totalOrders}</strong></article>
@@ -83,9 +134,10 @@ const SellerPage = () => {
                       <h3>{product.title}</h3>
                       <p>{product.pricePi} Pi · {product.category}</p>
                     </div>
-                    <span className={`availability ${product.hidden || !product.active || product.approved === false ? "sold" : "available"}`}>
-                      {product.hidden ? "Hidden" : product.approved === false ? "Pending Review" : product.active ? "Visible" : "Sold out"}
+                    <span className={`availability ${product.hidden || !product.active || product.reviewStatus !== "approved" ? "sold" : "available"}`}>
+                      {productReviewLabel(product)}
                     </span>
+                    <small>{productReviewNote(product)}</small>
                     <div className="row-actions">
                       <Link to={`/edit-product/${product._id}`}>Edit</Link>
                       <button onClick={() => void availability(product)}>{product.active ? "Sold out" : "Available"}</button>

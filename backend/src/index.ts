@@ -21,6 +21,7 @@ import mountAdminEndpoints from "./handlers/admin";
 import mountMessageEndpoints from "./handlers/messages";
 import mountOnboardingEndpoints from "./handlers/onboarding";
 import mountSupportEndpoints from "./handlers/support";
+import mountUploadEndpoints from "./handlers/uploads";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -55,7 +56,7 @@ app.use(
 );
 
 // Enable response bodies to be sent as JSON:
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({ limit: "8mb" }));
 
 // Handle CORS:
 const allowedOrigins = new Set(
@@ -156,6 +157,10 @@ const supportRouter = express.Router();
 mountSupportEndpoints(supportRouter);
 app.use("/support", supportRouter);
 
+const uploadRouter = express.Router();
+mountUploadEndpoints(uploadRouter);
+app.use("/uploads", uploadRouter);
+
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
   res.status(200).send({ message: "Hello, World!" });
@@ -183,6 +188,18 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
       app.locals.onboardingCollection = db.collection("onboarding_applications");
       app.locals.supportCollection = db.collection("support_requests");
+      await Promise.all([
+        app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
+        app.locals.userCollection.createIndex({ piUsername: 1 }),
+        app.locals.productCollection.createIndex({ sellerId: 1, createdAt: -1 }),
+        app.locals.productCollection.createIndex({ active: 1, approved: 1, reviewStatus: 1, hidden: 1, createdAt: -1 }),
+        app.locals.productCollection.createIndex({ category: 1, active: 1, approved: 1, reviewStatus: 1 }),
+        app.locals.marketplaceOrderCollection.createIndex({ buyerId: 1, createdAt: -1 }),
+        app.locals.marketplaceOrderCollection.createIndex({ sellerId: 1, createdAt: -1 }),
+        app.locals.conversationCollection.createIndex({ participants: 1, updatedAt: -1 }),
+        app.locals.messageCollection.createIndex({ conversationId: 1, createdAt: 1 }),
+        app.locals.notificationCollection.createIndex({ userId: 1, createdAt: -1 }),
+      ]);
     }
 
     console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${mongoUri}`);
