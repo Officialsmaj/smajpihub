@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -21,7 +22,33 @@ const countries = countryCodes.map((code) => ({
   flag: code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0))),
 })).sort((a, b) => Number(priorityCountries.has(b.code)) - Number(priorityCountries.has(a.code)) || a.name.localeCompare(b.name));
 
-const languages = ["English","Arabic","French","Spanish","Portuguese","Hindi","Urdu","Bengali","Indonesian","Vietnamese","Filipino","Chinese","Japanese","Korean","German","Italian","Dutch","Russian","Turkish","Swahili","Hausa","Yoruba","Igbo","Amharic","Somali","Persian","Thai","Malay","Tamil","Telugu","Marathi","Gujarati","Punjabi","Polish","Romanian","Ukrainian","Greek","Czech","Swedish","Norwegian","Danish","Finnish","Hebrew"] as const;
+const languages = [
+  { name: "English", native: "United Kingdom", flag: "🇬🇧" },
+  { name: "Arabic", native: "العربية", flag: "🇦🇪" },
+  { name: "French", native: "Français", flag: "🇫🇷" },
+  { name: "Spanish", native: "Español", flag: "🇪🇸" },
+  { name: "Portuguese", native: "Português", flag: "🇵🇹" },
+  { name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
+  { name: "Urdu", native: "اردو", flag: "🇵🇰" },
+  { name: "Bengali", native: "বাংলা", flag: "🇧🇩" },
+  { name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
+  { name: "Vietnamese", native: "Tiếng Việt", flag: "🇻🇳" },
+  { name: "Filipino", native: "Filipino", flag: "🇵🇭" },
+  { name: "Chinese", native: "中国人", flag: "🇨🇳" },
+  { name: "Japanese", native: "日本語", flag: "🇯🇵" },
+  { name: "Korean", native: "한국어", flag: "🇰🇷" },
+  { name: "German", native: "Deutsch", flag: "🇩🇪" },
+  { name: "Italian", native: "Italiano", flag: "🇮🇹" },
+  { name: "Dutch", native: "Nederlands", flag: "🇳🇱" },
+  { name: "Russian", native: "Русский", flag: "🇷🇺" },
+  { name: "Turkish", native: "Türkçe", flag: "🇹🇷" },
+  { name: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
+  { name: "Hausa", native: "Hausa", flag: "🇳🇬" },
+  { name: "Yoruba", native: "Yorùbá", flag: "🇳🇬" },
+  { name: "Igbo", native: "Igbo", flag: "🇳🇬" },
+  { name: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
+] as const;
+type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
 type CropState = { target: CropTarget; source: string };
 
@@ -73,6 +100,8 @@ const ProfilePage = () => {
   const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
   const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
+  const [languageSearch, setLanguageSearch] = useState("");
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
   const [saving, setSaving] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
@@ -108,16 +137,27 @@ const ProfilePage = () => {
     axiosClient.get("/user/stats").then(({ data }) => setStats(data.stats)).catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(""), 3000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   const filteredCountries = useMemo(() => {
     const query = countrySearch.trim().toLowerCase();
     return countries.filter((country) => !query || country.name.toLowerCase().includes(query) || country.code.toLowerCase().includes(query)).slice(0, 220);
   }, [countrySearch]);
+  const filteredLanguages = useMemo(() => {
+    const query = languageSearch.trim().toLowerCase();
+    return languages.filter((language) => !query || language.name.toLowerCase().includes(query) || language.native.toLowerCase().includes(query));
+  }, [languageSearch]);
 
   const name = form.displayName || user?.displayName || user?.username || "Pi User";
   const username = user?.piUsername || user?.username || "pi-user";
   const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available";
   const sellerActive = Boolean(form.sellerActive || user?.sellerActive || user?.role === "seller");
   const selectedCountry = countries.find((country) => country.name === form.country);
+  const selectedLanguage = languages.find((language) => language.name === form.language) || languages[0];
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -168,8 +208,8 @@ const ProfilePage = () => {
       setForm((current) => ({ ...current, avatar, coverImage }));
       setMessage("Profile saved successfully.");
       setEditing(false);
-    } catch {
-      setMessage("Could not save profile. Check image size and required details.");
+    } catch (err: unknown) {
+      setMessage(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not save profile. Please sign in again and check required details." : "Could not save profile. Check image size and required details.");
     } finally {
       setSaving(false);
     }
@@ -183,9 +223,9 @@ const ProfilePage = () => {
     try {
       await updateProfile({ ...nextForm, role: next ? "seller" : "buyer" });
       setMessage(next ? "Seller tools activated." : "Seller tools deactivated.");
-    } catch {
+    } catch (err: unknown) {
       setForm(form);
-      setMessage("Could not update seller tools. Complete your profile and try again.");
+      setMessage(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not update seller tools. Please sign in again." : "Could not update seller tools. Please try again.");
     }
   };
 
@@ -238,7 +278,7 @@ const ProfilePage = () => {
         </div>
       </section>
 
-      {message ? <div className={`private-alert ${message.includes("Could") || message.includes("required") ? "error" : "success"}`}>{message}</div> : null}
+      {message ? <div className={`private-alert floating-alert ${message.includes("Could") || message.includes("required") || message.includes("sign in") ? "error" : "success"}`}>{message}</div> : null}
 
       {!editing ? (
         <>
@@ -319,7 +359,28 @@ const ProfilePage = () => {
                   </div>
                 ) : null}
               </label>
-              <label>Language<select value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label className="language-picker-label">Language
+                <button type="button" className="language-picker-trigger" onClick={() => setLanguageOpen((open) => !open)}>
+                  <span>{selectedLanguage.flag}</span>
+                  <strong>{selectedLanguage.name}</strong>
+                  <small>{selectedLanguage.native}</small>
+                </button>
+                {languageOpen ? (
+                  <div className="language-picker-panel">
+                    <input autoFocus value={languageSearch} onChange={(event) => setLanguageSearch(event.target.value)} placeholder="Search language..." />
+                    <div>
+                      {filteredLanguages.map((language) => (
+                        <button type="button" key={language.name} className={language.name === form.language ? "active" : ""} onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); }}>
+                          <span>{language.flag}</span>
+                          <strong>{language.name}</strong>
+                          <small>{language.native}</small>
+                          {language.name === form.language ? <b>✓</b> : null}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </label>
             </div>
             <label>Phone / WhatsApp<input maxLength={40} value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} placeholder="+971 50 123 4567" /></label>
           </section>

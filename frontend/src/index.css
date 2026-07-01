@@ -11930,7 +11930,7 @@ select,
   color: #ffffff;
   background: linear-gradient(135deg, var(--smaj-primary), var(--smaj-accent));
   border: 7px solid var(--smaj-card);
-  border-radius: 34px;
+  border-radius: 50%;
   box-shadow: 0 18px 44px rgba(15, 23, 42, .22);
   font-size: 42px;
   font-weight: 950;
@@ -12117,7 +12117,11 @@ select,
 .country-picker-label {
   position: relative;
   z-index: 20;
-  grid-column: 1 / -1;
+}
+
+.language-picker-label {
+  position: relative;
+  z-index: 19;
 }
 
 .country-picker-trigger {
@@ -12130,6 +12134,34 @@ select,
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.language-picker-trigger {
+  min-height: 45px;
+  padding: 9px 13px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--smaj-text);
+  background: var(--smaj-input);
+  border: 1px solid var(--smaj-border);
+  border-radius: 9px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.language-picker-trigger strong,
+.language-picker-trigger small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.language-picker-trigger small {
+  color: var(--smaj-text-secondary);
 }
 
 .country-picker-panel {
@@ -12148,6 +12180,86 @@ select,
   border: 1px solid var(--smaj-border);
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(15, 23, 42, .22);
+}
+
+.language-picker-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 300;
+  width: min(420px, calc(100vw - 96px));
+  max-width: calc(100vw - 96px);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, .22);
+}
+
+.language-picker-panel > input {
+  margin: 0 !important;
+}
+
+.language-picker-panel > div {
+  max-height: 360px;
+  display: grid;
+  gap: 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.language-picker-panel button {
+  width: 100%;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.language-picker-panel button:hover,
+.language-picker-panel button.active {
+  background: var(--smaj-secondary-bg);
+}
+
+.language-picker-panel button > span {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--smaj-card);
+  box-shadow: inset 0 0 0 1px var(--smaj-border);
+}
+
+.language-picker-panel button strong,
+.language-picker-panel button small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.language-picker-panel button small {
+  grid-column: 2;
+  color: var(--smaj-text-secondary);
+}
+
+.language-picker-panel button b {
+  grid-row: 1 / span 2;
+  grid-column: 3;
+  color: var(--smaj-primary);
 }
 
 .country-picker-panel > input {
@@ -12245,10 +12357,53 @@ select,
 }
 
 .crop-preview-avatar {
-  width: min(320px, 80vw);
+  width: min(320px, 74vw);
   aspect-ratio: 1;
   margin: 0 auto;
-  border-radius: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--smaj-primary);
+  box-shadow: 0 0 0 10px var(--smaj-secondary-bg);
+}
+
+.crop-preview-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.floating-alert {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  z-index: 8000;
+  width: min(520px, calc(100vw - 28px));
+  transform: translateX(-50%);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, .22) !important;
+  animation: floatingAlertIn .18s ease-out;
+}
+
+@keyframes floatingAlertIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+}
+
+@media (max-width: 640px) {
+  .country-picker-label,
+  .language-picker-label {
+    grid-column: 1 / -1;
+  }
+
+  .language-picker-panel {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    top: 116px;
+    width: auto;
+    max-width: none;
+  }
 }
 
 .crop-preview-cover {

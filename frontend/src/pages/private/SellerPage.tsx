@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
@@ -10,6 +11,7 @@ type SellerData = {
   orders: Order[];
   stats: { totalProducts: number; totalOrders: number; pendingOrders: number; paidOrders: number };
 };
+type BackendErrorBody = { message?: string; error?: string };
 
 const productReviewLabel = (product: Product) => {
   if (product.hidden) return "Hidden by admin";
@@ -39,8 +41,17 @@ const SellerPage = () => {
   }, []);
 
   useEffect(() => {
-    load().catch(() => setError("Could not load seller dashboard."));
+    load().catch((err: unknown) => setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not load seller dashboard. Please sign in again." : "Could not load seller dashboard."));
   }, [load]);
+
+  useEffect(() => {
+    if (!message && !error) return;
+    const timer = window.setTimeout(() => {
+      setMessage("");
+      setError("");
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [message, error]);
 
   const availability = async (product: Product) => {
     setError("");
@@ -48,8 +59,8 @@ const SellerPage = () => {
       await axiosClient.patch(`/marketplace/seller/products/${product._id}/availability`, { active: !product.active });
       setMessage(product.active ? "Product marked sold out." : "Product marked available.");
       await load();
-    } catch {
-      setError("Could not update product availability.");
+    } catch (err: unknown) {
+      setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not update product availability." : "Could not update product availability.");
     }
   };
 
@@ -60,8 +71,8 @@ const SellerPage = () => {
       await axiosClient.delete(`/marketplace/seller/products/${product._id}`);
       setMessage("Product deleted.");
       await load();
-    } catch {
-      setError("Could not delete product.");
+    } catch (err: unknown) {
+      setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not delete product." : "Could not delete product.");
     }
   };
 
@@ -73,8 +84,8 @@ const SellerPage = () => {
       await axiosClient.post("/user/verification-request");
       setVerificationRequested(true);
       setMessage("Trusted seller verification requested. Admin will review your account.");
-    } catch {
-      setError("Could not request verification. Make sure seller tools are active.");
+    } catch (err: unknown) {
+      setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not request verification. Make sure seller tools are active." : "Could not request verification. Make sure seller tools are active.");
     } finally {
       setRequestingVerification(false);
     }
@@ -94,8 +105,8 @@ const SellerPage = () => {
         <Link className="private-primary-button" to="/add-product">Add Product</Link>
       </section>
 
-      {message ? <div className="private-alert success">{message}</div> : null}
-      {error ? <div className="private-alert error">{error}</div> : null}
+      {message ? <div className="private-alert floating-alert success">{message}</div> : null}
+      {error ? <div className="private-alert floating-alert error">{error}</div> : null}
 
       {!data ? <div className="private-state">Loading seller dashboard...</div> : (
         <>

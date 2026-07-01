@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
@@ -38,6 +38,15 @@ const AddProductPage = () => {
   const priceUsdt = form.priceCurrency === "USDT" ? priceValue : priceValue * PI_USDT_RATE;
   const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
   const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
+
+  useEffect(() => {
+    if (!success && !error) return;
+    const timer = window.setTimeout(() => {
+      setSuccess("");
+      setError("");
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [success, error]);
 
   const selectImages = (files?: FileList | null) => {
     setError("");
@@ -110,8 +119,8 @@ const AddProductPage = () => {
         role: user.role === "admin" ? "admin" : "seller",
       });
       setSuccess("Seller tools activated. You can now submit real products for review.");
-    } catch {
-      setError("Could not activate seller tools. Please complete your profile and try again.");
+    } catch (err: unknown) {
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not activate seller tools. Please sign in again and try again." : "Could not activate seller tools. Please complete your profile and try again.");
     } finally {
       setActivatingSeller(false);
     }
@@ -167,8 +176,8 @@ const AddProductPage = () => {
           <span><strong>Seller agreement</strong><small>I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.</small></span>
           <input type="checkbox" checked={form.sellerAgreementAccepted} onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })} />
         </label>
-        {error ? <div className="private-alert error">{error}</div> : null}
-        {success ? <div className="private-alert success">{success}</div> : null}
+        {error ? <div className="private-alert floating-alert error">{error}</div> : null}
+        {success ? <div className="private-alert floating-alert success">{success}</div> : null}
         <button className="private-primary-button" disabled={submitting}>{submitting ? "Submitting for review..." : "Submit for Review"}</button>
       </form>
     </main>
