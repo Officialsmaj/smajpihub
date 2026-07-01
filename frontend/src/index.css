@@ -12482,19 +12482,24 @@ select,
 }
 
 .crop-preview-avatar {
-  width: min(320px, 74vw);
+  width: min(360px, 78vw);
   aspect-ratio: 1;
   margin: 0 auto;
-  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border-radius: 0;
   overflow: hidden;
-  border: 4px solid var(--smaj-primary);
-  box-shadow: 0 0 0 10px var(--smaj-secondary-bg);
+  background: #494949;
+  border: 0;
+  box-shadow: none;
 }
 
 .crop-preview-avatar img {
-  width: 100%;
-  height: 100%;
+  width: 78%;
+  height: 78%;
   object-fit: cover;
+  border-radius: 50%;
+  filter: brightness(.9);
 }
 
 .floating-alert {
@@ -12536,6 +12541,11 @@ select,
   border-radius: 16px;
 }
 
+.crop-preview-cover .crop-frame {
+  inset: 0;
+  border-width: 3px;
+}
+
 .crop-preview img {
   width: 100%;
   height: 100%;
@@ -12552,44 +12562,55 @@ select,
 }
 
 .crop-preview-avatar::after {
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 999px rgba(2, 6, 23, .42);
+  inset: 0;
+  border-radius: 0;
+  box-shadow: none;
   background: transparent;
 }
 
 .crop-frame {
   position: absolute;
-  inset: 0;
+  inset: 16%;
   z-index: 2;
   pointer-events: none;
-  border: 3px solid rgba(255, 255, 255, .92);
-  box-shadow: 0 0 0 999px rgba(2, 6, 23, .38);
+  border: 4px solid rgba(255, 255, 255, .96);
+  box-shadow: 0 0 0 999px rgba(2, 6, 23, .28), 0 8px 18px rgba(0, 0, 0, .22);
 }
 
 .crop-preview-avatar .crop-frame {
-  border-radius: 50%;
+  border-radius: 0;
 }
 
-.crop-controls {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  background: var(--smaj-secondary-bg);
-  border: 1px solid var(--smaj-border);
-  border-radius: 14px;
+.crop-frame i {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
 }
 
-.crop-controls label {
-  display: grid;
-  gap: 7px;
-  color: var(--smaj-text);
-  font-size: 13px;
-  font-weight: 850;
+.crop-frame i:nth-child(1) {
+  top: -6px;
+  left: -6px;
 }
 
-.crop-controls input[type="range"] {
-  width: 100%;
-  accent-color: var(--smaj-primary);
+.crop-frame i:nth-child(2) {
+  top: -6px;
+  right: -6px;
+}
+
+.crop-frame i:nth-child(3) {
+  right: -6px;
+  bottom: -6px;
+}
+
+.crop-frame i:nth-child(4) {
+  bottom: -6px;
+  left: -6px;
+}
+
+.crop-preview-cover .crop-frame i {
+  display: none;
 }
 
 .real-account-checkup {
