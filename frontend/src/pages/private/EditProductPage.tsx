@@ -94,7 +94,7 @@ const EditProductPage = () => {
       });
       navigate("/seller");
     }
-    catch (err: unknown) { setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not update product." : "Could not update product."); }
+    catch (err: unknown) { setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not update product." : err instanceof Error ? err.message : "Could not update product."); }
     finally { setSaving(false); }
   };
 

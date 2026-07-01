@@ -154,7 +154,7 @@ const StorePage = () => {
             <Link to="/store" className="storefront-brand storefront-brand-link">
               <strong>SMAJ Store</strong>
             </Link>
-            <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Lagos")}>
+            <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Abu Dhabi")}>
               <LocationOnOutlinedIcon />
               <span>Location</span>
               <KeyboardArrowDownOutlinedIcon className="storefront-location-chevron" />

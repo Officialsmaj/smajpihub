@@ -42,6 +42,27 @@ const productFields = (body: any) => ({
   images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
 });
 
+const productValidationMessage = (product: ReturnType<typeof productFields>) => {
+  if (!product.title) return "Product title is required.";
+  if (product.title.length < 3) return "Product title must be at least 3 characters.";
+  if (!product.image && !product.images.length) return "At least one product image is required.";
+  if (!product.description || product.description.length < 20) return "Product description must be at least 20 characters.";
+  if (!product.category) return "Product category is required.";
+  if (!product.condition) return "Product condition is required.";
+  if (!Number.isFinite(product.quantity) || product.quantity < 1) return "Product quantity must be at least 1.";
+  if (!Number.isFinite(product.pricePi) || product.pricePi <= 0) return "Pi price must be greater than zero.";
+  if (!Number.isFinite(product.priceUsdt) || product.priceUsdt <= 0) return "USDT price must be greater than zero.";
+  if (!product.country) return "Country is required.";
+  if (!product.stateRegion) return "State or region is required.";
+  if (!product.city) return "City is required.";
+  if (!product.areaAddress) return "Area or address summary is required.";
+  if (!product.location) return "Product location is required.";
+  if (!product.deliveryOption) return "Delivery option is required.";
+  if (!product.sellerContact) return "Seller contact is required.";
+  if (!product.sellerAgreementAccepted) return "Seller agreement must be accepted before listing.";
+  return "";
+};
+
 const validProduct = (product: ReturnType<typeof productFields>) =>
   product.title && product.image && product.description && product.category && product.location && product.sellerContact
   && Number.isFinite(product.pricePi) && product.pricePi > 0
@@ -103,9 +124,10 @@ export default function mountMarketplaceEndpoints(router: Router) {
     }
 
     const fields = productFields(req.body);
+    const validationMessage = productValidationMessage(fields);
 
-    if (!validProduct(fields)) {
-      return res.status(400).json({ error: "bad_request", message: "Complete all required product fields" });
+    if (validationMessage || !validProduct(fields)) {
+      return res.status(400).json({ error: "bad_request", message: validationMessage || "Complete all required product fields" });
     }
 
     const images = fields.images.length ? fields.images : [fields.image];
@@ -364,7 +386,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const fields = productFields(req.body);
-    if (!validProduct(fields)) return res.status(400).json({ error: "bad_request", message: "Complete all required product fields" });
+    const validationMessage = productValidationMessage(fields);
+    if (validationMessage || !validProduct(fields)) return res.status(400).json({ error: "bad_request", message: validationMessage || "Complete all required product fields" });
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
       { $set: { ...fields, approved: false, reviewStatus: "pending", rejectionReason: "", hidden: false, updatedAt: new Date() } },

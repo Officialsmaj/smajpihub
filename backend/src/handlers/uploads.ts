@@ -67,6 +67,9 @@ export default function mountUploadEndpoints(router: Router) {
         return res.status(201).json(upload);
       } catch (err) {
         console.error("Image upload failed:", err);
+        if (env.node_env !== "production") {
+          return res.status(201).json({ url: image, storage: "inline-dev", warning: "Cloudinary upload failed, using local development inline image." });
+        }
         return res.status(502).json({ error: "upload_failed", message: "Image storage is temporarily unavailable." });
       }
     }

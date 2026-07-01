@@ -99,7 +99,7 @@ const AddProductPage = () => {
       setSuccess("Product submitted for admin review. It will appear in SMAJ Store after approval.");
       window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {
-      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : "Could not add product.");
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : err instanceof Error ? err.message : "Could not add product.");
     } finally {
       setSubmitting(false);
     }
