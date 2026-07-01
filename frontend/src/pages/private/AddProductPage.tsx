@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { uploadImages } from "../../lib/uploadImage";
 
 const PI_USDT_RATE = 314159;
+const SELLER_AGREEMENT_READ_KEY = "smaj_seller_agreement_read";
 const initialForm = {
   title: "",
   image: "",
@@ -33,6 +34,7 @@ const AddProductPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const [activatingSeller, setActivatingSeller] = useState(false);
+  const [sellerAgreementRead, setSellerAgreementRead] = useState(() => localStorage.getItem(SELLER_AGREEMENT_READ_KEY) === "true");
   const priceValue = Number(form.priceInput);
   const pricePi = form.priceCurrency === "Pi" ? priceValue : priceValue / PI_USDT_RATE;
   const priceUsdt = form.priceCurrency === "USDT" ? priceValue : priceValue * PI_USDT_RATE;
@@ -70,6 +72,7 @@ const AddProductPage = () => {
     if (form.description.trim().length < 20) return setError("Description must be at least 20 characters.");
     if (!form.country.trim() || !form.stateRegion.trim() || !form.city.trim() || !form.areaAddress.trim() || !form.sellerContact.trim()) return setError("Full manual location and seller contact are required.");
     if (!form.deliveryOption) return setError("Choose a delivery option.");
+    if (!sellerAgreementRead) return setError("Open and read the seller agreement before accepting it.");
     if (!form.sellerAgreementAccepted) return setError("Accept the seller agreement before submitting.");
     setSubmitting(true);
     try {
@@ -100,6 +103,11 @@ const AddProductPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const markSellerAgreementRead = () => {
+    localStorage.setItem(SELLER_AGREEMENT_READ_KEY, "true");
+    setSellerAgreementRead(true);
   };
 
   const activateSeller = async () => {
@@ -173,8 +181,23 @@ const AddProductPage = () => {
           <label>Seller contact<input required placeholder="+971 50 123 4567, email, or Pi username" value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} /></label>
         </div>
         <label className="setting-line">
-          <span><strong>Seller agreement</strong><small>I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.</small></span>
-          <input type="checkbox" checked={form.sellerAgreementAccepted} onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })} />
+          <span>
+            <strong>Seller agreement</strong>
+            <small>
+              Read the official{" "}
+              <Link className="seller-agreement-link" to="/seller-agreement" target="_blank" rel="noreferrer" onClick={markSellerAgreementRead}>
+                SMAJ PI HUB Seller Agreement
+              </Link>
+              {" "}before accepting. I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.
+            </small>
+            {!sellerAgreementRead ? <small className="seller-agreement-required">Open the agreement link first to enable this checkbox.</small> : null}
+          </span>
+          <input
+            type="checkbox"
+            disabled={!sellerAgreementRead}
+            checked={form.sellerAgreementAccepted}
+            onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })}
+          />
         </label>
         {error ? <div className="private-alert floating-alert error">{error}</div> : null}
         {success ? <div className="private-alert floating-alert success">{success}</div> : null}

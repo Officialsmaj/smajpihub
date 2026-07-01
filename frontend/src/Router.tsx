@@ -20,7 +20,7 @@ import PublicStorePage from "./pages/PublicStorePage.tsx";
 import OnboardingPage from "./pages/OnboardingPage.tsx";
 import BlogPage from "./pages/BlogPage.tsx";
 import BlogPostPage from "./pages/BlogPostPage.tsx";
-import { CookiesPage, PrivacyPage, ReportAbusePage, TermsPage } from "./pages/LegalPages.tsx";
+import { CookiesPage, PrivacyPage, ReportAbusePage, SellerAgreementPage, TermsPage } from "./pages/LegalPages.tsx";
 import { platformDefinitions } from "./content/platforms";
 import { privatePages } from "./content/privatePages";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -228,6 +228,10 @@ export const router = createBrowserRouter(
     {
       path: "/report-abuse",
       element: <ReportAbusePage />,
+    },
+    {
+      path: "/seller-agreement",
+      element: <SellerAgreementPage />,
     },
     {
       path: "/engagement-tasks",

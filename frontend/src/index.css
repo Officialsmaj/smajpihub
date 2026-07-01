@@ -11566,6 +11566,84 @@ select,
   font-weight: 850;
 }
 
+.legal-back-link {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 14px;
+  color: var(--primary);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.legal-back-link svg {
+  font-size: 18px;
+}
+
+.legal-text-document {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+}
+
+.legal-text-intro {
+  display: grid;
+  gap: 6px;
+}
+
+.legal-text-intro h2,
+.legal-text-intro p,
+.legal-text-section h3,
+.legal-text-section p {
+  margin: 0;
+}
+
+.legal-text-intro p,
+.legal-text-section p,
+.legal-text-section li {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.legal-text-section {
+  padding-top: 16px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.legal-text-section h3 {
+  color: var(--text);
+}
+
+.legal-text-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.seller-agreement-link {
+  color: var(--smaj-primary);
+  font-weight: 850;
+}
+
+.seller-agreement-required {
+  color: var(--smaj-accent) !important;
+  font-weight: 800 !important;
+}
+
+.setting-line input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 @media (max-width: 900px) {
   .public-store-hero,
   .legal-company-hero,
@@ -11580,6 +11658,7 @@ select,
   .legal-hero-card {
     min-height: 220px;
   }
+
 }
 
 /* Seller and provider onboarding */
