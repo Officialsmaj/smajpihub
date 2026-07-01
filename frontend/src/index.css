@@ -10401,6 +10401,27 @@ select,
   color: var(--primary);
 }
 
+.services-company-page .services-directory-grid > *,
+.services-company-page .services-principle-grid > * {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.services-company-page .services-directory-card {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft);
+}
+
+.services-company-page .services-directory-card h3 {
+  color: var(--text) !important;
+}
+
+.services-company-page .services-directory-card p {
+  color: var(--muted) !important;
+}
+
 .how-phone-mockup {
   min-height: 390px;
   display: grid;
