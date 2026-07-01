@@ -207,15 +207,15 @@ const ProfilePage = () => {
 
   return (
     <main className="private-page real-profile-page">
-      <input ref={avatarInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
-      <input ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
+      <input id="profileAvatarUpload" ref={avatarInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
+      <input id="profileCoverUpload" ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
-        <button className="real-profile-cover" type="button" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} onClick={() => coverInputRef.current?.click()} aria-label="Edit profile banner">
-          <span>
+        <label className="real-profile-cover" htmlFor="profileCoverUpload" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Edit profile banner">
+          <span role="button" tabIndex={0}>
             <EditOutlinedIcon /> Edit Banner
           </span>
-        </button>
+        </label>
         <div className="real-profile-identity">
           <button className="real-profile-avatar" type="button" onClick={() => avatarInputRef.current?.click()} aria-label="Upload profile picture">
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}

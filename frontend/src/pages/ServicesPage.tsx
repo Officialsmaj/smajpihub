@@ -9,6 +9,7 @@ import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { platformDefinitions } from "../content/platforms";
 import { serviceCatalog } from "../content/serviceCatalog";
+import useSliceReveal from "../hooks/useSliceReveal";
 
 const servicePath = (routeSegment: string) => `/services/${routeSegment}`;
 
@@ -20,6 +21,8 @@ const servicePrinciples = [
 ] as const;
 
 const ServicesPage = () => {
+  useSliceReveal();
+
   return (
     <AppLayout>
       <main className="home-page services-company-page">

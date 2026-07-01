@@ -3,10 +3,13 @@ import react from "@vitejs/plugin-react";
 import legacy from "@vitejs/plugin-legacy";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { fileURLToPath } from "node:url";
+
+const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const rootDir = __dirname;
+  const rootDir = configDir;
   const env = loadEnv(mode, rootDir, "");
   const isPublicBuild = mode === "public";
   const build = {
@@ -69,7 +72,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        "@mui/styled-engine": path.resolve(__dirname, "node_modules/@mui/styled-engine-sc"),
+        "@mui/styled-engine": path.resolve(rootDir, "node_modules/@mui/styled-engine-sc"),
       },
     },
     build,
