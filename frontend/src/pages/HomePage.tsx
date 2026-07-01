@@ -91,12 +91,9 @@ const HomePage = () => {
     );
   }, [isMobileServices]);
 
-  useEffect(() => {
-    setServicesPage((currentPage) => Math.min(currentPage, Math.max(serviceCarouselPages.length - 1, 0)));
-  }, [serviceCarouselPages.length]);
-
-  const isFirstServicesPage = servicesPage === 0;
-  const isLastServicesPage = servicesPage >= serviceCarouselPages.length - 1;
+  const safeServicesPage = Math.min(servicesPage, Math.max(serviceCarouselPages.length - 1, 0));
+  const isFirstServicesPage = safeServicesPage === 0;
+  const isLastServicesPage = safeServicesPage >= serviceCarouselPages.length - 1;
   const goToPreviousServicesPage = () => setServicesPage((currentPage) => Math.max(currentPage - 1, 0));
   const goToNextServicesPage = () =>
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
@@ -174,7 +171,7 @@ const HomePage = () => {
           <div className="public-home-service-carousel">
             <div className="public-home-service-carousel-top">
               <span>
-                {servicesPage + 1} / {serviceCarouselPages.length}
+                {safeServicesPage + 1} / {serviceCarouselPages.length}
               </span>
               <div>
                 <button
@@ -198,7 +195,7 @@ const HomePage = () => {
               </div>
             </div>
             <div className="public-home-service-viewport">
-              <div className="public-home-service-track" style={{ transform: `translateX(-${servicesPage * 100}%)` }}>
+              <div className="public-home-service-track" style={{ transform: `translateX(-${safeServicesPage * 100}%)` }}>
                 {serviceCarouselPages.map((page, pageIndex) => (
                   <div className="public-home-service-grid" key={pageIndex}>
                     {page.map((group, groupIndex) => (

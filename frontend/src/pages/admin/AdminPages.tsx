@@ -46,7 +46,7 @@ export const AdminUsersPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [message, setMessage] = useState("");
   const load = useCallback(async () => setUsers((await axiosClient.get("/admin/users")).data.users), []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/users/${id}`, body); setMessage("User updated."); await load(); };
 
   return (
@@ -87,7 +87,7 @@ export const AdminOnboardingPage = () => {
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("all");
   const load = useCallback(async () => setApplications((await axiosClient.get("/admin/onboarding")).data.applications), []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const update = async (id: string, status: OnboardingApplication["status"]) => {
     await axiosClient.patch(`/admin/onboarding/${id}`, { status });
     setMessage(`Application marked ${status}.`);
@@ -119,7 +119,7 @@ export const AdminProductsPage = () => {
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("all");
   const load = useCallback(async () => setProducts((await axiosClient.get("/admin/products")).data.products), []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/products/${id}`, body); setMessage("Product updated."); await load(); };
   const reject = async (product: Product) => {
     const reason = window.prompt(`Why is "${product.title}" rejected?`, product.rejectionReason || "Product photos, price, description, or seller details need review.");
@@ -156,7 +156,7 @@ export const AdminOrdersPage = () => {
   const [selected, setSelected] = useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const load = useCallback(async () => setOrders((await axiosClient.get("/admin/orders")).data.orders), []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const update = async (id: string, status: string) => { await axiosClient.patch(`/admin/orders/${id}`, { status }); setMessage("Order status updated."); await load(); };
   const filteredOrders = statusFilter === "all" ? orders : orders.filter((order) => order.status === statusFilter);
 
@@ -178,7 +178,7 @@ export const AdminReportsPage = () => {
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("open");
   const load = useCallback(async () => setReports((await axiosClient.get("/admin/reports")).data.reports), []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   const resolve = async (report: Report) => {
     await axiosClient.patch(report.source === "support" ? `/admin/support/${report._id}/resolve` : `/admin/reports/${report._id}/resolve`);
     setMessage("Record resolved.");

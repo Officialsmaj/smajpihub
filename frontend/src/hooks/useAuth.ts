@@ -113,6 +113,9 @@ export const useAuth = () => {
         const response = await axiosClient.get<{ user?: Partial<User> | null }>("/user");
         if (response.data.user?.uid && response.data.user.username && mounted) {
           setUser(storeUser(toUser(response.data.user, stored || response.data.user as User)));
+        } else if (mounted) {
+          window.localStorage.removeItem(PI_USER_STORAGE_KEY);
+          setUser(null);
         }
       } catch (err) {
         console.log("No active session found or error checking session:", err);

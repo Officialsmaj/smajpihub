@@ -22,32 +22,33 @@ const countries = countryCodes.map((code) => ({
   flag: code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0))),
 })).sort((a, b) => Number(priorityCountries.has(b.code)) - Number(priorityCountries.has(a.code)) || a.name.localeCompare(b.name));
 
-const languages = [
-  { name: "English", native: "United Kingdom", flag: "🇬🇧" },
-  { name: "Arabic", native: "العربية", flag: "🇦🇪" },
-  { name: "French", native: "Français", flag: "🇫🇷" },
-  { name: "Spanish", native: "Español", flag: "🇪🇸" },
-  { name: "Portuguese", native: "Português", flag: "🇵🇹" },
-  { name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
-  { name: "Urdu", native: "اردو", flag: "🇵🇰" },
-  { name: "Bengali", native: "বাংলা", flag: "🇧🇩" },
-  { name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
-  { name: "Vietnamese", native: "Tiếng Việt", flag: "🇻🇳" },
-  { name: "Filipino", native: "Filipino", flag: "🇵🇭" },
-  { name: "Chinese", native: "中国人", flag: "🇨🇳" },
-  { name: "Japanese", native: "日本語", flag: "🇯🇵" },
-  { name: "Korean", native: "한국어", flag: "🇰🇷" },
-  { name: "German", native: "Deutsch", flag: "🇩🇪" },
-  { name: "Italian", native: "Italiano", flag: "🇮🇹" },
-  { name: "Dutch", native: "Nederlands", flag: "🇳🇱" },
-  { name: "Russian", native: "Русский", flag: "🇷🇺" },
-  { name: "Turkish", native: "Türkçe", flag: "🇹🇷" },
-  { name: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
-  { name: "Hausa", native: "Hausa", flag: "🇳🇬" },
-  { name: "Yoruba", native: "Yorùbá", flag: "🇳🇬" },
-  { name: "Igbo", native: "Igbo", flag: "🇳🇬" },
-  { name: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
+const cleanLanguages = [
+  { name: "English", native: "United Kingdom", flag: "GB" },
+  { name: "Arabic", native: "Arabic", flag: "AE" },
+  { name: "French", native: "Francais", flag: "FR" },
+  { name: "Spanish", native: "Espanol", flag: "ES" },
+  { name: "Portuguese", native: "Portugues", flag: "PT" },
+  { name: "Hindi", native: "Hindi", flag: "IN" },
+  { name: "Urdu", native: "Urdu", flag: "PK" },
+  { name: "Bengali", native: "Bangla", flag: "BD" },
+  { name: "Indonesian", native: "Bahasa Indonesia", flag: "ID" },
+  { name: "Vietnamese", native: "Tieng Viet", flag: "VN" },
+  { name: "Filipino", native: "Filipino", flag: "PH" },
+  { name: "Chinese", native: "Chinese", flag: "CN" },
+  { name: "Japanese", native: "Japanese", flag: "JP" },
+  { name: "Korean", native: "Korean", flag: "KR" },
+  { name: "German", native: "Deutsch", flag: "DE" },
+  { name: "Italian", native: "Italiano", flag: "IT" },
+  { name: "Dutch", native: "Nederlands", flag: "NL" },
+  { name: "Russian", native: "Russian", flag: "RU" },
+  { name: "Turkish", native: "Turkce", flag: "TR" },
+  { name: "Swahili", native: "Kiswahili", flag: "KE" },
+  { name: "Hausa", native: "Hausa", flag: "NG" },
+  { name: "Yoruba", native: "Yoruba", flag: "NG" },
+  { name: "Igbo", native: "Igbo", flag: "NG" },
+  { name: "Amharic", native: "Amharic", flag: "ET" },
 ] as const;
+const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
 type CropState = { target: CropTarget; source: string };
@@ -149,7 +150,7 @@ const ProfilePage = () => {
   }, [countrySearch]);
   const filteredLanguages = useMemo(() => {
     const query = languageSearch.trim().toLowerCase();
-    return languages.filter((language) => !query || language.name.toLowerCase().includes(query) || language.native.toLowerCase().includes(query));
+    return cleanLanguages.filter((language) => !query || language.name.toLowerCase().includes(query) || language.native.toLowerCase().includes(query));
   }, [languageSearch]);
 
   const name = form.displayName || user?.displayName || user?.username || "Pi User";
@@ -157,7 +158,7 @@ const ProfilePage = () => {
   const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available";
   const sellerActive = Boolean(form.sellerActive || user?.sellerActive || user?.role === "seller");
   const selectedCountry = countries.find((country) => country.name === form.country);
-  const selectedLanguage = languages.find((language) => language.name === form.language) || languages[0];
+  const selectedLanguage = cleanLanguages.find((language) => language.name === form.language) || cleanLanguages[0];
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -327,14 +328,6 @@ const ProfilePage = () => {
       ) : (
         <form className="private-form real-profile-form" onSubmit={submit}>
           <section>
-            <h2>Profile Media</h2>
-            <div className="profile-media-actions">
-              <button type="button" className="private-secondary-button" onClick={() => avatarInputRef.current?.click()}>Upload profile picture</button>
-              <button type="button" className="private-secondary-button" onClick={() => coverInputRef.current?.click()}>Upload banner image</button>
-            </div>
-          </section>
-
-          <section>
             <h2>Personal Information</h2>
             <label>Display name<input required maxLength={80} value={form.displayName} onChange={(event) => setForm({ ...form, displayName: event.target.value })} /></label>
             <label>Pi username<input value={`@${username}`} disabled /><small>Pi username is managed by Pi authentication.</small></label>
@@ -361,7 +354,7 @@ const ProfilePage = () => {
               </label>
               <label className="language-picker-label">Language
                 <button type="button" className="language-picker-trigger" onClick={() => setLanguageOpen((open) => !open)}>
-                  <span>{selectedLanguage.flag}</span>
+                  <span>{codeToFlag(selectedLanguage.flag)}</span>
                   <strong>{selectedLanguage.name}</strong>
                   <small>{selectedLanguage.native}</small>
                 </button>
@@ -371,7 +364,7 @@ const ProfilePage = () => {
                     <div>
                       {filteredLanguages.map((language) => (
                         <button type="button" key={language.name} className={language.name === form.language ? "active" : ""} onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); }}>
-                          <span>{language.flag}</span>
+                          <span>{codeToFlag(language.flag)}</span>
                           <strong>{language.name}</strong>
                           <small>{language.native}</small>
                           {language.name === form.language ? <b>✓</b> : null}

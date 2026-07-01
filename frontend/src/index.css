@@ -11961,8 +11961,8 @@ select,
   position: absolute;
   right: 10px;
   bottom: 10px;
-  width: 34px;
-  height: 34px;
+  width: auto;
+  height: auto;
   display: grid;
   place-items: center;
   color: #fff;
@@ -12182,10 +12182,10 @@ select,
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  right: auto;
+  right: 0;
   z-index: 300;
-  width: min(760px, calc(100vw - 96px));
-  max-width: calc(100vw - 96px);
+  width: 100%;
+  max-width: none;
   display: grid;
   gap: 8px;
   padding: 10px;
@@ -12199,10 +12199,11 @@ select,
 .language-picker-panel {
   position: absolute;
   top: calc(100% + 8px);
+  left: 0;
   right: 0;
   z-index: 300;
-  width: min(420px, calc(100vw - 96px));
-  max-width: calc(100vw - 96px);
+  width: 100%;
+  max-width: none;
   display: grid;
   gap: 8px;
   padding: 10px;

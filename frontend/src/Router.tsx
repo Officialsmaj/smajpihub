@@ -123,7 +123,7 @@ export const router = createBrowserRouter(
     })),
     {
       path: "/smaj-store",
-      element: <Navigate to="/store" replace />,
+      element: <Navigate to="/services/store" replace />,
     },
     {
       path: "/smaj-food-delivery",

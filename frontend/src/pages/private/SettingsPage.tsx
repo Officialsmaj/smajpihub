@@ -45,7 +45,7 @@ const readSavedSettings = (): Partial<SavedSettings> => {
 const SettingsPage = () => {
   const { user, updateProfile, updateSettings, signOut } = useAuthContext();
   const navigate = useNavigate();
-  const saved = useMemo(readSavedSettings, []);
+  const saved = useMemo(() => readSavedSettings(), []);
   const [form, setForm] = useState<SavedSettings>({
     fullName: saved.fullName || user?.displayName || user?.username || "",
     username: saved.username || user?.piUsername || user?.username || "",

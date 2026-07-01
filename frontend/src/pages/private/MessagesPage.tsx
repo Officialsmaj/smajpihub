@@ -53,15 +53,21 @@ const MessagesPage = () => {
   }, [activeId]);
 
   useEffect(() => {
-    void loadConversations();
+    const initial = window.setTimeout(() => void loadConversations(), 0);
     const timer = window.setInterval(() => void loadConversations(), 5000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
   }, [loadConversations]);
 
   useEffect(() => {
-    void loadMessages();
+    const initial = window.setTimeout(() => void loadMessages(), 0);
     const timer = window.setInterval(() => void loadMessages(), 4000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
   }, [loadMessages]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -82,8 +88,9 @@ const MessagesPage = () => {
 
   useEffect(() => {
     nearBottomRef.current = true;
-    setShowScrollBottom(false);
+    const timer = window.setTimeout(() => setShowScrollBottom(false), 0);
     window.requestAnimationFrame(() => scrollToBottom("auto"));
+    return () => window.clearTimeout(timer);
   }, [activeId, scrollToBottom]);
 
   useEffect(() => {
