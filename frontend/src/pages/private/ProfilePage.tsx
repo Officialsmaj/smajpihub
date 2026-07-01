@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { Link } from "react-router-dom";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
-import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
@@ -23,7 +22,7 @@ const countries = countryCodes.map((code) => ({
 
 const languages = ["English","Arabic","French","Spanish","Portuguese","Hindi","Urdu","Bengali","Indonesian","Vietnamese","Filipino","Chinese","Japanese","Korean","German","Italian","Dutch","Russian","Turkish","Swahili","Hausa","Yoruba","Igbo","Amharic","Somali","Persian","Thai","Malay","Tamil","Telugu","Marathi","Gujarati","Punjabi","Polish","Romanian","Ukrainian","Greek","Czech","Swedish","Norwegian","Danish","Finnish","Hebrew"] as const;
 type CropTarget = "avatar" | "cover";
-type CropState = { target: CropTarget; source: string; zoom: number; x: number; y: number };
+type CropState = { target: CropTarget; source: string };
 
 const cropConfig = {
   avatar: { width: 512, height: 512, label: "Profile picture" },
@@ -41,7 +40,7 @@ const readImageFile = (file: File, onLoad: (value: string) => void, onError: (me
   reader.readAsDataURL(file);
 };
 
-const cropImage = (source: string, target: CropTarget, zoom: number, x: number, y: number) => new Promise<string>((resolve, reject) => {
+const cropImage = (source: string, target: CropTarget) => new Promise<string>((resolve, reject) => {
   const image = new Image();
   image.onload = () => {
     const { width, height } = cropConfig[target];
@@ -51,16 +50,14 @@ const cropImage = (source: string, target: CropTarget, zoom: number, x: number, 
     const ctx = canvas.getContext("2d");
     if (!ctx) return reject(new Error("Canvas not available"));
     const aspect = width / height;
-    let cropWidth = image.naturalWidth / Math.max(1, zoom);
+    let cropWidth = image.naturalWidth;
     let cropHeight = cropWidth / aspect;
-    if (cropHeight > image.naturalHeight / Math.max(1, zoom)) {
-      cropHeight = image.naturalHeight / Math.max(1, zoom);
+    if (cropHeight > image.naturalHeight) {
+      cropHeight = image.naturalHeight;
       cropWidth = cropHeight * aspect;
     }
-    const maxX = Math.max(0, image.naturalWidth - cropWidth);
-    const maxY = Math.max(0, image.naturalHeight - cropHeight);
-    const sx = maxX / 2 + (x / 100) * maxX / 2;
-    const sy = maxY / 2 + (y / 100) * maxY / 2;
+    const sx = Math.max(0, (image.naturalWidth - cropWidth) / 2);
+    const sy = Math.max(0, (image.naturalHeight - cropHeight) / 2);
     ctx.drawImage(image, sx, sy, cropWidth, cropHeight, 0, 0, width, height);
     resolve(canvas.toDataURL("image/jpeg", 0.9));
   };
@@ -76,6 +73,7 @@ const ProfilePage = () => {
   const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
+  const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
@@ -124,14 +122,14 @@ const ProfilePage = () => {
     if (!file) return;
     readImageFile(file, (source) => {
       setEditing(true);
-      setCrop({ target, source, zoom: 1.2, x: 0, y: 0 });
+      setCrop({ target, source });
     }, setMessage);
   };
 
   const applyCrop = async () => {
     if (!crop) return;
     try {
-      const cropped = await cropImage(crop.source, crop.target, crop.zoom, crop.x, crop.y);
+      const cropped = await cropImage(crop.source, crop.target);
       setForm((current) => crop.target === "avatar" ? { ...current, avatar: cropped } : { ...current, coverImage: cropped });
       setCrop(null);
       setMessage(`${cropConfig[crop.target].label} ready. Save changes to update your profile.`);
@@ -152,6 +150,7 @@ const ProfilePage = () => {
       return;
     }
     try {
+      setSaving(true);
       await updateProfile({
         ...form,
         bio: form.bio.trim(),
@@ -161,6 +160,8 @@ const ProfilePage = () => {
       setEditing(false);
     } catch {
       setMessage("Could not save profile. Check image size and required details.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -184,15 +185,15 @@ const ProfilePage = () => {
       <input ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
-        <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}>
-          <button type="button" onClick={() => coverInputRef.current?.click()}>
+        <button className="real-profile-cover" type="button" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} onClick={() => coverInputRef.current?.click()} aria-label="Edit profile banner">
+          <span>
             <EditOutlinedIcon /> Edit Banner
-          </button>
-        </div>
+          </span>
+        </button>
         <div className="real-profile-identity">
           <button className="real-profile-avatar" type="button" onClick={() => avatarInputRef.current?.click()} aria-label="Upload profile picture">
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
-            <span><CameraAltOutlinedIcon /></span>
+            <span><EditOutlinedIcon /></span>
           </button>
           <div>
             <h1>{name}</h1>
@@ -299,7 +300,7 @@ const ProfilePage = () => {
           <label className="setting-line"><span><strong>Seller profile</strong><small>Unlock seller tools under this same verified Pi account.</small></span><input type="checkbox" checked={form.sellerActive} onChange={(event) => setForm({ ...form, sellerActive: event.target.checked })} /></label>
 
           <div className="form-actions">
-            <button className="private-primary-button">Save Changes</button>
+            <button className="private-primary-button" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
             <button type="button" className="private-secondary-button" onClick={() => setEditing(false)}>Cancel</button>
           </div>
         </form>
@@ -310,13 +311,12 @@ const ProfilePage = () => {
           <section className="crop-modal">
             <h2>Crop {cropConfig[crop.target].label}</h2>
             <div className={`crop-preview crop-preview-${crop.target}`}>
-              <img src={crop.source} alt="" style={{ transform: `translate(${crop.x / 3}%, ${crop.y / 3}%) scale(${crop.zoom})` }} />
+              <img src={crop.source} alt="" />
             </div>
-            <label>Zoom<input type="range" min="1" max="3" step="0.05" value={crop.zoom} onChange={(event) => setCrop({ ...crop, zoom: Number(event.target.value) })} /></label>
-            <label>Move horizontal<input type="range" min="-100" max="100" step="1" value={crop.x} onChange={(event) => setCrop({ ...crop, x: Number(event.target.value) })} /></label>
-            <label>Move vertical<input type="range" min="-100" max="100" step="1" value={crop.y} onChange={(event) => setCrop({ ...crop, y: Number(event.target.value) })} /></label>
+            <p>{crop.target === "cover" ? "Your banner will be centered and saved at 1640 x 624." : "Your profile picture will be centered and saved as a square image."}</p>
             <div className="form-actions">
               <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
+              <button type="button" className="private-secondary-button" onClick={() => (crop.target === "cover" ? coverInputRef.current : avatarInputRef.current)?.click()}>Choose Another</button>
               <button type="button" className="private-secondary-button" onClick={() => setCrop(null)}>Cancel</button>
             </div>
           </section>
