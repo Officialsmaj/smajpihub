@@ -30,6 +30,7 @@ interface Environment {
   cloudinary_cloud_name: string;
   cloudinary_upload_preset: string;
   cloudinary_folder: string;
+  marketplace_auto_approve_products: boolean;
 }
 
 const sandboxSDK = String(process.env.SANDBOX_SDK || "false").toLowerCase() === "true";
@@ -59,6 +60,7 @@ const env: Environment = {
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinary_upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "",
   cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
+  marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
 };
 
 if (env.sandbox_sdk && env.platform_api_url.includes("api.minepi.com")) {

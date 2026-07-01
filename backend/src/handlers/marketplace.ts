@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
+import env from "../environments";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 
@@ -131,6 +132,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     }
 
     const images = fields.images.length ? fields.images : [fields.image];
+    const autoApprove = env.marketplace_auto_approve_products;
     const product = {
       sellerId: user.uid,
       sellerName: user.displayName || user.piUsername || user.username,
@@ -140,8 +142,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
       image: images[0],
       images,
       active: true,
-      approved: false,
-      reviewStatus: "pending",
+      approved: autoApprove,
+      reviewStatus: autoApprove ? "approved" : "pending",
       rejectionReason: "",
       hidden: false,
       createdAt: new Date(),
@@ -388,9 +390,10 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const fields = productFields(req.body);
     const validationMessage = productValidationMessage(fields);
     if (validationMessage || !validProduct(fields)) return res.status(400).json({ error: "bad_request", message: validationMessage || "Complete all required product fields" });
+    const autoApprove = env.marketplace_auto_approve_products;
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
-      { $set: { ...fields, approved: false, reviewStatus: "pending", rejectionReason: "", hidden: false, updatedAt: new Date() } },
+      { $set: { ...fields, approved: autoApprove, reviewStatus: autoApprove ? "approved" : "pending", rejectionReason: "", hidden: false, updatedAt: new Date() } },
     );
     if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });

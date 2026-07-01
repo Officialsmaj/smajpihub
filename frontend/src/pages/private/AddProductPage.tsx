@@ -4,6 +4,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { uploadImages } from "../../lib/uploadImage";
+import type { Product } from "../../types/marketplace";
 
 const PI_USDT_RATE = 314159;
 const SELLER_AGREEMENT_READ_KEY = "smaj_seller_agreement_read";
@@ -77,7 +78,7 @@ const AddProductPage = () => {
     setSubmitting(true);
     try {
       const uploadedImages = await uploadImages(form.images.length ? form.images : [form.image], "products");
-      await axiosClient.post("/marketplace/products", {
+      const { data } = await axiosClient.post<{ product: Product }>("/marketplace/products", {
         title: form.title.trim(),
         image: uploadedImages[0],
         images: uploadedImages,
@@ -96,7 +97,7 @@ const AddProductPage = () => {
         priceUsdt,
         sellerAgreementAccepted: form.sellerAgreementAccepted,
       });
-      setSuccess("Product submitted for admin review. It will appear in SMAJ Store after approval.");
+      setSuccess(data.product.reviewStatus === "approved" ? "Product saved and is live in SMAJ Store." : "Product saved for admin review. It will appear in SMAJ Store after approval.");
       window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : err instanceof Error ? err.message : "Could not add product.");

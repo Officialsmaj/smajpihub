@@ -52,6 +52,7 @@ const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCod
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
 type CropState = { target: CropTarget; source: string };
+type AlertState = { type: "success" | "error"; text: string };
 
 const cropConfig = {
   avatar: { width: 512, height: 512, label: "Profile picture" },
@@ -97,7 +98,7 @@ const cropImage = (source: string, target: CropTarget) => new Promise<string>((r
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthContext();
   const [editing, setEditing] = useState(false);
-  const [message, setMessage] = useState("");
+  const [alert, setAlert] = useState<AlertState | null>(null);
   const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
   const [countrySearch, setCountrySearch] = useState("");
   const [countryOpen, setCountryOpen] = useState(false);
@@ -139,10 +140,10 @@ const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    if (!message) return;
-    const timer = window.setTimeout(() => setMessage(""), 3000);
+    if (!alert) return;
+    const timer = window.setTimeout(() => setAlert(null), 3000);
     return () => window.clearTimeout(timer);
-  }, [message]);
+  }, [alert]);
 
   const filteredCountries = useMemo(() => {
     const query = countrySearch.trim().toLowerCase();
@@ -167,7 +168,7 @@ const ProfilePage = () => {
     readImageFile(file, (source) => {
       setEditing(true);
       setCrop({ target, source });
-    }, setMessage);
+    }, (text) => setAlert({ type: "error", text }));
   };
 
   const applyCrop = async () => {
@@ -176,23 +177,15 @@ const ProfilePage = () => {
       const cropped = await cropImage(crop.source, crop.target);
       setForm((current) => crop.target === "avatar" ? { ...current, avatar: cropped } : { ...current, coverImage: cropped });
       setCrop(null);
-      setMessage(`${cropConfig[crop.target].label} ready. Save changes to update your profile.`);
+      setAlert({ type: "success", text: `${cropConfig[crop.target].label} ready. Save changes to update your profile.` });
     } catch {
-      setMessage("Could not crop image. Please try another file.");
+      setAlert({ type: "error", text: "Could not crop image. Please try another file." });
     }
   };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    if (form.bio.trim().length < 30) {
-      setMessage("Bio/About is required. Please write at least 30 characters.");
-      return;
-    }
-    if (!form.country.trim()) {
-      setMessage("Country is required. Choose your country from the list.");
-      return;
-    }
+    setAlert(null);
     try {
       setSaving(true);
       const [avatar, coverImage] = await Promise.all([
@@ -207,10 +200,10 @@ const ProfilePage = () => {
         role: user?.role === "admin" ? "admin" : form.sellerActive ? "seller" : "buyer",
       });
       setForm((current) => ({ ...current, avatar, coverImage }));
-      setMessage("Profile saved successfully.");
+      setAlert({ type: "success", text: "Profile saved successfully." });
       setEditing(false);
     } catch (err: unknown) {
-      setMessage(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not save profile. Please sign in again and check required details." : "Could not save profile. Check image size and required details.");
+      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not save profile. Please sign in again and check required details." : err instanceof Error ? err.message : "Could not save profile. Check image size and required details." });
     } finally {
       setSaving(false);
     }
@@ -220,25 +213,25 @@ const ProfilePage = () => {
     const next = !sellerActive;
     const nextForm = { ...form, sellerActive: next };
     setForm(nextForm);
-    setMessage("");
+    setAlert(null);
     try {
       await updateProfile({ ...nextForm, role: next ? "seller" : "buyer" });
-      setMessage(next ? "Seller tools activated." : "Seller tools deactivated.");
+      setAlert({ type: "success", text: next ? "Seller tools activated." : "Seller tools deactivated." });
     } catch (err: unknown) {
       setForm(form);
-      setMessage(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not update seller tools. Please sign in again." : "Could not update seller tools. Please try again.");
+      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not update seller tools. Please sign in again." : err instanceof Error ? err.message : "Could not update seller tools. Please try again." });
     }
   };
 
   const requestVerification = async () => {
-    setMessage("");
+    setAlert(null);
     setRequestingVerification(true);
     try {
       await axiosClient.post("/user/verification-request");
       setVerificationRequested(true);
-      setMessage("Trusted seller verification requested. Admin will review your account.");
+      setAlert({ type: "success", text: "Trusted seller verification requested. Admin will review your account." });
     } catch {
-      setMessage("Could not request trusted seller verification. Activate seller tools first.");
+      setAlert({ type: "error", text: "Could not request trusted seller verification. Activate seller tools first." });
     } finally {
       setRequestingVerification(false);
     }
@@ -279,7 +272,7 @@ const ProfilePage = () => {
         </div>
       </section>
 
-      {message ? <div className={`private-alert floating-alert ${message.includes("Could") || message.includes("required") || message.includes("sign in") ? "error" : "success"}`}>{message}</div> : null}
+      {alert ? <div className={`private-alert floating-alert ${alert.type}`}>{alert.text}</div> : null}
 
       {!editing ? (
         <>
@@ -331,7 +324,7 @@ const ProfilePage = () => {
             <h2>Personal Information</h2>
             <label>Display name<input required maxLength={80} value={form.displayName} onChange={(event) => setForm({ ...form, displayName: event.target.value })} /></label>
             <label>Pi username<input value={`@${username}`} disabled /><small>Pi username is managed by Pi authentication.</small></label>
-            <label>Bio / About<textarea required minLength={30} maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters. Minimum 30 required.</small></label>
+            <label>Bio / About<textarea maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters.</small></label>
             <div className="private-form-row">
               <label className="country-picker-label">Country
                 <button type="button" className="country-picker-trigger" onClick={() => setCountryOpen((open) => !open)}>
