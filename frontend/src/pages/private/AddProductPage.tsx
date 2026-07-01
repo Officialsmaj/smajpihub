@@ -131,7 +131,7 @@ const AddProductPage = () => {
       setSellerActivatedHere(true);
       setSuccess("Seller tools activated. You can now submit real products for review.");
     } catch (err: unknown) {
-      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not activate seller tools. Please sign in again and try again." : "Could not activate seller tools. Please complete your profile and try again.");
+      setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Seller tools could not be activated. Try again." : "Seller tools could not be activated. Try again.");
     } finally {
       setActivatingSeller(false);
     }

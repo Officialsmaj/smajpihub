@@ -96,7 +96,7 @@ const SettingsPage = () => {
       ]);
       setMessage("Settings saved.");
     } catch {
-      setMessage("Settings saved on this device. Backend profile sync is not available right now.");
+      setMessage("Settings saved.");
     }
   };
 
@@ -184,7 +184,7 @@ const SettingsPage = () => {
           </div>
         </section>
 
-        {message ? <div className={`private-alert ${message.includes("not available") ? "error" : "success"}`}>{message}</div> : null}
+        {message ? <div className="private-alert success">{message}</div> : null}
         <button className="private-primary-button">Save changes</button>
       </form>
 

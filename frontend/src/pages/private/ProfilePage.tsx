@@ -213,7 +213,7 @@ const ProfilePage = () => {
       setAlert({ type: "success", text: "Profile saved successfully." });
       setEditing(false);
     } catch (err: unknown) {
-      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not save profile. Please sign in again and check required details." : err instanceof Error ? err.message : "Could not save profile. Check image size and required details." });
+      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Profile was not saved. Try again." : err instanceof Error ? err.message : "Profile was not saved. Try again." });
     } finally {
       setSaving(false);
     }
@@ -229,7 +229,7 @@ const ProfilePage = () => {
       setAlert({ type: "success", text: next ? "Seller tools activated." : "Seller tools deactivated." });
     } catch (err: unknown) {
       setForm(form);
-      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not update seller tools. Please sign in again." : err instanceof Error ? err.message : "Could not update seller tools. Please try again." });
+      setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Seller tools were not updated. Try again." : err instanceof Error ? err.message : "Seller tools were not updated. Try again." });
     }
   };
 

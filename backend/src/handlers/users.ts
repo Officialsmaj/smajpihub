@@ -200,7 +200,7 @@ export default function mountUserEndpoints(router: Router) {
       return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     }
 
-    const displayName = String(req.body?.displayName || "").trim();
+    const displayName = String(req.body?.displayName || currentUser.displayName || currentUser.username || "Pi User").trim();
     const country = String(req.body?.country || "").trim();
     const contactPhone = String(req.body?.contactPhone || "").trim();
     const avatar = String(req.body?.avatar || currentUser.avatar || "");
@@ -211,8 +211,8 @@ export default function mountUserEndpoints(router: Router) {
     const requestedRole = req.body?.role;
     const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : requestedRole === "seller" ? "seller" : "buyer";
 
-    if (!displayName || displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 6_500_000 || coverImage.length > 6_500_000 || !isImageReference(avatar) || !isImageReference(coverImage) || !["buyer", "seller", "admin"].includes(role)) {
-      return res.status(400).json({ error: "bad_request", message: "Invalid profile details" });
+    if (displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 6_500_000 || coverImage.length > 6_500_000 || !isImageReference(avatar) || !isImageReference(coverImage) || !["buyer", "seller", "admin"].includes(role)) {
+      return res.status(400).json({ error: "bad_request", message: "Profile image or text is too large." });
     }
 
     const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : displayName && country && contactPhone ? "verified" : "basic";
