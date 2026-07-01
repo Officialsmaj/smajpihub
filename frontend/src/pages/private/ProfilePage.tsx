@@ -102,6 +102,15 @@ const cropImage = (source: string, target: CropTarget) => new Promise<string>((r
   image.src = source;
 });
 
+const uploadProfileImage = async (image: string, purpose: string) => {
+  if (!image) return "";
+  try {
+    return await uploadImage(image, purpose);
+  } catch {
+    return image;
+  }
+};
+
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthContext();
   const [editing, setEditing] = useState(false);
@@ -196,8 +205,8 @@ const ProfilePage = () => {
     try {
       setSaving(true);
       const [avatar, coverImage] = await Promise.all([
-        uploadImage(form.avatar, "profile-avatar"),
-        uploadImage(form.coverImage, "profile-banner"),
+        uploadProfileImage(form.avatar, "profile-avatar"),
+        uploadProfileImage(form.coverImage, "profile-banner"),
       ]);
       await updateProfile({
         ...form,
