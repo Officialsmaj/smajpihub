@@ -12,7 +12,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
-import { storeTopNav } from "../../content/storefront";
+import { heroSlides, promoStripItems, storeTopNav } from "../../content/storefront";
 import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
@@ -28,6 +28,7 @@ const StorePage = () => {
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const [category, setCategory] = useState(params.get("category") || "All");
+  const [heroIndex, setHeroIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "electronics">("categories");
 
@@ -47,6 +48,11 @@ const StorePage = () => {
       setSavedIds([]);
       setCatalogError("SMAJ Store cannot reach the live catalog. Check the backend, MongoDB, session, and CORS settings.");
     }).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setHeroIndex((value) => (value + 1) % heroSlides.length), 4800);
+    return () => window.clearInterval(timer);
   }, []);
 
   const visibleProducts = useMemo(() => {
@@ -193,6 +199,29 @@ const StorePage = () => {
             </div>
           ) : null}
         </header>
+
+        <section className="storefront-promo-strip" aria-label="Store benefits">
+          <div>{[...promoStripItems, ...promoStripItems, ...promoStripItems].map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}</div>
+        </section>
+
+        <section className="storefront-hero">
+          <button type="button" className="storefront-arrow left" onClick={() => setHeroIndex((value) => (value - 1 + heroSlides.length) % heroSlides.length)} aria-label="Previous banner"><ArrowBackIosNewOutlinedIcon /></button>
+          <div className="storefront-hero-track" style={{ transform: `translateX(-${heroIndex * 100}%)` }}>
+            {heroSlides.map((slide) => (
+              <article className="storefront-hero-slide" key={slide.title}>
+                <img src={slide.image} alt={slide.title} />
+                <div>
+                  <span>SMAJ Store</span>
+                  <h1>{slide.title}</h1>
+                  <p>{slide.subtitle}</p>
+                  <button type="button" onClick={() => setSearch(slide.search)}>Shop now</button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <button type="button" className="storefront-arrow right" onClick={() => setHeroIndex((value) => (value + 1) % heroSlides.length)} aria-label="Next banner"><ArrowForwardIosOutlinedIcon /></button>
+          <div className="storefront-hero-dots">{heroSlides.map((slide, index) => <button type="button" key={slide.title} className={heroIndex === index ? "active" : ""} onClick={() => setHeroIndex(index)} aria-label={`Go to ${slide.title}`} />)}</div>
+        </section>
 
         {catalogError ? <div className="private-alert error">{catalogError}</div> : null}
         {loading ? <div className="private-state">Loading SMAJ Store...</div> : null}
