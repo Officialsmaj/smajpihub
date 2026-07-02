@@ -11975,13 +11975,11 @@ select,
   min-height: clamp(170px, 25vw, 280px);
   position: relative;
   display: block;
-  background:
-    radial-gradient(circle at 78% 18%, rgba(245, 166, 35, .42), transparent 26%),
-    radial-gradient(circle at 18% 20%, rgba(139, 92, 246, .42), transparent 30%),
-    linear-gradient(135deg, var(--smaj-primary), #07111f);
+  background: #f8fafc;
   background-position: center;
   background-size: cover;
   border: 0;
+  border-bottom: 1px solid var(--smaj-border);
   cursor: pointer;
   z-index: 1;
 }
@@ -11996,8 +11994,8 @@ select,
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--smaj-text);
-  background: var(--smaj-card);
+  color: #111827;
+  background: #ffffff;
   border: 1px solid var(--smaj-border);
   border-radius: 12px;
   font-weight: 850;
@@ -12022,9 +12020,9 @@ select,
   display: grid;
   place-items: center;
   overflow: hidden;
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--smaj-primary), var(--smaj-accent));
-  border: 0;
+  color: #111827;
+  background: #ffffff;
+  border: 6px solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 18px 44px rgba(15, 23, 42, .22);
   font-size: 42px;
@@ -12057,14 +12055,15 @@ select,
   position: absolute;
   right: 10px;
   bottom: 10px;
-  width: auto;
-  height: auto;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  color: #fff;
-  background: transparent;
-  border: 0;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid var(--smaj-border);
   border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .18);
 }
 
 .real-profile-avatar > span svg {

@@ -122,6 +122,7 @@ const ProfilePage = () => {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sellerSaving, setSellerSaving] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
   const [verificationRequested, setVerificationRequested] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -216,7 +217,7 @@ const ProfilePage = () => {
         role: user?.role === "admin" ? "admin" : form.sellerActive ? "seller" : "buyer",
       });
       setForm((current) => ({ ...current, avatar, coverImage }));
-      setAlert({ type: "success", text: "Profile saved successfully." });
+      setAlert({ type: "success", text: "Saved. Your profile changes are live." });
       setEditing(false);
     } catch (err: unknown) {
       setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Profile was not saved. Try again." : err instanceof Error ? err.message : "Profile was not saved. Try again." });
@@ -230,13 +231,17 @@ const ProfilePage = () => {
     const nextForm = { ...form, sellerActive: next };
     setForm(nextForm);
     setAlert(null);
+    setSellerSaving(true);
     try {
       const updatedUser = await updateProfile({ ...nextForm, role: user?.role === "admin" ? "admin" : next ? "seller" : "buyer" });
-      setForm((current) => ({ ...current, sellerActive: updatedUser ? Boolean(updatedUser.sellerActive || updatedUser.role === "seller") : next }));
-      setAlert({ type: "success", text: next ? "Seller tools activated." : "Seller tools deactivated." });
+      const active = updatedUser ? Boolean(updatedUser.sellerActive || updatedUser.role === "seller") : next;
+      setForm((current) => ({ ...current, sellerActive: active }));
+      setAlert({ type: "success", text: active ? "Seller tools activated. You can list products now." : "Seller tools deactivated." });
     } catch (err: unknown) {
       setForm(form);
       setAlert({ type: "error", text: isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Seller tools were not updated. Try again." : err instanceof Error ? err.message : "Seller tools were not updated. Try again." });
+    } finally {
+      setSellerSaving(false);
     }
   };
 
@@ -319,7 +324,7 @@ const ProfilePage = () => {
               <div className="real-profile-card-head"><StorefrontOutlinedIcon /><h2>Seller Profile</h2></div>
               <p>{sellerActive ? "Seller tools are active. Your listings can be reviewed and approved for SMAJ Store." : "Use one verified Pi identity to activate seller tools when you are ready to list products."}</p>
               <div className="form-actions">
-                <button className="private-secondary-button" type="button" onClick={() => void toggleSeller()}>{sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
+                <button className="private-secondary-button" type="button" disabled={sellerSaving} onClick={() => void toggleSeller()}>{sellerSaving ? "Saving..." : sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
                 {sellerActive && user?.verificationLevel !== "trusted_seller" ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
               </div>
