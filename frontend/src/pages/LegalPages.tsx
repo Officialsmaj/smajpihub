@@ -73,7 +73,7 @@ const LegalTextDocument = ({
     <div className="legal-text-intro">
       <span className="home-kicker">TEXT DOCUMENT</span>
       <h2>{title}</h2>
-      <p>Read the policy directly on this page. This text is written for clear user understanding across mobile and desktop.</p>
+      <p>Effective Date: July 1, 2026. Read the policy directly on this page for clear user understanding across mobile and desktop.</p>
     </div>
     {sections.map((section, index) => (
       <article className="legal-text-section" key={section.heading}>
@@ -93,7 +93,7 @@ export const PrivacyPage = () => (
   <LegalShell
     kicker="PRIVACY POLICY"
     title="How SMAJ PI HUB handles user and marketplace data."
-    description="This page explains the public privacy position for account access, Pi Browser login flows, marketplace activity, and support."
+    description="This page explains how SMAJ PI HUB collects, uses, processes, and protects information across account access, Pi wallet flows, marketplace activity, and support."
   >
     <section className="home-section legal-company-section">
       <LegalPanel
@@ -119,40 +119,52 @@ export const PrivacyPage = () => (
       title="SMAJ PI HUB Privacy Policy"
       sections={[
         {
-          heading: "Purpose",
+          heading: "Introduction",
           paragraphs: [
-            "SMAJ PI HUB respects user privacy and handles personal data only to operate the platform, protect users, improve services, and support verified marketplace activity.",
-            "The platform is designed around Pi identity, Pi wallet access, marketplace participation, service discovery, communication, support, and future real-world utility services.",
+            "SMAJ PI HUB is a comprehensive digital super platform powered by the Pi Network, offering integrated services including marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and utility-token features.",
+            "We respect user privacy and handle personal data to operate the platform, protect users, improve services, support verified marketplace activity, and comply with applicable data protection obligations.",
           ],
         },
         {
           heading: "Information We Collect",
           items: [
-            "Account details such as Pi username, display name, profile photo, country, language, contact details, and seller status.",
-            "Marketplace details such as product listings, images, prices, orders, reviews, saved products, seller profiles, and buyer/seller communication.",
-            "Support and safety details such as reports, feedback, dispute records, abuse reports, and communication with the SMAJ PI HUB team.",
-            "Technical details such as device/browser data, session information, login state, app performance, security events, and user preferences.",
+            "Personal information such as name, email address, phone number, location, profile details, seller status, and identity-verification information when required.",
+            "Pi wallet data such as wallet address, Pi Network authentication data, transaction details, payment confirmations, escrow context, and dispute-resolution records.",
+            "Marketplace and service activity such as listings, images, prices, orders, reviews, saved products, seller profiles, buyer/seller communication, and support records.",
+            "Usage and technical details such as device/browser data, session information, login state, app performance, security events, location data where needed, preferences, and AI assistant interactions.",
           ],
         },
         {
           heading: "How We Use Information",
           items: [
-            "To create and secure user accounts.",
-            "To support product listing, seller review, order handling, marketplace trust, and customer support.",
-            "To detect abuse, scams, fake sellers, unsafe listings, spam, and policy violations.",
-            "To improve navigation, loading, theme preference, language preference, and platform reliability.",
+            "To create, authenticate, maintain, and secure user accounts through supported Pi wallet and platform flows.",
+            "To provide services, process transactions, support listings, manage orders, assist sellers/providers, and handle customer support.",
+            "To personalize service discovery, send service-related notices, improve navigation, analyze platform performance, and develop new features.",
+            "To detect fraud, scams, fake sellers, unsafe listings, spam, unauthorized access, policy violations, and other abuse.",
+            "To support escrow, dispute resolution, legal compliance, security review, and AI assistant improvement.",
           ],
         },
         {
-          heading: "Sharing and Disclosure",
+          heading: "Sharing, Pi Integration, and Transfers",
           paragraphs: [
-            "SMAJ PI HUB does not sell personal data as a business model. Information may be shared only when needed to operate services, comply with law, prevent harm, investigate abuse, support transactions, or protect the platform.",
+            "SMAJ PI HUB does not sell personal data as a business model. Information may be shared only when needed to operate services, work with service providers, support Pi Network authentication and transaction interoperability, comply with law, prevent harm, investigate abuse, support transactions, protect the platform, complete a business transfer, or act with user consent.",
+            "As a global platform, information may be stored or processed in countries outside a user's place of residence. We use reasonable safeguards intended to comply with applicable data protection laws.",
           ],
         },
         {
-          heading: "User Rights and Contact",
+          heading: "User Rights, Security, and Retention",
+          items: [
+            "Depending on location, users may request access, correction, deletion, restriction, objection, portability, or applicable sale/sharing opt-out support.",
+            "We use technical and organizational measures such as encryption, access controls, security review, staff training, and Pi Network security features where applicable.",
+            "SMAJ PI HUB is not intended for individuals under 16 and does not knowingly collect personal data from children under 16.",
+            "We retain personal data only as long as necessary for platform operations, legal requirements, safety, accounting, dispute handling, and legitimate business purposes.",
+          ],
+        },
+        {
+          heading: "Changes and Contact Information",
           paragraphs: [
-            `Users may request privacy support, correction, or account-related assistance by contacting ${legalEmail}.`,
+            "We may update this Privacy Policy from time to time by posting the updated version and changing the effective date.",
+            `For privacy questions, user-rights requests, or account-related assistance, contact SMAJ PI HUB at ${legalEmail}.`,
           ],
         },
       ]}
@@ -192,20 +204,31 @@ export const TermsPage = () => (
         {
           heading: "Acceptance of Terms",
           paragraphs: [
-            "By accessing SMAJ PI HUB, users agree to use the platform honestly, lawfully, and responsibly. These terms apply to visitors, buyers, sellers, service providers, partners, and account holders.",
+            "By accessing, browsing, creating an account, authenticating with a Pi wallet, or using any part of SMAJ PI HUB, users agree to these Terms, the Privacy Policy, Cookie Policy, and Report Abuse Policy.",
+            "These Terms apply to visitors, buyers, sellers, service providers, partners, and account holders.",
           ],
         },
         {
-          heading: "Account Responsibility",
+          heading: "Eligibility, Account Registration, and Pi Wallet Authentication",
           items: [
-            "Users must provide accurate information and keep account details secure.",
+            "Users must be at least 18 years old and legally able to enter into a binding agreement.",
+            "Users must provide accurate, current, and complete account information and keep it updated.",
             "Users must not impersonate another person, company, seller, buyer, Pi Network representative, or SMAJ PI HUB representative.",
             "Users are responsible for actions taken through their account.",
+            "Pi wallet authentication may be used as the primary login credential and verified identity across supported SMAJ PI HUB services.",
+            "Users are responsible for the security of their Pi wallet and for reviewing wallet actions before confirmation.",
           ],
         },
         {
-          heading: "Marketplace Rules",
+          heading: "Platform Services",
+          paragraphs: [
+            "SMAJ PI HUB integrates services including marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and SMAJ Token utility features. Specific services may have additional guidelines or supplementary terms.",
+          ],
+        },
+        {
+          heading: "User Responsibilities and Marketplace Rules",
           items: [
+            "Users must comply with applicable laws, use the platform only for lawful purposes, provide truthful information, respect intellectual property rights, communicate respectfully, and report suspicious activity or abuse.",
             "Listings must be real, accurate, lawful, and supported by clear product or service information.",
             "Sellers must honor delivery, pickup, refund, communication, and customer support responsibilities.",
             "Buyers must review listing details carefully before placing orders or confirming transactions.",
@@ -213,15 +236,31 @@ export const TermsPage = () => (
           ],
         },
         {
-          heading: "Payments and Pi Utility",
+          heading: "Payments, Escrow, and Disputes",
           paragraphs: [
-            "SMAJ PI HUB is a marketplace and service platform. It is not a bank, investment adviser, wallet custodian, or financial institution. Users are responsible for reviewing wallet actions, payment confirmations, and local legal requirements.",
+            "Payments within SMAJ PI HUB are primarily conducted using Pi cryptocurrency where supported. SMAJ PI HUB facilitates platform flows but is not a bank, investment adviser, wallet custodian, financial institution, or guarantor of cryptocurrency value.",
+            "Escrow protection and dispute-resolution mechanisms may be provided for eligible transactions. Users agree to participate in dispute processes in good faith.",
           ],
         },
         {
-          heading: "Limitation and Changes",
+          heading: "Prohibited Activities",
+          items: [
+            "Violating laws, infringing rights, posting harmful or unlawful content, engaging in scams or misrepresentation, creating fake accounts, impersonating others, spreading malware, interfering with the platform, harvesting personal data without consent, or bypassing security measures.",
+          ],
+        },
+        {
+          heading: "AI Assistant, Token Terms, and Intellectual Property",
           paragraphs: [
-            "Service availability, roadmap timing, supported features, payment flow, pricing display, seller tools, and service categories may change as the platform develops.",
+            "The SMAJ PI HUB AI assistant provides platform-related assistance for informational purposes and should not be treated as medical, legal, financial, or other professional advice.",
+            "SMAJ Token features, if and when launched or integrated, may be governed by separate terms. Platform content, trademarks, logos, and intellectual property belong to SMAJ PI HUB or its licensors, while users grant SMAJ PI HUB the rights needed to operate and promote uploaded content.",
+          ],
+        },
+        {
+          heading: "Limitation, Termination, Changes, and Contact",
+          paragraphs: [
+            "To the maximum extent permitted by law, SMAJ PI HUB is not liable for indirect, incidental, special, consequential, punitive, profit, revenue, data, goodwill, or similar losses related to platform access, third-party conduct, content, or unauthorized use.",
+            "SMAJ PI HUB may suspend or terminate accounts or access for violations of these Terms or platform policies. Service availability, roadmap timing, supported features, payment flow, pricing display, seller tools, and service categories may change as the platform develops.",
+            `Questions about these Terms can be sent to ${legalEmail}.`,
           ],
         },
       ]}
@@ -258,30 +297,39 @@ export const CookiesPage = () => (
       title="SMAJ PI HUB Cookie Policy"
       sections={[
         {
-          heading: "Purpose of Cookies and Storage",
+          heading: "What Cookies Are",
           paragraphs: [
+            "Cookies are small data files placed on a computer or mobile device when visiting a website. They help websites function, remember actions and preferences, support reporting, and improve browsing experience.",
             "SMAJ PI HUB may use cookies, local storage, and similar browser storage to keep the website functional, remember preferences, support account sessions, and improve user experience.",
           ],
         },
         {
-          heading: "Storage We Use",
+          heading: "Types of Cookies and Storage We Use",
           items: [
-            "Theme preference such as light or dark mode.",
-            "Session state needed for account access and protected pages.",
-            "Language, country, search, navigation, or interface preferences.",
+            "Essential cookies and storage required for secure areas, login, account sessions, shopping carts, billing flows, and protected pages.",
+            "Analytics and customization cookies used in aggregate to understand site usage, improve performance, and refine user experience.",
+            "Functional cookies used to remember choices such as login details, language, theme, country, search, navigation, or interface preferences.",
+            "Marketing cookies may be used where applicable to make messages more relevant and manage advertising display.",
             "Performance, security, and reliability signals used to improve the platform.",
           ],
         },
         {
-          heading: "User Control",
+          heading: "Third-Party Cookies and Pi Browser Compatibility",
           paragraphs: [
-            "Users can clear or block browser storage from browser settings. Some features may not work correctly if required session or preference storage is disabled.",
+            "Third-party services may set cookies for analytics, reporting, advertising, social media plugins, or other supported functionality. SMAJ PI HUB is designed for Pi Browser compatibility so authentication and transaction experiences remain consistent and secure where supported.",
           ],
         },
         {
-          heading: "No Investment Tracking",
+          heading: "Managing Cookies and Consent",
           paragraphs: [
-            "SMAJ PI HUB does not use cookies to promise investment returns, guarantee token value, or provide financial advice.",
+            "Users can accept, reject, clear, or block cookies through browser settings and, where available, the cookie consent banner or consent tool. Some platform features may not work correctly if required cookies or storage are disabled.",
+          ],
+        },
+        {
+          heading: "Changes and Contact",
+          paragraphs: [
+            "We may update this Cookie Policy from time to time to reflect changes to the cookies or storage we use.",
+            `Questions about cookies or similar technologies can be sent to ${legalEmail}.`,
           ],
         },
       ]}
@@ -320,39 +368,169 @@ export const SellerAgreementPage = () => (
       title="SMAJ PI HUB Seller Agreement"
       sections={[
         {
+          heading: "Introduction",
+          paragraphs: [
+            "This Agreement sets forth the rights and obligations of Sellers utilizing the SMAJ PI HUB platform. It is a legally binding document that Sellers must read, understand, and accept prior to engaging in any selling activities on the Platform.",
+            "The purpose of this Agreement is to ensure a consistent and high-quality experience for both Sellers and Buyers within the SMAJ PI HUB ecosystem.",
+          ],
+        },
+        {
           heading: "Seller Eligibility",
           paragraphs: [
-            "Seller tools are connected to a user account and verified platform identity. Sellers must keep profile details, contact information, and location details accurate before listing products.",
-          ],
-        },
-        {
-          heading: "Listing Requirements",
-          items: [
-            "The product or service must be real and available.",
-            "Photos must represent the actual item or service clearly.",
-            "Title, description, price, quantity, condition, delivery option, location, and seller contact must be accurate.",
-            "Listings must not include fake products, scams, prohibited items, misleading claims, spam, or unsafe content.",
-          ],
-        },
-        {
-          heading: "Review and Approval",
-          paragraphs: [
-            "SMAJ PI HUB may review seller listings before they appear publicly in SMAJ Store. The platform may approve, reject, hide, remove, or request changes to listings when needed for trust and safety.",
+            "To be eligible to sell on SMAJ PI HUB, prospective Sellers must meet specific criteria as determined by the Platform. This includes, but is not limited to, compliance with all applicable laws and regulations, and adherence to the Platform's community guidelines and standards.",
+            "SMAJ PI HUB reserves the right to approve or reject any Seller application at its sole discretion.",
           ],
         },
         {
           heading: "Seller Responsibilities",
           items: [
-            "Respond to buyers respectfully and within a reasonable time.",
-            "Deliver products or services as described.",
-            "Handle refunds, disputes, and customer issues honestly.",
-            "Do not ask users to bypass SMAJ PI HUB safety, order, payment, or dispute flows.",
+            "Listing Authenticity: Sellers must list only genuine products or services. Sellers are responsible for the authenticity of their listings.",
+            "Accurate Descriptions: Sellers must provide accurate descriptions and images that truthfully represent the products or services offered.",
+            "Compliance: Sellers must adhere to all Platform policies, guidelines, and applicable laws.",
+            "Customer Service: Sellers must provide timely and professional customer support to Buyers.",
+            "Order Fulfillment: Sellers must ensure efficient and accurate processing, shipping, and delivery of orders.",
           ],
         },
         {
-          heading: "Enforcement",
+          heading: "Product and Service Listing Rules",
+          items: [
+            "Listings must be for genuine products or services.",
+            "Descriptions and images must be accurate, clear, and not misleading.",
+            "All necessary information, including specifications, condition, and availability, must be provided.",
+            "Fraudulent, misleading, counterfeit, or illegal listings are strictly prohibited.",
+          ],
+        },
+        {
+          heading: "Pricing Policy",
           paragraphs: [
-            "SMAJ PI HUB may restrict seller tools, remove listings, suspend marketplace access, or take other safety action when a seller violates this agreement or creates user risk.",
+            "Sellers are required to use honest market pricing for all products and services listed on SMAJ PI HUB. The Platform aims to promote fair competition and value for Buyers.",
+            "Price manipulation or deceptive pricing practices are strictly forbidden.",
+          ],
+        },
+        {
+          heading: "Pi Utility and Price Conversion Policy",
+          items: [
+            "SMAJ PI HUB uses an internal marketplace reference value of 1 Pi = 3,141.59 USDT for platform price calculations.",
+            "Sellers voluntarily agree to this pricing model when publishing listings.",
+            "Buyers voluntarily choose whether to purchase under this pricing model.",
+            "SMAJ PI HUB does not guarantee external exchange values for Pi.",
+          ],
+        },
+        {
+          heading: "Prohibited Products and Services",
+          items: [
+            "Illegal items or services.",
+            "Counterfeit goods or unauthorized replicas.",
+            "Items that promote hate, violence, discrimination, or illegal activities.",
+            "Adult content or sexually explicit materials.",
+            "Hazardous materials or dangerous goods.",
+            "Any other items deemed inappropriate or harmful by SMAJ PI HUB.",
+          ],
+          paragraphs: [
+            "Violations may result in listing removal, account suspension, or permanent account termination.",
+          ],
+        },
+        {
+          heading: "Intellectual Property",
+          paragraphs: [
+            "Sellers must respect intellectual property rights. Listing products or services that infringe upon copyrights, trademarks, patents, or other proprietary rights of third parties is strictly prohibited.",
+            "Sellers are solely responsible for ensuring that their listings do not violate any intellectual property laws.",
+          ],
+        },
+        {
+          heading: "Orders, Shipping, and Delivery",
+          items: [
+            "Processing orders promptly.",
+            "Packaging items securely.",
+            "Arranging for shipping and delivery to the Buyer.",
+            "Providing accurate tracking information where applicable.",
+            "Adhering to stated shipping times.",
+          ],
+        },
+        {
+          heading: "Returns, Refunds, and Disputes",
+          paragraphs: [
+            "Sellers must establish clear and fair return and refund policies that comply with Platform guidelines and applicable consumer protection laws.",
+            "In the event of a dispute between a Seller and a Buyer, SMAJ PI HUB may mediate to facilitate a resolution, but the ultimate responsibility for resolving disputes lies with the Seller.",
+          ],
+        },
+        {
+          heading: "Buyer Protection",
+          paragraphs: [
+            "SMAJ PI HUB is committed to providing a safe and secure environment for Buyers. The Platform implements various measures to protect Buyers, including dispute resolution mechanisms and policies against fraudulent activities.",
+            "Buyers are encouraged to report any issues or concerns to SMAJ PI HUB.",
+          ],
+        },
+        {
+          heading: "Marketplace Trust and Safety",
+          items: [
+            "Operating with honesty and integrity.",
+            "Communicating respectfully with Buyers and the Platform.",
+            "Reporting any suspicious activities or violations of this Agreement.",
+          ],
+        },
+        {
+          heading: "Fraud, Abuse, and Misconduct",
+          paragraphs: [
+            "Any form of fraudulent activity, abuse, or misconduct on the Platform is strictly prohibited. This includes, but is not limited to, misrepresentation, phishing, spamming, or any actions intended to harm other users or the Platform.",
+            "Violations may result in listing removal, account suspension, or permanent account termination.",
+          ],
+        },
+        {
+          heading: "Account Suspension and Termination",
+          paragraphs: [
+            "SMAJ PI HUB reserves the right to suspend or terminate a Seller's account, or remove listings, at its sole discretion, for violations of this Agreement, Platform policies, or any applicable laws.",
+            "Reasons for suspension or termination may include, but are not limited to, fraudulent activities, repeated policy violations, or engaging in prohibited conduct.",
+          ],
+        },
+        {
+          heading: "Privacy and Data Protection",
+          paragraphs: [
+            "Sellers must comply with all applicable privacy and data protection laws regarding the collection, use, storage, and processing of Buyer information.",
+            "Sellers are prohibited from using Buyer data for any purpose other than fulfilling orders and providing customer service, unless explicit consent is obtained from the Buyer.",
+          ],
+        },
+        {
+          heading: "Limitation of Liability",
+          paragraphs: [
+            "SMAJ PI HUB shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses.",
+            "This limitation applies to losses resulting from access to or use of, or inability to access or use, the Platform; any conduct or content of any third party on the Platform; or unauthorized access, use, or alteration of transmissions or content.",
+          ],
+        },
+        {
+          heading: "Changes to this Agreement",
+          paragraphs: [
+            "SMAJ PI HUB reserves the right to modify or update this Agreement at any time. Sellers will be notified of any significant changes, and continued use of the Platform after such modifications constitutes acceptance of the revised Agreement.",
+            "It is the Seller's responsibility to regularly review this Agreement for updates.",
+          ],
+        },
+        {
+          heading: "Governing Law",
+          paragraphs: [
+            "This Agreement shall be governed by and construed in accordance with the laws of the jurisdiction to be specified by SMAJ PI HUB.",
+            "Any disputes arising under or in connection with this Agreement shall be subject to the exclusive jurisdiction of the courts located in the jurisdiction to be specified by SMAJ PI HUB.",
+          ],
+        },
+        {
+          heading: "Contact Information",
+          paragraphs: [
+            `For any questions or concerns regarding this Agreement, Sellers may contact SMAJ PI HUB at ${legalEmail}.`,
+          ],
+        },
+        {
+          heading: "Seller Declaration",
+          paragraphs: [
+            "I confirm that I have carefully read, understood, and agree to comply with the SMAJ PI HUB Seller Agreement. I understand that my seller account and listings are subject to these rules and that failure to comply may result in suspension or permanent removal from the SMAJ PI HUB marketplace.",
+          ],
+        },
+        {
+          heading: "Acceptance",
+          paragraphs: [
+            "Seller Name:",
+            "Seller ID:",
+            "Date:",
+            "Signature:",
+            "I have read and agree to the SMAJ PI HUB Seller Agreement.",
           ],
         },
       ]}
@@ -435,32 +613,46 @@ export const ReportAbusePage = () => {
         title="SMAJ PI HUB Report Abuse Policy"
         sections={[
           {
-            heading: "What Users Can Report",
+            heading: "How to Report Abuse",
             items: [
-              "Fake sellers, fake buyers, suspicious accounts, scams, or impersonation.",
-              "Unsafe listings, prohibited content, misleading product information, or harmful behavior.",
-              "Payment pressure, off-platform payment requests, spam, harassment, or abuse.",
-              "Any activity that may harm users, sellers, providers, partners, or the SMAJ PI HUB community.",
+              "Use a report button or link within the user interface when it appears on profiles, listings, messages, or content.",
+              `Send a detailed report by email to ${legalEmail}.`,
+              "Use the dedicated report-abuse page form to provide guided report details.",
             ],
           },
           {
             heading: "Information to Include",
             items: [
-              "Username, seller name, listing title, order reference, or page link.",
-              "Screenshots description, messages, payment context, timeline, and what happened.",
-              "Your contact email so the team can follow up when needed.",
+              "Your username and the username, seller name, listing title, order reference, or page link for the reported party or content.",
+              "The specific service where the abuse occurred, such as Marketplace, Food Delivery, Chat, or another SMAJ PI HUB service.",
+              "Date and time of the incident.",
+              "Screenshots, links, messages, payment context, or other evidence supporting the report.",
+              "A clear, accurate, and factual description of the abusive behavior or content.",
             ],
           },
           {
-            heading: "Review Process",
+            heading: "What Happens After Submission",
             paragraphs: [
-              "SMAJ PI HUB may review reports, contact involved users, hide listings, restrict accounts, preserve evidence, or take safety action where needed.",
+              "After a report is submitted, users may receive an automated confirmation of receipt. The moderation team reviews submitted reports, and while individual updates may not always be available, reports are taken seriously.",
+              "Please provide accurate and factual information. Intentionally false or malicious reports can result in platform consequences.",
             ],
           },
           {
-            heading: "Urgent Contact",
+            heading: "Investigation Process",
+            items: [
+              "Review the submitted report and evidence.",
+              "Gather additional relevant platform information such as activity logs, transaction records, and communications when appropriate.",
+              "Assess the reported content or behavior against the Terms & Conditions, Privacy Policy, and platform guidelines.",
+              "Contact the reporting party or reported party when more information is needed.",
+              "Make a decision based on evidence and policy review.",
+            ],
+          },
+          {
+            heading: "Actions, Appeals, and False Reporting",
             paragraphs: [
-              `For urgent safety or company contact, email ${legalEmail}.`,
+              "Depending on severity, SMAJ PI HUB may issue a warning, remove content, temporarily suspend an account, permanently ban an account, or escalate illegal activity to relevant law enforcement authorities.",
+              "Users may be able to appeal enforcement actions believed to be made in error. Details will be provided in the enforcement notice where applicable.",
+              `For general inquiries or to report abuse, contact SMAJ PI HUB at ${legalEmail}.`,
             ],
           },
         ]}

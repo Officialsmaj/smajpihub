@@ -13,6 +13,8 @@ import { axiosClient } from "../../lib/axiosClient";
 import { setBuyNowItem } from "../../lib/storeCart";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
+const supportEmail = "info@smajpihub.com";
+
 const ProductDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuthContext();
@@ -197,6 +199,9 @@ const ProductDetailPage = () => {
               Reason
               <textarea rows={5} maxLength={300} value={reportReason} onChange={(event) => setReportReason(event.target.value)} required />
             </label>
+            <p>
+              You can also email a detailed report to <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
+            </p>
             <div className="confirm-modal-actions">
               <button type="button" className="modal-cancel-button" onClick={() => setReportOpen(false)}>Cancel</button>
               <button type="submit" className="modal-signout-button" disabled={submitting}>{submitting ? "Submitting..." : "Submit Report"}</button>

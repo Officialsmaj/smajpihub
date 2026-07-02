@@ -171,4 +171,4 @@ SMAJ PI HUB operates as a digital marketplace and service platform, not as a ban
 
 All users are responsible for complying with the laws, rules, and regulations applicable in their own jurisdictions. SMAJ PI HUB may update its policies, verification requirements, service access, and supported features to align with applicable legal, technical, and ecosystem requirements.
 
-For inquiries, contact the SMAJ team directly at contact@smaj.org.
+For inquiries, contact the SMAJ team directly at info@smajpihub.com.
