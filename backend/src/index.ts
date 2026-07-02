@@ -45,6 +45,12 @@ const mongoClientOptions =
 
 const app: express.Application = express();
 const serviceStartedAt = new Date();
+const isProduction = env.node_env === "production";
+const crossSiteSession = isProduction;
+
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 
 // Log requests to the console in a compact format:
 app.use(logger("dev"));
@@ -83,7 +89,7 @@ app.use(
       }
 
       // Allow Codespaces preview hosts and Pi Sandbox host for testnet app wrapper.
-      if (origin.endsWith(".app.github.dev") || origin === "https://sandbox.minepi.com") {
+      if (origin.endsWith(".app.github.dev") || origin === "https://sandbox.minepi.com" || origin === "https://smajpihub.com" || origin === "https://www.smajpihub.com") {
         callback(null, true);
         return;
       }
@@ -103,6 +109,10 @@ app.use(
     secret: env.session_secret,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      sameSite: crossSiteSession ? "none" : "lax",
+      secure: crossSiteSession,
+    },
     ...(env.use_memory_db
       ? {}
       : {

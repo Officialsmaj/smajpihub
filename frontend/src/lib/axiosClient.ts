@@ -16,6 +16,10 @@ export const getBaseURL = () => {
     return "http://127.0.0.1:8000";
   }
 
+  if (typeof window !== "undefined" && ["smajpihub.com", "www.smajpihub.com", "sandbox.minepi.com"].includes(window.location.hostname)) {
+    return "https://backend.smajpihub.com";
+  }
+
   return undefined;
 };
 
