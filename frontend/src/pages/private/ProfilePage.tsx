@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
@@ -52,7 +52,9 @@ const cleanLanguages = [
 const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
-type CropState = { target: CropTarget; source: string };
+type CropFrame = { x: number; y: number; w: number; h: number };
+type CropHandle = "move" | "nw" | "ne" | "se" | "sw";
+type CropState = { target: CropTarget; source: string; frame: CropFrame };
 type AlertState = { type: "success" | "error"; text: string };
 
 const formatJoinDate = (value?: string) => {
@@ -66,6 +68,12 @@ const cropConfig = {
   avatar: { width: 512, height: 512, label: "Profile picture" },
   cover: { width: 1640, height: 624, label: "Profile banner" },
 } as const;
+
+const initialCropFrame = (target: CropTarget): CropFrame => target === "cover"
+  ? { x: 8, y: 8, w: 84, h: 84 }
+  : { x: 12, y: 12, w: 76, h: 76 };
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const readImageFile = (file: File, onLoad: (value: string) => void, onError: (message: string) => void) => {
   if (!file.type.startsWith("image/") || file.size > 4 * 1024 * 1024) {
@@ -81,7 +89,7 @@ const readImageFile = (file: File, onLoad: (value: string) => void, onError: (me
 const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => {
   const image = new Image();
   image.onload = () => {
-    const { target } = crop;
+    const { target, frame } = crop;
     const { width, height } = cropConfig[target];
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -95,7 +103,11 @@ const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => 
     const renderedHeight = image.naturalHeight * scale;
     const dx = (width - renderedWidth) / 2;
     const dy = (height - renderedHeight) / 2;
-    ctx.drawImage(image, dx, dy, renderedWidth, renderedHeight);
+    const sx = clamp(((frame.x / 100) * width - dx) / scale, 0, image.naturalWidth);
+    const sy = clamp(((frame.y / 100) * height - dy) / scale, 0, image.naturalHeight);
+    const sw = clamp(((frame.w / 100) * width) / scale, 1, image.naturalWidth - sx);
+    const sh = clamp(((frame.h / 100) * height) / scale, 1, image.naturalHeight - sy);
+    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
     resolve(canvas.toDataURL("image/jpeg", 0.9));
   };
   image.onerror = reject;
@@ -121,6 +133,8 @@ const ProfilePage = () => {
   const [languageSearch, setLanguageSearch] = useState("");
   const [languageOpen, setLanguageOpen] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
+  const cropPreviewRef = useRef<HTMLDivElement | null>(null);
+  const cropDragRef = useRef<{ handle: CropHandle; startX: number; startY: number; startFrame: CropFrame } | null>(null);
   const [saving, setSaving] = useState(false);
   const [sellerSaving, setSellerSaving] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
@@ -184,8 +198,66 @@ const ProfilePage = () => {
     if (!file) return;
     readImageFile(file, (source) => {
       setEditing(true);
-      setCrop({ target, source });
+      setCrop({ target, source, frame: initialCropFrame(target) });
     }, (text) => setAlert({ type: "error", text }));
+  };
+
+  const updateCropFrame = (handle: CropHandle, event: PointerEvent<HTMLElement>) => {
+    const drag = cropDragRef.current;
+    const preview = cropPreviewRef.current;
+    if (!drag || !preview) return;
+    const rect = preview.getBoundingClientRect();
+    const dx = ((event.clientX - drag.startX) / rect.width) * 100;
+    const dy = ((event.clientY - drag.startY) / rect.height) * 100;
+    const minSize = crop?.target === "cover" ? 28 : 34;
+    const start = drag.startFrame;
+
+    setCrop((current) => {
+      if (!current) return current;
+      if (handle === "move") {
+        return {
+          ...current,
+          frame: {
+            ...start,
+            x: clamp(start.x + dx, 0, 100 - start.w),
+            y: clamp(start.y + dy, 0, 100 - start.h),
+          },
+        };
+      }
+
+      let size = start.w;
+      let x = start.x;
+      let y = start.y;
+      const change = handle === "nw" ? Math.max(-dx, -dy)
+        : handle === "ne" ? Math.max(dx, -dy)
+          : handle === "sw" ? Math.max(-dx, dy)
+            : Math.max(dx, dy);
+      size = clamp(start.w + change, minSize, 96);
+      if (handle === "nw" || handle === "sw") x = start.x + start.w - size;
+      if (handle === "nw" || handle === "ne") y = start.y + start.h - size;
+      x = clamp(x, 0, 100 - size);
+      y = clamp(y, 0, 100 - size);
+      return { ...current, frame: { x, y, w: size, h: size } };
+    });
+  };
+
+  const startCropDrag = (handle: CropHandle, event: PointerEvent<HTMLElement>) => {
+    if (!crop) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    cropDragRef.current = { handle, startX: event.clientX, startY: event.clientY, startFrame: crop.frame };
+  };
+
+  const dragCropFrame = (event: PointerEvent<HTMLElement>) => {
+    const handle = cropDragRef.current?.handle;
+    if (!handle) return;
+    updateCropFrame(handle, event);
+  };
+
+  const stopCropDrag = (event: PointerEvent<HTMLElement>) => {
+    cropDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
   const applyCrop = async () => {
@@ -262,8 +334,8 @@ const ProfilePage = () => {
 
   return (
     <main className="private-page real-profile-page">
-      <input id="profileAvatarUpload" ref={avatarInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
-      <input id="profileCoverUpload" ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
+      <input id="profileAvatarUpload" className="profile-file-input" ref={avatarInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
+      <input id="profileCoverUpload" className="profile-file-input" ref={coverInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
         <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Profile banner">
@@ -405,16 +477,24 @@ const ProfilePage = () => {
         <div className="crop-modal-backdrop">
           <section className="crop-modal">
             <h2>Crop {cropConfig[crop.target].label}</h2>
-            <div className={`crop-preview crop-preview-${crop.target}`}>
+            <div ref={cropPreviewRef} className={`crop-preview crop-preview-${crop.target}`}>
               <img src={crop.source} alt="" />
-              <span className="crop-frame" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-                <i />
+              <span
+                className="crop-frame"
+                style={{ left: `${crop.frame.x}%`, top: `${crop.frame.y}%`, width: `${crop.frame.w}%`, height: `${crop.frame.h}%` }}
+                onPointerDown={(event) => startCropDrag("move", event)}
+                onPointerMove={dragCropFrame}
+                onPointerUp={stopCropDrag}
+                onPointerCancel={stopCropDrag}
+                role="presentation"
+              >
+                <i onPointerDown={(event) => startCropDrag("nw", event)} onPointerMove={dragCropFrame} onPointerUp={stopCropDrag} onPointerCancel={stopCropDrag} />
+                <i onPointerDown={(event) => startCropDrag("ne", event)} onPointerMove={dragCropFrame} onPointerUp={stopCropDrag} onPointerCancel={stopCropDrag} />
+                <i onPointerDown={(event) => startCropDrag("se", event)} onPointerMove={dragCropFrame} onPointerUp={stopCropDrag} onPointerCancel={stopCropDrag} />
+                <i onPointerDown={(event) => startCropDrag("sw", event)} onPointerMove={dragCropFrame} onPointerUp={stopCropDrag} onPointerCancel={stopCropDrag} />
               </span>
             </div>
-            <p>The saved image uses the neat four-corner crop frame shown above.</p>
+            <p>Drag the frame or pull a corner, then save the selected area.</p>
             <div className="form-actions">
               <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
               <button type="button" className="private-secondary-button" onClick={() => (crop.target === "cover" ? coverInputRef.current : avatarInputRef.current)?.click()}>Choose Another</button>
