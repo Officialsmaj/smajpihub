@@ -26,7 +26,7 @@ const toClientUser = (user: any) => user ? ({
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
-  verificationLevel: user.verificationLevel || "basic",
+  verificationLevel: user.verificationLevel || "verified",
   verificationRequested: Boolean(user.verificationRequested),
   settings: user.settings || { theme: "light", language: "English", notifications: true },
   createdAt: user.createdAt,
@@ -105,7 +105,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            verificationLevel: currentUser.verificationLevel || "basic",
+            verificationLevel: currentUser.verificationLevel || "verified",
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
@@ -127,7 +127,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role,
         roles: [role],
         blocked: false,
-        verificationLevel: "basic",
+        verificationLevel: "verified",
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
@@ -215,7 +215,7 @@ export default function mountUserEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Profile image or text is too large." });
     }
 
-    const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : displayName && country && contactPhone ? "verified" : "basic";
+    const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
     await userCollection.updateOne(
       { uid: currentUser.uid },
       { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel } },

@@ -191,6 +191,7 @@ const ProfilePage = () => {
   const sellerActive = Boolean(form.sellerActive);
   const selectedCountry = countries.find((country) => country.name === form.country);
   const selectedLanguage = cleanLanguages.find((language) => language.name === form.language) || cleanLanguages[0];
+  const profileVerificationLevel = user?.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -352,7 +353,7 @@ const ProfilePage = () => {
             <h1>{name}</h1>
             <span>@{username}</span>
             <div className="real-profile-badges">
-              <TrustBadge level={user?.verificationLevel} />
+              <TrustBadge level={profileVerificationLevel} />
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
             </div>
           </div>
@@ -372,7 +373,7 @@ const ProfilePage = () => {
           <section className="real-profile-stats">
             <article><Inventory2OutlinedIcon /><span>Products</span><strong>{stats.totalProducts}</strong></article>
             <article><StorefrontOutlinedIcon /><span>Successful Orders</span><strong>{stats.successfulOrders}</strong></article>
-            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{user?.verificationLevel || "basic"}</strong></article>
+            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{profileVerificationLevel === "trusted_seller" ? "Trusted Seller" : "Verified"}</strong></article>
           </section>
 
           <section className="real-profile-grid">

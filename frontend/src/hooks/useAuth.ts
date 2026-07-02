@@ -49,8 +49,8 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   role: candidate?.role || fallback.role || "buyer",
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
   settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
-  createdAt: candidate?.createdAt || fallback.createdAt,
-  verificationLevel: candidate?.verificationLevel || fallback.verificationLevel || "basic",
+  createdAt: candidate?.createdAt || fallback.createdAt || new Date().toISOString(),
+  verificationLevel: candidate?.verificationLevel === "trusted_seller" || fallback.verificationLevel === "trusted_seller" ? "trusted_seller" : candidate?.verificationLevel || fallback.verificationLevel || "verified",
   verificationRequested: candidate?.verificationRequested ?? fallback.verificationRequested ?? false,
   accessToken: fallback.accessToken,
 });
@@ -85,9 +85,10 @@ const authResultUser = (authResult: AuthResult): User => ({
   language: "English",
   sellerActive: false,
   blocked: false,
-  verificationLevel: "basic",
+  verificationLevel: "verified",
   verificationRequested: false,
   settings: { theme: "light", language: "English", notifications: true },
+  createdAt: new Date().toISOString(),
   accessToken: authResult.accessToken,
 });
 
@@ -226,9 +227,7 @@ export const useAuth = () => {
       const role = user.role === "admin" ? "admin" : sellerActive ? "seller" : "buyer";
       const verificationLevel = user.verificationLevel === "trusted_seller"
         ? "trusted_seller"
-        : profile.displayName && profile.country && profile.contactPhone
-          ? "verified"
-          : "basic";
+        : "verified";
       const updatedUser = storeUser(toUser({
         ...profile,
         role,
