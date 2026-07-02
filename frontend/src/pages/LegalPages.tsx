@@ -306,63 +306,164 @@ export const TermsPage = () => (
         {
           heading: "Acceptance of Terms",
           paragraphs: [
-            "By accessing, browsing, creating an account, authenticating with a Pi wallet, or using any part of SMAJ PI HUB, users agree to these Terms, the Privacy Policy, Cookie Policy, and Report Abuse Policy.",
-            "These Terms apply to visitors, buyers, sellers, service providers, partners, and account holders.",
+            "These Terms & Conditions (\"Terms\") govern your access to and use of the SMAJ PI HUB digital super platform (\"Platform\"), located at smaj.org, operated by SMAJ PI HUB (\"we,\" \"us,\" or \"our\"). By accessing, browsing, or using the Platform, you signify your agreement to be bound by these Terms, our Privacy Policy, Cookie Policy, and Report Abuse Policy.",
+            "If you do not agree to these Terms, you may not access or use the Platform.",
+            "By creating an account, authenticating with your Pi wallet, or otherwise using any part of the SMAJ PI HUB Platform, you acknowledge that you have read, understood, and agree to be bound by these Terms, as well as any additional terms and conditions that are referenced herein or that may apply to specific services or features.",
+            "These Terms constitute a legally binding agreement between you and SMAJ PI HUB.",
           ],
         },
         {
-          heading: "Eligibility, Account Registration, and Pi Wallet Authentication",
+          heading: "User Eligibility and Account Registration",
           items: [
-            "Users must be at least 18 years old and legally able to enter into a binding agreement.",
-            "Users must provide accurate, current, and complete account information and keep it updated.",
-            "Users must not impersonate another person, company, seller, buyer, Pi Network representative, or SMAJ PI HUB representative.",
-            "Users are responsible for actions taken through their account.",
-            "Pi wallet authentication may be used as the primary login credential and verified identity across supported SMAJ PI HUB services.",
-            "Users are responsible for the security of their Pi wallet and for reviewing wallet actions before confirmation.",
+            "Eligibility: To use SMAJ PI HUB, you must be at least 18 years old and have the legal capacity to enter into a binding contract. By using the Platform, you represent and warrant that you meet these eligibility requirements.",
+            "Account Registration: Access to most services on SMAJ PI HUB requires account registration. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.",
+            "You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.",
           ],
         },
         {
-          heading: "Platform Services",
-          paragraphs: [
-            "SMAJ PI HUB integrates services including marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and SMAJ Token utility features. Specific services may have additional guidelines or supplementary terms.",
-          ],
-        },
-        {
-          heading: "User Responsibilities and Marketplace Rules",
+          heading: "Pi Wallet Authentication",
           items: [
-            "Users must comply with applicable laws, use the platform only for lawful purposes, provide truthful information, respect intellectual property rights, communicate respectfully, and report suspicious activity or abuse.",
-            "Listings must be real, accurate, lawful, and supported by clear product or service information.",
-            "Sellers must honor delivery, pickup, refund, communication, and customer support responsibilities.",
-            "Buyers must review listing details carefully before placing orders or confirming transactions.",
-            "SMAJ PI HUB may review, reject, remove, hide, or restrict listings that create risk or violate policy.",
+            "SMAJ PI HUB leverages the Pi Network for user authentication. Your Pi wallet serves as your primary login credential and verified identity across all 15 integrated services.",
+            "By authenticating with your Pi wallet, you authorize SMAJ PI HUB to access necessary information from your Pi Network profile for identity verification and service provision.",
+            "You agree that your Pi wallet will be used for all cryptocurrency transactions within the Platform.",
+            "You acknowledge that the security of your Pi wallet is your sole responsibility, and SMAJ PI HUB is not liable for any loss or damage arising from unauthorized access to your Pi wallet.",
           ],
         },
         {
-          heading: "Payments, Escrow, and Disputes",
+          heading: "Platform Services Description",
+          items: [
+            "SMAJ PI HUB is a comprehensive digital super platform integrating 15 distinct services into a single ecosystem.",
+            "Marketplace: For buying and selling goods and services.",
+            "Food Delivery: For ordering and delivering meals.",
+            "Jobs: For job seekers and employers.",
+            "Health: For health-related services and information.",
+            "Education: For learning resources and educational programs.",
+            "Transport: For ride-sharing, logistics, and transportation services.",
+            "Agriculture: For agricultural products and services.",
+            "Energy: For energy-related services and solutions.",
+            "Charity: For charitable donations and initiatives.",
+            "Housing: For real estate listings and rental services.",
+            "Events: For event discovery, ticketing, and management.",
+            "Swap: For exchanging goods and services.",
+            "Streaming: For digital content streaming.",
+            "Sports: For sports-related activities, news, and services.",
+            "Utility Token: The SMAJ Token, which may offer additional functionalities and benefits within the ecosystem.",
+            "Each service may have specific guidelines or supplementary terms, which you agree to abide by when using that particular service.",
+          ],
+        },
+        {
+          heading: "User Responsibilities and Conduct",
+          items: [
+            "Comply with all applicable laws, regulations, and these Terms.",
+            "Use the Platform and its services only for lawful purposes.",
+            "Provide accurate and truthful information in all interactions.",
+            "Respect the intellectual property rights of others.",
+            "Maintain a respectful and professional demeanor in all communications.",
+            "Report any suspicious activity or abuse as outlined in our Report Abuse Policy.",
+          ],
+        },
+        {
+          heading: "Seller/Provider Obligations",
+          items: [
+            "If you offer goods or services on SMAJ PI HUB, such as as a seller in the marketplace, a food vendor, a job poster, or a service provider, you agree to provide accurate descriptions of your offerings.",
+            "Deliver goods and services as advertised.",
+            "Comply with all relevant laws and regulations pertaining to your offerings.",
+            "Honor all commitments made to buyers/users.",
+            "Adhere to the Platform's policies regarding quality, safety, and customer service.",
+          ],
+        },
+        {
+          heading: "Pi Cryptocurrency Payments",
+          items: [
+            "All payments within SMAJ PI HUB are primarily conducted using Pi cryptocurrency.",
+            "All transactions are subject to the terms and conditions of the Pi Network blockchain.",
+            "SMAJ PI HUB facilitates these transactions but is not a financial institution and does not hold or control your Pi cryptocurrency directly.",
+            "The value of Pi cryptocurrency can be volatile, and SMAJ PI HUB is not responsible for any fluctuations in its value.",
+            "You are solely responsible for the accuracy of your Pi wallet address for transactions.",
+          ],
+        },
+        {
+          heading: "Escrow and Dispute Resolution",
           paragraphs: [
-            "Payments within SMAJ PI HUB are primarily conducted using Pi cryptocurrency where supported. SMAJ PI HUB facilitates platform flows but is not a bank, investment adviser, wallet custodian, financial institution, or guarantor of cryptocurrency value.",
-            "Escrow protection and dispute-resolution mechanisms may be provided for eligible transactions. Users agree to participate in dispute processes in good faith.",
+            "To enhance trust and security, SMAJ PI HUB provides escrow protection for eligible transactions and a robust dispute resolution mechanism.",
+            "Escrow Protection: Funds for certain transactions may be held in escrow until the service or delivery is confirmed. The specific terms of escrow will be detailed for each relevant service.",
+            "Dispute Resolution: In the event of a dispute between users, SMAJ PI HUB will provide a mechanism for resolution. Users agree to participate in good faith in the dispute resolution process. Our decision in resolving disputes will be final and binding.",
+          ],
+        },
+        {
+          heading: "Intellectual Property",
+          paragraphs: [
+            "All content, trademarks, service marks, logos, and intellectual property displayed on the SMAJ PI HUB Platform are the property of SMAJ PI HUB or its licensors. You may not use, reproduce, distribute, or create derivative works from any content on the Platform without explicit written permission from SMAJ PI HUB.",
+            "Users retain ownership of the content they create and upload to the Platform, but grant SMAJ PI HUB a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, translate, distribute, and display such content in connection with the operation and promotion of the Platform.",
+          ],
+        },
+        {
+          heading: "AI Assistant Usage",
+          items: [
+            "SMAJ PI HUB includes an AI assistant designed to enhance user experience and provide support.",
+            "The AI assistant provides information and assistance based on available data and algorithms. Its responses are for informational purposes only and should not be considered professional advice, including medical, legal, or financial advice.",
+            "SMAJ PI HUB is not responsible for any decisions made or actions taken based on the AI assistant's output.",
+            "You will not use the AI assistant to generate or disseminate harmful, unlawful, or inappropriate content.",
+            "Interactions with the AI assistant may be logged and analyzed to improve its performance and our services, in accordance with our Privacy Policy.",
+          ],
+        },
+        {
+          heading: "SMAJ Token Terms",
+          paragraphs: [
+            "If and when the SMAJ Token is launched and integrated, its use will be subject to specific terms and conditions, which will be made available separately.",
+            "These terms will govern the acquisition, holding, transfer, and utility of the SMAJ Token within the ecosystem. Users are advised to review these terms carefully before engaging with the SMAJ Token.",
           ],
         },
         {
           heading: "Prohibited Activities",
           items: [
-            "Violating laws, infringing rights, posting harmful or unlawful content, engaging in scams or misrepresentation, creating fake accounts, impersonating others, spreading malware, interfering with the platform, harvesting personal data without consent, or bypassing security measures.",
+            "Violating any laws or regulations.",
+            "Infringing on the rights of others, including intellectual property rights.",
+            "Posting or transmitting any unlawful, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable content.",
+            "Engaging in fraudulent activities, scams, or misrepresentation.",
+            "Creating fake accounts or impersonating others.",
+            "Distributing viruses, malware, or other harmful computer code.",
+            "Interfering with the proper functioning of the Platform.",
+            "Collecting or harvesting personal data of other users without their consent.",
+            "Circumventing any security measures or access restrictions of the Platform.",
           ],
         },
         {
-          heading: "AI Assistant, Token Terms, and Intellectual Property",
+          heading: "Limitation of Liability",
           paragraphs: [
-            "The SMAJ PI HUB AI assistant provides platform-related assistance for informational purposes and should not be treated as medical, legal, financial, or other professional advice.",
-            "SMAJ Token features, if and when launched or integrated, may be governed by separate terms. Platform content, trademarks, logos, and intellectual property belong to SMAJ PI HUB or its licensors, while users grant SMAJ PI HUB the rights needed to operate and promote uploaded content.",
+            "To the maximum extent permitted by applicable law, SMAJ PI HUB, its affiliates, officers, directors, employees, agents, and licensors shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses.",
+            "This applies to losses resulting from your access to or use of or inability to access or use the Platform; any conduct or content of any third party on the Platform; any content obtained from the Platform; and unauthorized access, use, or alteration of your transmissions or content, whether based on warranty, contract, tort, negligence, or any other legal theory.",
           ],
         },
         {
-          heading: "Limitation, Termination, Changes, and Contact",
+          heading: "Termination",
           paragraphs: [
-            "To the maximum extent permitted by law, SMAJ PI HUB is not liable for indirect, incidental, special, consequential, punitive, profit, revenue, data, goodwill, or similar losses related to platform access, third-party conduct, content, or unauthorized use.",
-            "SMAJ PI HUB may suspend or terminate accounts or access for violations of these Terms or platform policies. Service availability, roadmap timing, supported features, payment flow, pricing display, seller tools, and service categories may change as the platform develops.",
-            `Questions about these Terms can be sent to ${legalEmail}.`,
+            "We may terminate or suspend your account and access to the Platform immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach these Terms.",
+            "Upon termination, your right to use the Platform will immediately cease. If you wish to terminate your account, you may simply discontinue using the Platform or contact us to request account deletion.",
+          ],
+        },
+        {
+          heading: "Governing Law",
+          paragraphs: [
+            "These Terms shall be governed and construed in accordance with the laws of the jurisdiction of SMAJ PI HUB's incorporation or operation, without regard to its conflict of law provisions.",
+            "You agree to submit to the personal jurisdiction of the courts located within the applicable jurisdiction for the purpose of litigating all such claims or disputes.",
+          ],
+        },
+        {
+          heading: "Changes to Terms",
+          paragraphs: [
+            "We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days' notice prior to any new terms taking effect.",
+            "What constitutes a material change will be determined at our sole discretion. By continuing to access or use our Platform after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Platform.",
+          ],
+        },
+        {
+          heading: "Contact Information",
+          paragraphs: [
+            "If you have any questions about these Terms, please contact us at:",
+            "SMAJ PI HUB",
+            "Website: smaj.org",
+            `Email: ${legalEmail}`,
+            "Address: Online-only operation",
           ],
         },
       ]}
@@ -401,37 +502,69 @@ export const CookiesPage = () => (
         {
           heading: "What Cookies Are",
           paragraphs: [
-            "Cookies are small data files placed on a computer or mobile device when visiting a website. They help websites function, remember actions and preferences, support reporting, and improve browsing experience.",
-            "SMAJ PI HUB may use cookies, local storage, and similar browser storage to keep the website functional, remember preferences, support account sessions, and improve user experience.",
+            "This Cookie Policy explains how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smaj.org, uses cookies and similar technologies to recognize you when you visit our website.",
+            "It explains what these technologies are and why we use them, as well as your rights to control our use of them.",
+            "Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners to make their websites work, or to work more efficiently, as well as to provide reporting information.",
+            "They allow the website to remember your actions and preferences, such as login, language, font size, and other display preferences, over a period of time, so you do not have to keep re-entering them whenever you come back to the site or browse from one page to another.",
+            "Cookies set by the website owner, in this case SMAJ PI HUB, are called first-party cookies. Cookies set by parties other than the website owner are called third-party cookies.",
+            "Third-party cookies enable third-party features or functionality to be provided on or through the website, such as advertising, interactive content, and analytics. The parties that set these third-party cookies can recognize your computer both when it visits this website and when it visits certain other websites.",
           ],
         },
         {
-          heading: "Types of Cookies and Storage We Use",
+          heading: "Types of Cookies Used",
           items: [
-            "Essential cookies and storage required for secure areas, login, account sessions, shopping carts, billing flows, and protected pages.",
-            "Analytics and customization cookies used in aggregate to understand site usage, improve performance, and refine user experience.",
-            "Functional cookies used to remember choices such as login details, language, theme, country, search, navigation, or interface preferences.",
-            "Marketing cookies may be used where applicable to make messages more relevant and manage advertising display.",
-            "Performance, security, and reliability signals used to improve the platform.",
+            "We use both first-party and third-party cookies for several reasons.",
+            "Essential Cookies: These cookies are strictly necessary to provide you with services available through our website and to use some of its features, such as access to secure areas. Without these cookies, services like secure login, shopping carts, and e-billing cannot be provided.",
+            "Analytics and Customization Cookies: These cookies collect information that is used either in aggregate form to help us understand how our website is being used or how effective our marketing campaigns are, or to help us customize our website for you.",
+            "Functional Cookies: These cookies allow our website to remember choices you make when you use our website, such as remembering your login details or language preferences. The purpose of these cookies is to provide you with a more personal experience and avoid requiring you to re-enter preferences every time you visit.",
+            "Marketing Cookies: These cookies are used to make advertising messages more relevant to you and your interests. They may help prevent the same advertisement from continuously reappearing, ensure ads are properly displayed for advertisers, and in some cases select advertisements based on your interests.",
           ],
         },
         {
-          heading: "Third-Party Cookies and Pi Browser Compatibility",
+          heading: "Third-Party Cookies",
           paragraphs: [
-            "Third-party services may set cookies for analytics, reporting, advertising, social media plugins, or other supported functionality. SMAJ PI HUB is designed for Pi Browser compatibility so authentication and transaction experiences remain consistent and secure where supported.",
+            "In addition to our own cookies, we may also use various third-party cookies to report usage statistics of the Service, deliver advertisements on and through the Service, and so on.",
+            "These third-party cookies are set by entities other than SMAJ PI HUB. For example, we may use Google Analytics to help us understand how our customers arrive at our site, browse or use our site, and highlight areas where we can improve.",
+            "We may also use social media plugins that set cookies to track your interaction with their platforms.",
           ],
         },
         {
-          heading: "Managing Cookies and Consent",
+          heading: "Pi Browser Compatibility",
           paragraphs: [
-            "Users can accept, reject, clear, or block cookies through browser settings and, where available, the cookie consent banner or consent tool. Some platform features may not work correctly if required cookies or storage are disabled.",
+            "SMAJ PI HUB is designed to be fully compatible with the Pi Browser, which is the primary gateway for many Pi Network users.",
+            "Our cookie implementation is optimized to function seamlessly within the Pi Browser environment, ensuring that your user experience, authentication, and transaction processes are consistent and secure.",
+            "We adhere to the Pi Browser's technical specifications and privacy considerations regarding cookie handling.",
           ],
         },
         {
-          heading: "Changes and Contact",
+          heading: "How to Manage Cookies",
           paragraphs: [
-            "We may update this Cookie Policy from time to time to reflect changes to the cookies or storage we use.",
-            `Questions about cookies or similar technologies can be sent to ${legalEmail}.`,
+            "You have the right to decide whether to accept or reject cookies. You can exercise your cookie preferences by clicking on the appropriate opt-out links provided in the cookie consent banner or by setting your preferences within your browser controls.",
+            "Most web browsers allow some control of most cookies through browser settings. To find out more about cookies, including how to see what cookies have been set and how to manage and delete them, visit www.allaboutcookies.org or www.youronlinechoices.eu.",
+            "Please note that if you choose to reject cookies, you may still use our website, though your access to some functionality and areas of our website may be restricted.",
+          ],
+        },
+        {
+          heading: "Cookie Consent",
+          paragraphs: [
+            "Upon your first visit to smaj.org, you will be presented with a cookie consent banner that informs you about our use of cookies and requests your consent.",
+            "By continuing to browse our website or by clicking Accept on the banner, you consent to our use of cookies as described in this policy. You can change your cookie preferences at any time through your browser settings or by revisiting our cookie consent tool.",
+          ],
+        },
+        {
+          heading: "Changes to This Cookie Policy",
+          paragraphs: [
+            "We may update this Cookie Policy from time to time to reflect changes to the cookies we use or for other operational, legal, or regulatory reasons.",
+            "We encourage you to review this Cookie Policy periodically to stay informed about our use of cookies.",
+          ],
+        },
+        {
+          heading: "Contact Information",
+          paragraphs: [
+            "If you have any questions about our use of cookies or other technologies, please email us at:",
+            "SMAJ PI HUB",
+            "Website: smaj.org",
+            `Email: ${legalEmail}`,
           ],
         },
       ]}
@@ -742,19 +875,45 @@ export const ReportAbusePage = () => {
           {
             heading: "Investigation Process",
             items: [
-              "Review the submitted report and evidence.",
-              "Gather additional relevant platform information such as activity logs, transaction records, and communications when appropriate.",
-              "Assess the reported content or behavior against the Terms & Conditions, Privacy Policy, and platform guidelines.",
-              "Contact the reporting party or reported party when more information is needed.",
-              "Make a decision based on evidence and policy review.",
+              "Review of Report: The team assesses the submitted report, including all provided evidence.",
+              "Gathering Additional Information: We may access relevant platform data, such as user activity logs, transaction records, and communications, to corroborate the report.",
+              "Content/Behavior Assessment: The reported content or behavior is evaluated against our Terms & Conditions, Privacy Policy, and community guidelines.",
+              "User Communication: In some cases, we may contact the reporting party for more details or the reported party to gather their perspective.",
+              "Decision: Based on the evidence and policy review, a decision is made regarding the validity of the report and the appropriate action to take.",
             ],
           },
           {
-            heading: "Actions, Appeals, and False Reporting",
+            heading: "Actions Taken",
+            items: [
+              "Warning: For minor infractions, a formal warning may be issued to the offending user.",
+              "Content Removal: Abusive or inappropriate content may be removed from the platform.",
+              "Temporary Suspension: The user's account may be temporarily suspended, restricting access to some or all services for a specified period.",
+              "Permanent Ban: For severe or repeated violations, the user's account may be permanently banned from SMAJ PI HUB, resulting in loss of access to all services.",
+              "Escalation to Law Enforcement: In cases involving illegal activities, we may report the incident to relevant law enforcement authorities.",
+            ],
+          },
+          {
+            heading: "Appeal Process",
             paragraphs: [
-              "Depending on severity, SMAJ PI HUB may issue a warning, remove content, temporarily suspend an account, permanently ban an account, or escalate illegal activity to relevant law enforcement authorities.",
-              "Users may be able to appeal enforcement actions believed to be made in error. Details will be provided in the enforcement notice where applicable.",
-              `For general inquiries or to report abuse, contact SMAJ PI HUB at ${legalEmail}.`,
+              "If your account or content has been subject to an enforcement action that you believe was made in error, you may have the right to appeal the decision.",
+              "Details on how to appeal will be provided in the notification of the enforcement action. Appeals typically require you to submit a clear explanation of why you believe the decision should be reversed, along with any supporting evidence.",
+            ],
+          },
+          {
+            heading: "False Reporting Consequences",
+            paragraphs: [
+              "Submitting intentionally false or malicious reports of abuse can harm other users and disrupt the integrity of our reporting system.",
+              "Users found to be engaging in false reporting may face consequences, including warnings, temporary suspension, or permanent banning from the platform.",
+            ],
+          },
+          {
+            heading: "Contact Information",
+            paragraphs: [
+              "For general inquiries or to report abuse, please use the following contact information:",
+              "SMAJ PI HUB",
+              "Website: smaj.org",
+              `Email for Abuse Reports: ${legalEmail}`,
+              `General Inquiries Email: ${legalEmail}`,
             ],
           },
         ]}

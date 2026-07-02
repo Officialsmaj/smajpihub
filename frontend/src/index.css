@@ -6092,7 +6092,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     display: flex;
   }
 
-  .chat-header-actions button {
+  .chat-header-actions button,
+  .chat-header-actions a {
     width: 36px;
     height: 36px;
     display: grid;
@@ -7289,7 +7290,8 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     border-radius: 999px;
   }
 
-  .messages-page.conversation-selected .chat-header-actions button {
+  .messages-page.conversation-selected .chat-header-actions button,
+  .messages-page.conversation-selected .chat-header-actions a {
     width: 40px;
     height: 48px;
     display: grid;

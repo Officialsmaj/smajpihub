@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import AttachFileOutlinedIcon from "@mui/icons-material/AttachFileOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import { axiosClient } from "../../lib/axiosClient";
@@ -161,6 +162,9 @@ const MessagesPage = () => {
                   </div>
                 </div>
                 <div className="chat-header-actions">
+                  <Link to="/report-abuse" aria-label="Report conversation" title="Report conversation">
+                    <FlagOutlinedIcon />
+                  </Link>
                   <button aria-label="More options">
                     <MoreVertOutlinedIcon />
                   </button>
