@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
@@ -51,7 +51,7 @@ const cleanLanguages = [
 const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
-type CropState = { target: CropTarget; source: string };
+type CropState = { target: CropTarget; source: string; zoom: number; x: number; y: number };
 type AlertState = { type: "success" | "error"; text: string };
 
 const formatJoinDate = (value?: string) => {
@@ -77,29 +77,31 @@ const readImageFile = (file: File, onLoad: (value: string) => void, onError: (me
   reader.readAsDataURL(file);
 };
 
-const cropImage = (source: string, target: CropTarget) => new Promise<string>((resolve, reject) => {
+const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => {
   const image = new Image();
   image.onload = () => {
+    const { target, zoom, x, y } = crop;
     const { width, height } = cropConfig[target];
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return reject(new Error("Canvas not available"));
-    const aspect = width / height;
-    let cropWidth = image.naturalWidth;
-    let cropHeight = cropWidth / aspect;
-    if (cropHeight > image.naturalHeight) {
-      cropHeight = image.naturalHeight;
-      cropWidth = cropHeight * aspect;
-    }
-    const sx = Math.max(0, (image.naturalWidth - cropWidth) / 2);
-    const sy = Math.max(0, (image.naturalHeight - cropHeight) / 2);
-    ctx.drawImage(image, sx, sy, cropWidth, cropHeight, 0, 0, width, height);
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(0, 0, width, height);
+    const baseScale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+    const scale = baseScale * zoom;
+    const renderedWidth = image.naturalWidth * scale;
+    const renderedHeight = image.naturalHeight * scale;
+    const maxX = Math.max(0, (renderedWidth - width) / 2);
+    const maxY = Math.max(0, (renderedHeight - height) / 2);
+    const dx = (width - renderedWidth) / 2 + (x / 100) * maxX;
+    const dy = (height - renderedHeight) / 2 + (y / 100) * maxY;
+    ctx.drawImage(image, dx, dy, renderedWidth, renderedHeight);
     resolve(canvas.toDataURL("image/jpeg", 0.9));
   };
   image.onerror = reject;
-  image.src = source;
+  image.src = crop.source;
 });
 
 const uploadProfileImage = async (image: string, purpose: string) => {
@@ -184,14 +186,14 @@ const ProfilePage = () => {
     if (!file) return;
     readImageFile(file, (source) => {
       setEditing(true);
-      setCrop({ target, source });
+      setCrop({ target, source, zoom: 1, x: 0, y: 0 });
     }, (text) => setAlert({ type: "error", text }));
   };
 
   const applyCrop = async () => {
     if (!crop) return;
     try {
-      const cropped = await cropImage(crop.source, crop.target);
+      const cropped = await cropImage(crop);
       setForm((current) => crop.target === "avatar" ? { ...current, avatar: cropped } : { ...current, coverImage: cropped });
       setCrop(null);
       setAlert({ type: "success", text: `${cropConfig[crop.target].label} ready. Save changes to update your profile.` });
@@ -199,6 +201,7 @@ const ProfilePage = () => {
       setAlert({ type: "error", text: "Could not crop image. Please try another file." });
     }
   };
+  const updateCrop = (values: Partial<Pick<CropState, "zoom" | "x" | "y">>) => setCrop((current) => current ? { ...current, ...values } : current);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -407,7 +410,7 @@ const ProfilePage = () => {
           <section className="crop-modal">
             <h2>Crop {cropConfig[crop.target].label}</h2>
             <div className={`crop-preview crop-preview-${crop.target}`}>
-              <img src={crop.source} alt="" />
+              <img src={crop.source} alt="" style={{ "--crop-zoom": crop.zoom, "--crop-x": `${crop.x}%`, "--crop-y": `${crop.y}%` } as CSSProperties} />
               <span className="crop-frame" aria-hidden="true">
                 <i />
                 <i />
@@ -415,7 +418,12 @@ const ProfilePage = () => {
                 <i />
               </span>
             </div>
-            <p>{crop.target === "cover" ? "The banner will be saved from the centered frame at 1640 x 624." : "Place your photo in the centered frame. It will save as a clean circular profile picture."}</p>
+            <div className="crop-controls">
+              <label>Zoom<input type="range" min="1" max="3" step="0.01" value={crop.zoom} onChange={(event) => updateCrop({ zoom: Number(event.target.value) })} /></label>
+              <label>Move left / right<input type="range" min="-100" max="100" step="1" value={crop.x} onChange={(event) => updateCrop({ x: Number(event.target.value) })} /></label>
+              <label>Move up / down<input type="range" min="-100" max="100" step="1" value={crop.y} onChange={(event) => updateCrop({ y: Number(event.target.value) })} /></label>
+            </div>
+            <p>Move and zoom the image inside the crop frame, then save the frame you choose.</p>
             <div className="form-actions">
               <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
               <button type="button" className="private-secondary-button" onClick={() => (crop.target === "cover" ? coverInputRef.current : avatarInputRef.current)?.click()}>Choose Another</button>

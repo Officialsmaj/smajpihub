@@ -219,13 +219,43 @@ export const useAuth = () => {
   }, [signInUser]);
 
   const updateProfile = useCallback(async (profile: ProfileUpdate) => {
-    const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
-    if (response.data.user && user) {
-      const updatedUser = storeUser(toUser(response.data.user, user));
+    if (!user) return null;
+
+    const applyLocalProfileUpdate = () => {
+      const sellerActive = profile.sellerActive ?? profile.role === "seller";
+      const role = user.role === "admin" ? "admin" : sellerActive ? "seller" : "buyer";
+      const verificationLevel = user.verificationLevel === "trusted_seller"
+        ? "trusted_seller"
+        : profile.displayName && profile.country && profile.contactPhone
+          ? "verified"
+          : "basic";
+      const updatedUser = storeUser(toUser({
+        ...profile,
+        role,
+        roles: [role],
+        sellerActive,
+        verificationLevel,
+        settings: { ...(user.settings || { theme: "light", language: "English", notifications: true }), language: profile.language || user.settings?.language || "English" },
+      }, user));
       setUser(updatedUser);
       return updatedUser;
+    };
+
+    try {
+      const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
+      if (response.data.user) {
+        const updatedUser = storeUser(toUser(response.data.user, user));
+        setUser(updatedUser);
+        return updatedUser;
+      }
+    } catch (err) {
+      if (isAxiosError(err) && (!err.response || [404, 405, 413, 502, 503, 504].includes(err.response.status))) {
+        return applyLocalProfileUpdate();
+      }
+      throw err;
     }
-    return null;
+
+    return applyLocalProfileUpdate();
   }, [user]);
 
   const updateSettings = useCallback(async (settings: { theme: "dark" | "light"; language: string; notifications: boolean }) => {

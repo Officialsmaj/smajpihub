@@ -11962,24 +11962,25 @@ select,
 
 .real-profile-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   color: var(--smaj-text);
   background: var(--smaj-card);
   border: 0;
-  border-radius: 24px;
+  border-radius: 8px;
   box-shadow: var(--shadow-soft);
 }
 
 .real-profile-cover {
   width: 100%;
-  min-height: clamp(170px, 25vw, 280px);
+  min-height: clamp(180px, 27vw, 330px);
   position: relative;
   display: block;
-  background: #f8fafc;
+  background: #eef2f7;
   background-position: center;
   background-size: cover;
   border: 0;
   border-bottom: 1px solid var(--smaj-border);
+  border-radius: 8px 8px 0 0;
   cursor: pointer;
   z-index: 1;
 }
@@ -12005,7 +12006,7 @@ select,
 .real-profile-identity {
   position: relative;
   z-index: 2;
-  margin-top: -54px;
+  margin-top: -64px;
   padding: 0 clamp(18px, 4vw, 34px) clamp(24px, 4vw, 34px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -12015,8 +12016,8 @@ select,
 
 .real-profile-avatar {
   position: relative;
-  width: clamp(112px, 13vw, 148px);
-  height: clamp(112px, 13vw, 148px);
+  width: clamp(124px, 14vw, 168px);
+  height: clamp(124px, 14vw, 168px);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -12053,21 +12054,22 @@ select,
 
 .real-profile-avatar > span {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 34px;
-  height: 34px;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   color: #111827;
-  background: #ffffff;
+  background: rgba(255, 255, 255, .94);
   border: 1px solid var(--smaj-border);
   border-radius: 50%;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, .18);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .2);
 }
 
 .real-profile-avatar > span svg {
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .real-profile-identity h1 {
@@ -12456,7 +12458,7 @@ select,
 }
 
 .crop-modal {
-  width: min(620px, 100%);
+  width: min(720px, 100%);
   display: grid;
   gap: 14px;
   padding: 22px;
@@ -12490,7 +12492,7 @@ select,
   margin: 0 auto;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   background: #111827;
   border: 0;
@@ -12503,6 +12505,25 @@ select,
   object-fit: cover;
   border-radius: 0;
   filter: brightness(.92);
+}
+
+.crop-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.crop-controls label {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--smaj-text);
+  font-weight: 800;
+}
+
+.crop-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--smaj-primary);
 }
 
 .floating-alert {
@@ -12563,6 +12584,7 @@ select,
   height: 100%;
   object-fit: cover;
   transform-origin: center;
+  transform: translate(var(--crop-x, 0), var(--crop-y, 0)) scale(var(--crop-zoom, 1));
 }
 
 .crop-preview::after {
@@ -12590,10 +12612,10 @@ select,
 }
 
 .crop-preview-avatar .crop-frame {
-  inset: 15%;
+  inset: 0;
   border-width: 3px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 999px rgba(2, 6, 23, .42), 0 8px 22px rgba(0, 0, 0, .24);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, .25), 0 0 0 999px rgba(2, 6, 23, .16);
 }
 
 .crop-frame i {
@@ -12602,10 +12624,6 @@ select,
   height: 34px;
   background: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
-}
-
-.crop-preview-avatar .crop-frame i {
-  display: none;
 }
 
 .crop-frame i:nth-child(1) {
