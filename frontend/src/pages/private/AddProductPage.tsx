@@ -161,7 +161,7 @@ const AddProductPage = () => {
           <label>Price currency<select required value={form.priceCurrency} onChange={(event) => setForm({ ...form, priceCurrency: event.target.value as "USDT" | "Pi" })}><option>USDT</option><option>Pi</option></select></label>
         </div>
         <div className="private-alert success">
-          1 Pi = $314,159. This listing will show {Number.isFinite(priceUsdt) && priceUsdt > 0 ? priceUsdt.toFixed(2) : "0.00"} USDT and {Number.isFinite(pricePi) && pricePi > 0 ? pricePi.toFixed(5) : "0.00000"} Pi.
+          1 Pi = $314159. This listing will show {Number.isFinite(priceUsdt) && priceUsdt > 0 ? priceUsdt.toFixed(2) : "0.00"} USDT and {Number.isFinite(pricePi) && pricePi > 0 ? pricePi.toFixed(5) : "0.00000"} Pi.
         </div>
         <div className="private-form-row">
           <label>Category<select required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"].map((item) => <option key={item}>{item}</option>)}</select></label>

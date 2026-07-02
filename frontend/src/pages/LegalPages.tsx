@@ -645,7 +645,7 @@ export const SellerAgreementPage = () => (
         {
           heading: "Pi Utility and Price Conversion Policy",
           items: [
-            "SMAJ PI HUB uses an internal marketplace reference value of 1 Pi = 3,141.59 USDT for platform price calculations.",
+            "SMAJ PI HUB uses an internal marketplace reference value of 1 Pi = $314159 for platform price calculations.",
             "Sellers voluntarily agree to this pricing model when publishing listings.",
             "Buyers voluntarily choose whether to purchase under this pricing model.",
             "SMAJ PI HUB does not guarantee external exchange values for Pi.",
