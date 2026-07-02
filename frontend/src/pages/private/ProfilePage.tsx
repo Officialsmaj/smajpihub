@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
@@ -51,7 +52,7 @@ const cleanLanguages = [
 const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
-type CropState = { target: CropTarget; source: string; zoom: number; x: number; y: number };
+type CropState = { target: CropTarget; source: string };
 type AlertState = { type: "success" | "error"; text: string };
 
 const formatJoinDate = (value?: string) => {
@@ -80,7 +81,7 @@ const readImageFile = (file: File, onLoad: (value: string) => void, onError: (me
 const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => {
   const image = new Image();
   image.onload = () => {
-    const { target, zoom, x, y } = crop;
+    const { target } = crop;
     const { width, height } = cropConfig[target];
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -89,14 +90,11 @@ const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => 
     if (!ctx) return reject(new Error("Canvas not available"));
     ctx.fillStyle = "#f8fafc";
     ctx.fillRect(0, 0, width, height);
-    const baseScale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-    const scale = baseScale * zoom;
+    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
     const renderedWidth = image.naturalWidth * scale;
     const renderedHeight = image.naturalHeight * scale;
-    const maxX = Math.max(0, (renderedWidth - width) / 2);
-    const maxY = Math.max(0, (renderedHeight - height) / 2);
-    const dx = (width - renderedWidth) / 2 + (x / 100) * maxX;
-    const dy = (height - renderedHeight) / 2 + (y / 100) * maxY;
+    const dx = (width - renderedWidth) / 2;
+    const dy = (height - renderedHeight) / 2;
     ctx.drawImage(image, dx, dy, renderedWidth, renderedHeight);
     resolve(canvas.toDataURL("image/jpeg", 0.9));
   };
@@ -186,7 +184,7 @@ const ProfilePage = () => {
     if (!file) return;
     readImageFile(file, (source) => {
       setEditing(true);
-      setCrop({ target, source, zoom: 1, x: 0, y: 0 });
+      setCrop({ target, source });
     }, (text) => setAlert({ type: "error", text }));
   };
 
@@ -201,8 +199,6 @@ const ProfilePage = () => {
       setAlert({ type: "error", text: "Could not crop image. Please try another file." });
     }
   };
-  const updateCrop = (values: Partial<Pick<CropState, "zoom" | "x" | "y">>) => setCrop((current) => current ? { ...current, ...values } : current);
-
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setAlert(null);
@@ -270,15 +266,15 @@ const ProfilePage = () => {
       <input id="profileCoverUpload" ref={coverInputRef} hidden type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
-        <label className="real-profile-cover" htmlFor="profileCoverUpload" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Edit profile banner">
-          <span role="button" tabIndex={0}>
+        <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Profile banner">
+          <button type="button" onClick={() => coverInputRef.current?.click()} aria-label="Edit profile banner">
             <EditOutlinedIcon /> Edit Banner
-          </span>
-        </label>
+          </button>
+        </div>
         <div className="real-profile-identity">
           <button className="real-profile-avatar" type="button" onClick={() => avatarInputRef.current?.click()} aria-label="Upload profile picture">
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
-            <span><EditOutlinedIcon /></span>
+            <span><CameraAltOutlinedIcon /></span>
           </button>
           <div>
             <h1>{name}</h1>
@@ -410,7 +406,7 @@ const ProfilePage = () => {
           <section className="crop-modal">
             <h2>Crop {cropConfig[crop.target].label}</h2>
             <div className={`crop-preview crop-preview-${crop.target}`}>
-              <img src={crop.source} alt="" style={{ "--crop-zoom": crop.zoom, "--crop-x": `${crop.x}%`, "--crop-y": `${crop.y}%` } as CSSProperties} />
+              <img src={crop.source} alt="" />
               <span className="crop-frame" aria-hidden="true">
                 <i />
                 <i />
@@ -418,12 +414,7 @@ const ProfilePage = () => {
                 <i />
               </span>
             </div>
-            <div className="crop-controls">
-              <label>Zoom<input type="range" min="1" max="3" step="0.01" value={crop.zoom} onChange={(event) => updateCrop({ zoom: Number(event.target.value) })} /></label>
-              <label>Move left / right<input type="range" min="-100" max="100" step="1" value={crop.x} onChange={(event) => updateCrop({ x: Number(event.target.value) })} /></label>
-              <label>Move up / down<input type="range" min="-100" max="100" step="1" value={crop.y} onChange={(event) => updateCrop({ y: Number(event.target.value) })} /></label>
-            </div>
-            <p>Move and zoom the image inside the crop frame, then save the frame you choose.</p>
+            <p>The saved image uses the neat four-corner crop frame shown above.</p>
             <div className="form-actions">
               <button type="button" className="private-primary-button" onClick={() => void applyCrop()}>Use Image</button>
               <button type="button" className="private-secondary-button" onClick={() => (crop.target === "cover" ? coverInputRef.current : avatarInputRef.current)?.click()}>Choose Another</button>

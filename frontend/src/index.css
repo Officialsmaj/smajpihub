@@ -11985,7 +11985,7 @@ select,
   z-index: 1;
 }
 
-.real-profile-cover > span {
+.real-profile-cover > button {
   position: absolute;
   right: 18px;
   bottom: 18px;
@@ -11999,8 +11999,10 @@ select,
   background: #ffffff;
   border: 1px solid var(--smaj-border);
   border-radius: 12px;
+  font: inherit;
   font-weight: 850;
   box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+  cursor: pointer;
 }
 
 .real-profile-identity {
@@ -12054,11 +12056,10 @@ select,
 
 .real-profile-avatar > span {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  transform: translate(-50%, -50%);
+  right: 8px;
+  bottom: 8px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   color: #111827;
@@ -12507,25 +12508,6 @@ select,
   filter: brightness(.92);
 }
 
-.crop-controls {
-  display: grid;
-  gap: 10px;
-}
-
-.crop-controls label {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  color: var(--smaj-text);
-  font-weight: 800;
-}
-
-.crop-controls input[type="range"] {
-  width: 100%;
-  accent-color: var(--smaj-primary);
-}
-
 .floating-alert {
   position: fixed;
   top: 18px;
@@ -12583,8 +12565,6 @@ select,
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform-origin: center;
-  transform: translate(var(--crop-x, 0), var(--crop-y, 0)) scale(var(--crop-zoom, 1));
 }
 
 .crop-preview::after {
@@ -12612,38 +12592,44 @@ select,
 }
 
 .crop-preview-avatar .crop-frame {
-  inset: 0;
+  inset: 12%;
   border-width: 3px;
-  border-radius: 0;
-  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, .25), 0 0 0 999px rgba(2, 6, 23, .16);
+  border-radius: 10px;
+  box-shadow: 0 0 0 999px rgba(2, 6, 23, .28), 0 8px 22px rgba(0, 0, 0, .24);
 }
 
 .crop-frame i {
   position: absolute;
   width: 34px;
   height: 34px;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
+  background: transparent;
+  border-color: #ffffff;
+  border-style: solid;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .28));
 }
 
 .crop-frame i:nth-child(1) {
   top: -6px;
   left: -6px;
+  border-width: 4px 0 0 4px;
 }
 
 .crop-frame i:nth-child(2) {
   top: -6px;
   right: -6px;
+  border-width: 4px 4px 0 0;
 }
 
 .crop-frame i:nth-child(3) {
   right: -6px;
   bottom: -6px;
+  border-width: 0 4px 4px 0;
 }
 
 .crop-frame i:nth-child(4) {
   bottom: -6px;
   left: -6px;
+  border-width: 0 0 4px 4px;
 }
 
 .crop-preview-cover .crop-frame i {
