@@ -49,7 +49,10 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
     <script>
-      const runSDKInSandboxMode = window.__ENV.sandbox === "true";
+      const runSDKInSandboxMode =
+        window.__ENV.sandbox === "true" ||
+        window.location.hostname === "sandbox.minepi.com" ||
+        document.referrer.includes("sandbox.minepi.com");
       if (window.Pi?.init) {
         window.Pi.init({
           version: "2.0",
@@ -72,4 +75,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

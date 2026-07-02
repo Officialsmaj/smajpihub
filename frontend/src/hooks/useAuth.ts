@@ -20,6 +20,7 @@ type ProfileUpdate = {
 
 const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
+const PI_AUTH_SCOPES = ["username", "payments"];
 
 const onIncompletePaymentFound = (payment: PaymentDTO) => {
   if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment });
@@ -199,7 +200,7 @@ export const useAuth = () => {
     }
     setIsLoading(true);
     try {
-      const authResult = await authenticateWithTimeout(["username", "payments", "wallet_address"]);
+      const authResult = await authenticateWithTimeout(PI_AUTH_SCOPES);
       await signInUser(authResult);
       window.location.replace(getDashboardUrl());
       return true;
@@ -209,7 +210,7 @@ export const useAuth = () => {
         ? toErrorMessage(err)
         : (err as Error)?.message === "PI_AUTH_TIMEOUT"
           ? "Pi login timed out. Please close Pi Browser, reopen it, and try again."
-          : "Pi login failed. Please try again inside Pi Browser.";
+          : "Pi login failed. In Pi Sandbox mobile preview, make sure you are signed in to a sandbox Pi account and the app is running with sandbox SDK enabled.";
       setAuthFeedback({ type: "error", message });
       return false;
     } finally {
