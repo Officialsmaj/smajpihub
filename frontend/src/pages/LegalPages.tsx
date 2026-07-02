@@ -121,50 +121,152 @@ export const PrivacyPage = () => (
         {
           heading: "Introduction",
           paragraphs: [
-            "SMAJ PI HUB is a comprehensive digital super platform powered by the Pi Network, offering integrated services including marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and utility-token features.",
-            "We respect user privacy and handle personal data to operate the platform, protect users, improve services, support verified marketplace activity, and comply with applicable data protection obligations.",
+            "This Privacy Policy describes how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smaj.org, collects, uses, processes, and shares your information. We are committed to protecting your privacy and ensuring the security of your personal data. By accessing or using SMAJ PI HUB, you agree to the terms of this Privacy Policy.",
+            "SMAJ PI HUB is a comprehensive digital super platform powered by the Pi Network, offering 15 integrated services including a marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and a utility token.",
+            "Our platform is designed to provide a seamless and secure experience, utilizing Pi cryptocurrency for payments and a single verified identity across all services. This policy outlines our practices regarding data collection, usage, and protection, in compliance with global data protection regulations such as the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA).",
           ],
         },
         {
-          heading: "Information We Collect",
-          items: [
-            "Personal information such as name, email address, phone number, location, profile details, seller status, and identity-verification information when required.",
-            "Pi wallet data such as wallet address, Pi Network authentication data, transaction details, payment confirmations, escrow context, and dispute-resolution records.",
-            "Marketplace and service activity such as listings, images, prices, orders, reviews, saved products, seller profiles, buyer/seller communication, and support records.",
-            "Usage and technical details such as device/browser data, session information, login state, app performance, security events, location data where needed, preferences, and AI assistant interactions.",
-          ],
-        },
-        {
-          heading: "How We Use Information",
-          items: [
-            "To create, authenticate, maintain, and secure user accounts through supported Pi wallet and platform flows.",
-            "To provide services, process transactions, support listings, manage orders, assist sellers/providers, and handle customer support.",
-            "To personalize service discovery, send service-related notices, improve navigation, analyze platform performance, and develop new features.",
-            "To detect fraud, scams, fake sellers, unsafe listings, spam, unauthorized access, policy violations, and other abuse.",
-            "To support escrow, dispute resolution, legal compliance, security review, and AI assistant improvement.",
-          ],
-        },
-        {
-          heading: "Sharing, Pi Integration, and Transfers",
+          heading: "Data Collection",
           paragraphs: [
-            "SMAJ PI HUB does not sell personal data as a business model. Information may be shared only when needed to operate services, work with service providers, support Pi Network authentication and transaction interoperability, comply with law, prevent harm, investigate abuse, support transactions, protect the platform, complete a business transfer, or act with user consent.",
-            "As a global platform, information may be stored or processed in countries outside a user's place of residence. We use reasonable safeguards intended to comply with applicable data protection laws.",
+            "We collect various types of information to provide and improve our services. This includes:",
           ],
         },
         {
-          heading: "User Rights, Security, and Retention",
+          heading: "Personal Information",
           items: [
-            "Depending on location, users may request access, correction, deletion, restriction, objection, portability, or applicable sale/sharing opt-out support.",
-            "We use technical and organizational measures such as encryption, access controls, security review, staff training, and Pi Network security features where applicable.",
-            "SMAJ PI HUB is not intended for individuals under 16 and does not knowingly collect personal data from children under 16.",
-            "We retain personal data only as long as necessary for platform operations, legal requirements, safety, accounting, dispute handling, and legitimate business purposes.",
+            "This refers to data that can be used to identify you directly or indirectly. We collect personal information when you register for an account, complete your profile, or undergo identity verification (KYC).",
+            "Register for an account: This may include your name, email address, phone number, and other contact details.",
+            "Complete your profile: Additional information such as your date of birth, gender, and location may be collected to enhance your user experience and service personalization.",
+            "Undergo identity verification (KYC): As part of our commitment to security and regulatory compliance, we may collect government-issued identification details to verify your identity. This data is crucial for maintaining a trusted ecosystem within the Pi Network.",
           ],
         },
         {
-          heading: "Changes and Contact Information",
+          heading: "Pi Wallet Data",
+          items: [
+            "Given our integration with the Pi Network, we collect specific data related to your Pi wallet.",
+            "Pi Wallet Address: Your unique identifier on the Pi blockchain, necessary for transactions and identity verification within the SMAJ PI HUB ecosystem.",
+            "Transaction History: Details of transactions conducted using Pi cryptocurrency on our platform, including amounts, dates, and parties involved. This data is essential for escrow protection, dispute resolution, and maintaining a transparent marketplace.",
+            "Pi Network Authentication Data: Information related to your login and authentication via your Pi wallet, which serves as your verified identity across all SMAJ PI HUB services.",
+          ],
+        },
+        {
+          heading: "Transaction Data",
+          items: [
+            "When you engage in transactions across our 15 integrated services, we collect data related to these activities.",
+            "Service-Specific Transaction Details: For example, marketplace purchases, food delivery orders, job applications, health consultations, educational course enrollments, transport bookings, agricultural product transactions, energy service usage, charity donations, housing rentals, event ticket purchases, swap agreements, streaming subscriptions, and sports-related transactions.",
+            "Payment Information: While payments are primarily made with Pi cryptocurrency, we may collect information related to payment processing and confirmations.",
+            "Escrow and Dispute Resolution Data: Information pertinent to transactions under escrow, including communications, evidence submitted, and resolution outcomes.",
+          ],
+        },
+        {
+          heading: "Usage Data",
+          items: [
+            "We automatically collect information about your interaction with our platform.",
+            "Device Information: IP address, device type, operating system, browser type, and unique device identifiers.",
+            "Log Data: Details of how you use our services, such as pages viewed, features accessed, search queries, and timestamps of your activities.",
+            "Location Data: Depending on your device settings and service requirements, such as food delivery or transport, we may collect precise or approximate location data.",
+            "AI Assistant Interactions: Records of your interactions with our AI assistant, including queries and responses, to improve service quality and personalization.",
+          ],
+        },
+        {
+          heading: "How Data is Used",
+          items: [
+            "Service Provision: To operate and deliver the 15 integrated services, process transactions, and fulfill your requests.",
+            "Account Management: To create, maintain, and secure your account, and to authenticate your identity via your Pi wallet.",
+            "Personalization: To customize your experience, recommend relevant services, and provide tailored content based on your usage and preferences.",
+            "Communication: To send you service-related notifications, updates, security alerts, and promotional messages where permitted.",
+            "Security and Fraud Prevention: To detect and prevent fraudulent activities, unauthorized access, and other illegal activities, including leveraging Pi Network's security features.",
+            "Escrow and Dispute Resolution: To facilitate secure transactions, manage escrow services, and resolve disputes between users.",
+            "Platform Improvement: To analyze usage patterns, conduct research, and develop new features and services.",
+            "Compliance and Legal Obligations: To comply with applicable laws, regulations, legal processes, and governmental requests, including KYC requirements.",
+            "AI Assistant Enhancement: To train and improve the performance and accuracy of our AI assistant.",
+          ],
+        },
+        {
+          heading: "Third-Party Sharing",
+          items: [
+            "We may share your information with third parties under specific circumstances and with appropriate safeguards.",
+            "Service Providers: We engage third-party vendors and service providers to assist us in operating our platform, such as hosting, analytics, payment processing for fiat gateways if introduced, and customer support. These providers are contractually obligated to protect your data and use it only for the purposes for which it was disclosed.",
+            "Pi Network Ecosystem: As an integral part of the Pi Network, certain data, particularly Pi wallet authentication and transaction data, may be shared within the broader Pi ecosystem to ensure interoperability and security. This is fundamental to the operation of SMAJ PI HUB.",
+            "Business Transfers: In the event of a merger, acquisition, or asset sale, your information may be transferred to the acquiring entity.",
+            "Legal Requirements: We may disclose your information if required by law, court order, or governmental regulation, or if we believe such disclosure is necessary to protect our rights, property, or safety, or the rights, property, or safety of others.",
+            "With Your Consent: We may share your information with third parties when we have your explicit consent to do so.",
+            "Aggregated or Anonymized Data: We may share aggregated or anonymized data that cannot reasonably be used to identify you with third parties for research, marketing, analytics, or other purposes.",
+          ],
+        },
+        {
+          heading: "Pi Network Integration and Wallet Data",
+          items: [
+            "SMAJ PI HUB's core functionality relies on its deep integration with the Pi Network. Your Pi wallet serves as your primary authentication method and payment instrument.",
+            "Unified Identity: Your verified Pi Network identity is used across all 15 services on SMAJ PI HUB.",
+            "Secure Transactions: All cryptocurrency payments are processed via the Pi blockchain, leveraging its inherent security features.",
+            "Data Interoperability: Certain wallet-related data is necessary for the seamless operation of services and may be shared with the Pi Network infrastructure as required for authentication, transaction validation, and ecosystem integrity. We adhere to the Pi Network's privacy standards in handling such data.",
+          ],
+        },
+        {
+          heading: "Cookies and Tracking Technologies",
           paragraphs: [
-            "We may update this Privacy Policy from time to time by posting the updated version and changing the effective date.",
-            `For privacy questions, user-rights requests, or account-related assistance, contact SMAJ PI HUB at ${legalEmail}.`,
+            "We use cookies and similar tracking technologies, like web beacons and pixels, to collect and use personal information about you, including to serve interest-based advertising.",
+            "For more information about the types of cookies we use, why, and how you can control them, please refer to our separate Cookie Policy.",
+          ],
+        },
+        {
+          heading: "User Rights (GDPR and CCPA Compliance)",
+          items: [
+            "We respect your data protection rights and provide you with mechanisms to exercise them.",
+            "Depending on your location, particularly for users in the European Economic Area (EEA) and California, these rights may include right to access, right to rectification, right to erasure, right to restrict processing, right to object to processing, right to data portability, and right to opt-out of sale or sharing under CCPA.",
+            "To exercise any of these rights, please contact us using the details provided in the Contact Information section. We will respond to your request in accordance with applicable data protection laws.",
+          ],
+        },
+        {
+          heading: "Data Security",
+          items: [
+            "We implement robust technical and organizational measures to protect your personal data from unauthorized access, alteration, disclosure, or destruction.",
+            "Encryption: Data is encrypted both in transit and at rest where appropriate.",
+            "Access Controls: Strict access controls are in place to limit who can access your personal data.",
+            "Regular Security Audits: We conduct regular security assessments and penetration testing to identify and address vulnerabilities.",
+            "Employee Training: Our staff receives regular training on data protection and security best practices.",
+            "Pi Network Security: We leverage the inherent security features of the Pi Network for wallet authentication and transaction security.",
+            "However, no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your personal data, we cannot guarantee its absolute security.",
+          ],
+        },
+        {
+          heading: "Children's Privacy",
+          paragraphs: [
+            "SMAJ PI HUB is not intended for use by individuals under the age of 16. We do not knowingly collect personal data from children under 16.",
+            "If we become aware that we have collected personal data from a child under 16 without parental consent, we will take steps to delete that information promptly. If you believe that we might have any information from or about a child under 16, please contact us.",
+          ],
+        },
+        {
+          heading: "International Data Transfers",
+          paragraphs: [
+            "As a global platform, your information may be stored and processed in any country where we have facilities or where we engage service providers. By using SMAJ PI HUB, you understand that your information may be transferred to countries outside of your country of residence, which may have different data protection laws than those in your country.",
+            "We ensure that such transfers comply with applicable data protection laws, for example, by implementing standard contractual clauses approved by the European Commission or other appropriate safeguards.",
+          ],
+        },
+        {
+          heading: "Data Retention",
+          paragraphs: [
+            "We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, including for the purposes of satisfying any legal, accounting, or reporting requirements.",
+            "The retention period is determined by the type of data, the purpose of processing, and legal or regulatory obligations. When your personal data is no longer required, we will securely delete or anonymize it.",
+          ],
+        },
+        {
+          heading: "Changes to This Privacy Policy",
+          paragraphs: [
+            "We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons.",
+            "We will notify you of any material changes by posting the new Privacy Policy on smaj.org and updating the Effective Date at the top of this policy. We encourage you to review this Privacy Policy periodically for any changes.",
+          ],
+        },
+        {
+          heading: "Contact Information",
+          paragraphs: [
+            "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:",
+            "SMAJ PI HUB",
+            "Website: smaj.org",
+            `Email: ${legalEmail}`,
+            "Address: Online-only operation",
           ],
         },
       ]}
