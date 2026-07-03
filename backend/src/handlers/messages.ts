@@ -1,23 +1,22 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
+import { resolveCurrentUser } from "../services/auth";
 
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
 
 export default function mountMessageEndpoints(router: Router) {
-  router.use((req, res, next) => {
-    if (!req.session.currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
-    next();
-  });
-
   router.get("/", async (req, res) => {
-    const uid = req.session.currentUser!.uid;
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(200).json({ conversations: [] });
+    const uid = currentUser.uid;
     const conversations = await req.app.locals.conversationCollection.find({ participants: uid }).sort({ updatedAt: -1 }).toArray();
     return res.status(200).json({ conversations: conversations.map(serialize) });
   });
 
   router.post("/start", async (req, res) => {
-    const user = req.session.currentUser!;
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     const productId = String(req.body?.productId || "");
     if (!ObjectId.isValid(productId)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(productId) });
@@ -46,7 +45,9 @@ export default function mountMessageEndpoints(router: Router) {
 
   router.get("/:id", async (req, res) => {
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid conversation id" });
-    const uid = req.session.currentUser!.uid;
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(200).json({ conversation: null, messages: [] });
+    const uid = currentUser.uid;
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     await req.app.locals.messageCollection.updateMany({ conversationId: req.params.id, senderId: { $ne: uid }, readAt: { $exists: false } }, { $set: { readAt: new Date() } });
@@ -57,7 +58,8 @@ export default function mountMessageEndpoints(router: Router) {
 
   router.post("/:id", async (req, res) => {
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid conversation id" });
-    const user = req.session.currentUser!;
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     const message = String(req.body?.message || "").trim();
