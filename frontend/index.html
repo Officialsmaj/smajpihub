@@ -43,6 +43,7 @@
         apiBaseURL: "$$API_BASE_URL$$",
         backendURL: "$$BACKEND_URL$$",
         sandbox: "$$SANDBOX_SDK$$",
+        viteSandbox: "%VITE_SANDBOX_SDK%",
       };
     </script>
 
@@ -50,8 +51,12 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
     <script>
+      const piSandboxSetting =
+        window.__ENV.sandbox === "$$SANDBOX_SDK$$"
+          ? window.__ENV.viteSandbox
+          : window.__ENV.sandbox;
       const runSDKInSandboxMode =
-        window.__ENV.sandbox === "true" ||
+        piSandboxSetting === "true" ||
         window.location.hostname === "sandbox.minepi.com" ||
         document.referrer.includes("sandbox.minepi.com");
       if (window.Pi?.init) {

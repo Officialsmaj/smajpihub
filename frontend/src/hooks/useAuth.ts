@@ -22,9 +22,16 @@ const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 const PI_AUTH_SCOPES = ["username", "payments"];
 
+const getRuntimeSandboxSetting = () => {
+  const runtimeSandbox = window.__ENV?.sandbox;
+  return runtimeSandbox && runtimeSandbox !== "$$SANDBOX_SDK$$"
+    ? runtimeSandbox
+    : import.meta.env.VITE_SANDBOX_SDK;
+};
+
 const isPiSandboxMode = () =>
   typeof window !== "undefined" &&
-  (window.__ENV?.sandbox === "true" ||
+  (getRuntimeSandboxSetting() === "true" ||
     window.location.hostname === "sandbox.minepi.com" ||
     document.referrer.includes("sandbox.minepi.com"));
 
