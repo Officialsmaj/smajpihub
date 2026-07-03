@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Router } from "express";
-import platformAPIClient from "../services/platformAPIClient";
+import { getAppPlatformAPIClient } from "../services/platformAPIClient";
 import "../types/session";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
@@ -10,6 +10,7 @@ export default function mountPaymentsEndpoints(router: Router) {
   router.post("/incomplete", async (req, res) => {
     try {
       const payment = req.body.payment;
+      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox || payment?.metadata?.sandbox));
       const paymentId = payment.identifier;
       const txid = payment.transaction && payment.transaction.txid;
       const txURL = payment.transaction && payment.transaction._link;
@@ -57,7 +58,7 @@ export default function mountPaymentsEndpoints(router: Router) {
           });
         }
       }
-      await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
+      await piAPI.post(`/v2/payments/${paymentId}/complete`, { txid });
       return res.status(200).json({ message: `Handled the incomplete payment ${paymentId}` });
     } catch (err) {
       console.error("Error handling incomplete payment:", err);
@@ -74,7 +75,8 @@ export default function mountPaymentsEndpoints(router: Router) {
 
       const app = req.app;
       const paymentId = req.body.paymentId;
-      const currentPayment = await platformAPIClient.get(`/v2/payments/${paymentId}`);
+      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox));
+      const currentPayment = await piAPI.get(`/v2/payments/${paymentId}`);
       const paymentCollection = app.locals.paymentCollection;
       const orderId = String(currentPayment.data.metadata.orderId || "");
 
@@ -111,7 +113,7 @@ export default function mountPaymentsEndpoints(router: Router) {
         { $set: { paymentStatus: "processing", paymentId, updatedAt: new Date() } },
       );
 
-      await platformAPIClient.post(`/v2/payments/${paymentId}/approve`);
+      await piAPI.post(`/v2/payments/${paymentId}/approve`);
       return res.status(200).json({ message: `Approved the payment ${paymentId}` });
     } catch (err) {
       console.error("Error approving payment:", err);
@@ -126,6 +128,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       const paymentId = req.body.paymentId;
       const txid = req.body.txid;
       const paymentCollection = app.locals.paymentCollection;
+      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox));
 
       if (!req.session.currentUser || !paymentId || !txid) {
         return res.status(401).json({ error: "unauthorized", message: "A signed-in user and payment details are required" });
@@ -140,7 +143,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (!paymentRecord || paymentRecord.user !== req.session.currentUser?.uid) {
         return res.status(404).json({ error: "not_found", message: "Payment record not found" });
       }
-      const currentPayment = await platformAPIClient.get(`/v2/payments/${paymentId}`);
+      const currentPayment = await piAPI.get(`/v2/payments/${paymentId}`);
       if (String(currentPayment.data.transaction?.txid || "") !== String(txid)) {
         return res.status(400).json({ error: "mismatch", message: "Payment transaction does not match" });
       }
@@ -167,7 +170,7 @@ export default function mountPaymentsEndpoints(router: Router) {
           });
         }
       }
-      await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
+      await piAPI.post(`/v2/payments/${paymentId}/complete`, { txid });
       return res.status(200).json({ message: `Completed the payment ${paymentId}` });
     } catch (err) {
       console.error("Error completing payment:", err);

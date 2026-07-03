@@ -5,6 +5,7 @@ import type { PaymentDTO } from "../types/pi";
 type PaymentMetadata = {
   productId: string;
   orderId: string;
+  sandbox?: boolean;
 };
 
 type UsePaymentsArgs = {
@@ -17,10 +18,14 @@ type UsePaymentsArgs = {
 export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, onPaymentComplete }: UsePaymentsArgs) => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState("");
+  const isSandbox = () =>
+    window.__ENV?.sandbox === "true" ||
+    window.location.hostname === "sandbox.minepi.com" ||
+    document.referrer.includes("sandbox.minepi.com");
 
   const onReadyForServerApproval = useCallback(async (paymentId: string) => {
     try {
-      await axiosClient.post("/payments/approve", { paymentId });
+      await axiosClient.post("/payments/approve", { paymentId, sandbox: isSandbox() });
     } catch (err) {
       console.error("Error approving payment:", err);
     }
@@ -28,7 +33,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
 
   const onReadyForServerCompletion = useCallback(async (paymentId: string, txid: string) => {
     try {
-      await axiosClient.post("/payments/complete", { paymentId, txid });
+      await axiosClient.post("/payments/complete", { paymentId, txid, sandbox: isSandbox() });
       onPaymentStatus?.("Pi payment completed. Your order is now paid.");
       await onPaymentComplete?.();
     } catch (err) {
@@ -41,7 +46,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
 
   const onCancel = useCallback(async (paymentId: string) => {
     try {
-      await axiosClient.post("/payments/cancelled_payment", { paymentId });
+      await axiosClient.post("/payments/cancelled_payment", { paymentId, sandbox: isSandbox() });
       onPaymentStatus?.("Pi payment was cancelled. Your order remains pending.");
     } catch (err) {
       console.error("Error cancelling payment:", err);
@@ -54,7 +59,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
   const onError = useCallback(async (error: Error, payment?: PaymentDTO) => {
     console.error("Payment error:", error, payment);
     const orderId = String(payment?.metadata?.orderId || "");
-    if (orderId) await axiosClient.post("/payments/failed", { orderId }).catch(() => undefined);
+    if (orderId) await axiosClient.post("/payments/failed", { orderId, sandbox: isSandbox() }).catch(() => undefined);
     onPaymentStatus?.("Pi payment failed. Please try again in Pi Browser.");
     setIsLoading(false);
     setActiveOrderId("");
@@ -74,9 +79,10 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
 
       setIsLoading(true);
       setActiveOrderId(metadata.orderId);
+      const paymentMetadata = { ...metadata, sandbox: isSandbox() };
       try {
         await window.Pi.createPayment(
-          { amount, memo, metadata },
+          { amount, memo, metadata: paymentMetadata },
           {
             onReadyForServerApproval,
             onReadyForServerCompletion,
@@ -86,7 +92,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
         );
       } catch (err) {
         console.error("Error creating payment:", err);
-        await axiosClient.post("/payments/failed", { orderId: metadata.orderId }).catch(() => undefined);
+        await axiosClient.post("/payments/failed", { orderId: metadata.orderId, sandbox: isSandbox() }).catch(() => undefined);
         onPaymentStatus?.("Pi payment failed. Your order remains pending.");
         setIsLoading(false);
         setActiveOrderId("");

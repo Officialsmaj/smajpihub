@@ -37,7 +37,7 @@ const isPiSandboxMode = () =>
     document.referrer.includes("sandbox.minepi.com"));
 
 const onIncompletePaymentFound = (payment: PaymentDTO) => {
-  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment }, AUTH_REQUEST_CONFIG);
+  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment, sandbox: isPiSandboxMode() }, AUTH_REQUEST_CONFIG);
 };
 
 const authenticateWithTimeout = (scopes: string[]) =>
