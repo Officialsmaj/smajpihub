@@ -1,6 +1,7 @@
 import axios, { type AxiosRequestConfig } from "axios";
 
 const PRODUCTION_API_BASE_URL = "https://smajpihub.onrender.com";
+const PI_USER_STORAGE_KEY = "smaj_pi_user";
 const API_CREDENTIALS_CONFIG: Pick<AxiosRequestConfig, "withCredentials"> = {
   withCredentials: true,
 };
@@ -32,8 +33,24 @@ export const axiosClient = axios.create({
 
 axiosClient.defaults.withCredentials = true;
 
+const getStoredAccessToken = () => {
+  try {
+    const stored = window.localStorage.getItem(PI_USER_STORAGE_KEY);
+    if (!stored) return "";
+    const user = JSON.parse(stored) as { accessToken?: string };
+    return user.accessToken || "";
+  } catch {
+    return "";
+  }
+};
+
 axiosClient.interceptors.request.use((config) => {
   config.withCredentials = true;
+  const accessToken = getStoredAccessToken();
+  if (accessToken) {
+    config.headers = config.headers ?? {};
+    (config.headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+  }
   return config;
 });
 

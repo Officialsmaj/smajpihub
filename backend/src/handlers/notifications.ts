@@ -2,10 +2,34 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
+const getBearerToken = (authorization = "") => {
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() || "";
+};
 
 export default function mountNotificationEndpoints(router: Router) {
-  router.use((req, res, next) => {
-    if (!req.session.currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+  router.use(async (req, res, next) => {
+    if (req.session.currentUser) {
+      next();
+      return;
+    }
+
+    const accessToken = getBearerToken(req.get("authorization"));
+    if (!accessToken) {
+      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    }
+
+    const userCollection = req.app.locals.userCollection;
+    if (!userCollection) {
+      return res.status(503).json({ error: "service_unavailable", message: "Database not ready" });
+    }
+
+    const currentUser = await userCollection.findOne({ accessToken });
+    if (!currentUser || currentUser.blocked) {
+      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    }
+
+    req.session.currentUser = currentUser;
     next();
   });
 
