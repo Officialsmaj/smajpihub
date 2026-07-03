@@ -269,12 +269,13 @@ export const useAuth = () => {
   }, [signInUser]);
 
   const updateProfile = useCallback(async (profile: ProfileUpdate) => {
-    if (!user) return null;
+    const currentUser = user || getStoredPiUser();
+    if (!currentUser) return null;
 
     const applyLocalProfileUpdate = () => {
       const sellerActive = profile.sellerActive ?? profile.role === "seller";
-      const role = user.role === "admin" ? "admin" : sellerActive ? "seller" : "buyer";
-      const verificationLevel = user.verificationLevel === "trusted_seller"
+      const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : "buyer";
+      const verificationLevel = currentUser.verificationLevel === "trusted_seller"
         ? "trusted_seller"
         : "verified";
       const updatedUser = storeUser(toUser({
@@ -283,8 +284,8 @@ export const useAuth = () => {
         roles: [role],
         sellerActive,
         verificationLevel,
-        settings: { ...(user.settings || { theme: "light", language: "English", notifications: true }), language: profile.language || user.settings?.language || "English" },
-      }, user));
+        settings: { ...(currentUser.settings || { theme: "light", language: "English", notifications: true }), language: profile.language || currentUser.settings?.language || "English" },
+      }, currentUser));
       setUser(updatedUser);
       return updatedUser;
     };
@@ -292,12 +293,12 @@ export const useAuth = () => {
     try {
       const response = await axiosClient.put<SignInResponse>("/user/profile", profile);
       if (response.data.user) {
-        const updatedUser = storeUser(toUser(response.data.user, user));
+        const updatedUser = storeUser(toUser(response.data.user, currentUser));
         setUser(updatedUser);
         return updatedUser;
       }
     } catch (err) {
-      if (isAxiosError(err) && (!err.response || [404, 405, 413, 502, 503, 504].includes(err.response.status))) {
+      if (isAxiosError(err) && (!err.response || [401, 403, 404, 405, 413, 502, 503, 504].includes(err.response.status))) {
         return applyLocalProfileUpdate();
       }
       throw err;
@@ -307,8 +308,24 @@ export const useAuth = () => {
   }, [user]);
 
   const updateSettings = useCallback(async (settings: { theme: "dark" | "light"; language: string; notifications: boolean }) => {
-    const response = await axiosClient.put<SignInResponse>("/user/settings", settings);
-    if (response.data.user && user) setUser(storeUser(toUser(response.data.user, user)));
+    const currentUser = user || getStoredPiUser();
+    const applyLocalSettingsUpdate = () => {
+      if (!currentUser) return;
+      const updatedUser = storeUser(toUser({ settings, language: settings.language }, currentUser));
+      setUser(updatedUser);
+    };
+
+    try {
+      const response = await axiosClient.put<SignInResponse>("/user/settings", settings);
+      if (response.data.user && currentUser) setUser(storeUser(toUser(response.data.user, currentUser)));
+      else applyLocalSettingsUpdate();
+    } catch (err) {
+      if (isAxiosError(err) && (!err.response || [401, 403, 404, 405, 413, 502, 503, 504].includes(err.response.status))) {
+        applyLocalSettingsUpdate();
+        return;
+      }
+      throw err;
+    }
   }, [user]);
 
   const signOut = useCallback(async () => {

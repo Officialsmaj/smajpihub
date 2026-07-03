@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
 import env from "../environments";
+import { resolveCurrentUser } from "../services/auth";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 
@@ -15,12 +16,13 @@ const timelineEntry = (status: string, label: string, note?: string) => ({
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
 
-const requireUser = (req: Request, res: Response) => {
-  if (!req.session.currentUser) {
+const requireUser = async (req: Request, res: Response) => {
+  const currentUser = await resolveCurrentUser(req);
+  if (!currentUser) {
     res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     return null;
   }
-  return req.session.currentUser;
+  return currentUser;
 };
 
 const productFields = (body: any) => ({
@@ -73,7 +75,6 @@ const validProduct = (product: ReturnType<typeof productFields>) =>
 
 export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/products", async (req, res) => {
-    if (!requireUser(req, res)) return;
     const query: Record<string, any> = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
     const search = String(req.query.search || "").trim();
     const category = String(req.query.category || "").trim();
@@ -87,21 +88,26 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/feed", async (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
+    const user = await resolveCurrentUser(req);
     const visible = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
-    const [latest, favorites, orders] = await Promise.all([
-      req.app.locals.productCollection.find(visible).sort({ createdAt: -1 }).limit(8).toArray(),
+    const latest = await req.app.locals.productCollection.find(visible).sort({ createdAt: -1 }).limit(8).toArray();
+    const counts = await req.app.locals.productCollection.aggregate([{ $match: visible }, { $group: { _id: "$category", count: { $sum: 1 } } }]).toArray();
+
+    if (!user) {
+      return res.status(200).json({ latest: latest.map(serialize), recommended: latest.map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: [] });
+    }
+
+    const [favorites, orders] = await Promise.all([
       req.app.locals.favoriteCollection.find({ userId: user.uid }).limit(20).toArray(),
       req.app.locals.marketplaceOrderCollection.find({ buyerId: user.uid }).sort({ createdAt: -1 }).limit(20).toArray(),
     ]);
     const preferredCategories = [...new Set(orders.map((item: any) => item.productCategory).filter(Boolean))];
     const recommended = await req.app.locals.productCollection.find(preferredCategories.length ? { ...visible, category: { $in: preferredCategories } } : visible).sort({ createdAt: -1 }).limit(8).toArray();
-    const counts = await req.app.locals.productCollection.aggregate([{ $match: visible }, { $group: { _id: "$category", count: { $sum: 1 } } }]).toArray();
     return res.status(200).json({ latest: latest.map(serialize), recommended: (recommended.length ? recommended : latest).map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: favorites.map((item: any) => item.productId) });
   });
 
   router.get("/products/:id", async (req, res) => {
-    if (!requireUser(req, res)) return;
+    const user = await resolveCurrentUser(req);
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     }
@@ -112,13 +118,13 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const [seller, related, favorite] = await Promise.all([
       req.app.locals.userCollection.findOne({ uid: product.sellerId }),
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: { $ne: false } }).sort({ createdAt: -1 }).limit(4).toArray(),
-      req.app.locals.favoriteCollection.findOne({ userId: req.session.currentUser!.uid, productId: req.params.id }),
+      user ? req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id }) : null,
     ]);
     return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
   });
 
   router.post("/products", async (req, res) => {
-    const sessionUser = requireUser(req, res);
+    const sessionUser = await requireUser(req, res);
     if (!sessionUser) return;
     const freshUser = await req.app.locals.userCollection.findOne({ uid: sessionUser.uid });
     const user = freshUser || sessionUser;
@@ -156,8 +162,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/orders", async (req, res) => {
-    const user = requireUser(req, res);
-    if (!user) return;
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(200).json({ orders: [] });
     const orders = await req.app.locals.marketplaceOrderCollection
       .find({ $or: [{ buyerId: user.uid }, { sellerId: user.uid }] })
       .sort({ createdAt: -1 })
@@ -166,7 +172,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/orders/:id", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
@@ -182,7 +188,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.post("/orders", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     const productId = String(req.body?.productId || "");
     if (!ObjectId.isValid(productId)) {
@@ -225,7 +231,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.post("/products/:id/report", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
@@ -249,7 +255,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.patch("/orders/:id/status", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
@@ -312,7 +318,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/saved", async (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
+    const user = await resolveCurrentUser(req); if (!user) return res.status(200).json({ products: [] });
     const favorites = await req.app.locals.favoriteCollection.find({ userId: user.uid }).sort({ createdAt: -1 }).toArray();
     const ids = favorites.map((item: any) => item.productId).filter(ObjectId.isValid).map((id: string) => new ObjectId(id));
     const products = ids.length ? await req.app.locals.productCollection.find({ _id: { $in: ids }, hidden: { $ne: true } }).toArray() : [];
@@ -320,7 +326,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.post("/products/:id/favorite", async (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
+    const user = await requireUser(req, res); if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const existing = await req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id });
     if (existing) {
@@ -332,7 +338,6 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/sellers/:id", async (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
     const seller = await req.app.locals.userCollection.findOne({ uid: req.params.id });
     if (!seller) return res.status(404).json({ error: "not_found", message: "Seller not found" });
     const [products, reviews, completedOrders] = await Promise.all([
@@ -345,7 +350,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.post("/orders/:id/review", async (req, res) => {
-    const user = requireUser(req, res); if (!user) return;
+    const user = await requireUser(req, res); if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
     const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id), buyerId: user.uid, status: "completed" });
     if (!order) return res.status(404).json({ error: "not_found", message: "Completed order not found" });
@@ -356,8 +361,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/seller", async (req, res) => {
-    const user = requireUser(req, res);
-    if (!user) return;
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(200).json({ products: [], orders: [], stats: { totalProducts: 0, totalOrders: 0, pendingOrders: 0, paidOrders: 0 } });
     const products = await req.app.locals.productCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
     const orders = await req.app.locals.marketplaceOrderCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
     return res.status(200).json({
@@ -373,7 +378,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.get("/seller/products/:id", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id), sellerId: user.uid });
@@ -387,7 +392,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.put("/seller/products/:id", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const fields = productFields(req.body);
@@ -404,7 +409,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.patch("/seller/products/:id/availability", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id) || typeof req.body?.active !== "boolean") {
       return res.status(400).json({ error: "bad_request", message: "Invalid availability update" });
@@ -418,7 +423,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
   });
 
   router.delete("/seller/products/:id", async (req, res) => {
-    const user = requireUser(req, res);
+    const user = await requireUser(req, res);
     if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const result = await req.app.locals.productCollection.deleteOne({ _id: new ObjectId(req.params.id), sellerId: user.uid });
