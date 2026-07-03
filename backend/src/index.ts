@@ -66,12 +66,24 @@ app.use(
 app.use(express.json({ limit: "8mb" }));
 
 // Handle CORS:
-const allowedOrigins = new Set(
+const configuredFrontendOrigins =
   (env.frontend_url || "")
     .split(",")
     .map((origin) => origin.trim())
-    .filter(Boolean),
-);
+    .filter(Boolean);
+
+const corsAllowlist = [
+  "https://smajpihub.com",
+  "https://www.smajpihub.com",
+  "https://sandbox.minepi.com",
+  "https://smajpihub.onrender.com",
+  "http://localhost:3000",
+  "http://localhost:3314",
+  "http://localhost:5173",
+  ...configuredFrontendOrigins,
+];
+
+const allowedOrigins = new Set(corsAllowlist);
 
 app.use(
   cors({
@@ -88,14 +100,8 @@ app.use(
         return;
       }
 
-      // Allow Codespaces preview hosts and Pi Sandbox host for testnet app wrapper.
-      if (
-        origin.endsWith(".app.github.dev") ||
-        origin === "https://sandbox.minepi.com" ||
-        origin === "https://smajpihub.com" ||
-        origin === "https://www.smajpihub.com" ||
-        origin === "https://smajpihub.onrender.com"
-      ) {
+      // Allow Codespaces preview hosts for development previews.
+      if (origin.endsWith(".app.github.dev")) {
         callback(null, true);
         return;
       }
