@@ -27,7 +27,7 @@ Set `.env.development` with the following variables:
 | Variable           | Description           | Example                 |
 | ------------------ | --------------------- | ----------------------- |
 | `PORT`             | Dev server port       | `3314`                  |
-| `VITE_API_BASE_URL` | Backend API URL       | `http://localhost:8000` in development, `https://smajpihub.onrender.com` in production |
+| `VITE_API_BASE_URL` | Backend API URL       | `https://smajpihub.onrender.com` |
 | `VITE_BACKEND_URL` | Legacy backend API URL alias | Same as `VITE_API_BASE_URL` |
 | `VITE_SANDBOX_SDK` | Enable Pi Sandbox SDK | `true`                  |
 

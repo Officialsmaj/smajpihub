@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const PRODUCTION_API_BASE_URL = "https://smajpihub.onrender.com";
-const DEVELOPMENT_API_BASE_URL = "http://localhost:8000";
 
 const isConfiguredURL = (url?: string) => Boolean(url && url !== "$$BACKEND_URL$$" && url !== "$$API_BASE_URL$$");
 
@@ -15,10 +14,6 @@ export const getBaseURL = () => {
   const buildURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL;
   if (isConfiguredURL(buildURL)) {
     return buildURL;
-  }
-
-  if (import.meta.env.DEV) {
-    return DEVELOPMENT_API_BASE_URL;
   }
 
   return PRODUCTION_API_BASE_URL;
