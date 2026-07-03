@@ -21,6 +21,7 @@ type ProfileUpdate = {
 const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 const PI_AUTH_SCOPES = ["username", "payments"];
+const AUTH_REQUEST_CONFIG = { withCredentials: true };
 
 const getRuntimeSandboxSetting = () => {
   const runtimeSandbox = window.__ENV?.sandbox;
@@ -36,7 +37,7 @@ const isPiSandboxMode = () =>
     document.referrer.includes("sandbox.minepi.com"));
 
 const onIncompletePaymentFound = (payment: PaymentDTO) => {
-  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment });
+  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment }, AUTH_REQUEST_CONFIG);
 };
 
 const authenticateWithTimeout = (scopes: string[]) =>
@@ -110,6 +111,12 @@ const getDashboardUrl = () => {
   return `${baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`}dashboard`;
 };
 
+const redirectToDashboard = () => {
+  const dashboardUrl = getDashboardUrl();
+  console.log("[auth] dashboard redirect", { dashboardUrl });
+  window.location.replace(dashboardUrl);
+};
+
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
   if (!axiosErr.response) return "Backend connection unavailable. Please try again.";
@@ -136,12 +143,22 @@ export const useAuth = () => {
       if (stored && mounted) setUser(stored);
       if (!getBaseURL()) { if (mounted) setIsLoading(false); return; }
       try {
-        const response = await axiosClient.get<{ user?: Partial<User> | null }>("/user");
+        const response = await axiosClient.get<{ user?: Partial<User> | null }>("/user", AUTH_REQUEST_CONFIG);
+        console.log("[auth] /user session success", {
+          status: response.status,
+          hasUser: Boolean(response.data.user?.uid),
+          username: response.data.user?.username,
+        });
         if (response.data.user?.uid && response.data.user.username && mounted) {
           setUser(storeUser(toUser(response.data.user, stored || response.data.user as User)));
         } else if (mounted) {
-          window.localStorage.removeItem(PI_USER_STORAGE_KEY);
-          setUser(null);
+          if (stored?.uid) {
+            console.log("[auth] /user returned no server user; keeping local Pi auth state for Pi Browser session continuity.");
+            setUser(stored);
+          } else {
+            window.localStorage.removeItem(PI_USER_STORAGE_KEY);
+            setUser(null);
+          }
         }
       } catch (err) {
         if (isAxiosError(err) && err.response?.status === 401) {
@@ -161,7 +178,12 @@ export const useAuth = () => {
     let signedInUser = fallback;
     if (getBaseURL()) {
       try {
-        const response = await axiosClient.post<SignInResponse>("/user/signin", { authResult, sandbox: isPiSandboxMode() });
+        const response = await axiosClient.post<SignInResponse>("/user/signin", { authResult, sandbox: isPiSandboxMode() }, AUTH_REQUEST_CONFIG);
+        console.log("[auth] /user/signin success", {
+          status: response.status,
+          hasUser: Boolean(response.data.user?.uid),
+          username: response.data.user?.username || fallback.username,
+        });
         signedInUser = toUser(response.data.user, fallback);
       } catch (err) {
         if (import.meta.env.DEV && isAxiosError(err) && !err.response) {
@@ -183,7 +205,7 @@ export const useAuth = () => {
       if (import.meta.env.DEV && getBaseURL()) {
         setIsLoading(true);
         try {
-          const response = await axiosClient.post<SignInResponse>("/user/dev-signin");
+          const response = await axiosClient.post<SignInResponse>("/user/dev-signin", undefined, AUTH_REQUEST_CONFIG);
           const devFallback: User = {
             uid: response.data.user?.uid || "local-dev-user",
             username: response.data.user?.username || "localdev",
@@ -207,7 +229,7 @@ export const useAuth = () => {
           setUser(storeUser(toUser(response.data.user, devFallback)));
           setShowSignIn(false);
           setAuthFeedback({ type: "success", message: "Signed in with local development account." });
-          window.location.replace(getDashboardUrl());
+          redirectToDashboard();
           return true;
         } catch (err) {
           console.error("Development login failed:", err);
@@ -224,8 +246,13 @@ export const useAuth = () => {
     setIsLoading(true);
     try {
       const authResult = await authenticateWithTimeout(PI_AUTH_SCOPES);
+      console.log("[auth] Pi authenticate success", {
+        uid: authResult.user.uid,
+        username: authResult.user.username,
+        hasAccessToken: Boolean(authResult.accessToken),
+      });
       await signInUser(authResult);
-      window.location.replace(getDashboardUrl());
+      redirectToDashboard();
       return true;
     } catch (err) {
       console.error("Pi login failed:", err);
@@ -287,7 +314,7 @@ export const useAuth = () => {
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (getBaseURL()) await axiosClient.post("/user/signout");
+      if (getBaseURL()) await axiosClient.post("/user/signout", undefined, AUTH_REQUEST_CONFIG);
       window.localStorage.removeItem(PI_USER_STORAGE_KEY);
       setUser(null);
       setAuthFeedback({ type: "success", message: "Signed out successfully." });

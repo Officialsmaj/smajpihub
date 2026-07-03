@@ -24,3 +24,5 @@ export const axiosClient = axios.create({
   timeout: 20_000,
   withCredentials: true,
 });
+
+axiosClient.defaults.withCredentials = true;
