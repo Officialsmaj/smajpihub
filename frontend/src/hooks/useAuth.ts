@@ -99,7 +99,7 @@ const getDashboardUrl = () => {
 
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
-  if (!axiosErr.response) return "Cannot reach backend. Check BACKEND_URL, HTTPS, and CORS settings.";
+  if (!axiosErr.response) return "Backend sync is temporarily unavailable. You can continue with your Pi session.";
   if (axiosErr.response.status === 401) return "Pi token verification failed. Check the Pi Sandbox and API configuration.";
   return axiosErr.response.data?.message ? `Login failed: ${axiosErr.response.data.message}` : `Login failed with status ${axiosErr.response.status}.`;
 };
@@ -147,8 +147,17 @@ export const useAuth = () => {
     const fallback = authResultUser(authResult);
     let signedInUser = fallback;
     if (getBaseURL()) {
-      const response = await axiosClient.post<SignInResponse>("/signin", { authResult });
-      signedInUser = toUser(response.data.user, fallback);
+      try {
+        const response = await axiosClient.post<SignInResponse>("/signin", { authResult });
+        signedInUser = toUser(response.data.user, fallback);
+      } catch (err) {
+        if (isAxiosError(err) && !err.response) {
+          console.warn("Backend sign-in unavailable; using local Pi session fallback.");
+          signedInUser = fallback;
+        } else {
+          throw err;
+        }
+      }
     }
     setUser(storeUser(signedInUser));
     setShowSignIn(false);
