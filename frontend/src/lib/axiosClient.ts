@@ -50,6 +50,7 @@ axiosClient.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers = config.headers ?? {};
     (config.headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+    (config.headers as Record<string, string>)["X-SMAJ-Access-Token"] = accessToken;
   }
   return config;
 });

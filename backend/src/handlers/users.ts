@@ -3,6 +3,7 @@ import { Router, Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { getUserPlatformAPIClient } from "../services/platformAPIClient";
 import env from "../environments";
+import { resolveCurrentUser } from "../services/auth";
 
 type VerifiedPiUser = {
   uid?: string;
@@ -188,13 +189,14 @@ export default function mountUserEndpoints(router: Router) {
 
   // GET /user (session check)
   router.get("/", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
     return res.status(200).json({
-      user: toClientUser(req.session.currentUser),
+      user: toClientUser(currentUser),
     });
   });
 
   router.put("/profile", async (req: Request, res: Response) => {
-    const currentUser = req.session.currentUser;
+    const currentUser = await resolveCurrentUser(req);
     const userCollection = req.app.locals.userCollection;
 
     if (!currentUser) {
@@ -228,7 +230,7 @@ export default function mountUserEndpoints(router: Router) {
   });
 
   router.get("/stats", async (req: Request, res: Response) => {
-    const currentUser = req.session.currentUser;
+    const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     const [totalProducts, successfulOrders] = await Promise.all([
       req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid }),
@@ -238,7 +240,7 @@ export default function mountUserEndpoints(router: Router) {
   });
 
   router.post("/verification-request", async (req: Request, res: Response) => {
-    const currentUser = req.session.currentUser;
+    const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     if (currentUser.role !== "seller") return res.status(400).json({ error: "bad_request", message: "Only sellers can request trusted verification" });
     await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { verificationRequested: true, verificationRequestedAt: new Date() } });
@@ -248,7 +250,7 @@ export default function mountUserEndpoints(router: Router) {
   });
 
   router.put("/settings", async (req: Request, res: Response) => {
-    const currentUser = req.session.currentUser;
+    const currentUser = await resolveCurrentUser(req);
     if (!currentUser) {
       return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     }
