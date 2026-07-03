@@ -15,6 +15,12 @@ const platformAPIClient = axios.create({
   timeout: 20000,
 });
 
+export const getUserPlatformAPIClient = (sandbox?: boolean) =>
+  axios.create({
+    baseURL: sandbox ? "https://api.sandbox.minepi.com" : env.platform_api_url,
+    timeout: 20000,
+  });
+
 export const platformAPIKeyClient = axios.create({
   baseURL: env.platform_api_url,
   timeout: 20000,
@@ -22,4 +28,3 @@ export const platformAPIKeyClient = axios.create({
 });
 
 export default platformAPIClient;
-

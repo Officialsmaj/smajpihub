@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 
 import { ObjectId } from "mongodb";
-import platformAPIClient from "../services/platformAPIClient";
+import { getUserPlatformAPIClient } from "../services/platformAPIClient";
 import env from "../environments";
 
 type VerifiedPiUser = {
@@ -46,10 +46,11 @@ const destroySession = (req: Request, res: Response) => {
 
 export const handleSignIn = async (req: Request, res: Response) => {
   const auth = req.body?.authResult;
+  const useSandboxAPI = Boolean(req.body?.sandbox || auth?.sandbox);
   const userCollection = req.app.locals.userCollection;
 
   if (!auth?.accessToken || !auth?.user?.uid || !auth?.user?.username) {
-    return res.status(400).json({ error: "bad_request", message: "Missing required authResult payload" });
+    return res.status(400).json({ error: "bad_request", message: "Pi login failed. Please login again through Pi Browser." });
   }
 
   if (!userCollection) {
@@ -59,21 +60,21 @@ export const handleSignIn = async (req: Request, res: Response) => {
   let verifiedUser: VerifiedPiUser;
 
   try {
-    const meResponse = await platformAPIClient.get<VerifiedPiUser>("/v2/me", {
+    const meResponse = await getUserPlatformAPIClient(useSandboxAPI).get<VerifiedPiUser>("/v2/me", {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
     });
     verifiedUser = meResponse.data ?? {};
   } catch (err) {
     console.error("Error verifying access token:", err);
-    return res.status(401).json({ error: "invalid_token", message: "Invalid access token" });
+    return res.status(401).json({ error: "invalid_token", message: "Pi login failed. Please login again through Pi Browser." });
   }
 
   if (verifiedUser.uid && verifiedUser.uid !== auth.user.uid) {
-    return res.status(401).json({ error: "invalid_token", message: "Authenticated user mismatch" });
+    return res.status(401).json({ error: "invalid_token", message: "Pi login failed. Please login again through Pi Browser." });
   }
 
   if (verifiedUser.username && verifiedUser.username !== auth.user.username) {
-    return res.status(401).json({ error: "invalid_token", message: "Authenticated username mismatch" });
+    return res.status(401).json({ error: "invalid_token", message: "Pi login failed. Please login again through Pi Browser." });
   }
 
   const normalizedUser = {

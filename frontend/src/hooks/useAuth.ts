@@ -22,6 +22,12 @@ const PI_AUTH_TIMEOUT_MS = 30000;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 const PI_AUTH_SCOPES = ["username", "payments"];
 
+const isPiSandboxMode = () =>
+  typeof window !== "undefined" &&
+  (window.__ENV?.sandbox === "true" ||
+    window.location.hostname === "sandbox.minepi.com" ||
+    document.referrer.includes("sandbox.minepi.com"));
+
 const onIncompletePaymentFound = (payment: PaymentDTO) => {
   if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment });
 };
@@ -100,7 +106,7 @@ const getDashboardUrl = () => {
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
   if (!axiosErr.response) return "Backend connection unavailable. Please try again.";
-  if (axiosErr.response.status === 401) return "Pi token verification failed. Check the Pi Sandbox and API configuration.";
+  if ([400, 401].includes(axiosErr.response.status)) return "Pi login failed. Please login again through Pi Browser.";
   return axiosErr.response.data?.message ? `Login failed: ${axiosErr.response.data.message}` : `Login failed with status ${axiosErr.response.status}.`;
 };
 
@@ -148,10 +154,10 @@ export const useAuth = () => {
     let signedInUser = fallback;
     if (getBaseURL()) {
       try {
-        const response = await axiosClient.post<SignInResponse>("/signin", { authResult });
+        const response = await axiosClient.post<SignInResponse>("/user/signin", { authResult, sandbox: isPiSandboxMode() });
         signedInUser = toUser(response.data.user, fallback);
       } catch (err) {
-        if (isAxiosError(err) && !err.response) {
+        if (import.meta.env.DEV && isAxiosError(err) && !err.response) {
           console.warn("Backend sign-in unavailable; using local Pi session fallback.");
           signedInUser = fallback;
         } else {
