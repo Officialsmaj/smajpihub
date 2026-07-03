@@ -27,7 +27,8 @@ Set `.env.development` with the following variables:
 | Variable           | Description           | Example                 |
 | ------------------ | --------------------- | ----------------------- |
 | `PORT`             | Dev server port       | `3314`                  |
-| `VITE_BACKEND_URL` | Backend API URL       | `http://localhost:8000` |
+| `VITE_API_BASE_URL` | Backend API URL       | `https://smajpihub.onrender.com` |
+| `VITE_BACKEND_URL` | Legacy backend API URL alias | `https://smajpihub.onrender.com` |
 | `VITE_SANDBOX_SDK` | Enable Pi Sandbox SDK | `true`                  |
 
 ### 3. Start the development server
@@ -36,7 +37,7 @@ Set `.env.development` with the following variables:
 npm run dev
 ```
 
-The app will be available at `http://localhost:3314` or your configured `PORT`.
+The app will be available on your configured `PORT`.
 
 ## Production Build
 

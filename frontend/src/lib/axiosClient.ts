@@ -1,26 +1,26 @@
 import axios from "axios";
 
-export const getBaseURL = () => {
-  const runtimeURL = typeof window !== "undefined" ? window.__ENV?.backendURL : undefined;
+const PRODUCTION_API_BASE_URL = "https://smajpihub.onrender.com";
 
-  if (runtimeURL && runtimeURL !== "$$BACKEND_URL$$") {
+const isConfiguredURL = (url?: string) => Boolean(url && url !== "$$BACKEND_URL$$" && url !== "$$API_BASE_URL$$");
+
+export const getBaseURL = () => {
+  const runtimeURL = typeof window !== "undefined" ? window.__ENV?.apiBaseURL || window.__ENV?.backendURL : undefined;
+
+  if (isConfiguredURL(runtimeURL)) {
     return runtimeURL;
   }
 
-  const buildURL = import.meta.env.VITE_BACKEND_URL;
-  if (buildURL && buildURL !== "$$BACKEND_URL$$") {
+  const buildURL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL;
+  if (isConfiguredURL(buildURL)) {
     return buildURL;
   }
 
   if (import.meta.env.DEV) {
-    return "http://127.0.0.1:8000";
+    return PRODUCTION_API_BASE_URL;
   }
 
-  if (typeof window !== "undefined" && ["smajpihub.com", "www.smajpihub.com", "sandbox.minepi.com"].includes(window.location.hostname)) {
-    return "https://backend.smajpihub.com";
-  }
-
-  return undefined;
+  return PRODUCTION_API_BASE_URL;
 };
 
 export const axiosClient = axios.create({

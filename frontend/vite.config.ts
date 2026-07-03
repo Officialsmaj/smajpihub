@@ -6,6 +6,7 @@ import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
+const productionApiBaseURL = "https://smajpihub.onrender.com";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -48,8 +49,10 @@ export default defineConfig(({ mode }) => {
       {
         name: "html-env-replace",
         transformIndexHtml(html) {
+          const apiBaseURL = env.VITE_API_BASE_URL || env.VITE_BACKEND_URL || productionApiBaseURL;
           return html
-            .replace(/\$\$BACKEND_URL\$\$/g, () => env.VITE_BACKEND_URL || "$$BACKEND_URL$$")
+            .replace(/\$\$BACKEND_URL\$\$/g, () => apiBaseURL)
+            .replace(/\$\$API_BASE_URL\$\$/g, () => apiBaseURL)
             .replace(/\$\$SANDBOX_SDK\$\$/g, env.VITE_SANDBOX_SDK || "true");
         },
       },
@@ -81,4 +84,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-

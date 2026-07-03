@@ -19,6 +19,7 @@ interface Environment {
   session_secret: string;
   pi_api_key: string;
   platform_api_url: string;
+  mongodb_uri: string;
   mongo_host: string;
   mongo_db_name: string;
   mongo_user: string;
@@ -46,6 +47,7 @@ const env: Environment = {
   pi_api_key: process.env.PI_API_KEY || "",
   platform_api_url:
     process.env.PLATFORM_API_URL || (sandboxSDK ? "https://api.sandbox.minepi.com" : "https://api.minepi.com"),
+  mongodb_uri: process.env.MONGODB_URI || "",
   mongo_host: process.env.MONGO_HOST || "localhost:27017",
   mongo_db_name: process.env.MONGODB_DATABASE_NAME || "smajpihub",
   mongo_user: process.env.MONGODB_USERNAME || "",
@@ -73,8 +75,8 @@ if (isProduction) {
   if (!env.pi_api_key) missing.push("PI_API_KEY");
   if (!process.env.FRONTEND_URL) missing.push("FRONTEND_URL");
   if (env.use_memory_db) missing.push("USE_MEMORY_DB=false");
-  if (!process.env.MONGO_HOST) missing.push("MONGO_HOST");
-  if (!process.env.MONGODB_DATABASE_NAME) missing.push("MONGODB_DATABASE_NAME");
+  if (!env.mongodb_uri && !process.env.MONGO_HOST) missing.push("MONGODB_URI or MONGO_HOST");
+  if (!env.mongodb_uri && !process.env.MONGODB_DATABASE_NAME) missing.push("MONGODB_DATABASE_NAME");
   if (!env.cloudinary_cloud_name) missing.push("CLOUDINARY_CLOUD_NAME");
   if (!env.cloudinary_upload_preset) missing.push("CLOUDINARY_UPLOAD_PRESET");
 

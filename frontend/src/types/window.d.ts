@@ -3,6 +3,7 @@ import { AuthResult, PaymentDTO } from "./pi";
 declare global {
   interface Window {
     __ENV?: {
+      apiBaseURL?: string;
       backendURL?: string;
       sandbox?: string;
     };

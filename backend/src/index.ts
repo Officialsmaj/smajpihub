@@ -25,19 +25,19 @@ import mountUploadEndpoints from "./handlers/uploads";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
-const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
+const buildLegacyMongoUri = () => {
+  if (env.mongo_user && env.mongo_password) {
+    const username = encodeURIComponent(env.mongo_user);
+    const password = encodeURIComponent(env.mongo_password);
+    return `mongodb://${username}:${password}@${env.mongo_host}/${dbName}?authSource=admin`;
+  }
+
+  return `mongodb://${env.mongo_host}/${dbName}`;
+};
+const mongoUri = env.mongodb_uri || buildLegacyMongoUri();
 const baseMongoClientOptions = { serverSelectionTimeoutMS: 5000 };
-const mongoClientOptions =
-  env.mongo_user && env.mongo_password
-    ? {
-        ...baseMongoClientOptions,
-        authSource: "admin",
-        auth: {
-          username: env.mongo_user,
-          password: env.mongo_password,
-        },
-      }
-    : baseMongoClientOptions;
+const mongoClientOptions = baseMongoClientOptions;
+const maskMongoUri = (uri: string) => uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, "//$1:****@");
 
 //
 // I. Initialize and set up the express app and various middlewares and packages:
@@ -230,7 +230,7 @@ const start = async () => {
       ]);
     }
 
-    console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${mongoUri}`);
+    console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${maskMongoUri(mongoUri)}`);
 
     app.listen(env.port, () => {
       console.log(`SMAJ PI HUB backend listening on port ${env.port}!`);

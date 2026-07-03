@@ -99,7 +99,7 @@ const getDashboardUrl = () => {
 
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
-  if (!axiosErr.response) return "Backend sync is temporarily unavailable. You can continue with your Pi session.";
+  if (!axiosErr.response) return "Backend connection unavailable. Please try again.";
   if (axiosErr.response.status === 401) return "Pi token verification failed. Check the Pi Sandbox and API configuration.";
   return axiosErr.response.data?.message ? `Login failed: ${axiosErr.response.data.message}` : `Login failed with status ${axiosErr.response.status}.`;
 };
