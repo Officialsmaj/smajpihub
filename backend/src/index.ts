@@ -89,7 +89,13 @@ app.use(
       }
 
       // Allow Codespaces preview hosts and Pi Sandbox host for testnet app wrapper.
-      if (origin.endsWith(".app.github.dev") || origin === "https://sandbox.minepi.com" || origin === "https://smajpihub.com" || origin === "https://www.smajpihub.com") {
+      if (
+        origin.endsWith(".app.github.dev") ||
+        origin === "https://sandbox.minepi.com" ||
+        origin === "https://smajpihub.com" ||
+        origin === "https://www.smajpihub.com" ||
+        origin === "https://smajpihub.onrender.com"
+      ) {
         callback(null, true);
         return;
       }
