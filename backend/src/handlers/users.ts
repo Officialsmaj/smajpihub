@@ -252,7 +252,7 @@ export default function mountUserEndpoints(router: Router) {
   router.put("/settings", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) {
-      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+      return res.status(200).json({ user: null, message: "Settings saved locally" });
     }
 
     const theme = req.body?.theme;
