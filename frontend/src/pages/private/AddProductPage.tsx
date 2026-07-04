@@ -7,6 +7,7 @@ import { uploadImages } from "../../lib/uploadImage";
 import type { Product } from "../../types/marketplace";
 
 const PI_USDT_RATE = 314159;
+const MAX_PRODUCT_IMAGES = 5;
 const SELLER_AGREEMENT_READ_KEY = "smaj_seller_agreement_read";
 const initialForm = {
   title: "",
@@ -54,10 +55,24 @@ const AddProductPage = () => {
 
   const selectImages = (files?: FileList | null) => {
     setError("");
-    const selected = Array.from(files || []).slice(0, 5);
+    const selected = Array.from(files || []);
     if (!selected.length) return;
+    if (form.images.length >= MAX_PRODUCT_IMAGES) return setError("You can add up to five product images.");
+    const availableSlots = MAX_PRODUCT_IMAGES - form.images.length;
+    const nextFiles = selected.slice(0, availableSlots);
     if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) return setError("Choose up to five images, each 2 MB or smaller.");
-    Promise.all(selected.map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }))).then((images) => setForm((current) => ({ ...current, image: images[0], images }))).catch(() => setError("Could not read the selected images."));
+    if (selected.length > availableSlots) setError(`Only ${availableSlots} more image${availableSlots === 1 ? "" : "s"} can be added.`);
+    Promise.all(nextFiles.map((file) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }))).then((images) => setForm((current) => {
+      const gallery = [...current.images, ...images].slice(0, MAX_PRODUCT_IMAGES);
+      return { ...current, image: gallery[0] || "", images: gallery };
+    })).catch(() => setError("Could not read the selected images."));
+  };
+
+  const removeImage = (index: number) => {
+    setForm((current) => {
+      const images = current.images.filter((_, imageIndex) => imageIndex !== index);
+      return { ...current, image: images[0] || "", images };
+    });
   };
 
   const submit = async (event: FormEvent) => {
@@ -154,8 +169,18 @@ const AddProductPage = () => {
       ) : null}
       <form className="private-form" onSubmit={(event) => void submit(event)}>
         <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-        <label>Product gallery (up to 5 images)<input required multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>
-        {form.images.length ? <div className="product-upload-preview gallery-preview">{form.images.map((image) => <img src={image} alt="Product preview" key={image.slice(-30)} />)}</div> : null}
+        <label>Product gallery ({form.images.length}/5 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>
+        {form.images.length ? (
+          <div className="product-gallery-preview">
+            {form.images.map((image, index) => (
+              <figure key={`${image.slice(-30)}-${index}`}>
+                <img src={image} alt={`Product preview ${index + 1}`} />
+                {index === 0 ? <span>Main</span> : null}
+                <button type="button" onClick={() => removeImage(index)}>Remove</button>
+              </figure>
+            ))}
+          </div>
+        ) : null}
         <div className="private-form-row">
           <label>Price amount<input required type="number" min="0.0000000001" step="any" value={form.priceInput} onChange={(event) => setForm({ ...form, priceInput: event.target.value })} /></label>
           <label>Price currency<select required value={form.priceCurrency} onChange={(event) => setForm({ ...form, priceCurrency: event.target.value as "USDT" | "Pi" })}><option>USDT</option><option>Pi</option></select></label>

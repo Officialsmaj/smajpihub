@@ -6,6 +6,7 @@ import { isAxiosError } from "axios";
 import { uploadImages } from "../../lib/uploadImage";
 
 const PI_USDT_RATE = 314159;
+const MAX_PRODUCT_IMAGES = 5;
 
 const EditProductPage = () => {
   const { id } = useParams();
@@ -59,18 +60,35 @@ const EditProductPage = () => {
 
   const selectImages = (files?: FileList | null) => {
     setError("");
-    const selected = Array.from(files || []).slice(0, 5);
+    const selected = Array.from(files || []);
     if (!selected.length) return;
+    if (form.images.length >= MAX_PRODUCT_IMAGES) {
+      setError("You can add up to five product images.");
+      return;
+    }
+    const availableSlots = MAX_PRODUCT_IMAGES - form.images.length;
+    const nextFiles = selected.slice(0, availableSlots);
     if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) {
       setError("Choose up to five images, each 2 MB or smaller.");
       return;
     }
-    Promise.all(selected.map((file) => new Promise<string>((resolve, reject) => {
+    if (selected.length > availableSlots) setError(`Only ${availableSlots} more image${availableSlots === 1 ? "" : "s"} can be added.`);
+    Promise.all(nextFiles.map((file) => new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ""));
       reader.onerror = reject;
       reader.readAsDataURL(file);
-    }))).then((images) => setForm((current) => ({ ...current, image: images[0], images }))).catch(() => setError("Could not read the selected images."));
+    }))).then((images) => setForm((current) => {
+      const gallery = [...current.images, ...images].slice(0, MAX_PRODUCT_IMAGES);
+      return { ...current, image: gallery[0] || "", images: gallery };
+    })).catch(() => setError("Could not read the selected images."));
+  };
+
+  const removeImage = (index: number) => {
+    setForm((current) => {
+      const images = current.images.filter((_, imageIndex) => imageIndex !== index);
+      return { ...current, image: images[0] || "", images };
+    });
   };
 
   const submit = async (event: FormEvent) => {
@@ -79,6 +97,11 @@ const EditProductPage = () => {
     if (!form.sellerAgreementAccepted) {
       setSaving(false);
       setError("Accept the seller agreement before saving this product.");
+      return;
+    }
+    if (!form.image) {
+      setSaving(false);
+      setError("Choose at least one product image before saving.");
       return;
     }
     try {
@@ -101,7 +124,7 @@ const EditProductPage = () => {
   return <main className="private-page"><Link className="private-back-link" to="/seller">Back to Seller Dashboard</Link><section className="private-page-head"><div><p className="private-kicker">PRODUCT MANAGEMENT</p><h1>Edit Product</h1><p>Update listing details, price, image, and contact information.</p></div></section>
     <form className="private-form" onSubmit={(event) => void submit(event)}>
       <label>Product title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-      <label>Replace gallery<input multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>{form.images.length ? <div className="product-upload-preview gallery-preview">{form.images.map((image) => <img src={image} alt="Product preview" key={image.slice(-30)} />)}</div> : null}
+      <label>Product gallery ({form.images.length}/5 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>{form.images.length ? <div className="product-gallery-preview">{form.images.map((image, index) => <figure key={`${image.slice(-30)}-${index}`}><img src={image} alt={`Product preview ${index + 1}`} />{index === 0 ? <span>Main</span> : null}<button type="button" onClick={() => removeImage(index)}>Remove</button></figure>)}</div> : null}
       <div className="private-form-row"><label>USDT price<input required type="number" min="0.01" step="0.01" value={form.priceUsdt} onChange={(event) => setForm({ ...form, priceUsdt: event.target.value, pricePi: String(Number(event.target.value) / PI_USDT_RATE) })} /></label><label>Pi price<input required type="number" min="0.0000000001" step="any" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value, priceUsdt: String(Number(event.target.value) * PI_USDT_RATE) })} /></label></div>
       <div className="private-form-row"><label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label><label>Condition<input required value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })} /></label></div>
       <div className="private-form-row"><label>Quantity<input required type="number" min="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /></label><label>Delivery option<input required value={form.deliveryOption} onChange={(event) => setForm({ ...form, deliveryOption: event.target.value })} /></label></div>

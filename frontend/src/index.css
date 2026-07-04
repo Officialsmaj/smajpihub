@@ -3413,6 +3413,62 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .product-upload-preview { width: min(100%, 420px); height: 230px; overflow: hidden; background: #10151f; border: 1px solid #343d50; border-radius: 10px; }
 .product-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+.product-gallery-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.product-gallery-preview figure {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  margin: 0;
+  overflow: hidden;
+  background: var(--smaj-secondary-bg, #f8fafc);
+  border: 1px solid var(--smaj-border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.product-gallery-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.product-gallery-preview span,
+.product-gallery-preview button {
+  position: absolute;
+  z-index: 2;
+}
+
+.product-gallery-preview span {
+  top: 7px;
+  left: 7px;
+  padding: 4px 7px;
+  color: #ffffff !important;
+  background: var(--smaj-primary, #6d28d9);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.product-gallery-preview button {
+  left: 7px;
+  right: 7px;
+  bottom: 7px;
+  min-height: 30px;
+  color: #ffffff !important;
+  background: rgba(220, 38, 38, .94);
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
 .profile-readonly { padding: 13px; display: flex; justify-content: space-between; gap: 20px; background: #111620; border-radius: 8px; }
 .profile-readonly span, .form-help { color: #8e95a8; }
 .profile-readonly strong { overflow-wrap: anywhere; }
@@ -12377,10 +12433,10 @@ select,
   width: 100%;
   min-height: 45px;
   padding: 11px 13px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 9px;
   color: var(--smaj-text);
   background: var(--smaj-input);
   border: 1px solid var(--smaj-border);
@@ -12395,6 +12451,16 @@ select,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.profile-picker-flag {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: cover;
+  border: 1px solid var(--smaj-border);
+  border-radius: 50%;
+  background: var(--smaj-card);
 }
 
 .language-picker-trigger {

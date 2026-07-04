@@ -49,7 +49,9 @@ const cleanLanguages = [
   { name: "Igbo", native: "Igbo", flag: "NG" },
   { name: "Amharic", native: "Amharic", flag: "ET" },
 ] as const;
-const codeToFlag = (code: string) => code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+const FlagIcon = ({ code, label }: { code: string; label: string }) => (
+  <img className="profile-picker-flag" src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`} alt="" aria-label={label} loading="lazy" />
+);
 type BackendErrorBody = { message?: string; error?: string };
 type CropTarget = "avatar" | "cover";
 type CropFrame = { x: number; y: number; w: number; h: number };
@@ -461,16 +463,17 @@ const ProfilePage = () => {
             <label>Bio / About<textarea maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters.</small></label>
             <div className="private-form-row">
               <label className="country-picker-label">Country
-                <button type="button" className="country-picker-trigger" onClick={() => setCountryOpen((open) => !open)}>
-                  <span>{selectedCountry ? `${selectedCountry.flag} ${selectedCountry.name}` : form.country || "Choose country"}</span>
+                <button type="button" className="country-picker-trigger" onClick={() => { setLanguageOpen(false); setCountryOpen((open) => !open); }}>
+                  {selectedCountry ? <FlagIcon code={selectedCountry.code} label={selectedCountry.name} /> : null}
+                  <span>{selectedCountry ? selectedCountry.name : form.country || "Choose country"}</span>
                 </button>
                 {countryOpen ? (
                   <div className="country-picker-panel">
                     <input autoFocus value={countrySearch} onChange={(event) => setCountrySearch(event.target.value)} placeholder="Search country or scroll..." />
                     <div>
                       {filteredCountries.map((country) => (
-                        <button type="button" key={country.code} onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); }}>
-                          <span>{country.flag}</span>
+                        <button type="button" key={country.code} onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); setLanguageOpen(false); }}>
+                          <FlagIcon code={country.code} label={country.name} />
                           <strong>{country.name}</strong>
                           {priorityCountries.has(country.code) ? <small>High Pi community</small> : null}
                         </button>
@@ -480,8 +483,8 @@ const ProfilePage = () => {
                 ) : null}
               </label>
               <label className="language-picker-label">Language
-                <button type="button" className="language-picker-trigger" onClick={() => setLanguageOpen((open) => !open)}>
-                  <span>{codeToFlag(selectedLanguage.flag)}</span>
+                <button type="button" className="language-picker-trigger" onClick={() => { setCountryOpen(false); setLanguageOpen((open) => !open); }}>
+                  <FlagIcon code={selectedLanguage.flag} label={selectedLanguage.name} />
                   <strong>{selectedLanguage.name}</strong>
                   <small>{selectedLanguage.native}</small>
                 </button>
@@ -490,8 +493,8 @@ const ProfilePage = () => {
                     <input autoFocus value={languageSearch} onChange={(event) => setLanguageSearch(event.target.value)} placeholder="Search language..." />
                     <div>
                       {filteredLanguages.map((language) => (
-                        <button type="button" key={language.name} className={language.name === form.language ? "active" : ""} onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); }}>
-                          <span>{codeToFlag(language.flag)}</span>
+                        <button type="button" key={language.name} className={language.name === form.language ? "active" : ""} onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); setCountryOpen(false); }}>
+                          <FlagIcon code={language.flag} label={language.name} />
                           <strong>{language.name}</strong>
                           <small>{language.native}</small>
                           {language.name === form.language ? <b>✓</b> : null}
