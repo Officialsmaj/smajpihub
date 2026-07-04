@@ -13740,3 +13740,20 @@ button.private-primary-button {
   border-radius: 50% !important;
   box-shadow: none !important;
 }
+
+.trust-badge,
+.trust-badge *,
+.trust-badge > span {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.real-profile-avatar img,
+.account-dashboard-avatar img,
+.private-header-avatar img,
+.private-profile-avatar img,
+.mobile-private-avatar img {
+  object-fit: contain !important;
+  background: transparent !important;
+}

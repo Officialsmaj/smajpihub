@@ -84,6 +84,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
   const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
+  const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
@@ -171,7 +172,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
           <div className="mobile-private-header-actions">
-            <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
+            <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
             <button className="mobile-private-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
               {themeIcon}
             </button>
@@ -184,7 +185,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
-          <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}</Link>
+          <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
           <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
             {themeIcon}
           </button>
@@ -208,7 +209,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               <NavLink key={link.to} to={link.to} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? link.label : undefined} aria-label={link.label}>
                 {link.icon}
                 <span className="private-nav-label">{link.label}</span>
-                {link.to === "/notifications" && unreadCount ? <b className="sidebar-count">{unreadCount}</b> : null}
+                {link.to === "/notifications" && unreadCount ? <b className="sidebar-count">{notificationBadgeLabel}</b> : null}
               </NavLink>
             ))}
           </nav>
