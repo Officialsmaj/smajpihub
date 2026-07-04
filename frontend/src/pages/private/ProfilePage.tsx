@@ -350,7 +350,7 @@ const ProfilePage = () => {
             <span><CameraAltOutlinedIcon /></span>
           </button>
           <div>
-            <h1>{name}<TrustBadge level={profileVerificationLevel} /></h1>
+            <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} /></h1>
             <span>@{username}</span>
             <div className="real-profile-badges">
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>

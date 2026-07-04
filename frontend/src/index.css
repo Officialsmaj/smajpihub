@@ -13141,12 +13141,37 @@ select,
   max-width: 100%;
   font-size: clamp(1.35rem, 6vw, 2.35rem);
   line-height: 1.05;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
 }
 
 .seller-profile-hero h1 {
   font-size: clamp(1.25rem, 5.5vw, 2.1rem);
+}
+
+.profile-name-line {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+
+.profile-name-text {
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-name-line .trust-badge {
+  flex: 0 0 auto;
+  margin-left: 0;
 }
 
 .seller-profile-avatar {
@@ -13201,7 +13226,7 @@ select,
 
   .account-dashboard-identity h1,
   .seller-profile-hero h1 {
-    font-size: clamp(1.25rem, 7vw, 1.75rem);
+    font-size: clamp(1.05rem, 5.8vw, 1.55rem);
   }
 
   .seller-profile-hero {

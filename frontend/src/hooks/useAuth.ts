@@ -19,6 +19,7 @@ type ProfileUpdate = {
 };
 
 const PI_AUTH_TIMEOUT_MS = 30000;
+const MIN_SESSION_LOADING_MS = 450;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 const PI_AUTH_SCOPES = ["username", "payments"];
 const AUTH_REQUEST_CONFIG = { withCredentials: true };
@@ -45,6 +46,8 @@ const authenticateWithTimeout = (scopes: string[]) =>
     window.Pi!.authenticate(scopes, onIncompletePaymentFound),
     new Promise<AuthResult>((_, reject) => setTimeout(() => reject(new Error("PI_AUTH_TIMEOUT")), PI_AUTH_TIMEOUT_MS)),
   ]);
+
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const toUser = (candidate: Partial<User> | null | undefined, fallback: User): User => ({
   uid: candidate?.uid || fallback.uid,
@@ -139,6 +142,7 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
     const checkSession = async () => {
+      const startedAt = Date.now();
       const stored = getStoredPiUser();
       if (stored && mounted) setUser(stored);
       if (!getBaseURL()) { if (mounted) setIsLoading(false); return; }
@@ -166,6 +170,8 @@ export const useAuth = () => {
           if (mounted) setUser(null);
         }
       } finally {
+        const remaining = MIN_SESSION_LOADING_MS - (Date.now() - startedAt);
+        if (remaining > 0) await wait(remaining);
         if (mounted) setIsLoading(false);
       }
     };
