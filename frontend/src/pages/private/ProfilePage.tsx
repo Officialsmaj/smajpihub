@@ -70,7 +70,7 @@ const cropConfig = {
 } as const;
 
 const initialCropFrame = (target: CropTarget): CropFrame => target === "cover"
-  ? { x: 8, y: 8, w: 84, h: 84 }
+  ? { x: 6, y: 12, w: 88, h: 56 }
   : { x: 12, y: 12, w: 76, h: 76 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -226,9 +226,27 @@ const ProfilePage = () => {
         };
       }
 
-      let size = start.w;
       let x = start.x;
       let y = start.y;
+      if (current.target === "cover") {
+        let width = start.w;
+        let height = start.h;
+        if (handle === "nw" || handle === "sw") {
+          width = clamp(start.w - dx, minSize, 96);
+          x = start.x + start.w - width;
+        }
+        if (handle === "ne" || handle === "se") width = clamp(start.w + dx, minSize, 96 - start.x);
+        if (handle === "nw" || handle === "ne") {
+          height = clamp(start.h - dy, minSize, 90);
+          y = start.y + start.h - height;
+        }
+        if (handle === "sw" || handle === "se") height = clamp(start.h + dy, minSize, 90 - start.y);
+        x = clamp(x, 0, 100 - width);
+        y = clamp(y, 0, 100 - height);
+        return { ...current, frame: { x, y, w: width, h: height } };
+      }
+
+      let size = start.w;
       const change = handle === "nw" ? Math.max(-dx, -dy)
         : handle === "ne" ? Math.max(dx, -dy)
           : handle === "sw" ? Math.max(-dx, dy)
@@ -340,15 +358,38 @@ const ProfilePage = () => {
 
       <section className="real-profile-hero">
         <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Profile banner">
-          <button type="button" onClick={() => coverInputRef.current?.click()} aria-label="Edit profile banner">
+          <label
+            htmlFor="profileCoverUpload"
+            role="button"
+            tabIndex={0}
+            aria-label="Edit profile banner"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                coverInputRef.current?.click();
+              }
+            }}
+          >
             <EditOutlinedIcon /> Edit Banner
-          </button>
+          </label>
         </div>
         <div className="real-profile-identity">
-          <button className="real-profile-avatar" type="button" onClick={() => avatarInputRef.current?.click()} aria-label="Upload profile picture">
+          <label
+            className="real-profile-avatar"
+            htmlFor="profileAvatarUpload"
+            role="button"
+            tabIndex={0}
+            aria-label="Upload profile picture"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                avatarInputRef.current?.click();
+              }
+            }}
+          >
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
             <span><CameraAltOutlinedIcon /></span>
-          </button>
+          </label>
           <div>
             <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} /></h1>
             <span>@{username}</span>

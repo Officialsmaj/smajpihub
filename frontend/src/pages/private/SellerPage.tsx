@@ -21,6 +21,13 @@ const productReviewLabel = (product: Product) => {
   return "Pending Review";
 };
 
+const productReviewTone = (product: Product) => {
+  if (product.hidden) return "hidden";
+  if (product.reviewStatus === "rejected") return "rejected";
+  if (product.approved === true && product.reviewStatus === "approved") return product.active ? "available" : "sold";
+  return "pending";
+};
+
 const productReviewNote = (product: Product) => {
   if (product.hidden) return "This product is not visible in SMAJ Store.";
   if (product.reviewStatus === "rejected") return product.rejectionReason || "Admin rejected this listing. Edit and resubmit it for review.";
@@ -181,13 +188,13 @@ const SellerPage = () => {
             {data.products.length === 0 ? <div className="private-state">You have not published a product yet.</div> : (
               <div className="management-list">
                 {data.products.map((product) => (
-                  <article className="management-row" key={product._id}>
+                  <article className="management-row seller-product-row" key={product._id}>
                     <img src={product.image} alt="" />
                     <div className="management-main">
                       <h3>{product.title}</h3>
                       <p>{product.pricePi} Pi · {product.category}</p>
                     </div>
-                    <span className={`availability ${product.hidden || !product.active || product.reviewStatus !== "approved" ? "sold" : "available"}`}>
+                    <span className={`availability ${productReviewTone(product)}`}>
                       {productReviewLabel(product)}
                     </span>
                     <small>{productReviewNote(product)}</small>
