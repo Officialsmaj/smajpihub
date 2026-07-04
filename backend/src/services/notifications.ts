@@ -8,5 +8,9 @@ type NotificationInput = {
 
 export const createNotification = async (app: any, input: NotificationInput) => {
   if (!input.userId || !app.locals.notificationCollection) return;
-  await app.locals.notificationCollection.insertOne({ ...input, read: false, createdAt: new Date() });
+  try {
+    await app.locals.notificationCollection.insertOne({ ...input, read: false, createdAt: new Date() });
+  } catch (err) {
+    console.error("Notification creation failed:", err);
+  }
 };

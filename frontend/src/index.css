@@ -4086,7 +4086,8 @@ html[data-private-theme="dark"] .private-alert.success {
 .conversation-list { border-right: 1px solid var(--smaj-border); overflow-y: auto; }.conversation-list button { width: 100%; display: flex; gap: 10px; padding: 14px; border: 0; border-bottom: 1px solid var(--smaj-border); text-align: left; color: var(--smaj-text); background: transparent; cursor: pointer; }.conversation-list button.active { background: var(--smaj-secondary-bg); }.conversation-list button > span { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: var(--smaj-secondary-bg); overflow: hidden; }.conversation-list img { width: 100%; height: 100%; object-fit: cover; }.conversation-list div { min-width: 0; flex: 1; }.conversation-list p { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin: 3px 0; }.conversation-list i { width: 8px; height: 8px; border-radius: 50%; background: var(--smaj-primary); }
 .chat-panel { min-width: 0; display: flex; flex-direction: column; }.chat-panel > header { padding: 16px; border-bottom: 1px solid var(--smaj-border); display: flex; justify-content: space-between; }.chat-messages { flex: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--smaj-secondary-bg); }.chat-messages article { max-width: 75%; align-self: flex-start; padding: 10px 12px; border-radius: 14px 14px 14px 3px; background: var(--smaj-card); }.chat-messages article.mine { align-self: flex-end; color: #fff; background: var(--smaj-primary); border-radius: 14px 14px 3px 14px; }.chat-messages p { margin: 0 0 4px; }.chat-panel form { display: flex; gap: 10px; padding: 14px; }.chat-panel form input { min-width: 0; flex: 1; }
 .notification-list { display: grid; gap: 9px; }.notification-list > button { display: flex; gap: 12px; width: 100%; padding: 16px; border: 1px solid var(--smaj-border); border-radius: 14px; text-align: left; color: var(--smaj-text); background: var(--smaj-card); cursor: pointer; }.notification-list > button.unread { border-left: 4px solid var(--smaj-primary); background: color-mix(in srgb,var(--smaj-primary) 6%,var(--smaj-card)); }.notification-list p { margin: 4px 0; }.notification-dot { width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: var(--smaj-border); }.unread .notification-dot { background: var(--smaj-primary); }
-.notification-icon { position: relative; }.notification-icon > span, .sidebar-count { position: absolute; min-width: 17px; height: 17px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; color: #fff; background: #ef4444; font-size: .62rem; font-weight: 800; }.notification-icon > span { top: -4px; right: -5px; }.sidebar-count { position: static; margin-left: auto; }
+.notification-icon { position: relative; }.notification-icon > span, .sidebar-count { position: absolute; min-width: 18px; height: 18px; padding: 0 5px; display: grid; place-items: center; border-radius: 999px; color: #fff; background: #e11d48; border: 2px solid var(--smaj-card); box-shadow: 0 0 0 2px rgba(225, 29, 72, .18); font-size: .62rem; line-height: 1; font-weight: 900; }.notification-icon > span { top: -6px; right: -7px; animation: notificationBadgePulse 1.6s ease-in-out infinite; }.sidebar-count { position: static; margin-left: auto; border-color: transparent; }
+@keyframes notificationBadgePulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 5px rgba(225, 29, 72, .12); } }
 
 @media (max-width: 800px) { .store-tools { grid-template-columns: 1fr; }.category-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.seller-profile-hero { align-items: flex-start; flex-wrap: wrap; }.seller-profile-stats { width: 100%; margin-left: 0; justify-content: space-between; }.messages-layout { grid-template-columns: 1fr; min-height: auto; }.conversation-list { max-height: 260px; border-right: 0; border-bottom: 1px solid var(--smaj-border); }.chat-panel { min-height: 480px; }.product-detail-actions { align-items: stretch; }.product-detail-actions button { justify-content: center; } }
 
@@ -11506,6 +11507,10 @@ select,
   align-items: center;
 }
 
+.legal-company-hero {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .public-store-status-card,
 .legal-hero-card {
   min-height: 280px;
@@ -11558,6 +11563,15 @@ select,
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: var(--shadow-soft);
+}
+
+.legal-policy-panel,
+.legal-report-card {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .public-store-feature-grid article {
@@ -11640,7 +11654,7 @@ select,
 }
 
 .legal-report-grid {
-  grid-template-columns: minmax(0, 1.12fr) minmax(260px, 0.68fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -11652,6 +11666,19 @@ select,
 .legal-report-card a {
   color: var(--primary);
   font-weight: 850;
+}
+
+.legal-report-grid .contact-form {
+  padding: 0;
+  overflow: visible;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.legal-report-grid .contact-form::before {
+  display: none;
 }
 
 .legal-back-link {
@@ -11670,14 +11697,14 @@ select,
 }
 
 .legal-text-document {
-  padding: 20px;
+  padding: 0;
   display: grid;
   gap: 16px;
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: var(--shadow-soft);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .legal-text-intro {

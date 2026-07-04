@@ -22,6 +22,7 @@ const NotificationsPage = () => {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [tab, setTab] = useState("All");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const refreshNotificationBadge = () => window.dispatchEvent(new Event("smaj:notifications-refresh"));
 
   useEffect(() => {
     axiosClient
@@ -40,6 +41,7 @@ const NotificationsPage = () => {
       await axiosClient.patch(`/notifications/${item._id}/read`).catch(() => undefined);
     }
     setItems((all) => all.map((entry) => (entry._id === item._id ? { ...entry, read: true } : entry)));
+    refreshNotificationBadge();
     const target =
       item.relatedId === "messages" || item.type.includes("message")
         ? "/messages"
@@ -56,11 +58,13 @@ const NotificationsPage = () => {
     await axiosClient.delete(`/notifications/${deleteId}`).catch(() => undefined);
     setItems((all) => all.filter((item) => item._id !== deleteId));
     setDeleteId(null);
+    refreshNotificationBadge();
   };
 
   const markAll = async () => {
     await axiosClient.patch("/notifications/read-all").catch(() => undefined);
     setItems((current) => current.map((item) => ({ ...item, read: true })));
+    refreshNotificationBadge();
   };
 
   return (

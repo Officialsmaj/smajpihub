@@ -3,8 +3,6 @@ import type { FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import { axiosClient } from "../lib/axiosClient";
 
@@ -37,11 +35,6 @@ const LegalShell = ({
           <h1>{title}</h1>
           <p>{description}</p>
         </div>
-        <aside className="legal-hero-card">
-          <GavelOutlinedIcon />
-          <strong>SMAJ PI HUB</strong>
-          <span>Digital marketplace and service platform.</span>
-        </aside>
       </section>
       {children}
     </main>
@@ -837,12 +830,6 @@ export const ReportAbusePage = () => {
           {submitted ? <p className="contact-form-success">Thank you. Your report has been recorded for review.</p> : null}
           {error ? <p className="contact-form-success error">{error}</p> : null}
         </form>
-        <aside className="legal-report-card">
-          <ReportProblemOutlinedIcon />
-          <h2>What to Include</h2>
-          <p>Share links, usernames, listing titles, screenshots description, payment context, and any timeline details.</p>
-          <p>For urgent company contact, email <a href={`mailto:${legalEmail}`}>{legalEmail}</a>.</p>
-        </aside>
       </section>
       <LegalTextDocument
         title="SMAJ PI HUB Report Abuse Policy"

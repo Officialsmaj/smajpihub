@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -99,7 +99,23 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     window.localStorage.setItem("smaj_public_theme", themeMode);
   }, [themeMode]);
 
-  useEffect(() => { axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined); }, [location.pathname]);
+  const loadUnreadCount = useCallback(() => {
+    axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    loadUnreadCount();
+  }, [loadUnreadCount, location.pathname]);
+
+  useEffect(() => {
+    const onRefresh = () => loadUnreadCount();
+    const timer = window.setInterval(loadUnreadCount, 15000);
+    window.addEventListener("smaj:notifications-refresh", onRefresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("smaj:notifications-refresh", onRefresh);
+    };
+  }, [loadUnreadCount]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {

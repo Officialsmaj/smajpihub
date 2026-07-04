@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { getUserPlatformAPIClient } from "../services/platformAPIClient";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
+import { createNotification } from "../services/notifications";
 
 type VerifiedPiUser = {
   uid?: string;
@@ -34,7 +35,18 @@ const toClientUser = (user: any) => user ? ({
   createdAt: user.createdAt,
 }) : null;
 
-const destroySession = (req: Request, res: Response) => {
+const destroySession = async (req: Request, res: Response) => {
+  const currentUser = await resolveCurrentUser(req).catch(() => null);
+  if (currentUser) {
+    await createNotification(req.app, {
+      userId: currentUser.uid,
+      type: "security_logout",
+      title: "Signed out",
+      message: "Your SMAJ PI HUB account was signed out.",
+      relatedId: "settings",
+    });
+  }
+
   req.session.destroy((err) => {
     if (err) {
       console.error("Error during signout:", err);
@@ -140,6 +152,15 @@ export const handleSignIn = async (req: Request, res: Response) => {
     }
 
     req.session.currentUser = currentUser;
+    if (currentUser?.uid) {
+      await createNotification(req.app, {
+        userId: currentUser.uid,
+        type: "security_login",
+        title: "Login successful",
+        message: "Your SMAJ PI HUB account signed in successfully.",
+        relatedId: "settings",
+      });
+    }
     return res.status(200).json({ message: "User signed in", user: toClientUser(currentUser) });
   } catch (err) {
     console.error("Error during signin:", err);
@@ -181,6 +202,15 @@ export default function mountUserEndpoints(router: Router) {
     );
     const currentUser = await userCollection.findOne({ uid });
     req.session.currentUser = currentUser;
+    if (currentUser?.uid) {
+      await createNotification(req.app, {
+        userId: currentUser.uid,
+        type: "security_login",
+        title: "Login successful",
+        message: "Your SMAJ PI HUB development account signed in successfully.",
+        relatedId: "settings",
+      });
+    }
     return res.status(200).json({ message: "Development user signed in", user: toClientUser(currentUser) });
   });
 
