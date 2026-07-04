@@ -14,7 +14,6 @@ if (result.error) {
 
 interface Environment {
   node_env: string;
-  sandbox_sdk: boolean;
   port: number;
   session_secret: string;
   pi_api_key: string;
@@ -34,19 +33,17 @@ interface Environment {
   marketplace_auto_approve_products: boolean;
 }
 
-const sandboxSDK = String(process.env.SANDBOX_SDK || "false").toLowerCase() === "true";
 const nodeEnv = process.env.NODE_ENV || "development";
 const isProduction = nodeEnv === "production";
 const defaultSessionSecret = "This is my session secret";
+const productionPiPlatformAPIURL = "https://api.minepi.com";
 
 const env: Environment = {
   node_env: nodeEnv,
-  sandbox_sdk: sandboxSDK,
   port: parseInt(process.env.PORT || "8000"),
   session_secret: process.env.SESSION_SECRET || defaultSessionSecret,
   pi_api_key: process.env.PI_API_KEY || "",
-  platform_api_url:
-    process.env.PLATFORM_API_URL || (sandboxSDK ? "https://api.sandbox.minepi.com" : "https://api.minepi.com"),
+  platform_api_url: productionPiPlatformAPIURL,
   mongodb_uri: process.env.MONGODB_URI || "",
   mongo_host: process.env.MONGO_HOST || "localhost:27017",
   mongo_db_name: process.env.MONGODB_DATABASE_NAME || "smajpihub",
@@ -65,8 +62,8 @@ const env: Environment = {
   marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
 };
 
-if (env.sandbox_sdk && env.platform_api_url.includes("api.minepi.com")) {
-  console.warn("WARNING: SANDBOX_SDK=true but PLATFORM_API_URL points to production Pi API. Use https://api.sandbox.minepi.com");
+if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {
+  console.warn(`Ignoring PLATFORM_API_URL=${process.env.PLATFORM_API_URL}. Backend Pi API requests always use ${productionPiPlatformAPIURL}.`);
 }
 
 if (isProduction) {

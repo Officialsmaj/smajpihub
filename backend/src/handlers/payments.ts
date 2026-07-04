@@ -10,7 +10,7 @@ export default function mountPaymentsEndpoints(router: Router) {
   router.post("/incomplete", async (req, res) => {
     try {
       const payment = req.body.payment;
-      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox || payment?.metadata?.sandbox));
+      const piAPI = getAppPlatformAPIClient();
       const paymentId = payment.identifier;
       const txid = payment.transaction && payment.transaction.txid;
       const txURL = payment.transaction && payment.transaction._link;
@@ -75,7 +75,7 @@ export default function mountPaymentsEndpoints(router: Router) {
 
       const app = req.app;
       const paymentId = req.body.paymentId;
-      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox));
+      const piAPI = getAppPlatformAPIClient();
       const currentPayment = await piAPI.get(`/v2/payments/${paymentId}`);
       const paymentCollection = app.locals.paymentCollection;
       const orderId = String(currentPayment.data.metadata.orderId || "");
@@ -128,7 +128,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       const paymentId = req.body.paymentId;
       const txid = req.body.txid;
       const paymentCollection = app.locals.paymentCollection;
-      const piAPI = getAppPlatformAPIClient(Boolean(req.body?.sandbox));
+      const piAPI = getAppPlatformAPIClient();
 
       if (!req.session.currentUser || !paymentId || !txid) {
         return res.status(401).json({ error: "unauthorized", message: "A signed-in user and payment details are required" });

@@ -47,7 +47,6 @@ const destroySession = (req: Request, res: Response) => {
 
 export const handleSignIn = async (req: Request, res: Response) => {
   const auth = req.body?.authResult;
-  const useSandboxAPI = Boolean(req.body?.sandbox || auth?.sandbox);
   const userCollection = req.app.locals.userCollection;
 
   if (!auth?.accessToken || !auth?.user?.uid || !auth?.user?.username) {
@@ -61,7 +60,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
   let verifiedUser: VerifiedPiUser;
 
   try {
-    const meResponse = await getUserPlatformAPIClient(useSandboxAPI).get<VerifiedPiUser>("/v2/me", {
+    const meResponse = await getUserPlatformAPIClient().get<VerifiedPiUser>("/v2/me", {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
     });
     verifiedUser = meResponse.data ?? {};
