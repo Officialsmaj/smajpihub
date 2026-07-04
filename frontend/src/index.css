@@ -13303,3 +13303,235 @@ button.private-primary-button {
 .storefront-product-add * {
   color: #ffffff !important;
 }
+
+.welcome-tour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(12px);
+}
+
+.welcome-tour {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 24px;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  border-radius: 22px;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+}
+
+.welcome-tour-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.welcome-tour-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.welcome-tour-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 38px;
+}
+
+.welcome-tour-avatar,
+.welcome-tour-step-icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  border-radius: 18px;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.welcome-tour-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.welcome-tour-step-icon {
+  margin-bottom: 14px;
+}
+
+.welcome-tour-step-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.welcome-tour-kicker {
+  margin: 0 0 4px;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.welcome-tour h2 {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: #020617;
+  font-size: clamp(1.45rem, 5vw, 2rem);
+  line-height: 1.05;
+}
+
+.welcome-tour-copy {
+  margin: 18px 0 0;
+  color: #475569;
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.welcome-tour-preview {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  padding: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+.welcome-tour-preview span {
+  display: block;
+  height: 14px;
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.welcome-tour-preview span:first-child {
+  width: 68%;
+  height: 52px;
+  border-radius: 14px;
+}
+
+.welcome-tour-preview span:nth-child(2) {
+  width: 92%;
+}
+
+.welcome-tour-preview span:nth-child(3) {
+  width: 76%;
+}
+
+.welcome-tour-preview span:nth-child(4) {
+  width: 58%;
+}
+
+.welcome-tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.welcome-tour-primary,
+.welcome-tour-secondary,
+.welcome-tour-link {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.welcome-tour-primary {
+  color: #fff !important;
+  background: #6d28d9;
+  border: 1px solid #6d28d9;
+}
+
+.welcome-tour-secondary {
+  color: #334155;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+}
+
+.welcome-tour-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.welcome-tour-link {
+  margin-top: 18px;
+  color: #5b21b6;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+}
+
+.welcome-tour-link[aria-current="page"] {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.welcome-tour-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.welcome-tour-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.welcome-tour-dots span.active {
+  width: 22px;
+  background: #6d28d9;
+}
+
+@media (max-width: 520px) {
+  .welcome-tour-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .welcome-tour {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .welcome-tour-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .welcome-tour-primary,
+  .welcome-tour-secondary {
+    width: 100%;
+  }
+}

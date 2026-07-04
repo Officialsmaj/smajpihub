@@ -23,6 +23,7 @@ import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutl
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
+import WelcomeTour from "../components/WelcomeTour";
 import logoImage from "/logo.png";
 import { serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
@@ -243,6 +244,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         <NavLink to="/messages"><ChatOutlinedIcon /><span>Messages</span></NavLink>
         <NavLink to="/settings"><PersonOutlineIcon /><span>You</span></NavLink>
       </nav>
+      <WelcomeTour />
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );

@@ -6,6 +6,7 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
+import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 
@@ -117,6 +118,10 @@ const SettingsPage = () => {
     navigate("/home", { replace: true });
   };
 
+  const replayWelcomeTour = () => {
+    window.dispatchEvent(new Event(WELCOME_REPLAY_EVENT));
+  };
+
   const verificationStatus = user?.verificationLevel === "trusted_seller" ? "Trusted seller" : user?.verificationLevel === "verified" ? "Verified" : "Basic";
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
@@ -144,6 +149,7 @@ const SettingsPage = () => {
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
           <div className="settings-info-row"><span>Verification status</span><strong>{verificationStatus}</strong></div>
           <div className="settings-info-row"><span>Connected Pi account</span><strong>{piAccount}</strong></div>
+          <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
           <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
         </section>
 
