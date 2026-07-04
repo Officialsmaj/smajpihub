@@ -18,5 +18,14 @@ export const uploadImage = async (image: string, purpose: string) => {
 
 export const uploadImages = async (images: string[], purpose: string) => {
   const cleanImages = images.filter(Boolean).slice(0, 5);
+  if (!cleanImages.length) return [];
+
+  try {
+    const { data } = await axiosClient.post<{ urls?: string[] }>("/uploads/images", { images: cleanImages, purpose });
+    if (Array.isArray(data.urls) && data.urls.length === cleanImages.length) return data.urls;
+  } catch {
+    // Fall back to the single-image endpoint so one unsupported deployment does not block product listing.
+  }
+
   return Promise.all(cleanImages.map((image) => uploadImage(image, purpose)));
 };

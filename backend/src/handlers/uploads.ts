@@ -11,6 +11,7 @@ type CloudinaryResponse = {
 };
 
 const isDataImage = (value: string) => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value);
+const isExistingImageReference = (value: string) => /^https:\/\/[^\s]+$/i.test(value) || isDataImage(value);
 
 const uploadToCloudinary = async (image: string, purpose: string) => {
   const params = new URLSearchParams();
@@ -45,36 +46,55 @@ const uploadToCloudinary = async (image: string, purpose: string) => {
 };
 
 export default function mountUploadEndpoints(router: Router) {
-  router.post("/image", async (req: Request, res: Response) => {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
-    }
+  const cleanPurpose = (value: unknown) => String(value || "image").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) || "image";
 
-    const image = String(req.body?.image || req.body?.dataUrl || "");
-    const purpose = String(req.body?.purpose || "image").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) || "image";
-
+  const uploadImageValue = async (image: string, purpose: string) => {
     if (!isDataImage(image)) {
-      return res.status(400).json({ error: "bad_request", message: "Upload a valid image file." });
+      if (isExistingImageReference(image)) return { url: image, storage: "existing" };
+      return null;
     }
 
     if (image.length > 6_500_000) {
-      return res.status(413).json({ error: "payload_too_large", message: "Image must be smaller than 5 MB." });
+      throw Object.assign(new Error("Image must be smaller than 5 MB."), { statusCode: 413 });
     }
 
-    if (env.cloudinary_cloud_name && env.cloudinary_upload_preset) {
-      try {
-        const upload = await uploadToCloudinary(image, purpose);
-        return res.status(201).json(upload);
-      } catch (err) {
-        console.error("Image upload failed:", err);
-        if (env.node_env !== "production") {
-          return res.status(201).json({ url: image, storage: "inline-dev", warning: "Cloudinary upload failed, using local development inline image." });
-        }
-        return res.status(502).json({ error: "upload_failed", message: "Image storage is temporarily unavailable." });
-      }
+    if (!env.cloudinary_cloud_name || !env.cloudinary_upload_preset) {
+      return { url: image, storage: "inline-fallback" };
     }
 
-    // Local development fallback. Production should configure Cloudinary so MongoDB stores compact URLs.
-    return res.status(201).json({ url: image, storage: "inline-dev" });
+    try {
+      return await uploadToCloudinary(image, purpose);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      return { url: image, storage: "inline-fallback", warning: "Cloudinary upload failed, using inline image." };
+    }
+  };
+
+  router.post("/image", async (req: Request, res: Response) => {
+    try {
+      const upload = await uploadImageValue(String(req.body?.image || req.body?.dataUrl || ""), cleanPurpose(req.body?.purpose));
+      if (!upload) return res.status(400).json({ error: "bad_request", message: "Upload a valid image file." });
+      return res.status(201).json(upload);
+    } catch (err: any) {
+      if (err?.statusCode === 413) return res.status(413).json({ error: "payload_too_large", message: err.message });
+      console.error("Image upload failed:", err);
+      return res.status(500).json({ error: "upload_failed", message: "Image upload failed." });
+    }
+  });
+
+  router.post("/images", async (req: Request, res: Response) => {
+    try {
+      const images: string[] = Array.isArray(req.body?.images) ? req.body.images.map((item: unknown) => String(item || "")).filter(Boolean).slice(0, 5) : [];
+      if (!images.length) return res.status(400).json({ error: "bad_request", message: "Upload at least one image." });
+
+      const uploads = await Promise.all(images.map((image) => uploadImageValue(image, cleanPurpose(req.body?.purpose))));
+      if (uploads.some((upload) => !upload)) return res.status(400).json({ error: "bad_request", message: "Upload valid image files." });
+
+      return res.status(201).json({ urls: uploads.map((upload) => upload!.url), uploads });
+    } catch (err: any) {
+      if (err?.statusCode === 413) return res.status(413).json({ error: "payload_too_large", message: err.message });
+      console.error("Image upload failed:", err);
+      return res.status(500).json({ error: "upload_failed", message: "Image upload failed." });
+    }
   });
 }
