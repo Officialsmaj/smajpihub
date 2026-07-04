@@ -37,6 +37,7 @@ const nodeEnv = process.env.NODE_ENV || "development";
 const isProduction = nodeEnv === "production";
 const defaultSessionSecret = "This is my session secret";
 const productionPiPlatformAPIURL = "https://api.minepi.com";
+const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 
 const env: Environment = {
   node_env: nodeEnv,
@@ -54,7 +55,7 @@ const env: Environment = {
   dev_auth: String(process.env.DEV_AUTH || "false").toLowerCase() === "true",
   admin_pi_usernames: String(process.env.ADMIN_PI_USERNAMES || "")
     .split(",")
-    .map((username) => username.trim().toLowerCase())
+    .map(normalizePiUsername)
     .filter(Boolean),
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinary_upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "",

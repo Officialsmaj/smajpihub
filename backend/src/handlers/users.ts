@@ -11,6 +11,7 @@ type VerifiedPiUser = {
 };
 
 const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
+const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 
 const toClientUser = (user: any) => user ? ({
   uid: user.uid,
@@ -82,7 +83,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
     username: verifiedUser.username || auth.user.username,
     roles: Array.isArray(auth.user.roles) ? auth.user.roles : [],
   };
-  const isConfiguredAdmin = env.admin_pi_usernames.includes(String(normalizedUser.username || "").toLowerCase());
+  const isConfiguredAdmin = env.admin_pi_usernames.includes(normalizePiUsername(String(normalizedUser.username || "")));
 
   try {
     let currentUser = await userCollection.findOne({ uid: normalizedUser.uid });

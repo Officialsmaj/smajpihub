@@ -12,12 +12,19 @@ type CloudinaryResponse = {
 
 const isDataImage = (value: string) => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value);
 const isExistingImageReference = (value: string) => /^https:\/\/[^\s]+$/i.test(value) || isDataImage(value);
+const safeCloudinaryName = (purpose: string) => {
+  const cleanPurpose = purpose.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "image";
+  return `${cleanPurpose}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
 
 const uploadToCloudinary = async (image: string, purpose: string) => {
+  const assetName = safeCloudinaryName(purpose);
   const params = new URLSearchParams();
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
   params.set("folder", `${env.cloudinary_folder}/${purpose}`);
+  params.set("display_name", assetName);
+  params.set("public_id", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
     method: "POST",

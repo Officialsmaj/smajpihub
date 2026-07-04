@@ -1,23 +1,25 @@
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
+import { resolveCurrentUser } from "../services/auth";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
 
-const requireAdmin = (req: Request, res: Response) => {
-  if (!req.session.currentUser) {
+const requireAdmin = async (req: Request, res: Response) => {
+  const currentUser = await resolveCurrentUser(req);
+  if (!currentUser) {
     res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     return null;
   }
-  if (req.session.currentUser.role !== "admin") {
+  if (currentUser.role !== "admin") {
     res.status(403).json({ error: "forbidden", message: "Admin access required" });
     return null;
   }
-  return req.session.currentUser;
+  return currentUser;
 };
 
 export default function mountAdminEndpoints(router: Router) {
-  router.use((req, res, next) => { if (requireAdmin(req, res)) next(); });
+  router.use(async (req, res, next) => { if (await requireAdmin(req, res)) next(); });
 
   router.get("/stats", async (req, res) => {
     const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, supportRequests, pendingOnboarding, pendingProducts] = await Promise.all([
