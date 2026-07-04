@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useAuthContext } from "../contexts/AuthContext";
+import PrivateSkeleton from "./PrivateSkeleton";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -18,11 +19,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (isLoading) {
     return (
-      <main className="home-page">
-        <section className="home-section">
-          <h1>Checking secure session...</h1>
-          <p>Validating your Pi wallet authentication.</p>
-        </section>
+      <main className="private-page private-route-loading">
+        <PrivateSkeleton />
       </main>
     );
   }

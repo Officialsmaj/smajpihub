@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { usePayments } from "../../hooks/usePayments";
@@ -219,7 +220,7 @@ const OrdersPage = () => {
       ) : null}
       {message ? <div className="private-alert success">{message}</div> : null}
       {error ? <div className="private-alert error">{error}</div> : null}
-      {loading ? <div className="private-state">Loading orders...</div> : null}
+      {loading ? <PrivateSkeleton variant="list" count={4} /> : null}
       {!loading ? (
         <>
           {orderSection("Buyer Orders", "Products you ordered from SMAJ sellers.", buyerOrders, "buyer")}

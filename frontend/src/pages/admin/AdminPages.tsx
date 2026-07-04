@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Order, Product } from "../../types/marketplace";
 import type { User } from "../../types/pi";
@@ -31,7 +32,7 @@ export const AdminDashboardPage = () => {
   return (
     <main className="private-page">
       <Head title="Admin Dashboard" description="Platform health, moderation, and marketplace operations." />
-      {!stats ? <div className="private-state">Loading platform totals...</div> : (
+      {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
         <section className="stats-grid admin-stats">
           {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
         </section>

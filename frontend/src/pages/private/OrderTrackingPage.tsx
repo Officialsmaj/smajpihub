@@ -4,6 +4,7 @@ import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import { isAxiosError } from "axios";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { usePayments } from "../../hooks/usePayments";
 import { axiosClient } from "../../lib/axiosClient";
@@ -86,7 +87,7 @@ const OrderTrackingPage = () => {
   ] as const;
 
   if (loading) {
-    return <main className="private-page"><div className="private-state">Loading tracking...</div></main>;
+    return <main className="private-page"><PrivateSkeleton variant="list" count={3} /></main>;
   }
 
   if (!order) {

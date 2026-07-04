@@ -7,6 +7,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import { isAxiosError } from "axios";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
@@ -97,7 +98,7 @@ const ProductDetailPage = () => {
   if (!product) {
     return (
       <main className="private-page">
-        <div className="private-state">{error || "Loading product..."}</div>
+        {error ? <div className="private-state">{error}</div> : <PrivateSkeleton variant="product" />}
       </main>
     );
   }
@@ -142,11 +143,10 @@ const ProductDetailPage = () => {
             <div className="profile-avatar small">{product.sellerName.slice(0, 1)}</div>
             <div>
               <span>Seller</span>
-              <strong>{seller?.displayName || product.sellerName}</strong>
+              <strong>{seller?.displayName || product.sellerName}<TrustBadge level={seller?.verificationLevel} /></strong>
               <p>
                 @{seller?.piUsername || product.piUsername} · {product.location}
               </p>
-              <TrustBadge level={seller?.verificationLevel} />
             </div>
           </Link>
 

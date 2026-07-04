@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import type { Order, Product } from "../../types/marketplace";
 
 type SellerData = {
@@ -136,7 +137,7 @@ const SellerPage = () => {
       {message ? <div className="private-alert floating-alert success">{message}</div> : null}
       {error ? <div className="private-alert floating-alert error">{error}</div> : null}
 
-      {!data ? <div className="private-state">Loading seller dashboard...</div> : (
+      {!data ? <PrivateSkeleton variant="stats" count={4} /> : (
         <>
           {!sellerActive ? (
             <section className="private-form seller-activation-panel">

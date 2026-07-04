@@ -10,6 +10,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
 import { heroSlides, promoStripItems, storeTopNav } from "../../content/storefront";
@@ -224,7 +225,7 @@ const StorePage = () => {
         </section>
 
         {catalogError ? <div className="private-alert error">{catalogError}</div> : null}
-        {loading ? <div className="private-state">Loading SMAJ Store...</div> : null}
+        {loading ? <PrivateSkeleton variant="grid" count={6} /> : null}
         {!loading && !products.length ? (
           <section className="private-state">
             <h2>Live catalog is empty</h2>
