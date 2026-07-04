@@ -2,6 +2,7 @@ export type Product = {
   _id: string;
   sellerId: string;
   sellerName: string;
+  sellerAvatar?: string;
   piUsername?: string;
   title: string;
   image: string;
@@ -31,7 +32,7 @@ export type Product = {
 };
 
 export type VerificationLevel = "basic" | "verified" | "trusted_seller";
-export type SellerSummary = { uid: string; username?: string; piUsername?: string; displayName: string; country?: string; createdAt?: string; verificationLevel?: VerificationLevel; totalProducts?: number; successfulOrders?: number; averageRating?: number; reviewCount?: number };
+export type SellerSummary = { uid: string; username?: string; piUsername?: string; displayName: string; avatar?: string; country?: string; createdAt?: string; verificationLevel?: VerificationLevel; totalProducts?: number; successfulOrders?: number; averageRating?: number; reviewCount?: number };
 export type Review = { _id: string; buyerName: string; rating: number; message?: string; createdAt: string };
 export type Conversation = { _id: string; buyerId: string; sellerId: string; productId: string; productTitle: string; productImage?: string; lastMessage?: string; updatedAt: string; unreadBy?: string[]; buyerName?: string; sellerName?: string };
 export type ChatMessage = { _id: string; conversationId: string; senderId: string; message: string; createdAt: string; readAt?: string };

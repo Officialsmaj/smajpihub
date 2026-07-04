@@ -7834,8 +7834,10 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-height: calc(100dvh - 96px);
   display: grid;
   gap: 0;
+  align-content: start;
   overflow-x: clip;
 }
 
@@ -8022,6 +8024,12 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   border: 1px solid rgba(15, 23, 42, .12);
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+}
+
+.storefront-search:focus-within {
+  border-color: color-mix(in srgb, var(--smaj-primary) 50%, #ffffff);
+  box-shadow: 0 0 0 3px rgba(112, 59, 224, .16), 0 8px 24px rgba(15, 23, 42, .08);
 }
 
 .storefront-search input {
@@ -9109,6 +9117,17 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
     justify-content: center;
     background: var(--smaj-secondary-bg);
     border: 1px solid var(--smaj-border);
+    border-radius: 50%;
+  }
+
+  .storefront-mobile-actions .storefront-avatar-link {
+    overflow: hidden;
+  }
+
+  .storefront-mobile-actions .storefront-avatar-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 50%;
   }
 
@@ -13041,6 +13060,135 @@ select,
   .seller-verification-card > button {
     width: 100%;
     justify-content: center;
+  }
+}
+
+.storefront-shell {
+  display: flex;
+  flex-direction: column;
+}
+
+.storefront-footer {
+  margin-top: auto;
+}
+
+.storefront-footer-grid button {
+  width: fit-content;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.storefront-footer-grid button:hover {
+  color: var(--smaj-primary);
+}
+
+.storefront-page .private-state {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.storefront-page .form-actions {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.storefront-page .form-actions > * {
+  min-width: 170px;
+  justify-content: center;
+}
+
+.storefront-mobile-actions .storefront-avatar-link {
+  padding: 0;
+}
+
+.storefront-mobile-actions .storefront-avatar-link img {
+  display: block;
+}
+
+.account-dashboard-identity h1,
+.seller-profile-hero h1 {
+  max-width: 100%;
+  font-size: clamp(1.35rem, 6vw, 2.35rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.seller-profile-hero h1 {
+  font-size: clamp(1.25rem, 5.5vw, 2.1rem);
+}
+
+.seller-profile-avatar {
+  overflow: hidden;
+}
+
+.seller-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-page .private-secondary-button.danger {
+  width: fit-content;
+  min-height: 42px;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  background: #e03131 !important;
+  border: 1px solid #e03131 !important;
+  border-radius: 10px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.settings-page .private-secondary-button.danger:hover {
+  background: #c92a2a !important;
+  border-color: #c92a2a !important;
+}
+
+@media (max-width: 767px) {
+  .storefront-search {
+    height: 42px;
+    padding: 0 12px;
+    border-radius: 12px;
+  }
+
+  .storefront-search input {
+    font-size: 13px;
+  }
+
+  .storefront-footer {
+    padding-bottom: 88px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .account-dashboard-identity {
+    align-items: center;
+  }
+
+  .account-dashboard-identity h1,
+  .seller-profile-hero h1 {
+    font-size: clamp(1.25rem, 7vw, 1.75rem);
+  }
+
+  .seller-profile-hero {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .seller-profile-stats {
+    grid-column: 1 / -1;
+  }
+
+  .settings-page .private-secondary-button.danger {
+    width: 100%;
   }
 }
 

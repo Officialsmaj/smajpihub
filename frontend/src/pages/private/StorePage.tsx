@@ -11,6 +11,7 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
 import { heroSlides, promoStripItems, storeTopNav } from "../../content/storefront";
@@ -21,6 +22,7 @@ const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion",
 const electronicsSubcategories = ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"];
 
 const StorePage = () => {
+  const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,6 +34,7 @@ const StorePage = () => {
   const [heroIndex, setHeroIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "electronics">("categories");
+  const profileName = user?.displayName || user?.username || "Pi User";
 
   useEffect(() => {
     Promise.all([
@@ -143,7 +146,9 @@ const StorePage = () => {
             </Link>
             <div className="storefront-mobile-actions">
               <Link to="/cart" aria-label="Cart"><ShoppingCartOutlinedIcon /></Link>
-              <Link to="/profile" aria-label="Profile"><span>P</span></Link>
+              <Link to="/profile" className="storefront-avatar-link" aria-label="Profile">
+                {user?.avatar ? <img src={user.avatar} alt="" /> : <span>{profileName.slice(0, 1).toUpperCase()}</span>}
+              </Link>
             </div>
           </div>
 
@@ -276,6 +281,35 @@ const StorePage = () => {
             </div> : <div className="private-state"><h2>No real products found</h2><p>Try another search or add a seller product.</p></div>}
           </section>
         ) : null}
+
+        <footer className="storefront-footer">
+          <div className="storefront-footer-grid">
+            <article>
+              <strong>SMAJ Store</strong>
+              <p>Real seller products, Pi checkout, and marketplace updates in one place.</p>
+            </article>
+            <article>
+              <strong>Shop</strong>
+              <button type="button" onClick={() => updateCategory("Deals")}>Deals</button>
+              <button type="button" onClick={() => updateCategory("Electronics")}>Electronics</button>
+              <button type="button" onClick={() => updateCategory("Fashion")}>Fashion</button>
+            </article>
+            <article>
+              <strong>Seller</strong>
+              <button type="button" onClick={() => navigate("/seller")}>Seller Dashboard</button>
+              <button type="button" onClick={() => navigate("/add-product")}>Add Product</button>
+            </article>
+            <article>
+              <strong>Account</strong>
+              <button type="button" onClick={() => navigate("/orders")}>Orders</button>
+              <button type="button" onClick={() => navigate("/saved")}>Saved Products</button>
+            </article>
+          </div>
+          <div className="storefront-footer-bottom">
+            <span>Part of SMAJ PI HUB</span>
+            <span>Secure marketplace for Pi users.</span>
+          </div>
+        </footer>
       </section>
     </main>
   );
