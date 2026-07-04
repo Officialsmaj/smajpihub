@@ -12596,6 +12596,68 @@ select,
   animation: floatingAlertIn .18s ease-out;
 }
 
+.management-row .row-actions {
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.management-row .row-actions a,
+.management-row .row-actions button {
+  min-width: 82px;
+  min-height: 38px;
+  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.management-row .row-actions a {
+  color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border)) !important;
+}
+
+.management-row .row-actions button {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+}
+
+.management-row .row-actions button:not(.danger) {
+  color: #7c4d00 !important;
+  background: #fff3bf !important;
+  border-color: #ffd43b !important;
+}
+
+.management-row .row-actions .danger {
+  color: #ffffff !important;
+  background: #e03131 !important;
+  border-color: #e03131 !important;
+}
+
+.management-row .row-actions a:hover {
+  color: #ffffff !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.management-row .row-actions button:not(.danger):hover {
+  background: #ffd43b !important;
+}
+
+.management-row .row-actions .danger:hover {
+  background: #c92a2a !important;
+  border-color: #c92a2a !important;
+}
+
 @keyframes floatingAlertIn {
   from {
     opacity: 0;
@@ -12604,6 +12666,18 @@ select,
 }
 
 @media (max-width: 640px) {
+  .management-row .row-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .management-row .row-actions a,
+  .management-row .row-actions button {
+    min-width: 0;
+    width: 100%;
+  }
+
   .country-picker-label,
   .language-picker-label {
     grid-column: 1 / -1;

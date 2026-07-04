@@ -157,7 +157,7 @@ const AddProductPage = () => {
         <label>Product gallery (up to 5 images)<input required multiple type="file" accept="image/*" onChange={(event) => selectImages(event.target.files)} /></label>
         {form.images.length ? <div className="product-upload-preview gallery-preview">{form.images.map((image) => <img src={image} alt="Product preview" key={image.slice(-30)} />)}</div> : null}
         <div className="private-form-row">
-          <label>Price amount<input required type="number" min="0.00001" step="0.00001" value={form.priceInput} onChange={(event) => setForm({ ...form, priceInput: event.target.value })} /></label>
+          <label>Price amount<input required type="number" min="0.0000000001" step="any" value={form.priceInput} onChange={(event) => setForm({ ...form, priceInput: event.target.value })} /></label>
           <label>Price currency<select required value={form.priceCurrency} onChange={(event) => setForm({ ...form, priceCurrency: event.target.value as "USDT" | "Pi" })}><option>USDT</option><option>Pi</option></select></label>
         </div>
         <div className="private-alert success">
