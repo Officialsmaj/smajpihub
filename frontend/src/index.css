@@ -13749,6 +13749,127 @@ button.private-primary-button {
   stroke: #ffffff !important;
 }
 
+.admin-shell .private-sidebar {
+  overflow: hidden;
+}
+
+.admin-shell .private-sidebar-top {
+  justify-content: space-between;
+}
+
+.admin-shell .private-sidebar-brand {
+  width: 34px;
+}
+
+.admin-shell .private-sidebar nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.admin-shell .private-sidebar-logout {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.admin-sidebar-avatar {
+  overflow: hidden;
+  border-radius: 50% !important;
+}
+
+.admin-sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.conversation-name {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+
+.conversation-name .trust-badge {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  font-size: 10px;
+}
+
+.conversation-avatar {
+  overflow: hidden;
+  color: var(--smaj-text);
+}
+
+.conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.chat-message-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.message-checks {
+  letter-spacing: -2px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.message-checks.sent {
+  color: currentColor;
+  opacity: .75;
+}
+
+.message-checks.read {
+  color: #38bdf8;
+}
+
+.chat-messages .typing-indicator {
+  width: fit-content;
+  max-width: 75%;
+  padding: 8px 11px;
+  align-self: flex-start;
+  color: var(--smaj-text-secondary);
+  background: var(--smaj-card);
+  border-radius: 14px 14px 14px 3px;
+  font-size: 12px;
+}
+
+.chat-messages .typing-indicator span {
+  width: 6px;
+  height: 6px;
+  margin: 0 2px 0 0;
+  display: inline-block;
+  background: currentColor;
+  border-radius: 50%;
+  box-shadow: 9px 0 0 currentColor, 18px 0 0 currentColor;
+  opacity: .55;
+}
+
+.chat-panel form input,
+.messages-page.conversation-selected .chat-panel > form input {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-private-theme="light"] .chat-panel form,
+html[data-private-theme="light"] .messages-page.conversation-selected .chat-panel > form {
+  background: #ffffff;
+}
+
 .real-profile-avatar img,
 .account-dashboard-avatar img,
 .private-header-avatar img,

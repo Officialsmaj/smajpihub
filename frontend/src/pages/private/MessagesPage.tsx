@@ -11,11 +11,31 @@ import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSati
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
+import TrustBadge from "../../components/TrustBadge";
 
 type RichConversation = Conversation & {
   profileImage?: string;
   online?: boolean;
   displayTime?: string;
+};
+
+const getConversationName = (conversation: RichConversation, currentUserId?: string) =>
+  conversation.participantName || (conversation.sellerId === currentUserId ? conversation.buyerName : conversation.sellerName) || "SMAJ user";
+
+const getConversationInitial = (conversation: RichConversation, currentUserId?: string) =>
+  getConversationName(conversation, currentUserId).slice(0, 1).toUpperCase();
+
+const formatLastSeen = (conversation: RichConversation) => {
+  if (conversation.online) return "Online";
+  const value = conversation.lastSeenAt || conversation.updatedAt;
+  if (!value) return "Offline";
+  const then = new Date(value).getTime();
+  if (!Number.isFinite(then)) return "Offline";
+  const diffMinutes = Math.max(1, Math.round((Date.now() - then) / 60000));
+  if (diffMinutes < 60) return `Last seen ${diffMinutes}m ago`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `Last seen ${diffHours}h ago`;
+  return `Last seen ${new Date(value).toLocaleDateString()}`;
 };
 
 const MessagesPage = () => {
@@ -27,6 +47,7 @@ const MessagesPage = () => {
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
+  const typingTimeoutRef = useRef<number | null>(null);
   const selectedId = params.get("conversation");
   const activeId = selectedId || conversations[0]?._id;
   const active = useMemo(() => conversations.find((item) => item._id === activeId), [activeId, conversations]);
@@ -46,8 +67,11 @@ const MessagesPage = () => {
       return;
     }
     try {
-      const { data } = await axiosClient.get<{ messages: ChatMessage[] }>(`/messages/${activeId}`);
+      const { data } = await axiosClient.get<{ conversation?: RichConversation; messages: ChatMessage[] }>(`/messages/${activeId}`);
       setMessages(data.messages || []);
+      if (data.conversation) {
+        setConversations((current) => current.map((item) => item._id === data.conversation?._id ? { ...item, ...data.conversation } : item));
+      }
     } catch {
       setMessages([]);
     }
@@ -64,12 +88,33 @@ const MessagesPage = () => {
 
   useEffect(() => {
     const initial = window.setTimeout(() => void loadMessages(), 0);
-    const timer = window.setInterval(() => void loadMessages(), 4000);
+    const timer = window.setInterval(() => void loadMessages(), 2500);
     return () => {
       window.clearTimeout(initial);
       window.clearInterval(timer);
     };
   }, [loadMessages]);
+
+  useEffect(() => () => {
+    if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+  }, []);
+
+  const setTyping = useCallback((typing: boolean) => {
+    if (!activeId) return;
+    axiosClient.post(`/messages/${activeId}/typing`, { typing }).catch(() => undefined);
+  }, [activeId]);
+
+  const handleTextChange = (value: string) => {
+    setText(value);
+    if (!value.trim()) {
+      if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+      setTyping(false);
+      return;
+    }
+    setTyping(true);
+    if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = window.setTimeout(() => setTyping(false), 1800);
+  };
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
     const container = chatMessagesRef.current;
@@ -103,6 +148,8 @@ const MessagesPage = () => {
     if (!activeId || !text.trim()) return;
     const message = text.trim();
     setText("");
+    if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+    setTyping(false);
     nearBottomRef.current = true;
     await axiosClient.post(`/messages/${activeId}`, { message });
     await Promise.all([loadMessages(), loadConversations()]);
@@ -126,13 +173,13 @@ const MessagesPage = () => {
             conversations.map((item) => (
               <button className={item._id === activeId ? "active" : ""} key={item._id} onClick={() => setParams({ conversation: item._id })}>
                 <span className="conversation-avatar">
-                  {item.profileImage ? <img src={item.profileImage} alt="" /> : (item.sellerName || item.buyerName || "U").slice(0, 1)}
+                  {item.profileImage ? <img src={item.profileImage} alt="" /> : getConversationInitial(item, user?.uid)}
                   <i className={item.online ? "online" : "offline"} />
                 </span>
                 <div>
-                  <strong>{item.sellerId === user?.uid ? item.buyerName : item.sellerName}</strong>
+                  <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} /></strong>
                   <p>{item.lastMessage || "No messages yet."}</p>
-                  <small>{item.productTitle} - {item.displayTime || new Date(item.updatedAt).toLocaleString()}</small>
+                  <small>{item.productTitle} - {formatLastSeen(item)}</small>
                 </div>
                 {item.unreadBy?.length ? <b>{item.unreadBy.length}</b> : null}
               </button>
@@ -153,12 +200,12 @@ const MessagesPage = () => {
                 </button>
                 <div className="chat-person">
                   <span className="conversation-avatar">
-                    {active.profileImage ? <img src={active.profileImage} alt="" /> : active.sellerName?.slice(0, 1)}
+                    {active.profileImage ? <img src={active.profileImage} alt="" /> : getConversationInitial(active, user?.uid)}
                     <i className={active.online ? "online" : "offline"} />
                   </span>
                   <div>
-                    <strong>{active.sellerId === user?.uid ? active.buyerName : active.sellerName}</strong>
-                    <small>{active.online ? "Online" : "Marketplace conversation"}</small>
+                    <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} /></strong>
+                    <small>{active.typing ? "Typing..." : formatLastSeen(active)}</small>
                   </div>
                 </div>
                 <div className="chat-header-actions">
@@ -188,9 +235,13 @@ const MessagesPage = () => {
                 {messages.map((item) => (
                   <article className={item.senderId === user?.uid ? "mine" : ""} key={item._id}>
                     <p>{item.message}</p>
-                    <small>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small>
+                    <small className="chat-message-meta">
+                      <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                      {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
+                    </small>
                   </article>
                 ))}
+                {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
               </div>
               {showScrollBottom ? (
                 <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">
@@ -201,7 +252,7 @@ const MessagesPage = () => {
                 <button type="button" aria-label="Emoji">
                   <SentimentSatisfiedAltOutlinedIcon />
                 </button>
-                <input value={text} onChange={(event) => setText(event.target.value)} maxLength={1000} placeholder="Message..." />
+                <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
                 <button type="button" aria-label="Attach file">
                   <AttachFileOutlinedIcon />
                 </button>

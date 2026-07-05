@@ -33,6 +33,8 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [showSignOut, setShowSignOut] = useState(false);
   const navigate = useNavigate();
+  const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
+  const adminInitial = adminName.slice(0, 1).toUpperCase();
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
@@ -65,12 +67,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
           <div className="private-sidebar-top">
-            <Link to="/admin" className="private-sidebar-brand" title="SMAJ ADMIN"><img src={logoImage} alt="SMAJ ADMIN" /><span>SMAJ ADMIN</span></Link>
-            <button className="private-sidebar-toggle" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            <Link to="/admin" className="private-sidebar-brand" title="SMAJ ADMIN" aria-label="SMAJ Admin dashboard"><img src={logoImage} alt="" /></Link>
+            <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
               {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
             </button>
           </div>
-          <div className="private-sidebar-user"><span>A</span><div><strong>{user.displayName}</strong><small>Admin account</small></div></div>
+          <div className="private-sidebar-user">
+            <span className="admin-sidebar-avatar">{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span>
+            <div><strong>{adminName}</strong><small>Admin account</small></div>
+          </div>
           <nav>
             {links.map(([to, label, icon]) => (
               <NavLink key={to} to={to} end={to === "/admin"} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? label : undefined} aria-label={label}>
@@ -78,7 +83,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               </NavLink>
             ))}
           </nav>
-          <button className="private-sidebar-logout" onClick={() => setShowSignOut(true)} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout"><LogoutIcon /><span className="private-nav-label">Logout</span></button>
+          <button className="private-sidebar-logout" type="button" onClick={() => setShowSignOut(true)} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout"><LogoutIcon /><span className="private-nav-label">Logout</span></button>
         </aside>
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>

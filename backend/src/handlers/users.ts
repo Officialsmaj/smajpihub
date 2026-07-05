@@ -123,6 +123,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
+            lastSeenAt: new Date(),
             accessToken: auth.accessToken,
           },
         },
@@ -145,6 +146,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
+        lastSeenAt: new Date(),
         accessToken: auth.accessToken,
       });
 
@@ -251,7 +253,7 @@ export default function mountUserEndpoints(router: Router) {
     const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel } },
+      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel, lastSeenAt: new Date() } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
