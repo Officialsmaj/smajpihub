@@ -65,7 +65,31 @@ jobs:
       name: github-pages
     steps:
       - name: Deploy to GitHub Pages
+        id: deploy_attempt_1
         uses: actions/deploy-pages@v5.0.0
+        continue-on-error: true
         with:
-          timeout: 900000
+          timeout: 600000
           error_count: 20
+
+      - name: Retry GitHub Pages deploy
+        id: deploy_attempt_2
+        if: steps.deploy_attempt_1.outcome == 'failure'
+        uses: actions/deploy-pages@v5.0.0
+        continue-on-error: true
+        with:
+          timeout: 600000
+          error_count: 20
+
+      - name: Final GitHub Pages deploy retry
+        id: deploy_attempt_3
+        if: steps.deploy_attempt_1.outcome == 'failure' && steps.deploy_attempt_2.outcome == 'failure'
+        uses: actions/deploy-pages@v5.0.0
+        continue-on-error: true
+        with:
+          timeout: 600000
+          error_count: 20
+
+      - name: Verify deployment
+        if: steps.deploy_attempt_1.outcome == 'failure' && steps.deploy_attempt_2.outcome == 'failure' && steps.deploy_attempt_3.outcome == 'failure'
+        run: exit 1
