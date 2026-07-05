@@ -11,6 +11,7 @@ import PrivateSkeleton from "../../components/PrivateSkeleton";
 import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
+import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { setBuyNowItem } from "../../lib/storeCart";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
@@ -135,7 +136,7 @@ const ProductDetailPage = () => {
           <span className="product-category inline">{product.category}</span>
           <h1>{product.title}</h1>
           <p className="product-detail-price">
-            {(product.priceUsdt ?? product.pricePi * 314159).toFixed(2)} USDT <small>{product.pricePi.toFixed(5)} Pi</small>
+            {formatUsdAmount(product.priceUsdt ?? product.pricePi * 314159)} USDT <small>{formatPiAmount(product.pricePi)}</small>
           </p>
           <p>{product.description}</p>
 

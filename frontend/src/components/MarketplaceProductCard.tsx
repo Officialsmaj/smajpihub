@@ -5,9 +5,10 @@ import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutl
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import TrustBadge from "./TrustBadge";
 import type { Product } from "../types/marketplace";
+import { countryFlag, formatPiAmount, formatUsdAmount } from "../lib/formatters";
 
 const PI_USDT_RATE = 314159;
-const usdt = (product: Product) => (product.priceUsdt ?? product.pricePi * PI_USDT_RATE).toFixed(2);
+const usdt = (product: Product) => formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE);
 
 type MarketplaceProductCardProps = {
   product: Product;
@@ -17,17 +18,16 @@ type MarketplaceProductCardProps = {
   onBuy?: (product: Product) => void;
 };
 
-const badgeTypes = ["Best Seller", "New", "Hot Deal"] as const;
-
 const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy }: MarketplaceProductCardProps) => {
-  const discount = 10 + ((product.title.length + Math.round(product.pricePi * 10000)) % 41);
-  const reviewCount = 40 + ((product.title.length * 17) % 860);
-  const badge = badgeTypes[(product.title.length + Math.round(product.pricePi * 10000)) % badgeTypes.length];
-  const deliveryLabel = product.pricePi < 0.01 ? "Pi checkout available" : "Delivery updates in app";
+  const flag = countryFlag(product.country || product.location.split(" - ")[0]);
+  const location = [product.country, product.stateRegion, product.city].filter(Boolean).join(" - ") || product.location;
+  const reviewLabel = product.reviewCount ? `(${product.reviewCount} reviews)` : "No reviews yet";
+  const ratingLabel = product.rating ? product.rating.toFixed(1) : "New";
+  const deliveryLabel = product.deliveryOption || "Delivery updates in app";
 
   return (
     <article className="product-card product-card-link storefront-product-card">
-      <span className={`storefront-product-badge badge-${badge.toLowerCase().replace(/\s+/g, "-")}`}>{badge}</span>
+      <span className="storefront-product-badge badge-real">Real listing</span>
       {onFavorite ? (
         <button className="favorite-button storefront-favorite-button" type="button" onClick={() => onFavorite(product)} aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}>
           {saved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
@@ -45,16 +45,16 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
         <div className="product-card-body storefront-product-body">
           <h2>{product.title}</h2>
           <div className="storefront-product-rating">
-            <span>{(product.rating || 4.7).toFixed(1)} star</span>
-            <small>({reviewCount} reviews)</small>
+            <span>{ratingLabel} star</span>
+            <small>{reviewLabel}</small>
           </div>
           <div className="storefront-price-stack">
             <strong>{usdt(product)} USDT</strong>
-            <small>{product.pricePi.toFixed(5)} Pi</small>
+            <small>{formatPiAmount(product.pricePi)}</small>
           </div>
           <div className="storefront-product-meta">
-            <span className="storefront-product-discount">{product.condition || `${discount}% off`}</span>
-            <small>{product.location}</small>
+            <span className="storefront-product-discount">{product.condition}</span>
+            <small>{flag ? `${flag} ` : ""}{location}</small>
           </div>
           <div className="storefront-product-meta">
             <small>{product.sellerName}</small>
@@ -64,6 +64,7 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
             <small>{deliveryLabel}</small>
             <small>{product.quantity ? `${product.quantity} in stock` : "Stock updates in app"}</small>
           </div>
+          {typeof product.viewCount === "number" ? <small className="storefront-real-views">{product.viewCount} views</small> : null}
         </div>
       </Link>
 

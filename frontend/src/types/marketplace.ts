@@ -29,6 +29,8 @@ export type Product = {
   createdAt: string;
   verificationLevel?: VerificationLevel;
   rating?: number;
+  reviewCount?: number;
+  viewCount?: number;
 };
 
 export type VerificationLevel = "basic" | "verified" | "trusted_seller";

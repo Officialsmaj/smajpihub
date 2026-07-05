@@ -8,6 +8,7 @@ import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { usePayments } from "../../hooks/usePayments";
 import { axiosClient } from "../../lib/axiosClient";
+import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import {
   clearBuyNowItem,
   getBuyNowItem,
@@ -161,7 +162,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <p>
                       {item.sellerName} · {item.location}
                     </p>
-                    <small>{item.pricePi.toFixed(4)} Pi each</small>
+                    <small>{formatPiAmount(item.pricePi)} each</small>
                   </div>
                   <label className="commerce-qty">
                     <span>Qty</span>
@@ -175,7 +176,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       }}
                     />
                   </label>
-                  <strong>{(item.pricePi * item.quantity).toFixed(4)} Pi</strong>
+                  <strong>{formatPiAmount(item.pricePi * item.quantity)}</strong>
                   <div className="commerce-line-actions">
                     <button
                       type="button"
@@ -207,9 +208,9 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
               </div>
               <div>
                 <span>Total</span>
-                <strong>{cartTotalPi.toFixed(4)} Pi</strong>
+                <strong>{formatPiAmount(cartTotalPi)}</strong>
               </div>
-              <small>approx ${(cartTotalPi * PI_USD).toFixed(2)}</small>
+              <small>approx ${formatUsdAmount(cartTotalPi * PI_USD)}</small>
               <button
                 type="button"
                 className="private-primary-button"
@@ -273,13 +274,13 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     </p>
                     <small>{checkoutItem.category}</small>
                   </div>
-                  <strong>{checkoutTotalPi.toFixed(4)} Pi</strong>
+                  <strong>{formatPiAmount(checkoutTotalPi)}</strong>
                 </article>
                 <div className="commerce-total-row">
                   <span>Total</span>
-                  <strong>{checkoutTotalPi.toFixed(4)} Pi</strong>
+                  <strong>{formatPiAmount(checkoutTotalPi)}</strong>
                 </div>
-                <small className="commerce-usd">approx ${(checkoutTotalPi * PI_USD).toFixed(2)}</small>
+                <small className="commerce-usd">approx ${formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
                 <div className="form-actions">
                   <button
                     type="button"
@@ -323,8 +324,8 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                   <div className="commerce-payment-card">
                     <div>
                       <strong>{order.productTitle}</strong>
-                      <span>{order.pricePi.toFixed(4)} Pi</span>
-                      <small>approx ${(order.pricePi * PI_USD).toFixed(2)}</small>
+                      <span>{formatPiAmount(order.pricePi)}</span>
+                      <small>approx ${formatUsdAmount(order.pricePi * PI_USD)}</small>
                     </div>
                     <div className="commerce-payment-actions">
                       <button
