@@ -8,6 +8,7 @@ import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { usePayments } from "../../hooks/usePayments";
 import { axiosClient } from "../../lib/axiosClient";
+import { formatPiAmount } from "../../lib/formatters";
 import type { Order, OrderStatus } from "../../types/marketplace";
 
 const timelineOrder = ["pending", "payment_pending", "paid", "processing", "shipped", "delivered", "completed"] as const;
@@ -117,7 +118,7 @@ const OrderTrackingPage = () => {
             <div>
               <strong>{order.productTitle}</strong>
               <p>Order ID: {order._id}</p>
-              <small>{order.pricePi.toFixed(4)} Pi</small>
+              <small>{formatPiAmount(order.pricePi)}</small>
             </div>
           </div>
           <div className="tracking-chips">

@@ -24,6 +24,7 @@ export type AuthResult = {
     createdAt?: string;
     verificationLevel?: "basic" | "verified" | "trusted_seller";
     verificationRequested?: boolean;
+    verificationRequestType?: "verified" | "trusted_seller";
   };
 };
 

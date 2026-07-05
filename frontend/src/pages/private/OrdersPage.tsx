@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { axiosClient } from "../../lib/axiosClient";
+import { formatPiAmount } from "../../lib/formatters";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { usePayments } from "../../hooks/usePayments";
 import type { Order, OrderStatus } from "../../types/marketplace";
@@ -108,7 +109,7 @@ const OrdersPage = () => {
           <p>{new Date(order.createdAt).toLocaleString()}</p>
           {order.paidAt ? <p>Paid: {new Date(order.paidAt).toLocaleString()}</p> : null}
         </div>
-        <strong className="order-price">{order.pricePi} Pi</strong>
+        <strong className="order-price">{formatPiAmount(order.pricePi)}</strong>
         <span className={`order-status ${order.status}`}>{order.status}</span>
         <div className="order-actions">
           <button className="secondary" onClick={() => navigate(`/orders/${order._id}/track`)}>

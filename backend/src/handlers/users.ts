@@ -31,6 +31,7 @@ const toClientUser = (user: any) => user ? ({
   blocked: Boolean(user.blocked),
   verificationLevel: user.verificationLevel || "verified",
   verificationRequested: Boolean(user.verificationRequested),
+  verificationRequestType: user.verificationRequestType || "",
   settings: user.settings || { theme: "light", language: "English", notifications: true },
   createdAt: user.createdAt,
 }) : null;
@@ -274,8 +275,11 @@ export default function mountUserEndpoints(router: Router) {
   router.post("/verification-request", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ user: null, message: "Verification request saved locally" });
-    if (currentUser.role !== "seller") return res.status(400).json({ error: "bad_request", message: "Only sellers can request trusted verification" });
-    await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { verificationRequested: true, verificationRequestedAt: new Date() } });
+    const requestedLevel = req.body?.level === "trusted_seller" || currentUser.role === "seller" || currentUser.sellerActive ? "trusted_seller" : "verified";
+    await req.app.locals.userCollection.updateOne(
+      { uid: currentUser.uid },
+      { $set: { verificationRequested: true, verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
+    );
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
     req.session.currentUser = updatedUser;
     return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });

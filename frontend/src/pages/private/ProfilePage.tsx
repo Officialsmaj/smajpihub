@@ -341,7 +341,7 @@ const ProfilePage = () => {
     setAlert(null);
     setRequestingVerification(true);
     try {
-      await axiosClient.post("/user/verification-request");
+      await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
       setVerificationRequested(true);
       setAlert({ type: "success", text: "Trusted seller verification requested. Admin will review your account." });
     } catch {

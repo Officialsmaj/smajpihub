@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
@@ -12,6 +12,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -32,6 +33,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [showSignOut, setShowSignOut] = useState(false);
+  const [adminSearch, setAdminSearch] = useState("");
   const navigate = useNavigate();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
   const adminInitial = adminName.slice(0, 1).toUpperCase();
@@ -39,6 +41,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
   }, [user?.settings?.theme]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileSidebarOpen]);
 
   if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
 
@@ -55,14 +62,41 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const searchResults = useMemo(() => {
+    const query = adminSearch.trim().toLowerCase();
+    if (!query) return [];
+    return links.filter(([, label]) => label.toLowerCase().includes(query) || query.includes(label.toLowerCase())).slice(0, 5);
+  }, [adminSearch]);
+
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    const target = searchResults[0]?.[0] || "/admin";
+    setAdminSearch("");
+    setMobileSidebarOpen(false);
+    navigate(target);
+  };
+
   return (
     <div className="private-shell admin-shell">
       <header className="private-header">
-        <Link to="/admin" className="private-brand"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link>
-        <div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div>
-        <button className="private-menu-toggle" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
+        <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close admin menu" : "Open admin menu"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
+        <Link to="/admin" className="private-brand"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link>
+        <form className="admin-header-search" onSubmit={submitSearch}>
+          <SearchOutlinedIcon />
+          <input value={adminSearch} onChange={(event) => setAdminSearch(event.target.value)} placeholder="Search admin..." aria-label="Search admin pages" />
+          {adminSearch.trim() ? (
+            <div className="admin-search-results">
+              {searchResults.length ? searchResults.map(([to, label, icon]) => (
+                <button type="button" key={to} onClick={() => { setAdminSearch(""); navigate(to); }}>
+                  {icon}<span>{label}</span>
+                </button>
+              )) : <button type="submit">Open Admin Dashboard</button>}
+            </div>
+          ) : null}
+        </form>
+        <div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div>
       </header>
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>

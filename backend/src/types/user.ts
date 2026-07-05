@@ -18,6 +18,7 @@ export interface UserData {
   blocked?: boolean,
   verificationLevel?: "basic" | "verified" | "trusted_seller",
   verificationRequested?: boolean,
+  verificationRequestType?: "verified" | "trusted_seller",
   settings?: {
     theme: "dark" | "light",
     language: string,

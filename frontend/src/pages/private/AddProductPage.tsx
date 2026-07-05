@@ -4,6 +4,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { uploadImages } from "../../lib/uploadImage";
+import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import type { Product } from "../../types/marketplace";
 
 const PI_USDT_RATE = 314159;
@@ -186,7 +187,7 @@ const AddProductPage = () => {
           <label>Price currency<select required value={form.priceCurrency} onChange={(event) => setForm({ ...form, priceCurrency: event.target.value as "USDT" | "Pi" })}><option>USDT</option><option>Pi</option></select></label>
         </div>
         <div className="private-alert success">
-          1 Pi = $314159. This listing will show {Number.isFinite(priceUsdt) && priceUsdt > 0 ? priceUsdt.toFixed(2) : "0.00"} USDT and {Number.isFinite(pricePi) && pricePi > 0 ? pricePi.toFixed(5) : "0.00000"} Pi.
+          1 Pi = $314159. This listing will show {formatUsdAmount(priceUsdt)} USDT and {formatPiAmount(pricePi)}.
         </div>
         <div className="private-form-row">
           <label>Category<select required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Others"].map((item) => <option key={item}>{item}</option>)}</select></label>

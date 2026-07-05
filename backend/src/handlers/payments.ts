@@ -4,6 +4,7 @@ import { getAppPlatformAPIClient } from "../services/platformAPIClient";
 import "../types/session";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
+import { resolveCurrentUser } from "../services/auth";
 
 export default function mountPaymentsEndpoints(router: Router) {
   // handle the incomplete payment
@@ -206,15 +207,15 @@ export default function mountPaymentsEndpoints(router: Router) {
   });
 
   router.post("/failed", async (req, res) => {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
-    }
+    const currentUser = await resolveCurrentUser(req);
     const orderId = String(req.body?.orderId || "");
     if (!ObjectId.isValid(orderId)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
     }
+    const orderQuery: Record<string, unknown> = { _id: new ObjectId(orderId), status: "pending" };
+    if (currentUser?.uid) orderQuery.buyerId = currentUser.uid;
     await req.app.locals.marketplaceOrderCollection.updateOne(
-      { _id: new ObjectId(orderId), buyerId: req.session.currentUser.uid, status: "pending" },
+      orderQuery,
       { $set: { paymentStatus: "failed", updatedAt: new Date() } },
     );
     return res.status(200).json({ message: "Payment failure recorded" });

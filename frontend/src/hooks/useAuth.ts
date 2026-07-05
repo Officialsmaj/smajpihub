@@ -69,6 +69,7 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   createdAt: candidate?.createdAt || fallback.createdAt || new Date().toISOString(),
   verificationLevel: candidate?.verificationLevel === "trusted_seller" || fallback.verificationLevel === "trusted_seller" ? "trusted_seller" : candidate?.verificationLevel || fallback.verificationLevel || "verified",
   verificationRequested: candidate?.verificationRequested ?? fallback.verificationRequested ?? false,
+  verificationRequestType: candidate?.verificationRequestType ?? fallback.verificationRequestType,
   accessToken: fallback.accessToken,
 });
 
@@ -104,6 +105,7 @@ const authResultUser = (authResult: AuthResult): User => ({
   blocked: false,
   verificationLevel: "verified",
   verificationRequested: false,
+  verificationRequestType: undefined,
   settings: { theme: "light", language: "English", notifications: true },
   createdAt: new Date().toISOString(),
   accessToken: authResult.accessToken,

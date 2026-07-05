@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
+import { formatPiAmount } from "../../lib/formatters";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
@@ -90,7 +91,7 @@ const SellerPage = () => {
     setMessage("");
     setRequestingVerification(true);
     try {
-      await axiosClient.post("/user/verification-request");
+      await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
       setVerificationRequested(true);
       setMessage("Trusted seller verification requested. Admin will review your account.");
     } catch (err: unknown) {
@@ -192,7 +193,7 @@ const SellerPage = () => {
                     <img src={product.image} alt="" />
                     <div className="management-main">
                       <h3>{product.title}</h3>
-                      <p>{product.pricePi} Pi · {product.category}</p>
+                      <p>{formatPiAmount(product.pricePi)} · {product.category}</p>
                     </div>
                     <span className={`availability ${productReviewTone(product)}`}>
                       {productReviewLabel(product)}
@@ -220,7 +221,7 @@ const SellerPage = () => {
                   <article className="management-row compact" key={order._id}>
                     <div className="management-main">
                       <h3>{order.productTitle}</h3>
-                      <p>{order.buyerName} · {order.pricePi} Pi</p>
+                      <p>{order.buyerName} · {formatPiAmount(order.pricePi)}</p>
                     </div>
                     <span className={`order-status ${order.status}`}>{order.status}</span>
                   </article>

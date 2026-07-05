@@ -64,6 +64,8 @@ const SettingsPage = () => {
   const [message, setMessage] = useState("");
   const [showSignOut, setShowSignOut] = useState(false);
   const [deleteRequested, setDeleteRequested] = useState(false);
+  const [verificationRequested, setVerificationRequested] = useState(false);
+  const [requestingVerification, setRequestingVerification] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = form.theme;
@@ -113,6 +115,20 @@ const SettingsPage = () => {
     setMessage("Account deletion request submitted for support review.");
   };
 
+  const requestVerification = async () => {
+    setMessage("");
+    setRequestingVerification(true);
+    try {
+      await axiosClient.post("/user/verification-request", { level: "verified" });
+      setVerificationRequested(true);
+      setMessage("Verification request submitted. Admin will review your account.");
+    } catch {
+      setMessage("Verification request could not be submitted. Please try again.");
+    } finally {
+      setRequestingVerification(false);
+    }
+  };
+
   const logout = async () => {
     await signOut();
     navigate("/home", { replace: true });
@@ -123,6 +139,7 @@ const SettingsPage = () => {
   };
 
   const verificationStatus = user?.verificationLevel === "trusted_seller" ? "Trusted seller" : user?.verificationLevel === "verified" ? "Verified" : "Basic";
+  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
   return (
@@ -149,6 +166,7 @@ const SettingsPage = () => {
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
           <div className="settings-info-row"><span>Verification status</span><strong>{verificationStatus}</strong></div>
           <div className="settings-info-row"><span>Connected Pi account</span><strong>{piAccount}</strong></div>
+          {user?.verificationLevel === "basic" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
           <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
           <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
         </section>
