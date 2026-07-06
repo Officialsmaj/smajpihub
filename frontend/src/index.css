@@ -3713,6 +3713,11 @@ body {
   background: #eff6ff;
 }
 
+.private-home .private-primary-button,
+.private-home .private-secondary-button {
+  color: #fff !important;
+}
+
 .status-chip.live-status-chip,
 .live-card-badge,
 .live-rating-badge {
@@ -14143,8 +14148,8 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   background: transparent !important;
 }
 
-.mobile-home-hero-copy > a,
-.mobile-home-hero-copy > a *,
+.public-home-page .mobile-home-hero-copy > a,
+.public-home-page .mobile-home-hero-copy > a *,
 .mobile-feature-card div > span,
 .mobile-feature-card div > span *,
 .desktop-feature-card div > span,
@@ -14335,12 +14340,18 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   line-height: 1.35;
 }
 
-.chat-messages article.mine,
+.chat-messages article.mine {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--smaj-primary);
+  border-radius: 14px 14px 3px 14px;
+}
+
 .chat-messages article.mine p,
 .chat-messages article.mine small,
 .chat-messages article.mine time,
 .chat-messages article.mine .message-checks {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .chat-message-meta {

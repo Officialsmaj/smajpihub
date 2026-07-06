@@ -365,6 +365,7 @@ const ProfilePage = () => {
             role="button"
             tabIndex={0}
             aria-label="Edit profile banner"
+            onClick={() => coverInputRef.current?.click()}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -382,6 +383,7 @@ const ProfilePage = () => {
             role="button"
             tabIndex={0}
             aria-label="Upload profile picture"
+            onClick={() => avatarInputRef.current?.click()}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
