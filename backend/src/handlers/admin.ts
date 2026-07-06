@@ -88,8 +88,9 @@ export default function mountAdminEndpoints(router: Router) {
       title: req.body.approved ? "Product approved" : "Product needs changes",
       message: req.body.approved ? `${product.title} is approved for the Store` : `${product.title} was rejected: ${updates.rejectionReason}`,
       relatedId: req.params.id,
+      image: product.image,
     });
-    if (product && typeof req.body?.hidden === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_hidden", title: req.body.hidden ? "Product hidden" : "Product visible", message: `${product.title} visibility was updated`, relatedId: req.params.id });
+    if (product && typeof req.body?.hidden === "boolean") await createNotification(req.app, { userId: product.sellerId, type: "product_hidden", title: req.body.hidden ? "Product hidden" : "Product visible", message: `${product.title} visibility was updated`, relatedId: req.params.id, image: product.image });
     return res.status(200).json({ message: "Product updated" });
   });
 

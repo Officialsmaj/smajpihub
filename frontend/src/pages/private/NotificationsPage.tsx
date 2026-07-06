@@ -45,6 +45,8 @@ const NotificationsPage = () => {
     const target =
       item.relatedId === "messages" || item.type.includes("message")
         ? "/messages"
+        : item.type.includes("product") && item.relatedId
+          ? `/product/${item.relatedId}`
         : item.relatedId === "settings" || item.type.includes("security")
           ? "/settings"
           : item.relatedId === "dashboard"

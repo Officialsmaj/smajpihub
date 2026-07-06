@@ -56,6 +56,7 @@ export default function mountPaymentsEndpoints(router: Router) {
             title: "Order paid",
             message: `${marketplaceOrder.productTitle} has been paid with Pi.`,
             relatedId: String(marketplaceOrder._id),
+            image: marketplaceOrder.productImage,
           });
         }
       }
@@ -168,6 +169,7 @@ export default function mountPaymentsEndpoints(router: Router) {
             title: "Order paid",
             message: `${marketplaceOrder.productTitle} has been paid with Pi.`,
             relatedId: String(marketplaceOrder._id),
+            image: marketplaceOrder.productImage,
           });
         }
       }

@@ -114,7 +114,7 @@ export default function mountMessageEndpoints(router: Router) {
     const document = { conversationId: req.params.id, senderId: user.uid, senderName: user.displayName || user.username, message, createdAt: new Date() };
     const result = await req.app.locals.messageCollection.insertOne(document);
     await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: message, updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
-    await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${message.slice(0, 100)}`, relatedId: req.params.id });
+    await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${message.slice(0, 100)}`, relatedId: req.params.id, image: user.avatar || "" });
     return res.status(201).json({ message: serialize({ ...document, _id: result.insertedId }) });
   });
 }

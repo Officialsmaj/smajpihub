@@ -227,7 +227,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       ],
     };
     const result = await req.app.locals.marketplaceOrderCollection.insertOne(order);
-    await createNotification(req.app, { userId: product.sellerId, type: "new_order", title: "New order", message: `${order.buyerName} ordered ${product.title}`, relatedId: result.insertedId.toString() });
+    await createNotification(req.app, { userId: product.sellerId, type: "new_order", title: "New order", message: `${order.buyerName} ordered ${product.title}`, relatedId: result.insertedId.toString(), image: product.image });
     return res.status(201).json({ order: serialize({ ...order, _id: result.insertedId }) });
   });
 
@@ -314,7 +314,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     };
     await req.app.locals.marketplaceOrderCollection.updateOne({ _id: order._id }, { $set: updates });
     const receiverId = order.buyerId === user.uid ? order.sellerId : order.buyerId;
-    await createNotification(req.app, { userId: receiverId, type: status === "completed" ? "order_completed" : "order_update", title: `Order ${status}`, message: `${order.productTitle} was marked ${status}`, relatedId: order._id.toString() });
+    await createNotification(req.app, { userId: receiverId, type: status === "completed" ? "order_completed" : "order_update", title: `Order ${status}`, message: `${order.productTitle} was marked ${status}`, relatedId: order._id.toString(), image: order.productImage });
     return res.status(200).json({ message: `Order marked ${status}` });
   });
 

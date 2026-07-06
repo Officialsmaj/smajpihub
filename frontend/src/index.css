@@ -14152,3 +14152,62 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   outline: 0 !important;
   box-shadow: none !important;
 }
+
+.notification-list.rich > article {
+  min-height: 72px;
+}
+
+.notification-list.rich .notification-open {
+  align-items: flex-start;
+  min-height: 72px;
+}
+
+.notification-list.rich .notification-open > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.notification-list.rich .notification-open strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.notification-list.rich .notification-open p {
+  display: -webkit-box;
+  max-height: 3.9em;
+  margin: 0;
+  overflow: hidden;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.notification-list.rich .notification-open small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.notification-list.rich .notification-open img {
+  background: var(--smaj-secondary-bg);
+}
+
+@media (max-width: 767px) {
+  .notification-list.rich .notification-open p {
+    max-height: 2.6em;
+    -webkit-line-clamp: 2;
+  }
+
+  .notification-list.rich .notification-open img,
+  .notification-type {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+}

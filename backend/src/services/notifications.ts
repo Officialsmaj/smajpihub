@@ -4,6 +4,7 @@ type NotificationInput = {
   title: string;
   message: string;
   relatedId?: string;
+  image?: string;
 };
 
 export const createNotification = async (app: any, input: NotificationInput) => {
