@@ -14211,3 +14211,191 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
     flex-basis: 42px;
   }
 }
+
+/* Message polish: keep long previews, typing state, avatars, and sent bubbles tidy. */
+.messages-layout.rich,
+.messages-layout.rich * {
+  box-sizing: border-box;
+}
+
+.messages-layout.rich .conversation-list button {
+  min-width: 0;
+  align-items: center;
+}
+
+.messages-layout.rich .conversation-list button > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.messages-layout.rich .conversation-name {
+  min-width: 0;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.messages-layout.rich .conversation-name .trust-badge {
+  margin-left: 2px;
+}
+
+.messages-layout.rich .conversation-list p {
+  display: -webkit-box;
+  margin: 2px 0;
+  overflow: hidden;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.messages-layout.rich .conversation-list small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.messages-layout.rich .conversation-avatar {
+  overflow: visible !important;
+  z-index: 0;
+}
+
+.messages-layout.rich .conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.messages-layout.rich .conversation-avatar i {
+  z-index: 2;
+  box-shadow: 0 0 0 1px var(--smaj-card);
+}
+
+.chat-person,
+.chat-person > div,
+.chat-product-preview,
+.chat-product-preview span,
+.chat-product-mobile,
+.chat-product-mobile div {
+  min-width: 0;
+}
+
+.chat-person small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chat-product-preview strong,
+.chat-product-mobile strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chat-messages article {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chat-messages article p {
+  color: var(--smaj-text);
+  line-height: 1.35;
+}
+
+.chat-messages article.mine,
+.chat-messages article.mine p,
+.chat-messages article.mine small,
+.chat-messages article.mine time,
+.chat-messages article.mine .message-checks {
+  color: #ffffff;
+}
+
+.chat-message-meta {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: .82;
+}
+
+.typing-indicator {
+  width: fit-content;
+  max-width: 82%;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: var(--smaj-text-secondary);
+  background: var(--smaj-card);
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.typing-indicator span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  margin: 0;
+  background: var(--smaj-primary);
+  border-radius: 50%;
+  animation: typing-dot 1s infinite alternate;
+}
+
+@media (max-width: 767px) {
+  .messages-page .conversation-list button {
+    min-height: 72px;
+    gap: 8px;
+  }
+
+  .messages-page .conversation-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    flex-basis: 48px !important;
+  }
+
+  .messages-page.conversation-selected .chat-person {
+    align-self: center;
+  }
+
+  .messages-page.conversation-selected .chat-person .conversation-avatar {
+    overflow: visible !important;
+  }
+
+  .messages-page.conversation-selected .chat-person .conversation-avatar img {
+    border-radius: 50%;
+  }
+
+  .messages-page.conversation-selected .chat-product-mobile {
+    width: min(296px, 94%);
+  }
+
+  .messages-page.conversation-selected .chat-product-mobile img {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+  }
+
+  .messages-page.conversation-selected .chat-messages article {
+    max-width: 78%;
+  }
+
+  .messages-page.conversation-selected .chat-messages article.mine {
+    max-width: 72%;
+  }
+}
