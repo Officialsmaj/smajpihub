@@ -99,7 +99,7 @@ const Footer = () => {
 
       <div className={styles.footerBottomBar}>
         <div className={styles.poweredBy}>
-          <a href="https://smaj.org" className={styles.logoLink} aria-label="SMAJ Ecosystem">
+          <a href="https://smajpihub.com" className={styles.logoLink} aria-label="SMAJ Ecosystem">
             <img src="/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
           </a>
           <p className={styles.poweredText}>

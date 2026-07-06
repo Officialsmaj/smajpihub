@@ -114,7 +114,7 @@ export const PrivacyPage = () => (
         {
           heading: "Introduction",
           paragraphs: [
-            "This Privacy Policy describes how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smaj.org, collects, uses, processes, and shares your information. We are committed to protecting your privacy and ensuring the security of your personal data. By accessing or using SMAJ PI HUB, you agree to the terms of this Privacy Policy.",
+            "This Privacy Policy describes how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smajpihub.com, collects, uses, processes, and shares your information. We are committed to protecting your privacy and ensuring the security of your personal data. By accessing or using SMAJ PI HUB, you agree to the terms of this Privacy Policy.",
             "SMAJ PI HUB is a comprehensive digital super platform powered by the Pi Network, offering 15 integrated services including a marketplace, food delivery, jobs, health, education, transport, agriculture, energy, charity, housing, events, swap, streaming, sports, and a utility token.",
             "Our platform is designed to provide a seamless and secure experience, utilizing Pi cryptocurrency for payments and a single verified identity across all services. This policy outlines our practices regarding data collection, usage, and protection, in compliance with global data protection regulations such as the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA).",
           ],
@@ -249,7 +249,7 @@ export const PrivacyPage = () => (
           heading: "Changes to This Privacy Policy",
           paragraphs: [
             "We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons.",
-            "We will notify you of any material changes by posting the new Privacy Policy on smaj.org and updating the Effective Date at the top of this policy. We encourage you to review this Privacy Policy periodically for any changes.",
+            "We will notify you of any material changes by posting the new Privacy Policy on smajpihub.com and updating the Effective Date at the top of this policy. We encourage you to review this Privacy Policy periodically for any changes.",
           ],
         },
         {
@@ -257,7 +257,7 @@ export const PrivacyPage = () => (
           paragraphs: [
             "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:",
             "SMAJ PI HUB",
-            "Website: smaj.org",
+            "Website: smajpihub.com",
             `Email: ${legalEmail}`,
             "Address: Online-only operation",
           ],
@@ -299,7 +299,7 @@ export const TermsPage = () => (
         {
           heading: "Acceptance of Terms",
           paragraphs: [
-            "These Terms & Conditions (\"Terms\") govern your access to and use of the SMAJ PI HUB digital super platform (\"Platform\"), located at smaj.org, operated by SMAJ PI HUB (\"we,\" \"us,\" or \"our\"). By accessing, browsing, or using the Platform, you signify your agreement to be bound by these Terms, our Privacy Policy, Cookie Policy, and Report Abuse Policy.",
+            "These Terms & Conditions (\"Terms\") govern your access to and use of the SMAJ PI HUB digital super platform (\"Platform\"), located at smajpihub.com, operated by SMAJ PI HUB (\"we,\" \"us,\" or \"our\"). By accessing, browsing, or using the Platform, you signify your agreement to be bound by these Terms, our Privacy Policy, Cookie Policy, and Report Abuse Policy.",
             "If you do not agree to these Terms, you may not access or use the Platform.",
             "By creating an account, authenticating with your Pi wallet, or otherwise using any part of the SMAJ PI HUB Platform, you acknowledge that you have read, understood, and agree to be bound by these Terms, as well as any additional terms and conditions that are referenced herein or that may apply to specific services or features.",
             "These Terms constitute a legally binding agreement between you and SMAJ PI HUB.",
@@ -454,7 +454,7 @@ export const TermsPage = () => (
           paragraphs: [
             "If you have any questions about these Terms, please contact us at:",
             "SMAJ PI HUB",
-            "Website: smaj.org",
+            "Website: smajpihub.com",
             `Email: ${legalEmail}`,
             "Address: Online-only operation",
           ],
@@ -495,7 +495,7 @@ export const CookiesPage = () => (
         {
           heading: "What Cookies Are",
           paragraphs: [
-            "This Cookie Policy explains how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smaj.org, uses cookies and similar technologies to recognize you when you visit our website.",
+            "This Cookie Policy explains how SMAJ PI HUB (\"we,\" \"us,\" or \"our\"), operating the digital super platform accessible at smajpihub.com, uses cookies and similar technologies to recognize you when you visit our website.",
             "It explains what these technologies are and why we use them, as well as your rights to control our use of them.",
             "Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners to make their websites work, or to work more efficiently, as well as to provide reporting information.",
             "They allow the website to remember your actions and preferences, such as login, language, font size, and other display preferences, over a period of time, so you do not have to keep re-entering them whenever you come back to the site or browse from one page to another.",
@@ -540,7 +540,7 @@ export const CookiesPage = () => (
         {
           heading: "Cookie Consent",
           paragraphs: [
-            "Upon your first visit to smaj.org, you will be presented with a cookie consent banner that informs you about our use of cookies and requests your consent.",
+            "Upon your first visit to smajpihub.com, you will be presented with a cookie consent banner that informs you about our use of cookies and requests your consent.",
             "By continuing to browse our website or by clicking Accept on the banner, you consent to our use of cookies as described in this policy. You can change your cookie preferences at any time through your browser settings or by revisiting our cookie consent tool.",
           ],
         },
@@ -556,7 +556,7 @@ export const CookiesPage = () => (
           paragraphs: [
             "If you have any questions about our use of cookies or other technologies, please email us at:",
             "SMAJ PI HUB",
-            "Website: smaj.org",
+            "Website: smajpihub.com",
             `Email: ${legalEmail}`,
           ],
         },
