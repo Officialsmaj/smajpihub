@@ -359,19 +359,25 @@ const ProfilePage = () => {
       <input id="profileCoverUpload" className="profile-file-input" ref={coverInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
-        <div className="real-profile-cover" style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined} aria-label="Profile banner">
+        <div
+        className="real-profile-cover"
+        style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}
+        role="button"
+        tabIndex={0}
+        aria-label="Edit profile banner"
+        onClick={() => coverInputRef.current?.click()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            coverInputRef.current?.click();
+          }
+        }}
+      >
           <label
             htmlFor="profileCoverUpload"
             role="button"
             tabIndex={0}
             aria-label="Edit profile banner"
-            onClick={() => coverInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                coverInputRef.current?.click();
-              }
-            }}
           >
             <EditOutlinedIcon /> Edit Banner
           </label>

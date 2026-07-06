@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
+import { useAuthContext } from "../contexts/AuthContext";
 import AppLayout from "../layouts/AppLayout";
 import { axiosClient } from "../lib/axiosClient";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
@@ -42,16 +43,13 @@ const readinessItems = [
 ];
 
 const OnboardingPage = () => {
-  const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const { showFeedback } = useAuthContext();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setSubmitting(true);
-    setSubmitted(false);
-    setError("");
     try {
       await axiosClient.post("/onboarding", {
         fullName: String(form.get("fullName") || ""),
@@ -61,13 +59,17 @@ const OnboardingPage = () => {
         details: String(form.get("details") || ""),
       });
       event.currentTarget.reset();
-      setSubmitted(true);
+      showFeedback?.({
+        type: "success",
+        message: "Application submitted. The SMAJ PI HUB team will review it and contact selected applicants.",
+      });
     } catch (err: unknown) {
-      setError(
-        isAxiosError<{ message?: string }>(err)
+      showFeedback?.({
+        type: "error",
+        message: isAxiosError<{ message?: string }>(err)
           ? err.response?.data?.message || "Could not submit this application."
           : "Could not submit this application.",
-      );
+      });
     } finally {
       setSubmitting(false);
     }
@@ -152,12 +154,6 @@ const OnboardingPage = () => {
               />
             </label>
             <button type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit Application"}</button>
-            {error ? <p className="contact-form-success error">{error}</p> : null}
-            {submitted ? (
-              <p className="contact-form-success">
-                Application submitted. The SMAJ PI HUB team will review it and contact selected applicants.
-              </p>
-            ) : null}
           </form>
 
           <aside className="onboarding-readiness-card">

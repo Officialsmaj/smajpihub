@@ -1,6 +1,6 @@
-import { useState } from "react";
 import type { FormEvent } from "react";
 import { axiosClient } from "../lib/axiosClient";
+import { useAuthContext } from "../contexts/AuthContext";
 import AppLayout from "../layouts/AppLayout";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
@@ -18,14 +18,11 @@ const contactRoutes = [
 ] as const;
 
 const ContactPage = () => {
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const { showFeedback } = useAuthContext();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    setError("");
-    setMessage("");
     try {
       await axiosClient.post("/support", {
         source: "contact",
@@ -35,9 +32,9 @@ const ContactPage = () => {
         message: String(form.get("message") || ""),
       });
       event.currentTarget.reset();
-      setMessage("Thanks. Your message has been recorded for the SMAJ PI HUB team.");
+      showFeedback?.({ type: "success", message: "Thanks. Your message has been recorded for the SMAJ PI HUB team." });
     } catch {
-      setError("Could not send your message. Please email info@smajpihub.com.");
+      showFeedback?.({ type: "error", message: "Could not send your message. Please email info@smajpihub.com." });
     }
   };
 
@@ -108,8 +105,6 @@ const ContactPage = () => {
               <textarea id="contact-message" name="message" rows={6} placeholder="Write your message here..." required />
             </label>
             <button type="submit">Send Message</button>
-            {message ? <p className="contact-form-success">{message}</p> : null}
-            {error ? <p className="contact-form-success error">{error}</p> : null}
           </form>
 
           <aside className="contact-info-panel">

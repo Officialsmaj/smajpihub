@@ -134,6 +134,9 @@ export const useAuth = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
+  const showFeedback = useCallback((feedback: AuthFeedback | null) => {
+    setAuthFeedback(feedback);
+  }, []);
 
   useEffect(() => {
     if (!authFeedback) return;
@@ -366,5 +369,6 @@ export const useAuth = () => {
     requireAuth: () => setShowSignIn(true),
     isLoading,
     authFeedback,
+    showFeedback,
   };
 };
