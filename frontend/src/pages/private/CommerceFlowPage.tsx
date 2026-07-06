@@ -68,6 +68,12 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
       return;
     }
 
+    if (!isAuthenticated) {
+      setError("Please sign in with Pi before creating an order.");
+      requireAuth();
+      return;
+    }
+
     setCreating(true);
     setError("");
     setMessage("");
@@ -87,11 +93,14 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
       setBuyNowItemState(null);
       setMessage("Order created successfully");
     } catch (err: unknown) {
-      setError(
-        isAxiosError<{ message?: string }>(err)
-          ? err.response?.data?.message || "Could not create the order."
-          : "Could not create the order."
-      );
+      if (isAxiosError<{ message?: string }>(err)) {
+        const responseMessage = err.response?.data?.message;
+        setError(responseMessage || `Unable to create order: ${err.message || "Please try again."}`);
+      } else if (err instanceof Error) {
+        setError(`Unable to create order: ${err.message}`);
+      } else {
+        setError("Could not create the order.");
+      }
     } finally {
       setCreating(false);
     }
