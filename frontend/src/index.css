@@ -11789,6 +11789,28 @@ select,
   font-size: 18px;
 }
 
+/* Remove card styling specifically for legal pages so policies appear as plain content */
+.legal-company-page .public-store-status-card,
+.legal-company-page .legal-hero-card,
+.legal-company-page .public-store-feature-grid article,
+.legal-company-page .legal-policy-panel,
+.legal-company-page .public-store-flow-panel,
+.legal-company-page .legal-report-card,
+.legal-company-page .home-section {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.legal-company-page .legal-company-hero > div,
+.legal-company-page .legal-text-document,
+.legal-company-page .legal-company-section {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
 .legal-text-document {
   padding: 0;
   display: grid;
