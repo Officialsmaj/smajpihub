@@ -1290,15 +1290,16 @@ h4, h5, h6 {
 
 .home-section {
   margin-top: 24px;
-  background: #1a2435;
-  border: 1px solid #2f3f57;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 22px;
+  color: var(--text);
 }
 
 .home-section-head p {
   margin-top: 0;
-  color: #c8d0dc;
+  color: var(--muted);
 }
 
 .home-section h2,
@@ -1307,7 +1308,7 @@ h4, h5, h6 {
 .content-panel h2,
 .content-panel h3,
 .content-panel h4 {
-  color: #f5f7fb;
+  color: var(--text);
 }
 
 .home-service-grid,
