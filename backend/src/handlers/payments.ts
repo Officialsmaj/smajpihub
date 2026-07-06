@@ -216,17 +216,8 @@ export default function mountPaymentsEndpoints(router: Router) {
   });
 
   router.post("/failed", async (req, res) => {
-    const currentUser = await resolveCurrentUser(req);
-    const orderId = String(req.body?.orderId || "");
-    if (!ObjectId.isValid(orderId)) {
-      return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
-    }
-    const orderQuery: Record<string, unknown> = { _id: new ObjectId(orderId), status: "pending" };
-    if (currentUser?.uid) orderQuery.buyerId = currentUser.uid;
-    await req.app.locals.marketplaceOrderCollection.updateOne(
-      orderQuery,
-      { $set: { paymentStatus: "failed", updatedAt: new Date() } },
-    );
-    return res.status(200).json({ message: "Payment failure recorded" });
+    // Keep pending orders pending when Pi reports a failure.
+    // Do not mark the order as failed automatically.
+    return res.status(200).json({ message: "Payment failure received. Order remains pending." });
   });
 }

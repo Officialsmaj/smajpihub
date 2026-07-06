@@ -58,9 +58,7 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
 
   const onError = useCallback(async (error: Error, payment?: PaymentDTO) => {
     console.error("Payment error:", error, payment);
-    const orderId = String(payment?.metadata?.orderId || "");
-    if (orderId) await axiosClient.post("/payments/failed", { orderId, sandbox: isSandbox() }).catch(() => undefined);
-    onPaymentStatus?.("Pi payment failed. Please try again in Pi Browser.");
+    onPaymentStatus?.("Pi payment failed. Your order remains pending.");
     setIsLoading(false);
     setActiveOrderId("");
   }, [onPaymentStatus]);
@@ -92,7 +90,6 @@ export const usePayments = ({ isAuthenticated, onRequireAuth, onPaymentStatus, o
         );
       } catch (err) {
         console.error("Error creating payment:", err);
-        await axiosClient.post("/payments/failed", { orderId: metadata.orderId, sandbox: isSandbox() }).catch(() => undefined);
         onPaymentStatus?.("Pi payment failed. Your order remains pending.");
         setIsLoading(false);
         setActiveOrderId("");
