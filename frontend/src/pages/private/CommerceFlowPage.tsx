@@ -6,7 +6,6 @@ import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { usePayments } from "../../hooks/usePayments";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import {
@@ -43,24 +42,6 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
   );
   const checkoutTotalPi = checkoutItem ? checkoutItem.pricePi * checkoutItem.quantity : 0;
 
-  const reloadOrder = async (orderId: string) => {
-    const { data } = await axiosClient.get<{ order: Order }>(`/marketplace/orders/${orderId}`);
-    setOrder(data.order);
-  };
-
-  const { orderProduct, isLoading: paymentLoading, activeOrderId } = usePayments({
-    isAuthenticated,
-    onRequireAuth: requireAuth,
-    onPaymentStatus: (nextMessage) => {
-      setMessage(nextMessage);
-      setError("");
-    },
-    onPaymentComplete: async () => {
-      if (order?._id) {
-        await reloadOrder(order._id);
-      }
-    },
-  });
 
   const handleCreateOrder = async () => {
     if (!checkoutItem) {
@@ -329,7 +310,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <h2>Payment</h2>
                     </div>
                   </div>
-                  {!window.Pi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi</div> : null}
+                  <div className="private-alert">Pi payments are temporarily disabled. Your order stays pending until support updates the flow.</div>
                   <div className="commerce-payment-card">
                     <div>
                       <strong>{order.productTitle}</strong>
@@ -337,18 +318,8 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <small>approx ${formatUsdAmount(order.pricePi * PI_USD)}</small>
                     </div>
                     <div className="commerce-payment-actions">
-                      <button
-                        type="button"
-                        className="private-primary-button pi-payment-button"
-                        disabled={paymentLoading}
-                        onClick={() =>
-                          void orderProduct(`SMAJ Store order: ${order.productTitle}`, order.pricePi, {
-                            productId: order.productId,
-                            orderId: order._id,
-                          })
-                        }
-                      >
-                        {paymentLoading && activeOrderId === order._id ? "Opening Pi payment..." : "Pay with Pi"}
+                      <button type="button" className="private-primary-button" disabled={true}>
+                        Payments unavailable
                       </button>
                       <Link className="private-secondary-button" to={`/orders/${order._id}/track`}>
                         Track Order

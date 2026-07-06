@@ -6,7 +6,6 @@ import TaskAltOutlinedIcon from "@mui/icons-material/TaskAltOutlined";
 import { isAxiosError } from "axios";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { usePayments } from "../../hooks/usePayments";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import type { Order, OrderStatus } from "../../types/marketplace";
@@ -16,7 +15,7 @@ const timelineOrder = ["pending", "payment_pending", "paid", "processing", "ship
 const OrderTrackingPage = () => {
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated, requireAuth } = useAuthContext();
+  const { user } = useAuthContext();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -42,13 +41,6 @@ const OrderTrackingPage = () => {
   useEffect(() => {
     void loadOrder();
   }, [loadOrder]);
-
-  const { orderProduct, isLoading: paymentLoading, activeOrderId } = usePayments({
-    isAuthenticated,
-    onRequireAuth: requireAuth,
-    onPaymentStatus: setMessage,
-    onPaymentComplete: loadOrder,
-  });
 
   const activeIndex = useMemo(() => {
     if (!order) return 0;
@@ -127,18 +119,8 @@ const OrderTrackingPage = () => {
           </div>
           <div className="tracking-actions">
             {isBuyer && order.status === "pending" ? (
-              <button
-                type="button"
-                className="private-primary-button pi-payment-button"
-                disabled={paymentLoading}
-                onClick={() =>
-                  void orderProduct(`SMAJ Store order: ${order.productTitle}`, order.pricePi, {
-                    productId: order.productId,
-                    orderId: order._id,
-                  })
-                }
-              >
-                {paymentLoading && activeOrderId === order._id ? "Opening Pi payment..." : "Retry Pi Payment"}
+              <button type="button" className="private-primary-button" disabled={true}>
+                Payments unavailable
               </button>
             ) : null}
             {isSeller && order.status === "paid" ? (

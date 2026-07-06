@@ -5,11 +5,10 @@ import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { usePayments } from "../../hooks/usePayments";
 import type { Order, OrderStatus } from "../../types/marketplace";
 
 const OrdersPage = () => {
-  const { user, isAuthenticated, requireAuth } = useAuthContext();
+  const { user } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -45,13 +44,6 @@ const OrdersPage = () => {
     () => orders.filter((order) => order.sellerId === user?.uid),
     [orders, user?.uid]
   );
-
-  const { orderProduct, isLoading: paymentLoading, activeOrderId } = usePayments({
-    isAuthenticated,
-    onRequireAuth: requireAuth,
-    onPaymentStatus: setMessage,
-    onPaymentComplete: loadOrders,
-  });
 
   const updateStatus = async (orderId: string, status: OrderStatus) => {
     setUpdatingId(orderId);
@@ -90,8 +82,6 @@ const OrdersPage = () => {
   };
 
   const renderOrder = (order: Order, mode: "buyer" | "seller") => {
-    const isPaying = paymentLoading && activeOrderId === order._id;
-
     return (
       <article className="order-card" key={order._id}>
         <div className="order-image">
@@ -121,22 +111,13 @@ const OrdersPage = () => {
             </button>
           ) : null}
           {mode === "buyer" && order.status === "pending" ? (
-            <button
-              className="pi-payment-button"
-              disabled={paymentLoading || updatingId === order._id}
-              onClick={() =>
-                void orderProduct(`SMAJ order: ${order.productTitle}`, order.pricePi, {
-                  productId: order.productId,
-                  orderId: order._id,
-                })
-              }
-            >
-              {isPaying ? "Opening Pi payment..." : "Pay with Pi Browser"}
+            <button className="secondary" disabled={true}>
+              Payments disabled
             </button>
           ) : null}
           {order.status === "pending" ? (
             <button
-              disabled={updatingId === order._id || isPaying}
+              disabled={updatingId === order._id}
               className="secondary"
               onClick={() => void updateStatus(order._id, "cancelled")}
             >

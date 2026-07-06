@@ -37,8 +37,8 @@ const isPiSandboxMode = () =>
     window.location.hostname === "sandbox.minepi.com" ||
     document.referrer.includes("sandbox.minepi.com"));
 
-const onIncompletePaymentFound = (payment: PaymentDTO) => {
-  if (getBaseURL()) void axiosClient.post("/payments/incomplete", { payment, sandbox: isPiSandboxMode() }, AUTH_REQUEST_CONFIG);
+const onIncompletePaymentFound = (_payment: PaymentDTO) => {
+  console.info("Pi incomplete payment handling is disabled.");
 };
 
 const authenticateWithTimeout = (scopes: string[]) =>
