@@ -191,8 +191,8 @@ const ProfilePage = () => {
   const username = user?.piUsername || user?.username || "pi-user";
   const joined = formatJoinDate(user?.createdAt);
   const sellerActive = Boolean(form.sellerActive);
-  const selectedCountry = countries.find((country) => country.name === form.country);
-  const selectedLanguage = cleanLanguages.find((language) => language.name === form.language) || cleanLanguages[0];
+  const selectedCountry = countries.find((country) => country.name === form.country || country.code === form.country);
+  const selectedLanguage = cleanLanguages.find((language) => language.name === form.language || language.native === form.language) || cleanLanguages[0];
   const profileVerificationLevel = user?.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
@@ -462,17 +462,27 @@ const ProfilePage = () => {
             <label>Pi username<input value={`@${username}`} disabled /><small>Pi username is managed by Pi authentication.</small></label>
             <label>Bio / About<textarea maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters.</small></label>
             <div className="private-form-row">
-              <label className="country-picker-label">Country
-                <button type="button" className="country-picker-trigger" onClick={() => { setLanguageOpen(false); setCountryOpen((open) => !open); }}>
+              <div className="country-picker-label">Country
+                <button
+                  type="button"
+                  className="country-picker-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded={countryOpen}
+                  onClick={() => { setLanguageOpen(false); setCountryOpen((open) => !open); setCountrySearch(""); }}
+                >
                   {selectedCountry ? <FlagIcon code={selectedCountry.code} label={selectedCountry.name} /> : null}
                   <span>{selectedCountry ? selectedCountry.name : form.country || "Choose country"}</span>
                 </button>
                 {countryOpen ? (
-                  <div className="country-picker-panel">
+                  <div className="country-picker-panel" role="listbox">
                     <input autoFocus value={countrySearch} onChange={(event) => setCountrySearch(event.target.value)} placeholder="Search country or scroll..." />
                     <div>
                       {filteredCountries.map((country) => (
-                        <button type="button" key={country.code} onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); setLanguageOpen(false); }}>
+                        <button
+                          type="button"
+                          key={country.code}
+                          onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); setLanguageOpen(false); }}
+                        >
                           <FlagIcon code={country.code} label={country.name} />
                           <strong>{country.name}</strong>
                           {priorityCountries.has(country.code) ? <small>High Pi community</small> : null}
@@ -481,19 +491,30 @@ const ProfilePage = () => {
                     </div>
                   </div>
                 ) : null}
-              </label>
-              <label className="language-picker-label">Language
-                <button type="button" className="language-picker-trigger" onClick={() => { setCountryOpen(false); setLanguageOpen((open) => !open); }}>
+              </div>
+              <div className="language-picker-label">Language
+                <button
+                  type="button"
+                  className="language-picker-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded={languageOpen}
+                  onClick={() => { setCountryOpen(false); setLanguageOpen((open) => !open); setLanguageSearch(""); }}
+                >
                   <FlagIcon code={selectedLanguage.flag} label={selectedLanguage.name} />
                   <strong>{selectedLanguage.name}</strong>
                   <small>{selectedLanguage.native}</small>
                 </button>
                 {languageOpen ? (
-                  <div className="language-picker-panel">
+                  <div className="language-picker-panel" role="listbox">
                     <input autoFocus value={languageSearch} onChange={(event) => setLanguageSearch(event.target.value)} placeholder="Search language..." />
                     <div>
                       {filteredLanguages.map((language) => (
-                        <button type="button" key={language.name} className={language.name === form.language ? "active" : ""} onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); setCountryOpen(false); }}>
+                        <button
+                          type="button"
+                          key={language.name}
+                          className={language.name === form.language ? "active" : ""}
+                          onClick={() => { setForm({ ...form, language: language.name }); setLanguageSearch(""); setLanguageOpen(false); setCountryOpen(false); }}
+                        >
                           <FlagIcon code={language.flag} label={language.name} />
                           <strong>{language.name}</strong>
                           <small>{language.native}</small>
@@ -503,7 +524,7 @@ const ProfilePage = () => {
                     </div>
                   </div>
                 ) : null}
-              </label>
+              </div>
             </div>
             <label>Phone / WhatsApp<input maxLength={40} value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} placeholder="+971 50 123 4567" /></label>
           </section>
