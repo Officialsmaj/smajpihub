@@ -39,12 +39,14 @@ const defaultSessionSecret = "This is my session secret";
 const productionPiPlatformAPIURL = "https://api.minepi.com";
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 
+const platformApiURL = process.env.PLATFORM_API_URL || productionPiPlatformAPIURL;
+
 const env: Environment = {
   node_env: nodeEnv,
   port: parseInt(process.env.PORT || "8000"),
   session_secret: process.env.SESSION_SECRET || defaultSessionSecret,
   pi_api_key: process.env.PI_API_KEY || "",
-  platform_api_url: productionPiPlatformAPIURL,
+  platform_api_url: platformApiURL,
   mongodb_uri: process.env.MONGODB_URI || "",
   mongo_host: process.env.MONGO_HOST || "localhost:27017",
   mongo_db_name: process.env.MONGODB_DATABASE_NAME || "smajpihub",
@@ -64,7 +66,7 @@ const env: Environment = {
 };
 
 if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {
-  console.warn(`Ignoring PLATFORM_API_URL=${process.env.PLATFORM_API_URL}. Backend Pi API requests always use ${productionPiPlatformAPIURL}.`);
+  console.warn(`Using PLATFORM_API_URL=${process.env.PLATFORM_API_URL} for Pi backend requests instead of the default ${productionPiPlatformAPIURL}.`);
 }
 
 if (isProduction) {

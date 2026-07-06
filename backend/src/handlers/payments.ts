@@ -71,7 +71,8 @@ export default function mountPaymentsEndpoints(router: Router) {
   // approve the current payment
   router.post("/approve", async (req, res) => {
     try {
-      if (!req.session.currentUser) {
+      const currentUser = await resolveCurrentUser(req);
+      if (!currentUser) {
         return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
       }
 
@@ -87,7 +88,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       }
       const marketplaceOrder = await app.locals.marketplaceOrderCollection.findOne({
         _id: new ObjectId(orderId),
-        buyerId: req.session.currentUser.uid,
+        buyerId: currentUser.uid,
         status: "pending",
       });
       if (!marketplaceOrder || Number(currentPayment.data.amount) !== Number(marketplaceOrder.pricePi)) {
@@ -103,7 +104,7 @@ export default function mountPaymentsEndpoints(router: Router) {
         pi_payment_id: paymentId,
         orderId,
         product_id: marketplaceOrder.productId,
-        user: req.session.currentUser.uid,
+        user: currentUser.uid,
         txid: null,
         paid: false,
         cancelled: false,
@@ -126,14 +127,19 @@ export default function mountPaymentsEndpoints(router: Router) {
   // complete the current payment
   router.post("/complete", async (req, res) => {
     try {
+      const currentUser = await resolveCurrentUser(req);
+      if (!currentUser) {
+        return res.status(401).json({ error: "unauthorized", message: "A signed-in user is required" });
+      }
+
       const app = req.app;
       const paymentId = req.body.paymentId;
       const txid = req.body.txid;
       const paymentCollection = app.locals.paymentCollection;
       const piAPI = getAppPlatformAPIClient();
 
-      if (!req.session.currentUser || !paymentId || !txid) {
-        return res.status(401).json({ error: "unauthorized", message: "A signed-in user and payment details are required" });
+      if (!paymentId || !txid) {
+        return res.status(400).json({ error: "bad_request", message: "Payment id and transaction id are required" });
       }
 
       /* 
@@ -142,7 +148,7 @@ export default function mountPaymentsEndpoints(router: Router) {
       */
 
       const paymentRecord = await paymentCollection.findOne({ pi_payment_id: paymentId });
-      if (!paymentRecord || paymentRecord.user !== req.session.currentUser?.uid) {
+      if (!paymentRecord || paymentRecord.user !== currentUser.uid) {
         return res.status(404).json({ error: "not_found", message: "Payment record not found" });
       }
       const currentPayment = await piAPI.get(`/v2/payments/${paymentId}`);
@@ -153,10 +159,10 @@ export default function mountPaymentsEndpoints(router: Router) {
       if (ObjectId.isValid(paymentRecord.orderId)) {
         const marketplaceOrder = await app.locals.marketplaceOrderCollection.findOne({
           _id: new ObjectId(paymentRecord.orderId),
-          buyerId: req.session.currentUser?.uid,
+          buyerId: currentUser.uid,
         });
         await app.locals.marketplaceOrderCollection.updateOne(
-          { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
+          { _id: new ObjectId(paymentRecord.orderId), buyerId: currentUser.uid },
           {
             $set: { status: "paid", paymentStatus: "paid", paymentId, paymentTxid: txid, paidAt: new Date(), updatedAt: new Date() },
             $push: { timeline: { status: "paid", label: "Paid", note: "Pi payment was confirmed successfully.", at: new Date().toISOString() } },
@@ -184,6 +190,7 @@ export default function mountPaymentsEndpoints(router: Router) {
   // handle the cancelled payment
   router.post("/cancelled_payment", async (req, res) => {
     try {
+      const currentUser = await resolveCurrentUser(req);
       const app = req.app;
       const paymentId = req.body.paymentId;
       const paymentCollection = app.locals.paymentCollection;
@@ -195,9 +202,9 @@ export default function mountPaymentsEndpoints(router: Router) {
 
       const paymentRecord = await paymentCollection.findOne({ pi_payment_id: paymentId });
       await paymentCollection.updateOne({ pi_payment_id: paymentId }, { $set: { cancelled: true } });
-      if (paymentRecord?.orderId && ObjectId.isValid(paymentRecord.orderId)) {
+      if (paymentRecord?.orderId && ObjectId.isValid(paymentRecord.orderId) && currentUser?.uid) {
         await app.locals.marketplaceOrderCollection.updateOne(
-          { _id: new ObjectId(paymentRecord.orderId), buyerId: req.session.currentUser?.uid },
+          { _id: new ObjectId(paymentRecord.orderId), buyerId: currentUser.uid },
           { $set: { status: "pending", paymentStatus: "cancelled", updatedAt: new Date() } },
         );
       }
