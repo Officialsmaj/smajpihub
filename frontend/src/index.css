@@ -2318,7 +2318,8 @@ h4, h5, h6 {
 .smaj-footer {
   background: #221740;
   color: #d9d1f5;
-  padding: 30px 16px 18px;
+  padding: 20px 16px 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 .smaj-footer-grid {
@@ -3715,8 +3716,8 @@ body {
 .status-chip.live-status-chip,
 .live-card-badge,
 .live-rating-badge {
-  color: #047857 !important;
-  background: #d1fae5 !important;
+  color: #ffffff !important;
+  background: var(--smaj-primary) !important;
 }
 
 .live-card-badge,
