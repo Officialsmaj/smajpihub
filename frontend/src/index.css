@@ -12223,7 +12223,7 @@ select,
   z-index: 1;
 }
 
-.real-profile-cover > label {
+.real-profile-cover > .real-profile-cover-edit {
   position: absolute;
   right: 18px;
   bottom: 18px;
@@ -12241,6 +12241,7 @@ select,
   font-weight: 850;
   box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
   cursor: pointer;
+  appearance: none;
 }
 
 .real-profile-identity {

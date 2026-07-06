@@ -360,27 +360,28 @@ const ProfilePage = () => {
 
       <section className="real-profile-hero">
         <div
-        className="real-profile-cover"
-        style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}
-        role="button"
-        tabIndex={0}
-        aria-label="Edit profile banner"
-        onClick={() => coverInputRef.current?.click()}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            coverInputRef.current?.click();
-          }
-        }}
-      >
-          <label
-            htmlFor="profileCoverUpload"
-            role="button"
-            tabIndex={0}
+          className="real-profile-cover"
+          style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}
+        >
+          <button
+            type="button"
+            className="real-profile-cover-edit"
             aria-label="Edit profile banner"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              coverInputRef.current?.click();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                coverInputRef.current?.click();
+              }
+            }}
           >
             <EditOutlinedIcon /> Edit Banner
-          </label>
+          </button>
         </div>
         <div className="real-profile-identity">
           <label
