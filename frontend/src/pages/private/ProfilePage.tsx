@@ -363,25 +363,15 @@ const ProfilePage = () => {
           className="real-profile-cover"
           style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}
         >
-          <button
-            type="button"
+          <label
+            htmlFor="profileCoverUpload"
             className="real-profile-cover-edit"
             aria-label="Edit profile banner"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              coverInputRef.current?.click();
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                event.stopPropagation();
-                coverInputRef.current?.click();
-              }
-            }}
+            role="button"
+            tabIndex={0}
           >
             <EditOutlinedIcon /> Edit Banner
-          </button>
+          </label>
         </div>
         <div className="real-profile-identity">
           <label
@@ -471,36 +461,36 @@ const ProfilePage = () => {
             <label>Pi username<input value={`@${username}`} disabled /><small>Pi username is managed by Pi authentication.</small></label>
             <label>Bio / About<textarea maxLength={500} rows={4} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} placeholder="Tell buyers and sellers who you are, what you do, and how you use SMAJ PI HUB." /><small className="form-help">{form.bio.length}/500 characters.</small></label>
             <div className="private-form-row">
-              <div className="country-picker-label">{!languageOpen ? "Country" : ""}
-                  <button
-                    type="button"
-                    className="country-picker-trigger"
-                    aria-haspopup="listbox"
-                    aria-expanded={countryOpen}
-                    onClick={() => { setLanguageOpen(false); setCountryOpen((open) => !open); setCountrySearch(""); }}
-                  >
-                    {selectedCountry ? <FlagIcon code={selectedCountry.code} label={selectedCountry.name} /> : null}
-                    <span>{selectedCountry ? selectedCountry.name : form.country || "Choose country"}</span>
-                  </button>
-                  {countryOpen ? (
-                    <div className="country-picker-panel" role="listbox">
-                      <input autoFocus value={countrySearch} onChange={(event) => setCountrySearch(event.target.value)} placeholder="Search country or scroll..." />
-                      <div>
-                        {filteredCountries.map((country) => (
-                          <button
-                            type="button"
-                            key={country.code}
-                            onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); setLanguageOpen(false); }}
-                          >
-                            <FlagIcon code={country.code} label={country.name} />
-                            <strong>{country.name}</strong>
-                            {priorityCountries.has(country.code) ? <small>High Pi community</small> : null}
-                          </button>
-                        ))}
-                      </div>
+              <div className="country-picker-label">Country
+                <button
+                  type="button"
+                  className="country-picker-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded={countryOpen}
+                  onClick={() => { setLanguageOpen(false); setCountryOpen((open) => !open); setCountrySearch(""); }}
+                >
+                  {selectedCountry ? <FlagIcon code={selectedCountry.code} label={selectedCountry.name} /> : null}
+                  <span>{selectedCountry ? selectedCountry.name : form.country || "Choose country"}</span>
+                </button>
+                {countryOpen ? (
+                  <div className="country-picker-panel" role="listbox">
+                    <input autoFocus value={countrySearch} onChange={(event) => setCountrySearch(event.target.value)} placeholder="Search country or scroll..." />
+                    <div>
+                      {filteredCountries.map((country) => (
+                        <button
+                          type="button"
+                          key={country.code}
+                          onClick={() => { setForm({ ...form, country: country.name }); setCountrySearch(""); setCountryOpen(false); setLanguageOpen(false); }}
+                        >
+                          <FlagIcon code={country.code} label={country.name} />
+                          <strong>{country.name}</strong>
+                          {priorityCountries.has(country.code) ? <small>High Pi community</small> : null}
+                        </button>
+                      ))}
                     </div>
-                  ) : null}
-                </div>
+                  </div>
+                ) : null}
+              </div>
               <div className="language-picker-label">Language
                 <button
                   type="button"

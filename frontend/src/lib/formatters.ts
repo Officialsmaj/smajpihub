@@ -26,13 +26,20 @@ const countryCodeMap: Record<string, string> = {
 };
 
 export const formatPiAmount = (value: number) => {
-  if (!Number.isFinite(value) || value <= 0) return "0 Pi";
+  if (!Number.isFinite(value) || value <= 0) return "0 PI";
   const formatted = value >= 1
     ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
     : value >= 0.01
       ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })
-      : value.toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 10 });
-  return `${formatted} Pi`;
+      : formatPiInputValue(value);
+  return `${formatted} PI`;
+};
+
+export const formatPiInputValue = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) return "";
+  if (value >= 1) return String(Math.trunc(value * 100) / 100);
+  if (value >= 0.01) return String(Math.trunc(value * 10000) / 10000);
+  return String(Math.trunc(value * 10000) / 10000);
 };
 
 export const formatUsdAmount = (value: number) =>

@@ -3485,7 +3485,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .order-main p { margin: 2px 0 0; color: #7f889b; font-size: 12px; }
 .order-price { color: #cfb4ff; white-space: nowrap; }
 .order-status { padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-.order-status.pending { color: #ffd786; background: #3c321d; }
+.order-status.pending { color: #ffffff; background: #3c321d; }
 .order-status.paid { color: #77e8ae; background: #173b2b; }
 .order-status.completed { color: #a8d2ff; background: #1b3048; }
 .order-status.cancelled { color: #ff9eaa; background: #42232b; }
@@ -3520,7 +3520,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .management-main h3, .management-main p { margin: 0; }.management-main p { margin-top: 5px; color: #8e95a8; font-size: 12px; }
 .availability { padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }.availability.available { color: #77e8ae; background: #173b2b; }.availability.sold { color: #ff9eaa; background: #42232b; }
 .row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }.row-actions a, .row-actions button, .admin-table button, .report-card button, .detail-panel button { padding: 7px 10px; color: #eee9fb; background: #29223a; border: 1px solid #46366a; border-radius: 7px; cursor: pointer; font: inherit; font-size: 12px; }
-.payment-state { grid-column: 2 / -1; color: #9da5b8; overflow-wrap: anywhere; }.payment-state.paid { color: #77e8ae; }.payment-state.failed, .payment-state.cancelled { color: #ff9eaa; }
+.payment-state { grid-column: 2 / -1; color: #9da5b8; overflow-wrap: anywhere; }.payment-state.pending { color: #ffffff; }.payment-state.paid { color: #77e8ae; }.payment-state.failed, .payment-state.cancelled { color: #ff9eaa; }
 
 .admin-shell .private-body { max-width: none; }.admin-shell .private-sidebar { background: #100d19; }.admin-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .admin-table-wrap { overflow-x: auto; background: #171d29; border: 1px solid #2c3446; border-radius: 12px; }
@@ -12870,7 +12870,7 @@ select,
 }
 
 .availability.pending {
-  color: #8a5a00 !important;
+  color: #ffffff !important;
   background: #fff3bf !important;
   border: 1px solid #ffd43b;
 }
