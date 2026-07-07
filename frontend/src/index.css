@@ -5,6 +5,20 @@ body {
   background: var(--color-gray-dark);
 }
 
+.private-home .mobile-service-app .live-rating-badge,
+.private-home .desktop-service-app .live-rating-badge,
+.private-home .mobile-feed-section .live-rating-badge,
+.private-home .desktop-suggested-grid .live-rating-badge {
+  color: #ffffff !important;
+  background: var(--smaj-primary) !important;
+  border-color: var(--smaj-primary) !important;
+}
+
+.private-home .mobile-service-app .live-rating-badge *,
+.private-home .desktop-service-app .live-rating-badge * {
+  color: #ffffff !important;
+}
+
 a {
   color: inherit;
 }
