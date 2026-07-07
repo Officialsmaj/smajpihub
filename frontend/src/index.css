@@ -14633,3 +14633,10 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   background: #0f766e !important;
   border-color: #0f766e !important;
 }
+
+.storefront-page .storefront-product-badge,
+.storefront-page .storefront-product-badge *,
+.product-category,
+.product-category * {
+  color: #ffffff !important;
+}

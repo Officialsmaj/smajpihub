@@ -1,11 +1,16 @@
 import { useCallback, useState } from "react";
 import { axiosClient } from "../lib/axiosClient";
+import type { PaymentDTO } from "../types/pi";
 
 type PaymentCallbacks = {
   onReady?: () => void;
   onComplete?: () => void;
   onCancel?: () => void;
   onError?: (message: string) => void;
+};
+
+const onIncompletePaymentFound = (_payment: PaymentDTO) => {
+  console.info("Pi incomplete payment found before checkout.");
 };
 
 export const usePiPayment = () => {
@@ -18,6 +23,7 @@ export const usePiPayment = () => {
 
     setIsPaying(true);
     try {
+      await window.Pi.authenticate(["payments"], onIncompletePaymentFound);
       await window.Pi.createPayment(
         {
           amount,
