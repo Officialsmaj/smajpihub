@@ -121,7 +121,7 @@ const SettingsPage = () => {
     try {
       await axiosClient.post("/user/verification-request", { level: "verified" });
       setVerificationRequested(true);
-      setMessage("Verification request submitted. Admin will review your account.");
+      setMessage("Verification request submitted. Team will review your account.");
     } catch {
       setMessage("Verification request could not be submitted. Please try again.");
     } finally {
@@ -138,7 +138,7 @@ const SettingsPage = () => {
     window.dispatchEvent(new Event(WELCOME_REPLAY_EVENT));
   };
 
-  const verificationStatus = user?.verificationStatus === "approved" ? user?.verificationLevel === "trusted_seller" ? "Trusted seller" : "Verified" : user?.verificationStatus === "pending" ? "Pending admin review" : user?.verificationStatus === "rejected" ? "Rejected" : "Basic";
+  const verificationStatus = user?.verificationStatus === "approved" ? user?.verificationLevel === "trusted_seller" ? "Trusted seller" : "Verified" : user?.verificationStatus === "pending" ? "Pending team review" : user?.verificationStatus === "rejected" ? "Rejected" : "Basic";
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 

@@ -66,7 +66,7 @@ const AccountDashboardPage = () => {
         <StorefrontOutlinedIcon />
         <div>
           <h2>Ready to sell on SMAJ Store?</h2>
-          <p>Activate seller tools from your profile, submit products, and wait for admin approval before they appear in Store.</p>
+          <p>Activate seller tools from your profile, submit products, and wait for team approval before they appear in Store.</p>
         </div>
         <Link className="private-secondary-button" to="/profile">Seller Setup</Link>
       </section>

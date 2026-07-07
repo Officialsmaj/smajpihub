@@ -348,7 +348,7 @@ const ProfilePage = () => {
     try {
       await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
       setVerificationRequested(true);
-      setAlert({ type: "success", text: "Trusted seller verification requested. Admin will review your account." });
+      setAlert({ type: "success", text: "Trusted seller verification requested. Team will review your account." });
     } catch {
       setAlert({ type: "error", text: "Could not request trusted seller verification. Activate seller tools first." });
     } finally {

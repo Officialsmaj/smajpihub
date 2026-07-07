@@ -83,7 +83,7 @@ const ProductDetailPage = () => {
     setError("");
     try {
       await axiosClient.post(`/marketplace/products/${product._id}/report`, { reason: reportReason.trim() });
-      setMessage("Product report submitted for admin review.");
+      setMessage("Product report submitted for team review.");
       setReportOpen(false);
       setReportReason("Misleading or inappropriate listing");
     } catch (err: unknown) {

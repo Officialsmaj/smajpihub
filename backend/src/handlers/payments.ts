@@ -35,6 +35,40 @@ const findBuyerOrder = async (req: Request, res: Response, orderId: string) => {
 };
 
 export default function mountPaymentsEndpoints(router: Router) {
+  router.get("/", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const orders = await req.app.locals.marketplaceOrderCollection
+      .find({ $or: [{ buyerId: user.uid }, { sellerId: user.uid }] })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(100)
+      .toArray();
+    const payments = orders
+      .filter((order: any) => order.paymentId || order.paymentStatus || ["paid", "processing", "shipped", "delivered", "completed"].includes(order.status))
+      .map((order: any) => ({
+        orderId: order._id.toString(),
+        productTitle: order.productTitle,
+        productImage: order.productImage || "",
+        amountPi: Number(order.pricePi) || 0,
+        paymentId: order.paymentId || "",
+        txid: order.paymentTxid || "",
+        status: order.paymentStatus || (order.status === "paid" ? "paid" : order.status === "pending" ? "pending" : order.status),
+        orderStatus: order.status,
+        role: order.buyerId === user.uid ? "buyer" : "seller",
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt || order.paidAt || order.createdAt,
+        paidAt: order.paidAt || null,
+      }));
+    const summary = payments.reduce((totals: any, payment: any) => {
+      totals.total += payment.amountPi;
+      if (payment.status === "paid" || payment.orderStatus === "paid" || payment.paidAt) totals.paid += payment.amountPi;
+      else if (payment.status === "processing" || payment.status === "pending") totals.pending += payment.amountPi;
+      else if (payment.status === "cancelled") totals.cancelled += payment.amountPi;
+      return totals;
+    }, { total: 0, paid: 0, pending: 0, cancelled: 0 });
+    return res.status(200).json({ payments, summary, serverTime: new Date().toISOString() });
+  });
+
   router.post("/incomplete", async (_req, res) => {
     return res.status(200).json({ message: "Pi payments are temporarily disabled. No payment was processed." });
   });

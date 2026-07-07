@@ -289,7 +289,7 @@ export default function mountUserEndpoints(router: Router) {
       userId: currentUser.uid,
       type: "verification_requested",
       title: "Verification request sent",
-      message: requestedLevel === "trusted_seller" ? "Admin will review your trusted seller verification request." : "Admin will review your verified account request.",
+      message: requestedLevel === "trusted_seller" ? "Team will review your trusted seller verification request." : "Team will review your verified account request.",
       relatedId: "settings",
     });
     const admins = await req.app.locals.userCollection.find({ role: "admin" }).project({ uid: 1 }).toArray();

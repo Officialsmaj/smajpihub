@@ -114,7 +114,7 @@ const AddProductPage = () => {
         priceUsdt,
         sellerAgreementAccepted: form.sellerAgreementAccepted,
       });
-      setSuccess(data.product.reviewStatus === "approved" ? "Product saved and is live in SMAJ Store." : "Product saved for admin review. It will appear in SMAJ Store after approval.");
+      setSuccess(data.product.reviewStatus === "approved" ? "Product saved and is live in SMAJ Store." : "Product saved for team review. It will appear in SMAJ Store after approval.");
       window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : err instanceof Error ? err.message : "Could not add product.");

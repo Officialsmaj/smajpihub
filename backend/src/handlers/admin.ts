@@ -78,7 +78,7 @@ export default function mountAdminEndpoints(router: Router) {
         : status === "rejected"
           ? "Your verification request was not approved. You can update your profile and request again."
           : status === "pending"
-            ? "Your verification request is still under admin review."
+            ? "Your verification request is still under team review."
             : "Your verification badge was removed or reset by admin.";
       if (before?.verificationLevel !== after.verificationLevel || before?.verificationStatus !== after.verificationStatus) {
         await createNotification(req.app, { userId: after.uid, type: "verification_update", title, message, relatedId: "settings" });

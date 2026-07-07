@@ -16,7 +16,7 @@ type SellerData = {
 type BackendErrorBody = { message?: string; error?: string };
 
 const productReviewLabel = (product: Product) => {
-  if (product.hidden) return "Hidden by admin";
+  if (product.hidden) return "Hidden by team";
   if (product.reviewStatus === "rejected") return "Rejected";
   if (product.approved === true && product.reviewStatus === "approved") return product.active ? "Live in Store" : "Sold out";
   return "Pending Review";
@@ -33,7 +33,7 @@ const productReviewNote = (product: Product) => {
   if (product.hidden) return "This product is not visible in SMAJ Store.";
   if (product.reviewStatus === "rejected") return product.rejectionReason || "Admin rejected this listing. Edit and resubmit it for review.";
   if (product.approved === true && product.reviewStatus === "approved") return product.active ? "This product is visible to buyers in SMAJ Store." : "This approved product is currently marked sold out.";
-  return "Saved successfully. It will appear in SMAJ Store after admin approval.";
+  return "Saved successfully. It will appear in SMAJ Store after team approval.";
 };
 
 const SellerPage = () => {
@@ -93,7 +93,7 @@ const SellerPage = () => {
     try {
       await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
       setVerificationRequested(true);
-      setMessage("Trusted seller verification requested. Admin will review your account.");
+      setMessage("Trusted seller verification requested. Team will review your account.");
     } catch (err: unknown) {
       setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not request verification. Make sure seller tools are active." : "Could not request verification. Make sure seller tools are active.");
     } finally {
@@ -130,7 +130,7 @@ const SellerPage = () => {
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
   const isTrustedSeller = user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller";
-  const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Admin is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
+  const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Team is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
 
   return (
     <main className="private-page">
