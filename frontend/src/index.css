@@ -13580,6 +13580,26 @@ select,
     gap: 4px;
   }
 
+  .real-profile-identity h1.profile-name-line {
+    font-size: clamp(1rem, 5.2vw, 1.28rem);
+    line-height: 1.12;
+  }
+
+  .real-profile-identity .profile-name-text {
+    font-size: inherit;
+    letter-spacing: 0;
+  }
+
+  .real-profile-identity .profile-name-line .trust-badge {
+    width: 13px;
+    height: 13px;
+    flex-basis: 13px;
+  }
+
+  .real-profile-identity .profile-name-line .trust-badge > span {
+    font-size: 8px;
+  }
+
   .seller-profile-hero {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
