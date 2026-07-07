@@ -115,6 +115,8 @@ const Footer = () => {
           <Link to="/cookies">Cookie Policy</Link>
           <span className={styles.legalSeparator}>|</span>
           <Link to="/report-abuse">Report Abuse</Link>
+          <span className={styles.legalSeparator}>|</span>
+          <Link to="/seller-agreement">Seller Agreement</Link>
         </div>
 
 
@@ -138,4 +140,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
