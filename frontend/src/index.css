@@ -4126,11 +4126,37 @@ html[data-private-theme="dark"] .private-alert.success {
 .account-dashboard-identity h1,
 .real-profile-identity h1,
 .seller-profile-hero h1,
-.seller-info-card strong { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.seller-info-card strong { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
 .account-dashboard-identity h1 .trust-badge,
 .real-profile-identity h1 .trust-badge,
 .seller-profile-hero h1 .trust-badge,
 .seller-info-card strong .trust-badge { margin-left: 0; }
+.seller-name-line {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.seller-name-text {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storefront-seller-name {
+  width: 100%;
+}
+
+.storefront-seller-name .seller-name-text {
+  display: block;
+}
 .product-gallery { min-width: 0; }
 .gallery-thumbnails, .gallery-preview { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; }
 .gallery-thumbnails button { width: 70px; height: 62px; padding: 2px; border: 2px solid transparent; border-radius: 10px; background: var(--smaj-card); cursor: pointer; }
@@ -4434,6 +4460,11 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   display: block;
   margin: 3px 0 0;
   overflow-wrap: anywhere;
+}
+
+.seller-info-card strong.seller-name-line {
+  display: inline-flex;
+  overflow-wrap: normal;
 }
 
 .product-detail-actions {
@@ -9534,9 +9565,9 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #3b3e66;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  color: #ffffff;
+  background: #2563eb;
+  border: 1px solid #2563eb;
   border-radius: 16px;
 }
 
@@ -9550,13 +9581,14 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-product-cart {
   grid-column: 2;
-  color: #4338ca;
-  background: #eef2ff;
-  border: 1px solid transparent;
+  color: #ffffff;
+  background: #1d4ed8;
+  border: 1px solid #1d4ed8;
 }
 
 .storefront-product-cart:hover {
-  background: #e0e7ff;
+  background: #1e40af;
+  border-color: #1e40af;
 }
 
 .storefront-product-buy {
@@ -9568,6 +9600,7 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
 
 .storefront-product-buy:hover {
   background: #6d28d9;
+  border-color: #6d28d9;
 }
 
 .storefront-offer-card,

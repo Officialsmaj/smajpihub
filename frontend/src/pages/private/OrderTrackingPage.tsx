@@ -119,9 +119,7 @@ const OrderTrackingPage = () => {
           </div>
           <div className="tracking-actions">
             {isBuyer && order.status === "pending" ? (
-              <button type="button" className="private-primary-button" disabled={true}>
-                Payments unavailable
-              </button>
+              <div className="private-alert">Open SMAJ PI HUB in Pi Browser and use the checkout page to complete payment.</div>
             ) : null}
             {isSeller && order.status === "paid" ? (
               <button type="button" className="private-primary-button" disabled={updating} onClick={() => void updateStatus("processing")}>

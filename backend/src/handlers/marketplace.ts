@@ -120,7 +120,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: { $ne: false } }).sort({ createdAt: -1 }).limit(4).toArray(),
       user ? req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id }) : null,
     ]);
-    return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
+    return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
   });
 
   router.post("/products", async (req, res) => {

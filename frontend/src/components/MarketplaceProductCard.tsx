@@ -5,7 +5,7 @@ import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutl
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import TrustBadge from "./TrustBadge";
 import type { Product } from "../types/marketplace";
-import { countryFlag, formatPiAmount, formatUsdAmount } from "../lib/formatters";
+import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from "../lib/formatters";
 
 const PI_USDT_RATE = 314159;
 const usdt = (product: Product) => formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE);
@@ -19,8 +19,9 @@ type MarketplaceProductCardProps = {
 };
 
 const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy }: MarketplaceProductCardProps) => {
+  const country = countryDisplayName(product.country || product.location.split(" - ")[0]);
   const flag = countryFlag(product.country || product.location.split(" - ")[0]);
-  const location = [product.country, product.stateRegion, product.city].filter(Boolean).join(" - ") || product.location;
+  const location = [country, product.stateRegion, product.city].filter(Boolean).join(" - ") || product.location;
   const reviewLabel = product.reviewCount ? `(${product.reviewCount} reviews)` : "No reviews yet";
   const ratingLabel = product.rating ? product.rating.toFixed(1) : "New";
   const deliveryLabel = product.deliveryOption || "Delivery updates in app";
@@ -57,8 +58,10 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
             <small>{flag ? `${flag} ` : ""}{location}</small>
           </div>
           <div className="storefront-product-meta">
-            <small>{product.sellerName}</small>
-            <TrustBadge level={product.verificationLevel} />
+            <span className="seller-name-line storefront-seller-name">
+              <small className="seller-name-text">{product.sellerName}</small>
+              <TrustBadge level={product.verificationLevel} />
+            </span>
           </div>
           <div className="storefront-product-meta">
             <small>{deliveryLabel}</small>

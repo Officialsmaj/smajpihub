@@ -111,9 +111,7 @@ const OrdersPage = () => {
             </button>
           ) : null}
           {mode === "buyer" && order.status === "pending" ? (
-            <button className="secondary" disabled={true}>
-              Payments disabled
-            </button>
+            <span className="order-note">Payment pending. Open the product checkout to complete payment.</span>
           ) : null}
           {order.status === "pending" ? (
             <button

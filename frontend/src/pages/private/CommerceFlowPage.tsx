@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import { usePiPayment } from "../../hooks/usePiPayment";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
@@ -29,6 +30,16 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
   const [creating, setCreating] = useState(false);
   const [message, setMessage] = useState((location.state as { message?: string } | null)?.message || "");
   const [error, setError] = useState("");
+  const { isPaying, payOrder } = usePiPayment();
+
+  const loadOrder = useCallback(async (orderId: string) => {
+    try {
+      const { data } = await axiosClient.get<{ order: Order }>(`/marketplace/orders/${orderId}`);
+      setOrder(data.order);
+    } catch {
+      // ignore refresh failure
+    }
+  }, []);
 
   useEffect(() => {
     setCartItems(getCartItems());
@@ -310,7 +321,6 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <h2>Payment</h2>
                     </div>
                   </div>
-                  <div className="private-alert">Pi payments are temporarily disabled. Your order stays pending until support updates the flow.</div>
                   <div className="commerce-payment-card">
                     <div>
                       <strong>{order.productTitle}</strong>
@@ -318,8 +328,21 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <small>approx ${formatUsdAmount(order.pricePi * PI_USD)}</small>
                     </div>
                     <div className="commerce-payment-actions">
-                      <button type="button" className="private-primary-button" disabled={true}>
-                        Payments unavailable
+                      <button
+                        type="button"
+                        className="private-primary-button"
+                        disabled={isPaying}
+                        onClick={() => void payOrder(order._id, order.pricePi, {
+                          onReady: () => setMessage("Pi payment approved. Waiting confirmation..."),
+                          onComplete: () => {
+                            setMessage("Payment confirmed. Order is paid.");
+                            void loadOrder(order._id);
+                          },
+                          onCancel: () => setError("Payment was cancelled."),
+                          onError: (message) => setError(message),
+                        })}
+                      >
+                        {isPaying ? "Processing payment..." : "Pay with Pi"}
                       </button>
                       <Link className="private-secondary-button" to={`/orders/${order._id}/track`}>
                         Track Order

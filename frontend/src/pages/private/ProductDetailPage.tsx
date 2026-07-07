@@ -11,7 +11,7 @@ import PrivateSkeleton from "../../components/PrivateSkeleton";
 import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
-import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
+import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { setBuyNowItem } from "../../lib/storeCart";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
@@ -105,6 +105,11 @@ const ProductDetailPage = () => {
   }
 
   const images = product.images?.length ? product.images : [product.image].filter(Boolean);
+  const sellerAvatar = seller?.avatar || product.sellerAvatar || "";
+  const sellerName = seller?.displayName || product.sellerName;
+  const sellerCountry = countryDisplayName(seller?.country || product.country || product.location.split(" - ")[0]);
+  const sellerFlag = countryFlag(seller?.country || product.country || product.location.split(" - ")[0]);
+  const sellerLocation = [sellerCountry, product.stateRegion, product.city, product.areaAddress].filter(Boolean).join(" - ") || product.location;
 
   return (
     <main className="private-page">
@@ -141,12 +146,17 @@ const ProductDetailPage = () => {
           <p>{product.description}</p>
 
           <Link className="seller-info-card" to={`/seller/${product.sellerId}`}>
-            <div className="profile-avatar small">{product.sellerName.slice(0, 1)}</div>
+            <div className="profile-avatar small">
+              {sellerAvatar ? <img src={sellerAvatar} alt={sellerName} /> : <span>{sellerName.slice(0, 1)}</span>}
+            </div>
             <div>
               <span>Seller</span>
-              <strong>{seller?.displayName || product.sellerName}<TrustBadge level={seller?.verificationLevel} /></strong>
+              <strong className="seller-name-line">
+                <span className="seller-name-text">{sellerName}</span>
+                <TrustBadge level={seller?.verificationLevel || product.verificationLevel} />
+              </strong>
               <p>
-                @{seller?.piUsername || product.piUsername} · {product.location}
+                @{seller?.piUsername || product.piUsername} · {sellerFlag ? `${sellerFlag} ` : ""}{sellerLocation}
               </p>
             </div>
           </Link>
