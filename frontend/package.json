@@ -1,7 +1,7 @@
 {
   "name": "smaj-pi-hub-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "homepage": "https://smajpihub.com",
   "type": "module",
   "scripts": {
@@ -45,5 +45,4 @@
     "@mui/styled-engine": "@mui/styled-engine-sc"
   }
 }
-
 

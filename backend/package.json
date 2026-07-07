@@ -1,6 +1,6 @@
 {
   "name": "smaj-pi-hub-backend",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Backend services for SMAJ PI HUB marketplace, Pi authentication, payments, messaging, and operations.",
   "author": {

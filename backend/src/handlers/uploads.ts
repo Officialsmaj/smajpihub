@@ -23,7 +23,6 @@ const uploadToCloudinary = async (image: string, purpose: string) => {
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
   params.set("folder", `${env.cloudinary_folder}/${purpose}`);
-  params.set("display_name", assetName);
   params.set("public_id", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
