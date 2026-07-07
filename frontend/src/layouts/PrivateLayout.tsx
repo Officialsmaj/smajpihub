@@ -171,6 +171,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
+          <span className="environment-badge mobile-environment-badge" aria-label="Testnet beta environment">Beta</span>
           <div className="mobile-private-header-actions">
             <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
             <button className="mobile-private-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
@@ -182,6 +183,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
         <Link to="/dashboard" className="private-header-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="" /></Link>
+        <span className="environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
         <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">

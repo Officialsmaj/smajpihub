@@ -57,7 +57,7 @@ const StorePage = () => {
       const unique = Array.from(new Map(live.map((item) => [item._id, item])).values());
       setProducts(unique);
       setSavedIds(feed?.data?.savedIds || saved?.data?.products.map((item) => item._id) || []);
-      setCatalogError(live.length ? "" : "No live products are available yet. Add a seller product to open the marketplace.");
+      setCatalogError("");
     }).catch(() => {
       setProducts([]);
       setSavedIds([]);
@@ -140,6 +140,7 @@ const StorePage = () => {
             </Link>
             <Link to="/store" className="storefront-brand storefront-brand-link">
               <strong>SMAJ Store</strong>
+              <span className="environment-badge storefront-environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
             </Link>
             <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Abu Dhabi")}>
               <LocationOnOutlinedIcon />
@@ -165,6 +166,7 @@ const StorePage = () => {
             <Link to="/store" className="storefront-mobile-logo" aria-label="SMAJ Store">
               <img src={logoImage} alt="SMAJ Store" />
             </Link>
+            <span className="environment-badge storefront-mobile-environment-badge" aria-label="Testnet beta environment">Beta</span>
             <div className="storefront-mobile-actions">
               <Link to="/cart" aria-label="Cart"><ShoppingCartOutlinedIcon /></Link>
               <Link to="/profile" className="storefront-avatar-link" aria-label="Profile">
@@ -252,17 +254,6 @@ const StorePage = () => {
 
         {catalogError ? <div className="private-alert error">{catalogError}</div> : null}
         {loading ? <PrivateSkeleton variant="grid" count={6} /> : null}
-        {!loading && !products.length ? (
-          <section className="private-state">
-            <h2>Live catalog is empty</h2>
-            <p>Add the first seller product or reconnect the backend catalog before testing checkout.</p>
-            <div className="form-actions">
-              <Link className="private-primary-button" to="/add-product">Add Product</Link>
-              <Link className="private-secondary-button" to="/seller">Open Seller Dashboard</Link>
-            </div>
-          </section>
-        ) : null}
-
         {!loading && products.length && !showSearchResults ? (
           <section className="storefront-search-results">
             <div className="storefront-section-head">
