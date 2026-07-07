@@ -46,6 +46,7 @@ export const formatPiInputValue = (value: number) => {
   if (!Number.isFinite(value) || value <= 0) return "";
   if (value >= 1) return String(Math.trunc(value * 100) / 100);
   if (value >= 0.01) return String(Math.trunc(value * 10000) / 10000);
+  if (value >= 0.0001) return String(Math.trunc(value * 10000) / 10000);
   return String(Math.trunc(value * 100000000) / 100000000);
 };
 

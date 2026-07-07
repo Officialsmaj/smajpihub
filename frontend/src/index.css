@@ -4169,6 +4169,8 @@ html[data-private-theme="dark"] .private-alert.success {
 
 .storefront-seller-name .seller-name-text {
   display: block;
+  font-size: clamp(8px, 2.2vw, 11px);
+  line-height: 1.15;
 }
 .product-gallery { min-width: 0; }
 .gallery-thumbnails, .gallery-preview { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; }
@@ -13474,9 +13476,13 @@ select,
 }
 
 .seller-profile-page .profile-name-text,
-.seller-info-card .seller-name-text,
-.storefront-seller-name .seller-name-text {
+.seller-info-card .seller-name-text {
   font-size: inherit;
+}
+
+.storefront-seller-name .seller-name-text {
+  font-size: clamp(8px, 2.2vw, 11px);
+  line-height: 1.15;
 }
 
 .profile-name-line {
