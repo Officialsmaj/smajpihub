@@ -9,6 +9,7 @@ import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from
 
 const PI_USDT_RATE = 314159;
 const usdt = (product: Product) => formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE);
+const pi = (product: Product) => product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
 
 type MarketplaceProductCardProps = {
   product: Product;
@@ -51,7 +52,7 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
           </div>
           <div className="storefront-price-stack">
             <strong>{usdt(product)} USDT</strong>
-            <small>{formatPiAmount(product.pricePi)}</small>
+            <small>{formatPiAmount(pi(product))}</small>
           </div>
           <div className="storefront-product-meta">
             <span className="storefront-product-discount">{product.condition}</span>

@@ -16,6 +16,7 @@ import { setBuyNowItem } from "../../lib/storeCart";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
 const supportEmail = "info@smajpihub.com";
+const PI_USDT_RATE = 314159;
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -110,6 +111,7 @@ const ProductDetailPage = () => {
   const sellerCountry = countryDisplayName(seller?.country || product.country || product.location.split(" - ")[0]);
   const sellerFlag = countryFlag(seller?.country || product.country || product.location.split(" - ")[0]);
   const sellerLocation = [sellerCountry, product.stateRegion, product.city, product.areaAddress].filter(Boolean).join(" - ") || product.location;
+  const piPrice = product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
 
   return (
     <main className="private-page">
@@ -141,7 +143,7 @@ const ProductDetailPage = () => {
           <span className="product-category inline">{product.category}</span>
           <h1>{product.title}</h1>
           <p className="product-detail-price">
-            {formatUsdAmount(product.priceUsdt ?? product.pricePi * 314159)} USDT <small>{formatPiAmount(product.pricePi)}</small>
+            {formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE)} USDT <small>{formatPiAmount(piPrice)}</small>
           </p>
           <p>{product.description}</p>
 

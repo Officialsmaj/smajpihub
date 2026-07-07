@@ -13832,6 +13832,41 @@ button.private-primary-button {
   justify-content: space-between;
 }
 
+.storefront-page .storefront-back-link,
+.storefront-page .storefront-back-link *,
+.storefront-page .storefront-brand,
+.storefront-page .storefront-brand *,
+.storefront-page .storefront-location,
+.storefront-page .storefront-location *,
+.storefront-page .storefront-quick-links a,
+.storefront-page .storefront-quick-links a *,
+.storefront-product-badge,
+.storefront-product-badge *,
+.order-status.pending,
+.order-status.pending *,
+.availability.pending,
+.availability.pending * {
+  color: #ffffff !important;
+}
+
+.storefront-page .storefront-category-nav button,
+.storefront-page .storefront-category-nav button.active,
+.storefront-page .storefront-category-nav button:hover,
+.category-strip button,
+.category-strip button.active,
+.category-strip button:hover {
+  color: #ffffff !important;
+}
+
+.storefront-page .storefront-category-nav {
+  background: #7c3aed !important;
+  border-bottom-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.storefront-product-badge.badge-real {
+  background: #0f766e !important;
+}
+
 .admin-shell .private-sidebar-brand {
   width: 34px;
 }

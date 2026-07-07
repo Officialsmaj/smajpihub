@@ -5,6 +5,7 @@ import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
+const PI_USDT_RATE = 314159;
 
 const timelineEntry = (status: string, label: string, note?: string) => ({
   status,
@@ -16,6 +17,34 @@ const timelineEntry = (status: string, label: string, note?: string) => ({
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
 
+const piFromUsdt = (priceUsdt: unknown) => {
+  const amount = Number(priceUsdt);
+  return Number.isFinite(amount) && amount > 0 ? amount / PI_USDT_RATE : 0;
+};
+
+const withResolvedPiPrice = (document: Record<string, any>) => {
+  const pricePi = Number(document.pricePi);
+  if (Number.isFinite(pricePi) && pricePi > 0) return document;
+  const fallbackPi = piFromUsdt(document.priceUsdt);
+  return fallbackPi > 0 ? { ...document, pricePi: fallbackPi } : document;
+};
+
+const enrichOrdersWithProductPrices = async (req: Request, orders: any[]) => {
+  const productIds = [...new Set(orders.map((order) => order.productId).filter(ObjectId.isValid))].map((id) => new ObjectId(id));
+  if (!productIds.length) return orders;
+  const products = await req.app.locals.productCollection.find({ _id: { $in: productIds } }).project({ pricePi: 1, priceUsdt: 1 }).toArray();
+  const productById = new Map<string, any>(products.map((product: any) => [product._id.toString(), product]));
+  return orders.map((order) => {
+    const pricePi = Number(order.pricePi);
+    if (Number.isFinite(pricePi) && pricePi > 0) return order;
+    const product = productById.get(order.productId);
+    if (!product) return order;
+    const productPricePi = Number(product.pricePi);
+    const fallbackPi = Number.isFinite(productPricePi) && productPricePi > 0 ? productPricePi : piFromUsdt(product.priceUsdt);
+    return fallbackPi > 0 ? { ...order, pricePi: fallbackPi } : order;
+  });
+};
+
 const requireUser = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
   if (!currentUser) {
@@ -25,25 +54,29 @@ const requireUser = async (req: Request, res: Response) => {
   return currentUser;
 };
 
-const productFields = (body: any) => ({
-  title: String(body?.title || "").trim(),
-  image: String(body?.image || "").trim(),
-  description: String(body?.description || "").trim(),
-  category: String(body?.category || "").trim(),
-  location: String(body?.location || "").trim(),
-  sellerContact: String(body?.sellerContact || "").trim(),
-  pricePi: Number(body?.pricePi),
-  priceUsdt: Number(body?.priceUsdt),
-  condition: String(body?.condition || "").trim(),
-  quantity: Number(body?.quantity || 1),
-  deliveryOption: String(body?.deliveryOption || "").trim(),
-  country: String(body?.country || "").trim(),
-  stateRegion: String(body?.stateRegion || "").trim(),
-  city: String(body?.city || "").trim(),
-  areaAddress: String(body?.areaAddress || "").trim(),
-  sellerAgreementAccepted: Boolean(body?.sellerAgreementAccepted),
-  images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
-});
+const productFields = (body: any) => {
+  const priceUsdt = Number(body?.priceUsdt);
+  const pricePi = Number(body?.pricePi);
+  return {
+    title: String(body?.title || "").trim(),
+    image: String(body?.image || "").trim(),
+    description: String(body?.description || "").trim(),
+    category: String(body?.category || "").trim(),
+    location: String(body?.location || "").trim(),
+    sellerContact: String(body?.sellerContact || "").trim(),
+    pricePi: Number.isFinite(pricePi) && pricePi > 0 ? pricePi : piFromUsdt(priceUsdt),
+    priceUsdt,
+    condition: String(body?.condition || "").trim(),
+    quantity: Number(body?.quantity || 1),
+    deliveryOption: String(body?.deliveryOption || "").trim(),
+    country: String(body?.country || "").trim(),
+    stateRegion: String(body?.stateRegion || "").trim(),
+    city: String(body?.city || "").trim(),
+    areaAddress: String(body?.areaAddress || "").trim(),
+    sellerAgreementAccepted: Boolean(body?.sellerAgreementAccepted),
+    images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
+  };
+};
 
 const productValidationMessage = (product: ReturnType<typeof productFields>) => {
   if (!product.title) return "Product title is required.";
@@ -84,7 +117,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (location) query.location = { $regex: location, $options: "i" };
     const sort: Record<string, 1 | -1> = req.query.sort === "price-low" ? { pricePi: 1 } : req.query.sort === "price-high" ? { pricePi: -1 } : { createdAt: -1 };
     const products = await req.app.locals.productCollection.find(query).sort(sort).toArray();
-    return res.status(200).json({ products: products.map(serialize) });
+    return res.status(200).json({ products: products.map(withResolvedPiPrice).map(serialize) });
   });
 
   router.get("/feed", async (req, res) => {
@@ -94,7 +127,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const counts = await req.app.locals.productCollection.aggregate([{ $match: visible }, { $group: { _id: "$category", count: { $sum: 1 } } }]).toArray();
 
     if (!user) {
-      return res.status(200).json({ latest: latest.map(serialize), recommended: latest.map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: [] });
+      return res.status(200).json({ latest: latest.map(withResolvedPiPrice).map(serialize), recommended: latest.map(withResolvedPiPrice).map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: [] });
     }
 
     const [favorites, orders] = await Promise.all([
@@ -103,7 +136,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     ]);
     const preferredCategories = [...new Set(orders.map((item: any) => item.productCategory).filter(Boolean))];
     const recommended = await req.app.locals.productCollection.find(preferredCategories.length ? { ...visible, category: { $in: preferredCategories } } : visible).sort({ createdAt: -1 }).limit(8).toArray();
-    return res.status(200).json({ latest: latest.map(serialize), recommended: (recommended.length ? recommended : latest).map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: favorites.map((item: any) => item.productId) });
+    return res.status(200).json({ latest: latest.map(withResolvedPiPrice).map(serialize), recommended: (recommended.length ? recommended : latest).map(withResolvedPiPrice).map(serialize), categories: STORE_CATEGORIES.map((name) => ({ name, count: counts.find((item: any) => item._id === name)?.count || 0 })), savedIds: favorites.map((item: any) => item.productId) });
   });
 
   router.get("/products/:id", async (req, res) => {
@@ -120,7 +153,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: { $ne: false } }).sort({ createdAt: -1 }).limit(4).toArray(),
       user ? req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id }) : null,
     ]);
-    return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
+    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
   });
 
   router.post("/products", async (req, res) => {
@@ -169,7 +202,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
       .find({ $or: [{ buyerId: user.uid }, { sellerId: user.uid }] })
       .sort({ createdAt: -1 })
       .toArray();
-    return res.status(200).json({ orders: orders.map(serialize) });
+    const enrichedOrders = await enrichOrdersWithProductPrices(req, orders);
+    return res.status(200).json({ orders: enrichedOrders.map(serialize) });
   });
 
   router.get("/orders/:id", async (req, res) => {
@@ -185,7 +219,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!order) {
       return res.status(404).json({ error: "not_found", message: "Order not found" });
     }
-    return res.status(200).json({ order: serialize(order) });
+    const [enrichedOrder] = await enrichOrdersWithProductPrices(req, [order]);
+    return res.status(200).json({ order: serialize(enrichedOrder) });
   });
 
   router.post("/orders", async (req, res) => {
@@ -213,7 +248,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       productTitle: product.title,
       productImage: product.image,
       productCategory: product.category,
-      pricePi: product.pricePi,
+      pricePi: withResolvedPiPrice(product).pricePi,
       status: "pending",
       paymentStatus: "pending",
       paymentId: null,
@@ -323,7 +358,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const favorites = await req.app.locals.favoriteCollection.find({ userId: user.uid }).sort({ createdAt: -1 }).toArray();
     const ids = favorites.map((item: any) => item.productId).filter(ObjectId.isValid).map((id: string) => new ObjectId(id));
     const products = ids.length ? await req.app.locals.productCollection.find({ _id: { $in: ids }, hidden: { $ne: true } }).toArray() : [];
-    return res.status(200).json({ products: products.map(serialize) });
+    return res.status(200).json({ products: products.map(withResolvedPiPrice).map(serialize) });
   });
 
   router.post("/products/:id/favorite", async (req, res) => {
@@ -347,7 +382,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: seller.uid, status: "completed" }),
     ]);
     const averageRating = reviews.length ? reviews.reduce((sum: number, review: any) => sum + Number(review.rating), 0) / reviews.length : 0;
-    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt, totalProducts: products.length, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(serialize), reviews: reviews.map(serialize) });
+    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt, totalProducts: products.length, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(withResolvedPiPrice).map(serialize), reviews: reviews.map(serialize) });
   });
 
   router.post("/orders/:id/review", async (req, res) => {
@@ -366,9 +401,10 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!user) return res.status(200).json({ products: [], orders: [], stats: { totalProducts: 0, totalOrders: 0, pendingOrders: 0, paidOrders: 0 } });
     const products = await req.app.locals.productCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
     const orders = await req.app.locals.marketplaceOrderCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
+    const enrichedOrders = await enrichOrdersWithProductPrices(req, orders);
     return res.status(200).json({
-      products: products.map(serialize),
-      orders: orders.map(serialize),
+      products: products.map(withResolvedPiPrice).map(serialize),
+      orders: enrichedOrders.map(serialize),
       stats: {
         totalProducts: products.length,
         totalOrders: orders.length,
@@ -389,7 +425,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).limit(4).toArray(),
       req.app.locals.favoriteCollection.findOne({ userId: req.session.currentUser!.uid, productId: req.params.id }),
     ]);
-    return res.status(200).json({ product: serialize(product), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(serialize), saved: Boolean(favorite) });
+    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
   });
 
   router.put("/seller/products/:id", async (req, res) => {
