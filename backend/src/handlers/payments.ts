@@ -1,5 +1,3 @@
-import { Router } from "express";
-
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
