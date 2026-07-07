@@ -32,6 +32,15 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
   const [error, setError] = useState("");
   const { isPaying, payOrder } = usePiPayment();
 
+  useEffect(() => {
+    if (!message && !error) return;
+    const timer = window.setTimeout(() => {
+      setMessage("");
+      setError("");
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [message, error]);
+
   const loadOrder = useCallback(async (orderId: string) => {
     try {
       const { data } = await axiosClient.get<{ order: Order }>(`/marketplace/orders/${orderId}`);
@@ -139,8 +148,8 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
             <p>Review saved products and continue to checkout.</p>
           </div>
         </section>
-        {message ? <div className="private-alert success">{message}</div> : null}
-        {error ? <div className="private-alert error">{error}</div> : null}
+        {message ? <div className="smaj-toast success" role="status">{message}</div> : null}
+        {error ? <div className="smaj-toast error" role="alert">{error}</div> : null}
         {!cartItems.length ? (
           <section className="private-state commerce-flow">
             <ShoppingCartOutlinedIcon />
@@ -238,8 +247,8 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
           <p>Review product details, create the order, and pay with Pi.</p>
         </div>
       </section>
-      {message ? <div className="private-alert success">{message}</div> : null}
-      {error ? <div className="private-alert error">{error}</div> : null}
+      {message ? <div className="smaj-toast success" role="status">{message}</div> : null}
+      {error ? <div className="smaj-toast error" role="alert">{error}</div> : null}
 
       {!checkoutItem && !order ? (
         <section className="private-state commerce-flow">
@@ -277,12 +286,14 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                   </div>
                   <strong>{formatPiAmount(checkoutTotalPi)}</strong>
                 </article>
-                <div className="commerce-total-row">
-                  <span>Total</span>
-                  <strong>{formatPiAmount(checkoutTotalPi)}</strong>
+                <div className="commerce-total-box">
+                  <div className="commerce-total-row">
+                    <span>Total</span>
+                    <strong>{formatPiAmount(checkoutTotalPi)}</strong>
+                  </div>
+                  <small className="commerce-usd">approx ${formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
                 </div>
-                <small className="commerce-usd">approx ${formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
-                <div className="form-actions">
+                <div className="form-actions commerce-checkout-actions">
                   <button
                     type="button"
                     className="private-primary-button"
@@ -322,7 +333,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     </div>
                   </div>
                   <div className="commerce-payment-card">
-                    <div>
+                    <div className="commerce-payment-copy">
                       <strong>{order.productTitle}</strong>
                       <span>{formatPiAmount(order.pricePi)}</span>
                       <small>approx ${formatUsdAmount(order.pricePi * PI_USD)}</small>

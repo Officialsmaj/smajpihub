@@ -8830,7 +8830,34 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding-top: 16px;
+}
+
+.commerce-total-box {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 14px;
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 16px;
+}
+
+.commerce-total-box .commerce-total-row {
+  padding: 0;
+}
+
+.commerce-total-box .commerce-usd {
+  display: block;
+  text-align: right;
+}
+
+.commerce-checkout-actions {
+  margin-top: 14px;
+}
+
+.commerce-checkout-actions > * {
+  min-height: 44px;
+  padding-inline: 16px;
 }
 
 .commerce-success {
@@ -8847,6 +8874,23 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   background: var(--smaj-card);
   border: 1px solid var(--smaj-border);
   border-radius: 18px;
+}
+
+.commerce-payment-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.commerce-payment-copy strong,
+.commerce-payment-copy span,
+.commerce-payment-copy small {
+  display: block;
+}
+
+.commerce-payment-copy span {
+  color: var(--smaj-text);
+  font-weight: 800;
 }
 
 .commerce-method-card {
@@ -9370,6 +9414,21 @@ html[data-private-theme="dark"] .private-header-icon { color: #ffffff; backgroun
   flex-direction: column;
   align-items: stretch;
 }
+
+  .commerce-checkout-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .commerce-checkout-actions > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .commerce-total-box .commerce-usd {
+    text-align: left;
+  }
 }
 
 /* SMAJ Store listing and showcase polish */
