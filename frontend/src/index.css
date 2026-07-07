@@ -14660,3 +14660,98 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
 .product-category * {
   color: #ffffff !important;
 }
+
+/* Identity name + verified badge polish */
+.trust-badge {
+  --trust-size: 15px;
+  width: var(--trust-size) !important;
+  height: var(--trust-size) !important;
+  flex: 0 0 var(--trust-size) !important;
+  margin-left: 0 !important;
+  vertical-align: -2px;
+  box-shadow: none;
+}
+
+.trust-badge > span {
+  font-size: calc(var(--trust-size) * 0.66) !important;
+  line-height: 1 !important;
+  transform: translateY(-0.5px);
+}
+
+.profile-name-line,
+.seller-name-line,
+.conversation-name {
+  min-width: 0;
+  max-width: 100%;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+}
+
+.profile-name-text,
+.seller-name-text,
+.conversation-name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.real-profile-identity h1.profile-name-line,
+.account-dashboard-identity h1.profile-name-line,
+.seller-profile-hero h1.profile-name-line {
+  width: auto;
+  max-width: 100%;
+  margin-bottom: 2px;
+  font-size: clamp(1.05rem, 5vw, 1.55rem);
+  line-height: 1.08;
+}
+
+.real-profile-identity h1.profile-name-line .trust-badge,
+.account-dashboard-identity h1.profile-name-line .trust-badge,
+.seller-profile-hero h1.profile-name-line .trust-badge {
+  --trust-size: 15px;
+}
+
+.real-profile-identity h1.profile-name-line + span,
+.account-dashboard-identity h1.profile-name-line + p,
+.seller-profile-hero h1.profile-name-line + p,
+.seller-info-card p,
+.storefront-seller-name + span,
+.storefront-product-meta {
+  color: var(--smaj-text-secondary) !important;
+  font-size: clamp(10px, 2.8vw, 13px);
+  line-height: 1.25;
+}
+
+.seller-info-card .seller-name-line,
+.storefront-seller-name,
+.conversation-name {
+  font-size: clamp(0.72rem, 3.2vw, 0.95rem);
+  font-weight: 850;
+  line-height: 1.12;
+}
+
+.storefront-seller-name .trust-badge,
+.seller-info-card .trust-badge,
+.conversation-name .trust-badge {
+  --trust-size: 13px;
+}
+
+@media (max-width: 390px) {
+  .real-profile-identity h1.profile-name-line,
+  .account-dashboard-identity h1.profile-name-line,
+  .seller-profile-hero h1.profile-name-line {
+    font-size: clamp(0.92rem, 4.6vw, 1.12rem);
+  }
+
+  .real-profile-identity h1.profile-name-line .trust-badge,
+  .account-dashboard-identity h1.profile-name-line .trust-badge,
+  .seller-profile-hero h1.profile-name-line .trust-badge {
+    --trust-size: 13px;
+  }
+}
