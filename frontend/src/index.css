@@ -14626,3 +14626,10 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
     max-width: 72%;
   }
 }
+
+.storefront-product-card .storefront-product-badge.badge-real,
+.storefront-product-card .storefront-product-badge.badge-real * {
+  color: #ffffff !important;
+  background: #0f766e !important;
+  border-color: #0f766e !important;
+}

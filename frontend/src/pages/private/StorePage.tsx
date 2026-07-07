@@ -19,7 +19,17 @@ import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion", "Kids Fashion", "Home, Kitchen & Appliances", "Beauty & Fragrance", "Toys", "Baby", "Health & Nutrition"];
-const electronicsSubcategories = ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"];
+const mobileMenuSubcategories: Record<string, string[]> = {
+  Electronics: ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"],
+  "Women's Fashion": ["Dresses", "Shoes", "Bags", "Jewelry", "Beauty Deals", "All Women's Fashion"],
+  "Men's Fashion": ["Shirts", "Shoes", "Watches", "Bags", "Grooming", "All Men's Fashion"],
+  "Kids Fashion": ["Girls", "Boys", "Baby Clothing", "School Shoes", "Kids Accessories", "All Kids Fashion"],
+  "Home, Kitchen & Appliances": ["Kitchen Appliances", "Cookware", "Furniture", "Bedding", "Home Decor", "All Home"],
+  "Beauty & Fragrance": ["Perfume", "Skin Care", "Hair Care", "Makeup", "Personal Care", "All Beauty"],
+  Toys: ["Learning Toys", "Outdoor Play", "Remote Control", "Baby Toys", "Games", "All Toys"],
+  Baby: ["Diapers", "Feeding", "Strollers", "Baby Care", "Baby Clothing", "All Baby"],
+  "Health & Nutrition": ["Vitamins", "Fitness", "Wellness", "Medical Supplies", "Nutrition", "All Health"],
+};
 
 const StorePage = () => {
   const { user } = useAuthContext();
@@ -33,7 +43,8 @@ const StorePage = () => {
   const [category, setCategory] = useState(params.get("category") || "All");
   const [heroIndex, setHeroIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "electronics">("categories");
+  const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
+  const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
   const profileName = user?.displayName || user?.username || "Pi User";
 
   useEffect(() => {
@@ -92,8 +103,9 @@ const StorePage = () => {
   };
 
   const chooseMobileCategory = (value: string) => {
-    if (value === "Electronics") {
-      setMobileMenuPanel("electronics");
+    if (mobileMenuSubcategories[value]?.length) {
+      setMobileMenuCategory(value);
+      setMobileMenuPanel("subcategories");
       return;
     }
     setSearch(value);
@@ -101,9 +113,18 @@ const StorePage = () => {
     setMobileMenuOpen(false);
   };
 
-  const chooseElectronicsSubcategory = (value: string) => {
+  const chooseMobileSubcategory = (value: string) => {
     setSearch(value);
-    updateCategory("Electronics");
+    const normalizedCategory = mobileMenuCategory.includes("Fashion")
+      ? "Fashion"
+      : mobileMenuCategory.startsWith("Home")
+        ? "Home"
+        : mobileMenuCategory.startsWith("Beauty")
+          ? "Beauty"
+          : mobileMenuCategory.startsWith("Health")
+            ? "All"
+            : mobileMenuCategory;
+    updateCategory(STORE_CATEGORIES.includes(normalizedCategory) ? normalizedCategory : "All");
     setMobileMenuOpen(false);
     setMobileMenuPanel("categories");
   };
@@ -169,7 +190,7 @@ const StorePage = () => {
             <div className="storefront-mobile-drawer-wrap">
               <button type="button" className="storefront-mobile-drawer-backdrop" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} />
               <aside className="storefront-mobile-drawer" aria-label="SMAJ Store categories menu">
-                <div className="storefront-mobile-drawer-panels" style={{ transform: mobileMenuPanel === "electronics" ? "translateX(-50%)" : "translateX(0)" }}>
+                <div className="storefront-mobile-drawer-panels" style={{ transform: mobileMenuPanel === "subcategories" ? "translateX(-50%)" : "translateX(0)" }}>
                   <section className="storefront-mobile-drawer-panel">
                     <header>
                       <Link to="/store" aria-label="SMAJ Store" onClick={() => setMobileMenuOpen(false)}><img src={logoImage} alt="SMAJ Store" /></Link>
@@ -188,12 +209,12 @@ const StorePage = () => {
                   <section className="storefront-mobile-drawer-panel">
                     <header>
                       <button type="button" className="storefront-mobile-drawer-back" aria-label="Back to categories" onClick={() => setMobileMenuPanel("categories")}><ArrowBackIosNewOutlinedIcon /></button>
-                      <h3>Electronics</h3>
+                      <h3>{mobileMenuCategory}</h3>
                       <button type="button" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)}><CloseOutlinedIcon /></button>
                     </header>
                     <nav>
-                      {electronicsSubcategories.map((item) => (
-                        <button type="button" key={item} onClick={() => chooseElectronicsSubcategory(item)}>
+                      {(mobileMenuSubcategories[mobileMenuCategory] || []).map((item) => (
+                        <button type="button" key={item} onClick={() => chooseMobileSubcategory(item)}>
                           <span>{item}</span>
                           <ArrowForwardIosOutlinedIcon />
                         </button>
