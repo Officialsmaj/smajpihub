@@ -11986,6 +11986,49 @@ select,
   padding-left: 20px;
 }
 
+.legal-company-page > section,
+.legal-company-page .home-section,
+.legal-company-page .legal-company-hero,
+.legal-company-page .legal-company-section,
+.legal-company-page .legal-text-document,
+.legal-company-page .legal-text-intro,
+.legal-company-page .legal-text-section,
+.legal-company-page .legal-policy-panel,
+.legal-company-page .legal-report-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.legal-company-page,
+.legal-company-page h1,
+.legal-company-page h2,
+.legal-company-page h3,
+.legal-company-page p,
+.legal-company-page li,
+.legal-company-page span {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.legal-company-page {
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+.legal-company-page h1,
+.legal-company-page h2,
+.legal-company-page h3,
+.legal-company-page .home-kicker {
+  color: #0f172a !important;
+}
+
+.legal-company-page p,
+.legal-company-page li {
+  color: #334155 !important;
+}
+
 .seller-agreement-link {
   color: var(--smaj-primary);
   font-weight: 850;
@@ -14781,5 +14824,54 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   .account-dashboard-identity h1.profile-name-line .trust-badge,
   .seller-profile-hero h1.profile-name-line .trust-badge {
     --trust-size: 13px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-private-footer {
+    display: grid !important;
+    overflow: visible !important;
+    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .mobile-private-footer nav {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .mobile-private-footer nav a {
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 9px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--smaj-text, #111827) !important;
+    background: var(--smaj-card, #ffffff);
+    border: 1px solid var(--smaj-border, #e5e7eb);
+    border-radius: 8px;
+    font-size: 11px !important;
+    font-weight: 800;
+    line-height: 1.15;
+    text-align: center;
+    text-decoration: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+
+  .legal-company-page,
+  .legal-company-page .legal-text-document,
+  .legal-company-page .legal-text-intro,
+  .legal-company-page .legal-text-section,
+  .legal-company-page .legal-text-section p,
+  .legal-company-page .legal-text-section li,
+  .legal-company-page .legal-policy-panel,
+  .legal-company-page .legal-policy-panel li {
+    color: var(--smaj-text, #111827) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
