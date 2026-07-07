@@ -151,8 +151,8 @@ const ProductDetailPage = () => {
             <div className="profile-avatar small">
               {sellerAvatar ? <img src={sellerAvatar} alt={sellerName} /> : <span>{sellerName.slice(0, 1)}</span>}
             </div>
-            <div>
-              <span>Seller</span>
+            <div className="seller-info-copy">
+              <span className="seller-role-label">Seller</span>
               <strong className="seller-name-line">
                 <span className="seller-name-text">{sellerName}</span>
                 <TrustBadge level={seller?.verificationLevel || product.verificationLevel} />

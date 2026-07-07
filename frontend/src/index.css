@@ -4464,6 +4464,18 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   min-width: 0;
 }
 
+.seller-info-card .seller-info-copy {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 2px;
+}
+
+.seller-info-card .seller-role-label {
+  display: block;
+  line-height: 1.1;
+}
+
 .seller-info-card span,
 .seller-info-card p {
   color: var(--smaj-text-secondary);
@@ -4478,7 +4490,7 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 }
 
 .seller-info-card strong.seller-name-line {
-  display: inline-flex;
+  display: flex;
   overflow-wrap: normal;
 }
 
