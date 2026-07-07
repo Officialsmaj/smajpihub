@@ -61,6 +61,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
     [cartItems]
   );
   const checkoutTotalPi = checkoutItem ? checkoutItem.pricePi * checkoutItem.quantity : 0;
+  const hasPi = typeof window !== "undefined" && Boolean(window.Pi);
 
 
   const handleCreateOrder = async () => {
@@ -132,7 +133,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
               <p>Orders stay payment pending until Pi payment is confirmed successfully.</p>
             </div>
           </div>
-          {!window.Pi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi</div> : null}
+          {!hasPi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi</div> : null}
         </section>
       </main>
     );
@@ -332,6 +333,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <h2>Payment</h2>
                     </div>
                   </div>
+                  {!hasPi ? <div className="private-alert">Open SMAJ PI HUB in Pi Browser to pay with Pi.</div> : null}
                   <div className="commerce-payment-card">
                     <div className="commerce-payment-copy">
                       <strong>{order.productTitle}</strong>
@@ -342,15 +344,18 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <button
                         type="button"
                         className="private-primary-button"
-                        disabled={isPaying}
+                        disabled={!hasPi || isPaying}
                         onClick={() => void payOrder(order._id, order.pricePi, {
                           onReady: () => setMessage("Pi payment approved. Waiting confirmation..."),
                           onComplete: () => {
                             setMessage("Payment confirmed. Order is paid.");
                             void loadOrder(order._id);
+                            navigate(`/orders/${order._id}/track`);
                           },
                           onCancel: () => setError("Payment was cancelled."),
                           onError: (message) => setError(message),
+                        }).catch((err) => {
+                          if (err instanceof Error) setError(err.message);
                         })}
                       >
                         {isPaying ? "Processing payment..." : "Pay with Pi"}

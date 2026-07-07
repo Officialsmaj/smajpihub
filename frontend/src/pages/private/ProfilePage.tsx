@@ -369,6 +369,13 @@ const ProfilePage = () => {
             aria-label="Edit profile banner"
             role="button"
             tabIndex={0}
+            onClick={() => coverInputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                coverInputRef.current?.click();
+              }
+            }}
           >
             <EditOutlinedIcon /> Edit Banner
           </label>

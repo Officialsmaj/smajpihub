@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
+import { platformAPIKeyClient } from "../services/platformAPIClient";
 
 const timelineEntry = (status: string, label: string, note?: string) => ({
   status,
@@ -50,6 +51,8 @@ export default function mountPaymentsEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Only pending orders can be approved for payment." });
     }
 
+    await platformAPIKeyClient.post(`/v2/payments/${paymentId}/approve`);
+
     await req.app.locals.marketplaceOrderCollection.updateOne(
       { _id: order._id },
       {
@@ -79,6 +82,8 @@ export default function mountPaymentsEndpoints(router: Router) {
     if (order.status !== "pending") {
       return res.status(400).json({ error: "bad_request", message: "Only pending orders can be completed with payment." });
     }
+
+    await platformAPIKeyClient.post(`/v2/payments/${paymentId}/complete`, { txid });
 
     await req.app.locals.marketplaceOrderCollection.updateOne(
       { _id: order._id },
