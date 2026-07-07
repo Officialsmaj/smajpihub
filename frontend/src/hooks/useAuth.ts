@@ -173,8 +173,13 @@ export const useAuth = () => {
         }
       } catch (err) {
         if (isAxiosError(err) && err.response?.status === 401) {
-          window.localStorage.removeItem(PI_USER_STORAGE_KEY);
-          if (mounted) setUser(null);
+          if (stored?.uid) {
+            console.log("[auth] /user session expired; keeping local Pi auth state so private refresh stays on the same page.");
+            if (mounted) setUser(stored);
+          } else {
+            window.localStorage.removeItem(PI_USER_STORAGE_KEY);
+            if (mounted) setUser(null);
+          }
         }
       } finally {
         const remaining = MIN_SESSION_LOADING_MS - (Date.now() - startedAt);
