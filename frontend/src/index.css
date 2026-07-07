@@ -12340,6 +12340,7 @@ select,
   min-height: clamp(180px, 27vw, 330px);
   position: relative;
   display: block;
+  padding: 0;
   background: #eef2f7;
   background-position: center;
   background-size: cover;
@@ -12348,6 +12349,11 @@ select,
   border-radius: 8px 8px 0 0;
   cursor: pointer;
   z-index: 1;
+  text-align: left;
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  touch-action: manipulation;
 }
 
 .real-profile-cover > .real-profile-cover-edit {
@@ -14719,13 +14725,18 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   line-height: 1.08;
 }
 
+.real-profile-identity h1.profile-name-line {
+  display: flex !important;
+  width: fit-content;
+}
+
 .real-profile-identity h1.profile-name-line .trust-badge,
 .account-dashboard-identity h1.profile-name-line .trust-badge,
 .seller-profile-hero h1.profile-name-line .trust-badge {
   --trust-size: 15px;
 }
 
-.real-profile-identity h1.profile-name-line + span,
+.real-profile-identity .profile-username,
 .account-dashboard-identity h1.profile-name-line + p,
 .seller-profile-hero h1.profile-name-line + p,
 .seller-info-card p,
@@ -14734,6 +14745,15 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   color: var(--smaj-text-secondary) !important;
   font-size: clamp(10px, 2.8vw, 13px);
   line-height: 1.25;
+}
+
+.real-profile-identity .profile-username {
+  display: block;
+  margin-top: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .seller-info-card .seller-name-line,

@@ -205,6 +205,10 @@ const ProfilePage = () => {
     }, (text) => setAlert({ type: "error", text }));
   };
 
+  const openCoverPicker = () => {
+    coverInputRef.current?.click();
+  };
+
   const updateCropFrame = (handle: CropHandle, event: PointerEvent<HTMLElement>) => {
     const drag = cropDragRef.current;
     const preview = cropPreviewRef.current;
@@ -359,27 +363,20 @@ const ProfilePage = () => {
       <input id="profileCoverUpload" className="profile-file-input" ref={coverInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("cover", event)} />
 
       <section className="real-profile-hero">
-        <div
+        <button
+          type="button"
           className="real-profile-cover"
           style={form.coverImage ? { backgroundImage: `url(${form.coverImage})` } : undefined}
+          onClick={openCoverPicker}
+          aria-label="Edit profile banner"
         >
-          <label
-            htmlFor="profileCoverUpload"
+          <span
             className="real-profile-cover-edit"
-            aria-label="Edit profile banner"
-            role="button"
-            tabIndex={0}
-            onClick={() => coverInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                coverInputRef.current?.click();
-              }
-            }}
+            aria-hidden="true"
           >
             <EditOutlinedIcon /> Edit Banner
-          </label>
-        </div>
+          </span>
+        </button>
         <div className="real-profile-identity">
           <label
             className="real-profile-avatar"
@@ -400,7 +397,7 @@ const ProfilePage = () => {
           </label>
           <div>
             <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} /></h1>
-            <span>@{username}</span>
+            <span className="profile-username">@{username}</span>
             <div className="real-profile-badges">
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
             </div>
