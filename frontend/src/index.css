@@ -14933,7 +14933,7 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   .mobile-private-footer {
     display: grid !important;
     overflow: visible !important;
-    padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .mobile-private-footer nav {
