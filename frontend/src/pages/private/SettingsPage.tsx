@@ -166,9 +166,11 @@ const SettingsPage = () => {
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
           <div className="settings-info-row"><span>Verification status</span><strong>{verificationStatus}</strong></div>
           <div className="settings-info-row"><span>Connected Pi account</span><strong>{piAccount}</strong></div>
-          {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
-          <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
-          <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
+          <div className="settings-action-row">
+            {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
+            <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
+            <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
+          </div>
         </section>
 
         <section>

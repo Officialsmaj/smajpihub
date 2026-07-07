@@ -28,6 +28,22 @@ const links = [
   ["/admin/settings", "Settings", <SettingsOutlinedIcon />],
 ] as const;
 
+const adminSearchItems = [
+  ...links.map(([to, label, icon]) => ({ to, label, icon, keywords: [label, "admin"] })),
+  { to: "/store", label: "SMAJ Store", icon: <Inventory2OutlinedIcon />, keywords: ["store", "shop", "products", "marketplace", "commerce"] },
+  { to: "/seller", label: "Seller Dashboard", icon: <Inventory2OutlinedIcon />, keywords: ["seller", "vendor", "listings", "products"] },
+  { to: "/add-product", label: "Add Product", icon: <Inventory2OutlinedIcon />, keywords: ["add", "new product", "listing"] },
+  { to: "/orders", label: "User Orders", icon: <ReceiptLongOutlinedIcon />, keywords: ["orders", "buyer", "seller orders"] },
+  { to: "/messages", label: "Messages", icon: <ReportProblemOutlinedIcon />, keywords: ["messages", "chat", "inbox"] },
+  { to: "/notifications", label: "Notifications", icon: <ReportProblemOutlinedIcon />, keywords: ["notifications", "alerts"] },
+  { to: "/profile", label: "Profile", icon: <PeopleOutlineIcon />, keywords: ["profile", "account", "user"] },
+  { to: "/settings", label: "User Settings", icon: <SettingsOutlinedIcon />, keywords: ["settings", "verification", "privacy"] },
+  { to: "/help", label: "Help Center", icon: <ReportProblemOutlinedIcon />, keywords: ["help", "support", "faq"] },
+  { to: "/privacy", label: "Privacy Policy", icon: <SettingsOutlinedIcon />, keywords: ["privacy", "legal"] },
+  { to: "/terms", label: "Terms", icon: <SettingsOutlinedIcon />, keywords: ["terms", "legal"] },
+  { to: "/seller-agreement", label: "Seller Agreement", icon: <SettingsOutlinedIcon />, keywords: ["seller agreement", "legal"] },
+] as const;
+
 const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { user, signOut } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -65,12 +81,14 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const searchResults = useMemo(() => {
     const query = adminSearch.trim().toLowerCase();
     if (!query) return [];
-    return links.filter(([, label]) => label.toLowerCase().includes(query) || query.includes(label.toLowerCase())).slice(0, 5);
+    return adminSearchItems
+      .filter((item) => [item.label, item.to, ...item.keywords].some((value) => value.toLowerCase().includes(query) || query.includes(value.toLowerCase())))
+      .slice(0, 8);
   }, [adminSearch]);
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    const target = searchResults[0]?.[0] || "/admin";
+    const target = searchResults[0]?.to || "/admin";
     setAdminSearch("");
     setMobileSidebarOpen(false);
     navigate(target);
@@ -88,9 +106,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           <input value={adminSearch} onChange={(event) => setAdminSearch(event.target.value)} placeholder="Search admin..." aria-label="Search admin pages" />
           {adminSearch.trim() ? (
             <div className="admin-search-results">
-              {searchResults.length ? searchResults.map(([to, label, icon]) => (
-                <button type="button" key={to} onClick={() => { setAdminSearch(""); navigate(to); }}>
-                  {icon}<span>{label}</span>
+              {searchResults.length ? searchResults.map((item) => (
+                <button type="button" key={item.to} onClick={() => { setAdminSearch(""); setMobileSidebarOpen(false); navigate(item.to); }}>
+                  {item.icon}<span>{item.label}</span>
                 </button>
               )) : <button type="submit">Open Admin Dashboard</button>}
             </div>

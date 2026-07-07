@@ -13608,6 +13608,29 @@ select,
   border-color: #c92a2a !important;
 }
 
+.settings-action-row {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settings-action-row .private-secondary-button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.settings-action-row .private-secondary-button.danger {
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 767px) {
   .storefront-search {
     height: 42px;
@@ -13669,6 +13692,17 @@ select,
 
   .settings-page .private-secondary-button.danger {
     width: 100%;
+  }
+
+  .settings-action-row {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .settings-action-row .private-secondary-button {
+    width: 100%;
+    min-height: 44px;
+    font-size: 12px;
   }
 }
 
@@ -14321,6 +14355,18 @@ button.private-primary-button {
     width: 100%;
     min-width: 0;
     padding: 0 9px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .admin-shell .admin-header-search input {
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .admin-shell .admin-header-search svg {
+    flex: 0 0 auto;
+    font-size: 18px;
   }
 
   .admin-shell .private-body {
@@ -14338,23 +14384,79 @@ button.private-primary-button {
 
   .admin-shell .private-sidebar.private-sidebar-open {
     left: 0;
+    display: flex !important;
+    overflow-y: auto !important;
   }
 
+  .admin-shell .private-sidebar .private-sidebar-top,
   .admin-shell .private-sidebar-collapsed .private-sidebar-top {
+    display: flex !important;
     justify-content: space-between;
   }
 
+  .admin-shell .private-sidebar .private-sidebar-brand,
+  .admin-shell .private-sidebar .private-sidebar-user,
+  .admin-shell .private-sidebar .private-nav-label,
   .admin-shell .private-sidebar-collapsed .private-sidebar-brand,
   .admin-shell .private-sidebar-collapsed .private-sidebar-user,
   .admin-shell .private-sidebar-collapsed .private-nav-label {
-    display: flex;
+    display: flex !important;
   }
 
+  .admin-shell .private-sidebar nav {
+    display: grid !important;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 0 16px;
+    overflow: visible;
+  }
+
+  .admin-shell .private-sidebar nav a,
+  .admin-shell .private-sidebar .private-sidebar-logout,
   .admin-shell .private-sidebar-collapsed nav a,
   .admin-shell .private-sidebar-collapsed .private-sidebar-logout {
+    width: 100%;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center;
     justify-content: flex-start;
     gap: 11px;
     padding: 11px 12px;
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+  }
+
+  .admin-shell .private-sidebar nav a.active {
+    background: var(--smaj-primary);
+    border-color: var(--smaj-primary);
+  }
+
+  .admin-shell .private-sidebar nav a svg,
+  .admin-shell .private-sidebar .private-sidebar-logout svg {
+    flex: 0 0 auto;
+    color: #ffffff !important;
+  }
+
+  .admin-shell .private-sidebar .private-nav-label {
+    min-width: 0;
+    color: #ffffff !important;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .admin-search-results {
+    left: auto;
+    right: 0;
+    width: min(300px, calc(100vw - 20px));
+    max-height: 62vh;
+    overflow-y: auto;
+  }
+
+  .admin-search-results button {
+    min-height: 40px;
   }
 
   .admin-analytics-grid,
