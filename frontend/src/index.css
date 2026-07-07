@@ -15311,7 +15311,7 @@ svg {
 
 @media (max-width: 767px) {
   .mobile-private-footer {
-    padding: 30px 20px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 30px 20px calc(64px + env(safe-area-inset-bottom, 0px)) !important;
     gap: 14px !important;
     background: var(--smaj-secondary-bg);
   }
