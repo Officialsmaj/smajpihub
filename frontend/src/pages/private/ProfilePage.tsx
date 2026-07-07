@@ -193,7 +193,8 @@ const ProfilePage = () => {
   const sellerActive = Boolean(form.sellerActive);
   const selectedCountry = countries.find((country) => country.name === form.country || country.code === form.country);
   const selectedLanguage = cleanLanguages.find((language) => language.name === form.language || language.native === form.language) || cleanLanguages[0];
-  const profileVerificationLevel = user?.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
+  const profileVerificationLevel = user?.verificationLevel || "basic";
+  const profileVerificationStatus = user?.verificationStatus || "none";
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -396,7 +397,7 @@ const ProfilePage = () => {
             <span><CameraAltOutlinedIcon /></span>
           </label>
           <div>
-            <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} /></h1>
+            <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} status={profileVerificationStatus} /></h1>
             <span className="profile-username">@{username}</span>
             <div className="real-profile-badges">
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
@@ -418,7 +419,7 @@ const ProfilePage = () => {
           <section className="real-profile-stats">
             <article><Inventory2OutlinedIcon /><span>Products</span><strong>{stats.totalProducts}</strong></article>
             <article><StorefrontOutlinedIcon /><span>Successful Orders</span><strong>{stats.successfulOrders}</strong></article>
-            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{profileVerificationLevel === "trusted_seller" ? "Trusted Seller" : "Verified"}</strong></article>
+            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{profileVerificationStatus === "approved" ? profileVerificationLevel === "trusted_seller" ? "Trusted Seller" : "Verified" : profileVerificationStatus === "pending" ? "Pending" : "Basic"}</strong></article>
           </section>
 
           <section className="real-profile-grid">
@@ -443,7 +444,7 @@ const ProfilePage = () => {
               <div className="form-actions">
                 <button className="private-secondary-button" type="button" disabled={sellerSaving} onClick={() => void toggleSeller()}>{sellerSaving ? "Saving..." : sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
-                {sellerActive && user?.verificationLevel !== "trusted_seller" ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
+                {sellerActive && !(user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller") ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
               </div>
             </article>
 

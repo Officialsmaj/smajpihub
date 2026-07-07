@@ -177,7 +177,7 @@ const MessagesPage = () => {
                   <i className={item.online ? "online" : "offline"} />
                 </span>
                 <div>
-                  <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} /></strong>
+                  <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} status={item.verificationStatus} /></strong>
                   <p>{item.lastMessage || "No messages yet."}</p>
                   <small>{item.productTitle} - {formatLastSeen(item)}</small>
                 </div>
@@ -204,7 +204,7 @@ const MessagesPage = () => {
                     <i className={active.online ? "online" : "offline"} />
                   </span>
                   <div>
-                    <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} /></strong>
+                    <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} status={active.verificationStatus} /></strong>
                     <small>{active.typing ? "Typing..." : formatLastSeen(active)}</small>
                   </div>
                 </div>

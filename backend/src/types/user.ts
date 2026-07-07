@@ -17,6 +17,7 @@ export interface UserData {
   sellerActive?: boolean,
   blocked?: boolean,
   verificationLevel?: "basic" | "verified" | "trusted_seller",
+  verificationStatus?: "none" | "pending" | "approved" | "rejected",
   verificationRequested?: boolean,
   verificationRequestType?: "verified" | "trusted_seller",
   settings?: {

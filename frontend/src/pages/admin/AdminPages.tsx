@@ -42,7 +42,7 @@ export const AdminDashboardPage = () => {
   );
 };
 
-type AdminUser = User & { _id: string; blocked?: boolean; verificationRequested?: boolean; verificationRequestType?: "verified" | "trusted_seller" };
+type AdminUser = User & { _id: string; blocked?: boolean; verificationRequested?: boolean; verificationStatus?: "none" | "pending" | "approved" | "rejected"; verificationRequestType?: "verified" | "trusted_seller" };
 
 export const AdminUsersPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -60,13 +60,18 @@ export const AdminUsersPage = () => {
           <thead><tr><th>User</th><th>Role</th><th>Verification</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>{users.map((user) => (
             <tr key={user._id}>
-              <td><strong>{user.displayName}</strong><small>@{user.piUsername || user.username}{user.verificationRequested ? ` - Requested ${user.verificationRequestType === "trusted_seller" ? "Trusted Seller" : "Verified"}` : ""}</small></td>
+              <td><strong>{user.displayName}</strong><small>@{user.piUsername || user.username}{user.verificationRequested || user.verificationStatus === "pending" ? ` - Requested ${user.verificationRequestType === "trusted_seller" ? "Trusted Seller" : "Verified"}` : ""}</small></td>
               <td><select value={user.role} onChange={(event) => void update(user._id, { role: event.target.value })}><option>buyer</option><option>seller</option><option>admin</option></select></td>
-              <td><select value={user.verificationLevel || "basic"} onChange={(event) => void update(user._id, { verificationLevel: event.target.value })}><option value="basic">Basic</option><option value="verified">Verified</option><option value="trusted_seller">Trusted Seller</option></select></td>
+              <td>
+                <select value={user.verificationLevel || "basic"} onChange={(event) => void update(user._id, { verificationLevel: event.target.value })}><option value="basic">Basic</option><option value="verified">Verified</option><option value="trusted_seller">Trusted Seller</option></select>
+                <select value={user.verificationStatus || "none"} onChange={(event) => void update(user._id, { verificationStatus: event.target.value, verificationLevel: event.target.value === "approved" ? user.verificationLevel || "verified" : user.verificationLevel })}><option value="none">No badge</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+              </td>
               <td>{user.blocked ? "Blocked" : "Active"}</td>
               <td>
                 <div className="row-actions">
-                  {user.verificationRequested ? <button onClick={() => void update(user._id, { verificationLevel: user.verificationRequestType || "verified" })}>Approve</button> : null}
+                  {user.verificationRequested || user.verificationStatus === "pending" ? <button onClick={() => void update(user._id, { verificationLevel: user.verificationRequestType || "verified", verificationStatus: "approved" })}>Approve</button> : null}
+                  {user.verificationRequested || user.verificationStatus === "pending" ? <button onClick={() => void update(user._id, { verificationStatus: "rejected" })}>Reject</button> : null}
+                  {user.verificationStatus === "approved" ? <button onClick={() => void update(user._id, { verificationLevel: "basic", verificationStatus: "none" })}>Remove Badge</button> : null}
                   <button onClick={() => void update(user._id, { blocked: !user.blocked })}>{user.blocked ? "Unblock" : "Block"}</button>
                 </div>
               </td>
@@ -213,7 +218,7 @@ export const AdminReportsPage = () => {
   const totalPi = useMemo(() => orders.filter((order) => ["paid", "processing", "shipped", "delivered", "completed"].includes(order.status)).reduce((sum, order) => sum + order.pricePi, 0), [orders]);
   const pendingRevenue = useMemo(() => orders.filter((order) => order.status === "pending").reduce((sum, order) => sum + order.pricePi, 0), [orders]);
   const visibleProducts = products.filter((product) => product.approved && !product.hidden).length;
-  const trustedUsers = users.filter((user) => user.verificationLevel === "trusted_seller").length;
+  const trustedUsers = users.filter((user) => user.verificationStatus === "approved" && user.verificationLevel === "trusted_seller").length;
   const recentOrders = orders.slice(0, 5);
   const latestProducts = products.slice(0, 5);
 

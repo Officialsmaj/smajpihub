@@ -4,6 +4,7 @@ import { createNotification } from "../services/notifications";
 import { resolveCurrentUser } from "../services/auth";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
+const verificationLabel = (level: string) => level === "trusted_seller" ? "Trusted Seller" : level === "verified" ? "Verified" : "Basic";
 
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
@@ -51,11 +52,39 @@ export default function mountAdminEndpoints(router: Router) {
     }
     if (["basic", "verified", "trusted_seller"].includes(req.body?.verificationLevel)) {
       updates.verificationLevel = req.body.verificationLevel;
+      updates.verificationStatus = req.body.verificationLevel === "basic" ? "none" : "approved";
       updates.verificationRequested = false;
+      updates.verificationRequestType = "";
+    }
+    if (["none", "pending", "approved", "rejected"].includes(req.body?.verificationStatus)) {
+      updates.verificationStatus = req.body.verificationStatus;
+      updates.verificationRequested = req.body.verificationStatus === "pending";
+      if (req.body.verificationStatus !== "approved" && req.body.verificationStatus !== "pending") updates.verificationLevel = "basic";
     }
     if (!Object.keys(updates).length) return res.status(400).json({ error: "bad_request", message: "No valid user update supplied" });
+    const before = await req.app.locals.userCollection.findOne({ _id: new ObjectId(req.params.id) });
     await req.app.locals.userCollection.updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
-    return res.status(200).json({ message: "User updated" });
+    const after = await req.app.locals.userCollection.findOne({ _id: new ObjectId(req.params.id) });
+    if (after?.uid && (updates.verificationLevel || updates.verificationStatus)) {
+      await req.app.locals.productCollection.updateMany(
+        { sellerId: after.uid },
+        { $set: { verificationLevel: after.verificationStatus === "approved" ? after.verificationLevel || "basic" : "basic", verificationStatus: after.verificationStatus || "none" } },
+      );
+      const status = String(after.verificationStatus || "none");
+      const level = String(after.verificationLevel || "basic");
+      const title = status === "approved" ? "Verification approved" : status === "rejected" ? "Verification rejected" : status === "pending" ? "Verification pending" : "Verification updated";
+      const message = status === "approved"
+        ? `Your account is now ${verificationLabel(level)}.`
+        : status === "rejected"
+          ? "Your verification request was not approved. You can update your profile and request again."
+          : status === "pending"
+            ? "Your verification request is still under admin review."
+            : "Your verification badge was removed or reset by admin.";
+      if (before?.verificationLevel !== after.verificationLevel || before?.verificationStatus !== after.verificationStatus) {
+        await createNotification(req.app, { userId: after.uid, type: "verification_update", title, message, relatedId: "settings" });
+      }
+    }
+    return res.status(200).json({ message: "User updated", user: serialize(after) });
   });
 
   router.get("/verification-requests", async (req, res) => {

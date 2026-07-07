@@ -67,7 +67,8 @@ const toUser = (candidate: Partial<User> | null | undefined, fallback: User): Us
   blocked: candidate?.blocked ?? fallback.blocked ?? false,
   settings: candidate?.settings || fallback.settings || { theme: "light", language: "English", notifications: true },
   createdAt: candidate?.createdAt || fallback.createdAt || new Date().toISOString(),
-  verificationLevel: candidate?.verificationLevel === "trusted_seller" || fallback.verificationLevel === "trusted_seller" ? "trusted_seller" : candidate?.verificationLevel || fallback.verificationLevel || "verified",
+  verificationLevel: candidate?.verificationLevel || fallback.verificationLevel || "basic",
+  verificationStatus: candidate?.verificationStatus || fallback.verificationStatus || "none",
   verificationRequested: candidate?.verificationRequested ?? fallback.verificationRequested ?? false,
   verificationRequestType: candidate?.verificationRequestType ?? fallback.verificationRequestType,
   accessToken: fallback.accessToken,
@@ -103,7 +104,8 @@ const authResultUser = (authResult: AuthResult): User => ({
   language: "English",
   sellerActive: false,
   blocked: false,
-  verificationLevel: "verified",
+  verificationLevel: "basic",
+  verificationStatus: "none",
   verificationRequested: false,
   verificationRequestType: undefined,
   settings: { theme: "light", language: "English", notifications: true },
@@ -233,6 +235,7 @@ export const useAuth = () => {
             sellerActive: true,
             blocked: false,
             verificationLevel: response.data.user?.verificationLevel || "trusted_seller",
+            verificationStatus: response.data.user?.verificationStatus || "approved",
             verificationRequested: false,
             settings: response.data.user?.settings || { theme: "light", language: "English", notifications: true },
             accessToken: "dev-token",
@@ -286,15 +289,13 @@ export const useAuth = () => {
     const applyLocalProfileUpdate = () => {
       const sellerActive = profile.sellerActive ?? profile.role === "seller";
       const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : "buyer";
-      const verificationLevel = currentUser.verificationLevel === "trusted_seller"
-        ? "trusted_seller"
-        : "verified";
       const updatedUser = storeUser(toUser({
         ...profile,
         role,
         roles: [role],
         sellerActive,
-        verificationLevel,
+        verificationLevel: currentUser.verificationLevel || "basic",
+        verificationStatus: currentUser.verificationStatus || "none",
         settings: { ...(currentUser.settings || { theme: "light", language: "English", notifications: true }), language: profile.language || currentUser.settings?.language || "English" },
       }, currentUser));
       setUser(updatedUser);

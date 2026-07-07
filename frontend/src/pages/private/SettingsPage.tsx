@@ -138,7 +138,7 @@ const SettingsPage = () => {
     window.dispatchEvent(new Event(WELCOME_REPLAY_EVENT));
   };
 
-  const verificationStatus = user?.verificationLevel === "trusted_seller" ? "Trusted seller" : user?.verificationLevel === "verified" ? "Verified" : "Basic";
+  const verificationStatus = user?.verificationStatus === "approved" ? user?.verificationLevel === "trusted_seller" ? "Trusted seller" : "Verified" : user?.verificationStatus === "pending" ? "Pending admin review" : user?.verificationStatus === "rejected" ? "Rejected" : "Basic";
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
@@ -166,7 +166,7 @@ const SettingsPage = () => {
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
           <div className="settings-info-row"><span>Verification status</span><strong>{verificationStatus}</strong></div>
           <div className="settings-info-row"><span>Connected Pi account</span><strong>{piAccount}</strong></div>
-          {user?.verificationLevel === "basic" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
+          {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
           <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
           <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
         </section>

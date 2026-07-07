@@ -129,7 +129,8 @@ const SellerPage = () => {
 
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
-  const verificationText = user?.verificationLevel === "trusted_seller" ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Admin is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
+  const isTrustedSeller = user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller";
+  const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Admin is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
 
   return (
     <main className="private-page">
@@ -165,9 +166,9 @@ const SellerPage = () => {
               <p className="private-kicker">SELLER TRUST</p>
               <h2>Verification Status</h2>
               <p>{verificationText}</p>
-              <TrustBadge level={user?.verificationLevel} />
+              <TrustBadge level={user?.verificationLevel} status={user?.verificationStatus} />
             </div>
-            {sellerActive && user?.verificationLevel !== "trusted_seller" ? (
+            {sellerActive && !isTrustedSeller ? (
               <button className="private-primary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>
                 {hasRequestedVerification ? "Review Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller Verification"}
               </button>

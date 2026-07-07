@@ -16,6 +16,8 @@ const timelineEntry = (status: string, label: string, note?: string) => ({
 
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
+const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
 
 const piFromUsdt = (priceUsdt: unknown) => {
   const amount = Number(priceUsdt);
@@ -153,7 +155,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: { $ne: false } }).sort({ createdAt: -1 }).limit(4).toArray(),
       user ? req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id }) : null,
     ]);
-    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
+    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
   });
 
   router.post("/products", async (req, res) => {
@@ -180,7 +182,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
       sellerName: user.displayName || user.piUsername || user.username,
       sellerAvatar: user.avatar || "",
       piUsername: user.piUsername || user.username,
-      verificationLevel: user.verificationLevel || "basic",
+      verificationLevel: publicVerificationLevel(user),
+      verificationStatus: verificationStatus(user),
       ...fields,
       image: images[0],
       images,
@@ -382,7 +385,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: seller.uid, status: "completed" }),
     ]);
     const averageRating = reviews.length ? reviews.reduce((sum: number, review: any) => sum + Number(review.rating), 0) / reviews.length : 0;
-    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt, totalProducts: products.length, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(withResolvedPiPrice).map(serialize), reviews: reviews.map(serialize) });
+    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt, totalProducts: products.length, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(withResolvedPiPrice).map(serialize), reviews: reviews.map(serialize) });
   });
 
   router.post("/orders/:id/review", async (req, res) => {
@@ -425,7 +428,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).limit(4).toArray(),
       req.app.locals.favoriteCollection.findOne({ userId: req.session.currentUser!.uid, productId: req.params.id }),
     ]);
-    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: seller.verificationLevel || "basic", createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
+    return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
   });
 
   router.put("/seller/products/:id", async (req, res) => {

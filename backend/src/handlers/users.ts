@@ -13,6 +13,8 @@ type VerifiedPiUser = {
 
 const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
+const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
 
 const toClientUser = (user: any) => user ? ({
   uid: user.uid,
@@ -29,7 +31,8 @@ const toClientUser = (user: any) => user ? ({
   role: user.role,
   roles: user.roles,
   blocked: Boolean(user.blocked),
-  verificationLevel: user.verificationLevel || "verified",
+  verificationLevel: publicVerificationLevel(user),
+  verificationStatus: verificationStatus(user),
   verificationRequested: Boolean(user.verificationRequested),
   verificationRequestType: user.verificationRequestType || "",
   settings: user.settings || { theme: "light", language: "English", notifications: true },
@@ -120,7 +123,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            verificationLevel: currentUser.verificationLevel || "verified",
+            verificationLevel: currentUser.verificationLevel || "basic",
+            verificationStatus: verificationStatus(currentUser),
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
@@ -143,7 +147,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role,
         roles: [role],
         blocked: false,
-        verificationLevel: "verified",
+        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "basic",
+        verificationStatus: isConfiguredAdmin ? "approved" : "none",
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
@@ -195,6 +200,7 @@ export default function mountUserEndpoints(router: Router) {
           sellerActive: true,
           blocked: false,
           verificationLevel: "trusted_seller",
+          verificationStatus: "approved",
           verificationRequested: false,
           settings: { theme: "light", language: "English", notifications: true },
           createdAt: new Date(),
@@ -251,10 +257,9 @@ export default function mountUserEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Profile image or text is too large." });
     }
 
-    const verificationLevel = currentUser.verificationLevel === "trusted_seller" ? "trusted_seller" : "verified";
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel, lastSeenAt: new Date() } },
+      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], lastSeenAt: new Date() } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
@@ -278,8 +283,23 @@ export default function mountUserEndpoints(router: Router) {
     const requestedLevel = req.body?.level === "trusted_seller" || currentUser.role === "seller" || currentUser.sellerActive ? "trusted_seller" : "verified";
     await req.app.locals.userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { verificationRequested: true, verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
+      { $set: { verificationRequested: true, verificationStatus: "pending", verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
     );
+    await createNotification(req.app, {
+      userId: currentUser.uid,
+      type: "verification_requested",
+      title: "Verification request sent",
+      message: requestedLevel === "trusted_seller" ? "Admin will review your trusted seller verification request." : "Admin will review your verified account request.",
+      relatedId: "settings",
+    });
+    const admins = await req.app.locals.userCollection.find({ role: "admin" }).project({ uid: 1 }).toArray();
+    await Promise.all(admins.map((admin: any) => createNotification(req.app, {
+      userId: admin.uid,
+      type: "admin_verification_request",
+      title: "New verification request",
+      message: `${currentUser.displayName || currentUser.username} requested ${requestedLevel === "trusted_seller" ? "Trusted Seller" : "Verified"} status.`,
+      relatedId: currentUser.uid,
+    })));
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
     req.session.currentUser = updatedUser;
     return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });

@@ -6,6 +6,8 @@ import { resolveCurrentUser } from "../services/auth";
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 const TYPING_WINDOW_MS = 5 * 1000;
+const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
 
 const enrichConversations = async (req: any, currentUser: Record<string, any>, conversations: Array<Record<string, any>>) => {
   const otherUserIds = conversations
@@ -29,7 +31,8 @@ const enrichConversations = async (req: any, currentUser: Record<string, any>, c
       participantId: otherUserId,
       participantName: otherUser?.displayName || otherUser?.username || (conversation.buyerId === currentUser.uid ? conversation.sellerName : conversation.buyerName),
       profileImage: otherUser?.avatar || (conversation.buyerId === currentUser.uid ? conversation.sellerAvatar : conversation.buyerAvatar) || "",
-      verificationLevel: otherUser?.verificationLevel || "verified",
+      verificationLevel: publicVerificationLevel(otherUser),
+      verificationStatus: verificationStatus(otherUser),
       online,
       lastSeenAt,
       typing: typingMs > 0 && Date.now() - typingMs < TYPING_WINDOW_MS,

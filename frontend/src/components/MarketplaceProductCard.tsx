@@ -61,7 +61,7 @@ const MarketplaceProductCard = ({ product, saved, onFavorite, onAddToCart, onBuy
           <div className="storefront-product-meta">
             <span className="seller-name-line storefront-seller-name">
               <small className="seller-name-text">{product.sellerName}</small>
-              <TrustBadge level={product.verificationLevel} />
+              <TrustBadge level={product.verificationLevel} status={product.verificationStatus} />
             </span>
           </div>
           <div className="storefront-product-meta">
