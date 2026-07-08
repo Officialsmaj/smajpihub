@@ -15955,6 +15955,9 @@ svg {
   height: 100% !important;
   display: block !important;
   fill: currentColor !important;
+  overflow: visible !important;
+  transform: scale(1.08) !important;
+  transform-origin: center !important;
 }
 
 @media (max-width: 767px) {
