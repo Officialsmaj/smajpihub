@@ -3073,11 +3073,9 @@ h4, h5, h6 {
   fill: currentColor !important;
 }
 
-.trust-badge.basic { --trust-color: #64748b; }
-.trust-badge.pi_verified { --trust-color: #7c3aed; }
-.trust-badge.seller_verified { --trust-color: #2563eb; }
-.trust-badge.trusted_seller { --trust-color: #d97706; }
-.trust-badge.not-approved { --trust-color: #94a3b8; }
+.trust-badge.pi_verified { --trust-color: #1d9bf0; }
+.trust-badge.seller_verified { --trust-color: #7c3aed; }
+.trust-badge.trusted_seller { --trust-color: #f59e0b; }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .smaj-header-inner {
@@ -15889,6 +15887,45 @@ svg {
 .private-home-socials,
 .mobile-socials {
   display: none !important;
+}
+
+.trust-badge,
+.profile-name-line .trust-badge,
+.conversation-name .trust-badge,
+.seller-info-card .trust-badge,
+.storefront-seller-name .trust-badge {
+  width: var(--trust-size, 16px) !important;
+  height: var(--trust-size, 16px) !important;
+  flex: 0 0 var(--trust-size, 16px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--trust-color) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  line-height: 0 !important;
+  vertical-align: -2px !important;
+}
+
+.trust-badge.pi_verified {
+  --trust-color: #1d9bf0;
+}
+
+.trust-badge.seller_verified {
+  --trust-color: #7c3aed;
+}
+
+.trust-badge.trusted_seller {
+  --trust-color: #f59e0b;
+}
+
+.trust-badge svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  fill: currentColor !important;
 }
 
 @media (max-width: 767px) {
