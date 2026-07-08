@@ -1,5 +1,5 @@
 type PrivateSkeletonProps = {
-  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard" | "wallet";
+  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "settings" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard" | "wallet";
   count?: number;
 };
 
@@ -73,6 +73,33 @@ const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) 
             </article>
           ))}
         </div>
+        <div className="private-skeleton-list">
+          {Array.from({ length: count }).map((_, index) => (
+            <article className="private-skeleton-row" key={index}>
+              <span className="private-skeleton-avatar" aria-hidden="true" />
+              <div>
+                <SkeletonLine className="medium" />
+                <SkeletonLine className="short" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "settings") {
+    return (
+      <section className="private-skeleton-settings" aria-label="Loading">
+        <article className="private-skeleton-page">
+          <div className="private-skeleton-profile">
+            <span className="private-skeleton-avatar" aria-hidden="true" />
+            <div>
+              <SkeletonLine className="title" />
+              <SkeletonLine className="medium" />
+            </div>
+          </div>
+        </article>
         <div className="private-skeleton-list">
           {Array.from({ length: count }).map((_, index) => (
             <article className="private-skeleton-row" key={index}>

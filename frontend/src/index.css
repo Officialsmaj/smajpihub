@@ -3399,10 +3399,12 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-skeleton-stats,
 .private-skeleton-home,
 .private-skeleton-profile-page,
+.private-skeleton-settings,
 .private-skeleton-seller-dashboard { width: 100%; }
 .private-skeleton-page { padding: 24px; display: grid; gap: 14px; background: #ffffff; border: 1px solid #eef1f5; border-radius: 14px; }
 .private-skeleton-home,
 .private-skeleton-profile-page,
+.private-skeleton-settings,
 .private-skeleton-seller-dashboard { display: grid; gap: 16px; }
 .private-skeleton-profile,
 .private-skeleton-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; }
@@ -3448,6 +3450,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-route-loading .private-skeleton-stats,
 .private-route-loading .private-skeleton-home,
 .private-route-loading .private-skeleton-profile-page,
+.private-route-loading .private-skeleton-settings,
 .private-route-loading .private-skeleton-seller-dashboard { min-height: min(520px, calc(100dvh - 160px)); }
 @keyframes privateRouteLoadingIn {
   from { opacity: .62; transform: translateY(4px); }
