@@ -216,7 +216,7 @@ const MessagesPage = () => {
             <div className="private-state compact">
               <h3>{conversations.length ? "No conversations found" : "No conversations yet"}</h3>
               <p>Start a chat from a product page when contacting a seller.</p>
-              <Link className="private-secondary-button" to="/store">Browse Products</Link>
+              <Link className="private-secondary-button messages-empty-browse" to="/store">Browse Products</Link>
             </div>
           )}
         </aside>

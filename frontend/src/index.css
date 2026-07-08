@@ -3657,10 +3657,46 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .setting-line span { display: grid; gap: 4px; }
 .setting-line small { color: #8e95a8; font-weight: 400; }
 .setting-line input { width: 18px; height: 18px; accent-color: #7d48e8; }
-.toggle-line input[type="checkbox"] { width: 44px; height: 24px; appearance: none; position: relative; border: 1px solid #d5d9e2; border-radius: 999px; background: #e8ebf1; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
-.toggle-line input[type="checkbox"]::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 4px rgba(15,23,42,.24); transition: transform .18s ease; }
-.toggle-line input[type="checkbox"]:checked { background: #7d48e8; border-color: #7d48e8; }
+.toggle-line {
+  min-height: 56px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-line input[type="checkbox"] {
+  width: 46px;
+  height: 26px;
+  flex: 0 0 46px;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #e2e8f0;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.toggle-line input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(15,23,42,.28);
+  transition: transform .18s ease;
+}
+.toggle-line input[type="checkbox"]:checked {
+  background: #7d48e8;
+  border-color: #7d48e8;
+  box-shadow: 0 0 0 3px rgba(125,72,232,.16);
+}
 .toggle-line input[type="checkbox"]:checked::after { transform: translateX(20px); }
+.toggle-line input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(125,72,232,.45);
+  outline-offset: 3px;
+}
 .settings-verification-badge { display: inline-flex !important; align-items: center; gap: 8px; }
 .account-verification-badge { display: inline-flex; align-items: center; width: fit-content; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 850; text-transform: uppercase; color: #14532d; background: #dcfce7; }
 .account-verification-badge.pi_verified { color: #5b21b6; background: #ede9fe; }
@@ -15065,6 +15101,20 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.messages-empty-browse {
+  width: fit-content;
+  min-width: 118px;
+  min-height: 34px;
+  margin: 12px auto 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
 }
 
 .messages-layout.rich .conversation-avatar {
