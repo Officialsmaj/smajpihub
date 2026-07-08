@@ -18,6 +18,7 @@ const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
 const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const piFromUsdt = (priceUsdt: unknown) => {
   const amount = Number(priceUsdt);
@@ -114,11 +115,28 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const search = String(req.query.search || "").trim();
     const category = String(req.query.category || "").trim();
     const location = String(req.query.location || "").trim();
-    if (search) query.title = { $regex: search, $options: "i" };
+    const country = String(req.query.country || "").trim();
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+    const verified = String(req.query.verified || "") === "true";
+    if (search) {
+      const regex = { $regex: escapeRegex(search).slice(0, 80), $options: "i" };
+      query.$or = [{ title: regex }, { description: regex }, { category: regex }, { sellerName: regex }, { location: regex }, { country: regex }];
+    }
     if (category && category !== "All") query.category = category;
     if (location) query.location = { $regex: location, $options: "i" };
+    if (country) query.country = { $regex: escapeRegex(country).slice(0, 80), $options: "i" };
+    if (Number.isFinite(minPrice) || Number.isFinite(maxPrice)) {
+      query.pricePi = {};
+      if (Number.isFinite(minPrice)) query.pricePi.$gte = Math.max(0, minPrice);
+      if (Number.isFinite(maxPrice)) query.pricePi.$lte = Math.max(0, maxPrice);
+    }
+    if (verified) {
+      query.verificationStatus = "approved";
+      query.verificationLevel = { $in: ["verified", "trusted_seller"] };
+    }
     const sort: Record<string, 1 | -1> = req.query.sort === "price-low" ? { pricePi: 1 } : req.query.sort === "price-high" ? { pricePi: -1 } : { createdAt: -1 };
-    const products = await req.app.locals.productCollection.find(query).sort(sort).toArray();
+    const products = await req.app.locals.productCollection.find(query).sort(sort).limit(60).toArray();
     return res.status(200).json({ products: products.map(withResolvedPiPrice).map(serialize) });
   });
 

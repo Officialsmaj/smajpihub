@@ -15,6 +15,7 @@ const isImageReference = (value: string) => !value || value.startsWith("data:ima
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
 const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toClientUser = (user: any) => user ? ({
   uid: user.uid,
@@ -275,6 +276,46 @@ export default function mountUserEndpoints(router: Router) {
       req.app.locals.marketplaceOrderCollection.countDocuments({ $or: [{ sellerId: currentUser.uid }, { buyerId: currentUser.uid }], status: "completed" }),
     ]);
     return res.status(200).json({ stats: { totalProducts, successfulOrders } });
+  });
+
+  router.get("/search", async (req: Request, res: Response) => {
+    const query = String(req.query.q || "").trim().slice(0, 80);
+    if (!query) return res.status(200).json({ users: [] });
+    const regex = { $regex: escapeRegex(query), $options: "i" };
+    const users = await req.app.locals.userCollection
+      .find({ blocked: { $ne: true }, $or: [{ displayName: regex }, { username: regex }, { piUsername: regex }, { country: regex }] })
+      .project({ uid: 1, username: 1, piUsername: 1, displayName: 1, country: 1, role: 1, sellerActive: 1, verificationLevel: 1, verificationStatus: 1 })
+      .limit(12)
+      .toArray();
+    return res.status(200).json({ users: users.map((user: any) => ({ uid: user.uid, username: user.username, piUsername: user.piUsername, displayName: user.displayName || user.username || "Pi user", country: user.country || "", role: user.role || "buyer", sellerActive: Boolean(user.sellerActive || user.role === "seller"), verificationLevel: publicVerificationLevel(user), verificationStatus: verificationStatus(user) })) });
+  });
+
+  router.get("/recent-searches", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    return res.status(200).json({ searches: Array.isArray(currentUser?.recentSearches) ? currentUser.recentSearches.slice(0, 10) : [] });
+  });
+
+  router.post("/recent-searches", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    const query = String(req.body?.query || "").trim().slice(0, 80);
+    if (!query) return res.status(400).json({ error: "bad_request", message: "Search query is required" });
+    if (!currentUser) return res.status(200).json({ searches: [query] });
+    const current = Array.isArray(currentUser.recentSearches) ? currentUser.recentSearches : [];
+    const searches = [query, ...current.filter((item: string) => item.toLowerCase() !== query.toLowerCase())].slice(0, 10);
+    await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: searches } });
+    const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
+    req.session.currentUser = updatedUser;
+    return res.status(200).json({ searches });
+  });
+
+  router.delete("/recent-searches", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (currentUser) {
+      await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: [] } });
+      const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
+      req.session.currentUser = updatedUser;
+    }
+    return res.status(200).json({ searches: [] });
   });
 
   router.post("/verification-request", async (req: Request, res: Response) => {

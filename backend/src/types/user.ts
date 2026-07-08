@@ -25,6 +25,7 @@ export interface UserData {
     language: string,
     notifications: boolean,
   },
+  recentSearches?: string[],
   createdAt: Date,
   accessToken: string
 }
