@@ -22,6 +22,15 @@ const serializeActivity = (item: { type: string; label: string; description: str
   createdAt: item.createdAt.toISOString(),
 });
 
+const safeCount = async (collection: { countDocuments?: (query?: Record<string, any>) => Promise<number> } | undefined, query: Record<string, any> = {}): Promise<number> => {
+  if (!collection || typeof collection.countDocuments !== "function") return 0;
+  try {
+    return await collection.countDocuments(query);
+  } catch {
+    return 0;
+  }
+};
+
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
   if (!currentUser) {
@@ -30,7 +39,7 @@ const requireAdmin = async (req: Request, res: Response) => {
   }
   const configuredAdmin = isConfiguredAdminUser(currentUser);
   if (currentUser.role !== "admin" && !configuredAdmin) {
-    res.status(403).json({ error: "forbidden", message: "Admin access required" });
+    res.status(403).json({ error: "Admin access required" });
     return null;
   }
   if (configuredAdmin && currentUser.role !== "admin") {
@@ -51,62 +60,64 @@ export default function mountAdminEndpoints(router: Router) {
   router.use(async (req, res, next) => { if (await requireAdmin(req, res)) next(); });
 
   router.get("/stats", async (req, res) => {
-    const sellerQuery = { $or: [{ role: "seller" }, { sellerActive: true }] };
-    const activeProductQuery = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
-    const pendingProductQuery = { hidden: { $ne: true }, $or: [{ reviewStatus: "pending" }, { approved: false, reviewStatus: { $ne: "rejected" } }] };
-    const rejectedProductQuery = { $or: [{ reviewStatus: "rejected" }, { approved: false, rejectionReason: { $exists: true, $ne: "" } }] };
-    const failedCancelledPaymentQuery = { $or: [{ paymentStatus: { $in: ["failed", "cancelled"] } }, { status: "cancelled" }] };
-    const unreadReportQuery = { resolved: { $ne: true } };
-    const [
-      totalUsers,
-      activeUsers,
-      piVerifiedUsers,
-      sellers,
-      sellerVerifiedUsers,
-      trustedSellers,
-      totalProducts,
-      activeProducts,
-      pendingProducts,
-      rejectedProducts,
-      totalOrders,
-      pendingOrders,
-      paidOrders,
-      completedOrders,
-      failedCancelledPayments,
-      marketplaceReports,
-      unreadMarketplaceReports,
-      supportRequests,
-      unreadSupportRequests,
-      onboardingApplications,
-      pendingOnboarding,
-      notifications,
-      unreadNotifications,
-    ] = await Promise.all([
-      req.app.locals.userCollection.countDocuments(),
-      req.app.locals.userCollection.countDocuments({ blocked: { $ne: true } }),
-      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: { $in: ["pi_verified", "seller_verified", "trusted_seller", "verified"] } }),
-      req.app.locals.userCollection.countDocuments(sellerQuery),
-      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: { $in: ["seller_verified", "trusted_seller"] } }),
-      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: "trusted_seller" }),
-      req.app.locals.productCollection.countDocuments(),
-      req.app.locals.productCollection.countDocuments(activeProductQuery),
-      req.app.locals.productCollection.countDocuments(pendingProductQuery),
-      req.app.locals.productCollection.countDocuments(rejectedProductQuery),
-      req.app.locals.marketplaceOrderCollection.countDocuments(),
-      req.app.locals.marketplaceOrderCollection.countDocuments({ status: "pending" }),
-      req.app.locals.marketplaceOrderCollection.countDocuments({ status: { $in: ["paid", "completed", "delivered"] } }),
-      req.app.locals.marketplaceOrderCollection.countDocuments({ status: "completed" }),
-      req.app.locals.marketplaceOrderCollection.countDocuments(failedCancelledPaymentQuery),
-      req.app.locals.reportCollection.countDocuments(),
-      req.app.locals.reportCollection.countDocuments(unreadReportQuery),
-      req.app.locals.supportCollection.countDocuments(),
-      req.app.locals.supportCollection.countDocuments(unreadReportQuery),
-      req.app.locals.onboardingCollection.countDocuments(),
-      req.app.locals.onboardingCollection.countDocuments({ status: "pending" }),
-      req.app.locals.notificationCollection.countDocuments(),
-      req.app.locals.notificationCollection.countDocuments({ read: false }),
-    ]);
-    const reports = marketplaceReports + supportRequests;
+    try {
+      const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, notificationCollection } = req.app.locals;
+      const sellerQuery = { $or: [{ role: "seller" }, { sellerActive: true }] };
+      const activeProductQuery = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
+      const pendingProductQuery = { hidden: { $ne: true }, $or: [{ reviewStatus: "pending" }, { approved: false, reviewStatus: { $ne: "rejected" } }] };
+      const rejectedProductQuery = { $or: [{ reviewStatus: "rejected" }, { approved: false, rejectionReason: { $exists: true, $ne: "" } }] };
+      const failedCancelledPaymentQuery = { $or: [{ paymentStatus: { $in: ["failed", "cancelled"] } }, { status: "cancelled" }] };
+      const unreadReportQuery = { resolved: { $ne: true } };
+      const [
+        totalUsers,
+        activeUsers,
+        piVerifiedUsers,
+        sellers,
+        sellerVerifiedUsers,
+        trustedSellers,
+        totalProducts,
+        activeProducts,
+        pendingProducts,
+        rejectedProducts,
+        totalOrders,
+        pendingOrders,
+        paidOrders,
+        completedOrders,
+        failedCancelledPayments,
+        marketplaceReports,
+        unreadMarketplaceReports,
+        supportRequests,
+        unreadSupportRequests,
+        onboardingApplications,
+        pendingOnboarding,
+        notifications,
+        unreadNotifications,
+      ] = await Promise.all([
+        safeCount(userCollection),
+        safeCount(userCollection, { blocked: { $ne: true } }),
+        safeCount(userCollection, { verificationStatus: "approved", verificationLevel: { $in: ["pi_verified", "seller_verified", "trusted_seller", "verified"] } }),
+        safeCount(userCollection, sellerQuery),
+        safeCount(userCollection, { verificationStatus: "approved", verificationLevel: { $in: ["seller_verified", "trusted_seller"] } }),
+        safeCount(userCollection, { verificationStatus: "approved", verificationLevel: "trusted_seller" }),
+        safeCount(productCollection),
+        safeCount(productCollection, activeProductQuery),
+        safeCount(productCollection, pendingProductQuery),
+        safeCount(productCollection, rejectedProductQuery),
+        safeCount(marketplaceOrderCollection),
+        safeCount(marketplaceOrderCollection, { status: "pending" }),
+        safeCount(marketplaceOrderCollection, { status: { $in: ["paid", "completed", "delivered"] } }),
+        safeCount(marketplaceOrderCollection, { status: "completed" }),
+        safeCount(marketplaceOrderCollection, failedCancelledPaymentQuery),
+        safeCount(reportCollection),
+        safeCount(reportCollection, unreadReportQuery),
+        safeCount(supportCollection),
+        safeCount(supportCollection, unreadReportQuery),
+        safeCount(onboardingCollection),
+        safeCount(onboardingCollection, { status: "pending" }),
+        safeCount(notificationCollection),
+        safeCount(notificationCollection, { read: false }),
+      ]);
+      const reports = marketplaceReports + supportRequests;
     const unreadReports = unreadMarketplaceReports + unreadSupportRequests;
     return res.status(200).json({
       stats: {
@@ -139,6 +150,10 @@ export default function mountAdminEndpoints(router: Router) {
       },
       updatedAt: new Date().toISOString(),
     });
+    } catch (error) {
+      console.error("Failed to load admin stats:", error);
+      return res.status(500).json({ error: "Failed to load admin stats" });
+    }
   });
 
   router.get("/activity", async (req, res) => {
