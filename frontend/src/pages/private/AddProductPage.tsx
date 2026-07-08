@@ -52,7 +52,7 @@ const initialForm = {
 
 const AddProductPage = () => {
   const navigate = useNavigate();
-  const { user, updateProfile } = useAuthContext();
+  const { user, updateProfile, refreshPiSession } = useAuthContext();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -141,7 +141,7 @@ const AddProductPage = () => {
           image: variant.image ? await uploadImage(variant.image, "products") : "",
         };
       }));
-      const { data } = await axiosClient.post<{ product: Product }>("/marketplace/products", {
+      const payload = {
         title: form.title.trim(),
         image: uploadedImages[0],
         images: uploadedImages,
@@ -169,7 +169,19 @@ const AddProductPage = () => {
         pricePi,
         priceUsdt,
         sellerAgreementAccepted: form.sellerAgreementAccepted,
-      });
+      };
+      const postProduct = () => axiosClient.post<{ product: Product }>("/marketplace/products", payload);
+      let response;
+      try {
+        response = await postProduct();
+      } catch (err: unknown) {
+        if (isAxiosError<{ message?: string }>(err) && err.response?.status === 401 && await refreshPiSession()) {
+          response = await postProduct();
+        } else {
+          throw err;
+        }
+      }
+      const { data } = response;
       setSuccess(data.product.reviewStatus === "approved" ? "Product saved and is live in SMAJ Store." : "Product saved for team review. It will appear in SMAJ Store after approval.");
       window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {

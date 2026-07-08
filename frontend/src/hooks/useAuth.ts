@@ -287,6 +287,18 @@ export const useAuth = () => {
     }
   }, [signInUser]);
 
+  const refreshPiSession = useCallback(async () => {
+    if (!window.Pi) return false;
+    try {
+      const authResult = await authenticateWithTimeout(PI_AUTH_SCOPES);
+      await signInUser(authResult);
+      return true;
+    } catch (err) {
+      console.error("Pi session refresh failed:", err);
+      return false;
+    }
+  }, [signInUser]);
+
   const updateProfile = useCallback(async (profile: ProfileUpdate) => {
     const currentUser = user || getStoredPiUser();
     if (!currentUser) return null;
@@ -368,6 +380,7 @@ export const useAuth = () => {
     showSignIn,
     loginWithPi,
     signIn: loginWithPi,
+    refreshPiSession,
     signOut,
     updateProfile,
     updateSettings,
