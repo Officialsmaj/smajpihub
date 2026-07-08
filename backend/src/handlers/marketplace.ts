@@ -432,10 +432,12 @@ export default function mountMarketplaceEndpoints(router: Router) {
 
   router.get("/seller", async (req, res) => {
     const user = await resolveCurrentUser(req);
-    if (!user) return res.status(200).json({ products: [], orders: [], stats: { totalProducts: 0, totalOrders: 0, pendingOrders: 0, paidOrders: 0 } });
+    if (!user) return res.status(200).json({ products: [], orders: [], stats: { totalProducts: 0, totalOrders: 0, pendingOrders: 0, paidOrders: 0, averageRating: 0, totalReviews: 0 } });
     const products = await req.app.locals.productCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
     const orders = await req.app.locals.marketplaceOrderCollection.find({ sellerId: user.uid }).sort({ createdAt: -1 }).toArray();
+    const reviews = await req.app.locals.reviewCollection.find({ sellerId: user.uid }).toArray();
     const enrichedOrders = await enrichOrdersWithProductPrices(req, orders);
+    const averageRating = reviews.length ? reviews.reduce((sum: number, review: any) => sum + Number(review.rating || 0), 0) / reviews.length : 0;
     return res.status(200).json({
       products: products.map(withResolvedPiPrice).map(serialize),
       orders: enrichedOrders.map(serialize),
@@ -444,6 +446,8 @@ export default function mountMarketplaceEndpoints(router: Router) {
         totalOrders: orders.length,
         pendingOrders: orders.filter((order: any) => order.status === "pending").length,
         paidOrders: orders.filter((order: any) => ["paid", "completed"].includes(order.status)).length,
+        averageRating,
+        totalReviews: reviews.length,
       },
     });
   });

@@ -1,5 +1,5 @@
 type PrivateSkeletonProps = {
-  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard";
+  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard" | "wallet";
   count?: number;
 };
 
@@ -18,6 +18,34 @@ const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) 
               <span className="private-skeleton-avatar" aria-hidden="true" />
               <SkeletonLine className="short" />
               <SkeletonLine />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "wallet") {
+    return (
+      <section className="private-skeleton-seller-dashboard" aria-label="Loading">
+        <span className="private-skeleton-line hero" aria-hidden="true" />
+        <div className="private-skeleton-stats">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <article className="private-skeleton-stat" key={index}>
+              <SkeletonLine className="short" />
+              <SkeletonLine className="large" />
+            </article>
+          ))}
+        </div>
+        <div className="private-skeleton-list">
+          {Array.from({ length: count }).map((_, index) => (
+            <article className="private-skeleton-row" key={index}>
+              <span className="private-skeleton-image small" aria-hidden="true" />
+              <div>
+                <SkeletonLine className="medium" />
+                <SkeletonLine />
+                <SkeletonLine className="short" />
+              </div>
             </article>
           ))}
         </div>

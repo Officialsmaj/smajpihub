@@ -82,6 +82,7 @@ const routeHasOwnLoader = (pathname: string) => {
     path === "/notifications" ||
     path === "/seller" ||
     path === "/search" ||
+    path === "/app/wallet" ||
     path === "/profile" ||
     path === "/settings" ||
     path.startsWith("/settings/") ||
@@ -114,6 +115,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     if (location.pathname === "/profile" || location.pathname === "/settings" || location.pathname.startsWith("/settings/")) return { variant: "profile" as const, count: 6 };
     if (location.pathname === "/store" || location.pathname === "/saved") return { variant: "grid" as const, count: 6 };
     if (location.pathname === "/search") return { variant: "search" as const, count: 5 };
+    if (location.pathname === "/app/wallet") return { variant: "wallet" as const, count: 4 };
     if (location.pathname.startsWith("/product/")) return { variant: "product" as const, count: 1 };
     if (location.pathname.startsWith("/seller/")) return { variant: "seller" as const, count: 1 };
     if (location.pathname === "/seller") return { variant: "sellerDashboard" as const, count: 4 };

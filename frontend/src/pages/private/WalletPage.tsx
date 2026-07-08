@@ -4,6 +4,7 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
@@ -49,6 +50,7 @@ const WalletPage = () => {
   const [summary, setSummary] = useState<WalletSummary>(emptySummary);
   const [serverTime, setServerTime] = useState("");
   const [loading, setLoading] = useState(true);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [error, setError] = useState("");
   const activitySummary = useMemo(() => {
     const counts = { paidOrders: 0, pending: 0, completed: 0, cancelled: 0, failed: 0 };
@@ -75,6 +77,7 @@ const WalletPage = () => {
       setError("Live Pi payment activity could not be loaded.");
     } finally {
       if (!silent) setLoading(false);
+      setInitialLoaded(true);
     }
   }, []);
 
@@ -99,6 +102,9 @@ const WalletPage = () => {
           <RefreshOutlinedIcon /> {hasPi ? "Live Pi ready" : "Open in Pi Browser"}
         </button>
       </section>
+
+      {!initialLoaded ? <PrivateSkeleton variant="wallet" count={4} /> : (
+        <>
 
       <section className="wallet-hero-card real-wallet-card">
         <div>
@@ -156,7 +162,7 @@ const WalletPage = () => {
         <div className="wallet-section-head">
           <h2>Payment History</h2>
           <button type="button" className="private-secondary-button" onClick={() => void loadPayments()} disabled={loading}>
-            <RefreshOutlinedIcon /> {loading ? "Refreshing..." : "Refresh"}
+            <RefreshOutlinedIcon /> Refresh
           </button>
         </div>
         {error ? <div className="private-alert error">{error}</div> : null}
@@ -182,6 +188,8 @@ const WalletPage = () => {
           </article>
         ))}
       </section>
+        </>
+      )}
     </main>
   );
 };

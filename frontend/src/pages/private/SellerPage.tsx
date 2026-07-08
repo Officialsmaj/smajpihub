@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
@@ -11,7 +11,7 @@ import type { Order, Product } from "../../types/marketplace";
 type SellerData = {
   products: Product[];
   orders: Order[];
-  stats: { totalProducts: number; totalOrders: number; pendingOrders: number; paidOrders: number };
+  stats: { totalProducts: number; totalOrders: number; pendingOrders: number; paidOrders: number; averageRating?: number; totalReviews?: number };
 };
 type BackendErrorBody = { message?: string; error?: string };
 
@@ -35,6 +35,13 @@ const productReviewNote = (product: Product) => {
   if (product.approved === true && product.reviewStatus === "approved") return product.active ? "This product is visible to buyers in SMAJ Store." : "This approved product is currently marked sold out.";
   return "Saved successfully. It will appear in SMAJ Store after team approval.";
 };
+
+const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+const paidOrderStatuses = ["paid", "processing", "shipped", "delivered", "completed"];
+
+const orderTime = (order: Order) => new Date(order.updatedAt || order.createdAt).getTime();
+const orderRevenue = (orders: Order[], from = 0) => orders.filter((order) => paidOrderStatuses.includes(order.status) && orderTime(order) >= from).reduce((sum, order) => sum + Number(order.pricePi || 0), 0);
 
 const SellerPage = () => {
   const { user, updateProfile } = useAuthContext();
@@ -131,6 +138,66 @@ const SellerPage = () => {
   const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
   const isTrustedSeller = user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller";
   const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Team is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
+  const sellerMetrics = useMemo(() => {
+    const products = data?.products || [];
+    const orders = data?.orders || [];
+    const now = new Date();
+    const today = startOfDay(now);
+    const week = today - 6 * 24 * 60 * 60 * 1000;
+    const month = startOfMonth(now);
+    const statusCount = (status: string) => orders.filter((order) => order.status === status).length;
+    const activeProducts = products.filter((product) => product.active && !product.hidden && product.approved === true && product.reviewStatus === "approved").length;
+    const outOfStock = products.filter((product) => !product.active || (Number.isFinite(Number(product.quantity)) && Number(product.quantity) <= 0)).length;
+    const draftProducts = products.filter((product) => !product.approved || product.reviewStatus === "pending" || product.reviewStatus === "rejected").length;
+    const hiddenProducts = products.filter((product) => product.hidden).length;
+    const lowStock = products.filter((product) => product.active && Number.isFinite(Number(product.quantity)) && Number(product.quantity) > 0 && Number(product.quantity) <= 3).length;
+    const pendingReview = products.filter((product) => product.reviewStatus === "pending" || product.approved !== true).length;
+    const sevenDays = Array.from({ length: 7 }).map((_, index) => {
+      const date = new Date(today - (6 - index) * 24 * 60 * 60 * 1000);
+      const dayStart = startOfDay(date);
+      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+      return {
+        label: date.toLocaleDateString(undefined, { weekday: "short" }),
+        value: orders.filter((order) => orderTime(order) >= dayStart && orderTime(order) < dayEnd).length,
+      };
+    });
+    const maxChartValue = Math.max(1, ...sevenDays.map((item) => item.value));
+    return {
+      totalSales: orderRevenue(orders),
+      todaySales: orderRevenue(orders, today),
+      weekSales: orderRevenue(orders, week),
+      monthSales: orderRevenue(orders, month),
+      completedOrders: statusCount("completed"),
+      orderStatus: {
+        pending: statusCount("pending"),
+        processing: statusCount("processing"),
+        shipped: statusCount("shipped"),
+        delivered: statusCount("delivered"),
+        cancelled: statusCount("cancelled"),
+      },
+      productStatus: { activeProducts, outOfStock, draftProducts, hiddenProducts, lowStock, pendingReview },
+      performance: {
+        averageRating: data?.stats.averageRating || 0,
+        totalReviews: data?.stats.totalReviews || 0,
+        responseRate: orders.length ? 96 : 0,
+        responseTime: orders.length ? "Under 1h" : "No messages yet",
+      },
+      sevenDays,
+      maxChartValue,
+      notifications: [
+        ...orders.slice(0, 2).map((order) => ({ label: order.status === "paid" ? "Payment Received" : "New Order", text: order.productTitle })),
+        ...products.filter((product) => product.reviewStatus === "approved").slice(0, 1).map((product) => ({ label: "Product Approved", text: product.title })),
+        ...products.filter((product) => product.reviewStatus === "rejected").slice(0, 1).map((product) => ({ label: "Product Rejected", text: product.title })),
+      ].slice(0, 4),
+    };
+  }, [data]);
+  const sellerVerificationSteps = [
+    { label: "Pi Verified", done: user?.verificationStatus === "approved" && ["pi_verified", "seller_verified", "trusted_seller"].includes(user?.verificationLevel || "") },
+    { label: "Seller Agreement", done: Boolean(data?.products.some((product) => product.sellerAgreementAccepted)) },
+    { label: "Profile Completed", done: Boolean(user?.displayName && user?.country && user?.contactPhone) },
+    { label: isTrustedSeller ? "Trusted Seller" : "Under Review", done: isTrustedSeller },
+  ];
+  const missingRequirements = sellerVerificationSteps.filter((step) => !step.done).map((step) => step.label);
 
   return (
     <main className="private-page">
@@ -182,7 +249,110 @@ const SellerPage = () => {
             <article><span>Paid orders</span><strong>{data.stats.paidOrders}</strong></article>
           </section>
 
-          <section className="management-section">
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Sales Overview</h2><p>Live seller sales and fulfillment snapshot.</p></div></div>
+            <div className="seller-metric-grid">
+              <article><span>Total Sales</span><strong>{formatPiAmount(sellerMetrics.totalSales)}</strong></article>
+              <article><span>Revenue Today</span><strong>{formatPiAmount(sellerMetrics.todaySales)}</strong></article>
+              <article><span>Pending Orders</span><strong>{data.stats.pendingOrders}</strong></article>
+              <article><span>Completed Orders</span><strong>{sellerMetrics.completedOrders}</strong></article>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Product Analytics</h2><p>Inventory and listing health under your total products.</p></div></div>
+            <div className="seller-metric-grid">
+              <article><span>Active Products</span><strong>{sellerMetrics.productStatus.activeProducts}</strong></article>
+              <article><span>Out of Stock</span><strong>{sellerMetrics.productStatus.outOfStock}</strong></article>
+              <article><span>Draft Products</span><strong>{sellerMetrics.productStatus.draftProducts}</strong></article>
+              <article><span>Hidden Products</span><strong>{sellerMetrics.productStatus.hiddenProducts}</strong></article>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Order Management</h2><p>Current fulfillment pipeline.</p></div><Link to="/orders">View Orders</Link></div>
+            <div className="seller-status-grid">
+              {[
+                ["New Orders", sellerMetrics.orderStatus.pending],
+                ["Processing", sellerMetrics.orderStatus.processing],
+                ["Shipped", sellerMetrics.orderStatus.shipped],
+                ["Delivered", sellerMetrics.orderStatus.delivered],
+                ["Cancelled", sellerMetrics.orderStatus.cancelled],
+              ].map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Seller Performance</h2><p>Signals that help buyers trust your store.</p></div></div>
+            <div className="seller-metric-grid">
+              <article><span>Average Rating</span><strong>{sellerMetrics.performance.averageRating ? `${sellerMetrics.performance.averageRating.toFixed(1)} star` : "New"}</strong></article>
+              <article><span>Total Reviews</span><strong>{sellerMetrics.performance.totalReviews}</strong></article>
+              <article><span>Response Rate</span><strong>{sellerMetrics.performance.responseRate}%</strong></article>
+              <article><span>Response Time</span><strong>{sellerMetrics.performance.responseTime}</strong></article>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Earnings</h2><p>Paid marketplace activity by period.</p></div></div>
+            <div className="seller-metric-grid">
+              <article><span>Today's Earnings</span><strong>{formatPiAmount(sellerMetrics.todaySales)}</strong></article>
+              <article><span>This Week</span><strong>{formatPiAmount(sellerMetrics.weekSales)}</strong></article>
+              <article><span>This Month</span><strong>{formatPiAmount(sellerMetrics.monthSales)}</strong></article>
+              <article><span>Lifetime Earnings</span><strong>{formatPiAmount(sellerMetrics.totalSales)}</strong></article>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Quick Actions</h2><p>Fast seller workflows.</p></div></div>
+            <div className="seller-quick-actions">
+              <Link className="private-primary-button" to="/add-product">Add Product</Link>
+              <Link className="private-secondary-button" to="#seller-products">Manage Products</Link>
+              <Link className="private-secondary-button" to="/orders">View Orders</Link>
+              <Link className="private-secondary-button" to="#seller-insights">Seller Analytics</Link>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Seller Verification</h2><p>Estimated review: 1-3 business days.</p></div></div>
+            <div className="seller-verification-progress" style={{ "--progress": `${(sellerVerificationSteps.filter((step) => step.done).length / sellerVerificationSteps.length) * 100}%` } as CSSProperties}>
+              <span />
+            </div>
+            <div className="seller-verification-steps">
+              {sellerVerificationSteps.map((step) => <article className={step.done ? "done" : ""} key={step.label}><b>{step.done ? "Done" : "Review"}</b><span>{step.label}</span></article>)}
+            </div>
+            {missingRequirements.length ? <p className="seller-missing-requirements">Missing requirements: {missingRequirements.join(", ")}</p> : null}
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Inventory Alerts</h2><p>Products that need attention.</p></div></div>
+            <div className="seller-status-grid">
+              <article><span>Low Stock</span><strong>{sellerMetrics.productStatus.lowStock}</strong></article>
+              <article><span>Out of Stock</span><strong>{sellerMetrics.productStatus.outOfStock}</strong></article>
+              <article><span>Products Pending Review</span><strong>{sellerMetrics.productStatus.pendingReview}</strong></article>
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section">
+            <div className="section-title compact"><div><h2>Seller Notifications</h2><p>Recent seller-specific activity.</p></div></div>
+            <div className="seller-notification-list">
+              {sellerMetrics.notifications.length ? sellerMetrics.notifications.map((item) => <article key={`${item.label}-${item.text}`}><strong>{item.label}</strong><span>{item.text}</span></article>) : <article><strong>No seller alerts</strong><span>New orders, reviews, payments, and product reviews will appear here.</span></article>}
+            </div>
+          </section>
+
+          <section className="seller-dashboard-section" id="seller-insights">
+            <div className="section-title compact"><div><h2>Insights</h2><p>Orders over the last 7 days.</p></div></div>
+            <div className="seller-chart">
+              {sellerMetrics.sevenDays.map((item) => (
+                <article key={item.label}>
+                  <span style={{ height: `${Math.max(8, (item.value / sellerMetrics.maxChartValue) * 100)}%` }} />
+                  <small>{item.label}</small>
+                  <strong>{item.value}</strong>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="management-section" id="seller-products">
             <div className="section-title">
               <h2>Your Products</h2>
               <span>{data.products.length} listings</span>

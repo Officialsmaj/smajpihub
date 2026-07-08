@@ -19,6 +19,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     if (location.pathname === "/notifications") return { variant: "notifications" as const, count: 5 };
     if (location.pathname === "/search") return { variant: "search" as const, count: 5 };
     if (location.pathname === "/orders") return { variant: "orders" as const, count: 4 };
+    if (location.pathname === "/app/wallet") return { variant: "wallet" as const, count: 4 };
     if (location.pathname === "/seller") return { variant: "sellerDashboard" as const, count: 4 };
     if (location.pathname.startsWith("/product/")) return { variant: "product" as const, count: 1 };
     if (location.pathname.startsWith("/seller/")) return { variant: "seller" as const, count: 1 };
