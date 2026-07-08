@@ -204,8 +204,8 @@
     padding: 0.35rem 0.45rem;
     align-items: center;
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
+    border: 0;
+    border-radius: 0;
     font-size: 0.72rem;
     text-align: center;
     white-space: normal;

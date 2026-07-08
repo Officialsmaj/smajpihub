@@ -107,6 +107,16 @@ const Footer = () => {
           </p>
         </div>
 
+        <div className={styles.legalLinksRow}>
+          <Link to="/privacy">Privacy Policy</Link>
+          <span className={styles.legalSeparator}>|</span>
+          <Link to="/terms">Terms & Conditions</Link>
+          <span className={styles.legalSeparator}>|</span>
+          <Link to="/cookies">Cookie Policy</Link>
+          <span className={styles.legalSeparator}>|</span>
+          <Link to="/report-abuse">Report Abuse</Link>
+        </div>
+
         <p className={styles.copyright}>&copy; 2026 SMAJ PI HUB. All rights reserved.</p>
 
       </div>
