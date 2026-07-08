@@ -8,6 +8,7 @@ import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
@@ -24,6 +25,9 @@ const getConversationName = (conversation: RichConversation, currentUserId?: str
 
 const getConversationInitial = (conversation: RichConversation, currentUserId?: string) =>
   getConversationName(conversation, currentUserId).slice(0, 1).toUpperCase();
+
+const getConversationRoleLabel = (conversation: RichConversation, currentUserId?: string) =>
+  conversation.sellerId === currentUserId ? "Buyer" : "Seller";
 
 const formatLastSeen = (conversation: RichConversation) => {
   if (conversation.online) return "Online";
@@ -44,12 +48,25 @@ const MessagesPage = () => {
   const [conversations, setConversations] = useState<RichConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
+  const [conversationSearch, setConversationSearch] = useState("");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const typingTimeoutRef = useRef<number | null>(null);
   const selectedId = params.get("conversation");
-  const activeId = selectedId || conversations[0]?._id;
+  const filteredConversations = useMemo(() => {
+    const query = conversationSearch.trim().toLowerCase();
+    if (!query) return conversations;
+    return conversations.filter((item) => [
+      getConversationName(item, user?.uid),
+      getConversationRoleLabel(item, user?.uid),
+      item.productTitle,
+      item.lastMessage,
+      item.buyerName,
+      item.sellerName,
+    ].join(" ").toLowerCase().includes(query));
+  }, [conversationSearch, conversations, user?.uid]);
+  const activeId = selectedId || filteredConversations[0]?._id || (!conversationSearch.trim() ? conversations[0]?._id : undefined);
   const active = useMemo(() => conversations.find((item) => item._id === activeId), [activeId, conversations]);
 
   const loadConversations = useCallback(async () => {
@@ -169,8 +186,12 @@ const MessagesPage = () => {
       </section>
       <section className="messages-layout rich">
         <aside className="conversation-list">
-          {conversations.length ? (
-            conversations.map((item) => (
+          <label className="conversation-search">
+            <SearchOutlinedIcon />
+            <input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" />
+          </label>
+          {filteredConversations.length ? (
+            filteredConversations.map((item) => (
               <button className={item._id === activeId ? "active" : ""} key={item._id} onClick={() => setParams({ conversation: item._id })}>
                 <span className="conversation-avatar">
                   {item.profileImage ? <img src={item.profileImage} alt="" /> : getConversationInitial(item, user?.uid)}
@@ -178,6 +199,7 @@ const MessagesPage = () => {
                 </span>
                 <div>
                   <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} status={item.verificationStatus} /></strong>
+                  <em className="conversation-role-label">{getConversationRoleLabel(item, user?.uid)}</em>
                   <p>{item.lastMessage || "No messages yet."}</p>
                   <small>{item.productTitle} - {formatLastSeen(item)}</small>
                 </div>
@@ -186,8 +208,9 @@ const MessagesPage = () => {
             ))
           ) : (
             <div className="private-state compact">
-              <h3>No conversations yet</h3>
-              <p>Buyer and seller chats will appear after a user starts a product conversation.</p>
+              <h3>{conversations.length ? "No conversations found" : "No conversations yet"}</h3>
+              <p>Start a chat from a product page when contacting a seller.</p>
+              <Link className="private-secondary-button" to="/store">Browse Products</Link>
             </div>
           )}
         </aside>

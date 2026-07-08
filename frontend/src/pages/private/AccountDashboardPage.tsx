@@ -65,10 +65,10 @@ const AccountDashboardPage = () => {
       <section className="account-checkup real-account-checkup">
         <StorefrontOutlinedIcon />
         <div>
-          <h2>Ready to sell on SMAJ Store?</h2>
-          <p>Activate seller tools from your profile, submit products, and wait for team approval before they appear in Store.</p>
+          <h2>Become a Seller</h2>
+          <p>Accept the seller agreement, add products, and start selling with Pi.</p>
         </div>
-        <Link className="private-secondary-button" to="/profile">Seller Setup</Link>
+        <Link className="private-secondary-button" to="/profile">Start Seller Setup</Link>
       </section>
     </main>
   );
