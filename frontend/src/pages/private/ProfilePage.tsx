@@ -402,7 +402,6 @@ const ProfilePage = () => {
             <span className="profile-username">@{username}</span>
             <div className="real-profile-badges">
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
-              <b className={`account-verification-badge ${profileVerificationLevel}`}>{profileVerificationLabel}</b>
             </div>
           </div>
           <div className="real-profile-actions">

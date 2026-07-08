@@ -3040,6 +3040,67 @@ h4, h5, h6 {
   }
 }
 
+.trust-badge,
+.profile-name-line .trust-badge,
+.conversation-name .trust-badge,
+.seller-info-card .trust-badge,
+.storefront-seller-name .trust-badge {
+  --trust-bg: #eef2f7;
+  --trust-fg: #475569;
+  width: fit-content !important;
+  height: 22px !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  flex: 0 0 auto !important;
+  padding: 3px 8px !important;
+  color: var(--trust-fg) !important;
+  background: var(--trust-bg) !important;
+  border: 1px solid color-mix(in srgb, var(--trust-fg) 24%, transparent) !important;
+  border-radius: 999px !important;
+  clip-path: none !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  text-transform: none !important;
+}
+
+.trust-badge > span,
+.trust-badge > b {
+  width: auto !important;
+  height: auto !important;
+  display: inline-flex !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  transform: none !important;
+}
+
+.trust-badge > span {
+  width: 14px !important;
+  height: 14px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  background: var(--trust-fg) !important;
+  border-radius: 50% !important;
+  font-size: 9px !important;
+}
+
+.trust-badge.basic { --trust-bg: #f1f5f9; --trust-fg: #64748b; }
+.trust-badge.pi_verified { --trust-bg: #f3e8ff; --trust-fg: #7c3aed; }
+.trust-badge.seller_verified { --trust-bg: #dbeafe; --trust-fg: #2563eb; }
+.trust-badge.trusted_seller { --trust-bg: #fef3c7; --trust-fg: #d97706; }
+.trust-badge.not-approved { --trust-bg: #f1f5f9; --trust-fg: #64748b; }
+
 @media (min-width: 768px) and (max-width: 1023px) {
   .smaj-header-inner {
     position: relative;

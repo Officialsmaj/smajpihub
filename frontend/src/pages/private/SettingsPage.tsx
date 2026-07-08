@@ -144,7 +144,6 @@ const SettingsPage = () => {
   };
 
   const verificationLevel = user?.verificationLevel || "basic";
-  const verificationLabel = user?.verificationStatus === "pending" ? "Pending team review" : user?.verificationStatus === "rejected" ? "Rejected" : verificationLevel === "trusted_seller" ? "Trusted Seller" : verificationLevel === "seller_verified" ? "Seller Verified" : verificationLevel === "pi_verified" ? "Pi Verified" : "Basic";
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
@@ -170,7 +169,7 @@ const SettingsPage = () => {
         <section>
           <h2>Account Settings</h2>
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
-          <div className="settings-info-row"><span>Verification status</span><strong className="settings-verification-badge"><span className={`account-verification-badge ${verificationLevel}`}>{verificationLabel}</span><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
+          <div className="settings-info-row"><span>Verification status</span><strong className="settings-verification-badge"><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
           <div className="settings-action-row">
             {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
             <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
