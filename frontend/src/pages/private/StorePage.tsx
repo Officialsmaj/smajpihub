@@ -30,6 +30,7 @@ const mobileMenuSubcategories: Record<string, string[]> = {
   Baby: ["Diapers", "Feeding", "Strollers", "Baby Care", "Baby Clothing", "All Baby"],
   "Health & Nutrition": ["Vitamins", "Fitness", "Wellness", "Medical Supplies", "Nutrition", "All Health"],
 };
+const PRODUCT_BATCH_SIZE = 10;
 
 const StorePage = () => {
   const { user } = useAuthContext();
@@ -45,6 +46,7 @@ const StorePage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
   const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
+  const [productLimit, setProductLimit] = useState(PRODUCT_BATCH_SIZE);
   const profileName = user?.displayName || user?.username || "Pi User";
 
   useEffect(() => {
@@ -76,6 +78,13 @@ const StorePage = () => {
   }, [category, products, search]);
 
   const showSearchResults = Boolean(search.trim()) || category !== "All";
+  const activeProducts = showSearchResults ? visibleProducts : products;
+  const displayedProducts = activeProducts.slice(0, productLimit);
+  const hiddenProductCount = Math.max(activeProducts.length - displayedProducts.length, 0);
+
+  useEffect(() => {
+    setProductLimit(PRODUCT_BATCH_SIZE);
+  }, [category, search]);
 
   const toggleFavorite = async (product: Product) => {
     const { data } = await axiosClient.post<{ saved: boolean }>(`/marketplace/products/${product._id}/favorite`);
@@ -260,10 +269,11 @@ const StorePage = () => {
               <div><h2>Live products</h2><p>{products.length} real seller products available</p></div>
             </div>
             <div className="storefront-product-grid search-grid">
-              {products.map((product) => (
+              {displayedProducts.map((product) => (
                 <MarketplaceProductCard
                   key={`live-${product._id}`}
                   product={product}
+                  variant="compact"
                   saved={savedIds.includes(product._id)}
                   onFavorite={(item) => void toggleFavorite(item)}
                   onAddToCart={addProductToCart}
@@ -271,6 +281,11 @@ const StorePage = () => {
                 />
               ))}
             </div>
+            {hiddenProductCount ? (
+              <button type="button" className="storefront-load-more" onClick={() => setProductLimit((value) => value + PRODUCT_BATCH_SIZE)}>
+                Show more products
+              </button>
+            ) : null}
           </section>
         ) : null}
 
@@ -279,18 +294,26 @@ const StorePage = () => {
             <div className="storefront-section-head">
               <div><h2>{search ? `Results for "${search}"` : `${category} products`}</h2><p>{visibleProducts.length} products found</p></div>
             </div>
-            {visibleProducts.length ? <div className="storefront-product-grid search-grid">
-              {visibleProducts.map((product) => (
+            {visibleProducts.length ? <>
+              <div className="storefront-product-grid search-grid">
+              {displayedProducts.map((product) => (
                 <MarketplaceProductCard
                   key={`search-${product._id}`}
                   product={product}
+                  variant="compact"
                   saved={savedIds.includes(product._id)}
                   onFavorite={(item) => void toggleFavorite(item)}
                   onAddToCart={addProductToCart}
                   onBuy={goToCheckout}
                 />
               ))}
-            </div> : <div className="private-state"><h2>No real products found</h2><p>Try another search or add a seller product.</p></div>}
+            </div>
+            {hiddenProductCount ? (
+              <button type="button" className="storefront-load-more" onClick={() => setProductLimit((value) => value + PRODUCT_BATCH_SIZE)}>
+                Show more products
+              </button>
+            ) : null}
+            </> : <div className="private-state"><h2>No real products found</h2><p>Try another search or add a seller product.</p></div>}
           </section>
         ) : null}
 
