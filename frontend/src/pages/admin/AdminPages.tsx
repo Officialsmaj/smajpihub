@@ -20,7 +20,22 @@ const Notice = ({ text }: { text: string }) => text ? <div className="private-al
 
 export const AdminDashboardPage = () => {
   const [stats, setStats] = useState<Record<string, number> | null>(null);
-  useEffect(() => { axiosClient.get("/admin/stats").then(({ data }) => setStats(data.stats)); }, []);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let mounted = true;
+    axiosClient.get("/admin/stats")
+      .then(({ data }) => {
+        if (!mounted) return;
+        setStats(data.stats);
+        setError("");
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setStats({});
+        setError("Admin stats could not load. Check backend admin access, session, and database collections.");
+      });
+    return () => { mounted = false; };
+  }, []);
   const cards = [
     ["totalUsers", "Total Users", "/admin/users"],
     ["totalProducts", "Total Products", "/admin/products"],
@@ -33,6 +48,7 @@ export const AdminDashboardPage = () => {
   return (
     <main className="private-page">
       <Head title="Admin Dashboard" description="Platform health, moderation, and marketplace operations." />
+      {error ? <div className="private-alert error">{error}</div> : null}
       {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
         <section className="stats-grid admin-stats">
           {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
