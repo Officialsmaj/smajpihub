@@ -58,7 +58,7 @@ const AccountDashboardPage = () => {
         ))}
         <div>
           <span>App version</span>
-          <small>1.0.0</small>
+          <small>0.1.0</small>
         </div>
       </section>
 
