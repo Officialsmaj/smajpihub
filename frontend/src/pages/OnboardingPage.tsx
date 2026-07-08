@@ -49,14 +49,28 @@ const OnboardingPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const fullName = String(form.get("fullName") || "").trim();
+    const email = String(form.get("email") || "").trim();
+    const applicationType = String(form.get("applicationType") || "").trim();
+    const location = String(form.get("location") || "").trim();
+    const details = String(form.get("details") || "").trim();
+
+    if (!fullName || !email || !applicationType || !location || details.length < 20 || !email.includes("@")) {
+      showFeedback?.({
+        type: "error",
+        message: "Please complete all fields with a valid email. The details section must be at least 20 characters.",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await axiosClient.post("/onboarding", {
-        fullName: String(form.get("fullName") || ""),
-        email: String(form.get("email") || ""),
-        applicationType: String(form.get("applicationType") || ""),
-        location: String(form.get("location") || ""),
-        details: String(form.get("details") || ""),
+        fullName,
+        email,
+        applicationType,
+        location,
+        details,
       });
       event.currentTarget.reset();
       showFeedback?.({
@@ -67,8 +81,8 @@ const OnboardingPage = () => {
       showFeedback?.({
         type: "error",
         message: isAxiosError<{ message?: string }>(err)
-          ? err.response?.data?.message || "Could not submit this application."
-          : "Could not submit this application.",
+          ? err.response?.data?.message || (err.response?.status ? `Application submission failed with server error ${err.response.status}. Please try again.` : "Application submission failed because the backend could not be reached. Please try again.")
+          : "Application submission failed. Please check your details and try again.",
       });
     } finally {
       setSubmitting(false);
@@ -149,9 +163,11 @@ const OnboardingPage = () => {
                 id="onboarding-details"
                 name="details"
                 rows={6}
+                minLength={20}
                 placeholder="Describe what you sell, provide, or want to contribute..."
                 required
               />
+              <small>Write at least 20 characters so the team understands your application.</small>
             </label>
             <button type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit Application"}</button>
           </form>
