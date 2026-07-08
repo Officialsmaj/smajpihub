@@ -34,7 +34,7 @@ export type Product = {
   viewCount?: number;
 };
 
-export type VerificationLevel = "basic" | "verified" | "trusted_seller";
+export type VerificationLevel = "basic" | "pi_verified" | "seller_verified" | "trusted_seller";
 export type VerificationStatus = "none" | "pending" | "approved" | "rejected";
 export type SellerSummary = { uid: string; username?: string; piUsername?: string; displayName: string; avatar?: string; country?: string; createdAt?: string; verificationLevel?: VerificationLevel; verificationStatus?: VerificationStatus; totalProducts?: number; successfulOrders?: number; averageRating?: number; reviewCount?: number };
 export type Review = { _id: string; buyerName: string; rating: number; message?: string; createdAt: string };

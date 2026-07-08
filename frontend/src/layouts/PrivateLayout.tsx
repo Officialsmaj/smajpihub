@@ -146,6 +146,15 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     window.localStorage.setItem("smaj_public_theme", themeMode);
   }, [themeMode]);
 
+  useEffect(() => {
+    const onThemeChange = (event: Event) => {
+      const theme = (event as CustomEvent<"light" | "dark">).detail;
+      if (theme === "light" || theme === "dark") setThemeMode(theme);
+    };
+    window.addEventListener("smaj:theme-change", onThemeChange);
+    return () => window.removeEventListener("smaj:theme-change", onThemeChange);
+  }, []);
+
   const loadUnreadCount = useCallback(() => {
     axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined);
   }, []);

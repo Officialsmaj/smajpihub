@@ -195,6 +195,7 @@ const ProfilePage = () => {
   const selectedLanguage = cleanLanguages.find((language) => language.name === form.language || language.native === form.language) || cleanLanguages[0];
   const profileVerificationLevel = user?.verificationLevel || "basic";
   const profileVerificationStatus = user?.verificationStatus || "none";
+  const profileVerificationLabel = profileVerificationStatus === "pending" ? "Pending" : profileVerificationStatus === "rejected" ? "Rejected" : profileVerificationLevel === "trusted_seller" ? "Trusted Seller" : profileVerificationLevel === "seller_verified" ? "Seller Verified" : profileVerificationLevel === "pi_verified" ? "Pi Verified" : "Basic";
 
   const beginCrop = (target: CropTarget, event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -401,6 +402,7 @@ const ProfilePage = () => {
             <span className="profile-username">@{username}</span>
             <div className="real-profile-badges">
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
+              <b className={`account-verification-badge ${profileVerificationLevel}`}>{profileVerificationLabel}</b>
             </div>
           </div>
           <div className="real-profile-actions">
@@ -419,7 +421,7 @@ const ProfilePage = () => {
           <section className="real-profile-stats">
             <article><Inventory2OutlinedIcon /><span>Products</span><strong>{stats.totalProducts}</strong></article>
             <article><StorefrontOutlinedIcon /><span>Successful Orders</span><strong>{stats.successfulOrders}</strong></article>
-            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{profileVerificationStatus === "approved" ? profileVerificationLevel === "trusted_seller" ? "Trusted Seller" : "Verified" : profileVerificationStatus === "pending" ? "Pending" : "Basic"}</strong></article>
+            <article><VerifiedUserOutlinedIcon /><span>Verification</span><strong>{profileVerificationLabel}</strong></article>
           </section>
 
           <section className="real-profile-grid">

@@ -7,7 +7,14 @@ const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toStr
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 const TYPING_WINDOW_MS = 5 * 1000;
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
+const normalizeVerificationLevel = (user: any) => {
+  const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
+  if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
+  if (level === "seller_verified") return user?.sellerActive || user?.role === "seller" ? "seller_verified" : "pi_verified";
+  if (level === "pi_verified") return "pi_verified";
+  return "basic";
+};
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
 
 const enrichConversations = async (req: any, currentUser: Record<string, any>, conversations: Array<Record<string, any>>) => {
   const otherUserIds = conversations

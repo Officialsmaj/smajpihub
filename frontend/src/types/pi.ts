@@ -22,10 +22,10 @@ export type AuthResult = {
       notifications: boolean;
     };
     createdAt?: string;
-    verificationLevel?: "basic" | "verified" | "trusted_seller";
+    verificationLevel?: "basic" | "pi_verified" | "seller_verified" | "trusted_seller";
     verificationStatus?: "none" | "pending" | "approved" | "rejected";
     verificationRequested?: boolean;
-    verificationRequestType?: "verified" | "trusted_seller";
+    verificationRequestType?: "pi_verified" | "seller_verified" | "trusted_seller";
   };
 };
 

@@ -6,6 +6,7 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import XIcon from "@mui/icons-material/X";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
+import TrustBadge from "../../components/TrustBadge";
 import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
@@ -64,6 +65,7 @@ const SettingsPage = () => {
   const [message, setMessage] = useState("");
   const [showSignOut, setShowSignOut] = useState(false);
   const [deleteRequested, setDeleteRequested] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
 
@@ -72,6 +74,7 @@ const SettingsPage = () => {
     document.documentElement.dataset.theme = form.theme;
     window.localStorage.setItem("smaj_private_theme_mode", form.theme);
     window.localStorage.setItem("smaj_public_theme", form.theme);
+    window.dispatchEvent(new CustomEvent("smaj:theme-change", { detail: form.theme }));
   }, [form.theme]);
 
   const setField = <Key extends keyof SavedSettings>(key: Key, value: SavedSettings[Key]) => {
@@ -104,6 +107,7 @@ const SettingsPage = () => {
   };
 
   const requestDeletion = async () => {
+    if (deleteConfirmText !== "DELETE") return;
     await axiosClient.post("/support", {
       source: "account",
       topic: "Account deletion request",
@@ -112,6 +116,7 @@ const SettingsPage = () => {
       message: "User requested account deletion review from Settings.",
     });
     setDeleteRequested(false);
+    setDeleteConfirmText("");
     setMessage("Account deletion request submitted for support review.");
   };
 
@@ -119,7 +124,7 @@ const SettingsPage = () => {
     setMessage("");
     setRequestingVerification(true);
     try {
-      await axiosClient.post("/user/verification-request", { level: "verified" });
+      await axiosClient.post("/user/verification-request", { level: "pi_verified" });
       setVerificationRequested(true);
       setMessage("Verification request submitted. Team will review your account.");
     } catch {
@@ -138,7 +143,8 @@ const SettingsPage = () => {
     window.dispatchEvent(new Event(WELCOME_REPLAY_EVENT));
   };
 
-  const verificationStatus = user?.verificationStatus === "approved" ? user?.verificationLevel === "trusted_seller" ? "Trusted seller" : "Verified" : user?.verificationStatus === "pending" ? "Pending team review" : user?.verificationStatus === "rejected" ? "Rejected" : "Basic";
+  const verificationLevel = user?.verificationLevel || "basic";
+  const verificationLabel = user?.verificationStatus === "pending" ? "Pending team review" : user?.verificationStatus === "rejected" ? "Rejected" : verificationLevel === "trusted_seller" ? "Trusted Seller" : verificationLevel === "seller_verified" ? "Seller Verified" : verificationLevel === "pi_verified" ? "Pi Verified" : "Basic";
   const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
@@ -157,15 +163,14 @@ const SettingsPage = () => {
           <h2>Identity & Access</h2>
           <div className="settings-info-row"><span>Account name</span><strong>{form.fullName || user?.displayName || user?.username || "Pi user"}</strong></div>
           <div className="settings-info-row"><span>Pi username</span><strong>{piAccount}</strong></div>
-          <div className="settings-info-row"><span>Wallet access</span><strong>{user?.wallet_address ? "Connected" : "Requested at Pi login"}</strong></div>
+          <div className="settings-info-row"><span>Pi access</span><strong>Pi access is handled by Pi Network. SMAJ PI HUB does not store your Pi or private keys.</strong></div>
           <p>Profile name, country, image, banner, and bio are managed from the Profile page so your public marketplace identity stays consistent.</p>
         </section>
 
         <section>
           <h2>Account Settings</h2>
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
-          <div className="settings-info-row"><span>Verification status</span><strong>{verificationStatus}</strong></div>
-          <div className="settings-info-row"><span>Connected Pi account</span><strong>{piAccount}</strong></div>
+          <div className="settings-info-row"><span>Verification status</span><strong className="settings-verification-badge"><span className={`account-verification-badge ${verificationLevel}`}>{verificationLabel}</span><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
           <div className="settings-action-row">
             {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
             <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
@@ -186,15 +191,15 @@ const SettingsPage = () => {
 
         <section>
           <h2>Notification Settings</h2>
-          <label className="setting-line"><span><strong>Email notifications</strong><small>Receive important account and support updates.</small></span><input type="checkbox" checked={form.emailNotifications} onChange={(event) => setField("emailNotifications", event.target.checked)} /></label>
-          <label className="setting-line"><span><strong>Product/order notifications</strong><small>Get marketplace listing, order, and payment updates.</small></span><input type="checkbox" checked={form.productNotifications} onChange={(event) => setField("productNotifications", event.target.checked)} /></label>
-          <label className="setting-line"><span><strong>Message notifications</strong><small>Get alerts for buyer and seller conversations.</small></span><input type="checkbox" checked={form.messageNotifications} onChange={(event) => setField("messageNotifications", event.target.checked)} /></label>
+          <label className="setting-line toggle-line"><span><strong>Email notifications</strong><small>Receive important account and support updates.</small></span><input type="checkbox" checked={form.emailNotifications} onChange={(event) => setField("emailNotifications", event.target.checked)} /></label>
+          <label className="setting-line toggle-line"><span><strong>Product/order notifications</strong><small>Get marketplace listing, order, and payment updates.</small></span><input type="checkbox" checked={form.productNotifications} onChange={(event) => setField("productNotifications", event.target.checked)} /></label>
+          <label className="setting-line toggle-line"><span><strong>Message notifications</strong><small>Get alerts for buyer and seller conversations.</small></span><input type="checkbox" checked={form.messageNotifications} onChange={(event) => setField("messageNotifications", event.target.checked)} /></label>
         </section>
 
         <section>
           <h2>Privacy & Security</h2>
-          <label className="setting-line"><span><strong>Show profile publicly</strong><small>Allow marketplace users to see your public seller or buyer profile.</small></span><input type="checkbox" checked={form.publicProfile} onChange={(event) => setField("publicProfile", event.target.checked)} /></label>
-          <label className="setting-line"><span><strong>Allow sellers/buyers to contact me</strong><small>Enable safe marketplace contact for service and order activity.</small></span><input type="checkbox" checked={form.allowContact} onChange={(event) => setField("allowContact", event.target.checked)} /></label>
+          <label className="setting-line toggle-line"><span><strong>Show profile publicly</strong><small>Allow marketplace users to see your public seller or buyer profile.</small></span><input type="checkbox" checked={form.publicProfile} onChange={(event) => setField("publicProfile", event.target.checked)} /></label>
+          <label className="setting-line toggle-line"><span><strong>Allow sellers/buyers to contact me</strong><small>Enable safe marketplace contact for service and order activity.</small></span><input type="checkbox" checked={form.allowContact} onChange={(event) => setField("allowContact", event.target.checked)} /></label>
           <button type="button" className="private-secondary-button danger" onClick={() => setDeleteRequested(true)}>Delete account</button>
         </section>
 
@@ -219,10 +224,11 @@ const SettingsPage = () => {
         <div className="confirm-modal-backdrop">
           <section className="confirm-modal">
             <h2>Delete account?</h2>
-            <p>The SMAJ support team will review the request before any account action is taken.</p>
+            <p>The SMAJ support team will review the request before any account action is taken. Type DELETE to confirm.</p>
+            <input value={deleteConfirmText} onChange={(event) => setDeleteConfirmText(event.target.value)} placeholder="Type DELETE" />
             <div className="confirm-modal-actions">
-              <button className="modal-cancel-button" onClick={() => setDeleteRequested(false)}>Cancel</button>
-              <button className="modal-signout-button" onClick={() => void requestDeletion()}>Submit Request</button>
+              <button className="modal-cancel-button" onClick={() => { setDeleteRequested(false); setDeleteConfirmText(""); }}>Cancel</button>
+              <button className="modal-signout-button" disabled={deleteConfirmText !== "DELETE"} onClick={() => void requestDeletion()}>Submit Request</button>
             </div>
           </section>
         </div>

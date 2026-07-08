@@ -4,7 +4,7 @@ import { createNotification } from "../services/notifications";
 import { resolveCurrentUser } from "../services/auth";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
-const verificationLabel = (level: string) => level === "trusted_seller" ? "Trusted Seller" : level === "verified" ? "Verified" : "Basic";
+const verificationLabel = (level: string) => level === "trusted_seller" ? "Trusted Seller" : level === "seller_verified" ? "Seller Verified" : level === "pi_verified" || level === "verified" ? "Pi Verified" : "Basic";
 
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
@@ -50,8 +50,8 @@ export default function mountAdminEndpoints(router: Router) {
       updates.role = req.body.role;
       updates.roles = [req.body.role];
     }
-    if (["basic", "verified", "trusted_seller"].includes(req.body?.verificationLevel)) {
-      updates.verificationLevel = req.body.verificationLevel;
+    if (["basic", "pi_verified", "seller_verified", "trusted_seller", "verified"].includes(req.body?.verificationLevel)) {
+      updates.verificationLevel = req.body.verificationLevel === "verified" ? "pi_verified" : req.body.verificationLevel;
       updates.verificationStatus = req.body.verificationLevel === "basic" ? "none" : "approved";
       updates.verificationRequested = false;
       updates.verificationRequestType = "";

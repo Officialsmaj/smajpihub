@@ -17,7 +17,14 @@ const timelineEntry = (status: string, label: string, note?: string) => ({
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
+const normalizeVerificationLevel = (user: any) => {
+  const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
+  if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
+  if (level === "seller_verified") return user?.sellerActive || user?.role === "seller" ? "seller_verified" : "pi_verified";
+  if (level === "pi_verified") return "pi_verified";
+  return "basic";
+};
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const piFromUsdt = (priceUsdt: unknown) => {
@@ -133,7 +140,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     }
     if (verified) {
       query.verificationStatus = "approved";
-      query.verificationLevel = { $in: ["verified", "trusted_seller"] };
+      query.verificationLevel = { $in: ["pi_verified", "seller_verified", "trusted_seller", "verified"] };
     }
     const sort: Record<string, 1 | -1> = req.query.sort === "price-low" ? { pricePi: 1 } : req.query.sort === "price-high" ? { pricePi: -1 } : { createdAt: -1 };
     const products = await req.app.locals.productCollection.find(query).sort(sort).limit(60).toArray();
@@ -195,13 +202,15 @@ export default function mountMarketplaceEndpoints(router: Router) {
 
     const images = fields.images.length ? fields.images : [fields.image];
     const autoApprove = env.marketplace_auto_approve_products;
+    const currentVerificationLevel = publicVerificationLevel(user);
+    const sellerVerificationLevel = currentVerificationLevel === "trusted_seller" ? "trusted_seller" : user.sellerActive || user.role === "seller" ? "seller_verified" : currentVerificationLevel;
     const product = {
       sellerId: user.uid,
       sellerName: user.displayName || user.piUsername || user.username,
       sellerAvatar: user.avatar || "",
       piUsername: user.piUsername || user.username,
-      verificationLevel: publicVerificationLevel(user),
-      verificationStatus: verificationStatus(user),
+      verificationLevel: sellerVerificationLevel,
+      verificationStatus: "approved",
       ...fields,
       image: images[0],
       images,
@@ -213,6 +222,10 @@ export default function mountMarketplaceEndpoints(router: Router) {
       createdAt: new Date(),
     };
     const result = await req.app.locals.productCollection.insertOne(product);
+    await req.app.locals.userCollection.updateOne(
+      { uid: user.uid },
+      { $set: { role: user.role === "admin" ? "admin" : "seller", roles: [user.role === "admin" ? "admin" : "seller"], sellerActive: true, verificationLevel: sellerVerificationLevel, verificationStatus: "approved" } },
+    );
     return res.status(201).json({ product: serialize({ ...product, _id: result.insertedId }) });
   });
 

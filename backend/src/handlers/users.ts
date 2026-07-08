@@ -14,7 +14,14 @@ type VerifiedPiUser = {
 const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && ["verified", "trusted_seller"].includes(user?.verificationLevel) ? user.verificationLevel : "basic";
+const normalizeVerificationLevel = (user: any) => {
+  const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
+  if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
+  if (level === "seller_verified") return user?.sellerActive || user?.role === "seller" ? "seller_verified" : "pi_verified";
+  if (level === "pi_verified") return "pi_verified";
+  return "basic";
+};
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toClientUser = (user: any) => user ? ({
@@ -124,8 +131,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            verificationLevel: currentUser.verificationLevel || "basic",
-            verificationStatus: verificationStatus(currentUser),
+            verificationLevel: normalizeVerificationLevel(currentUser) === "basic" ? "pi_verified" : normalizeVerificationLevel(currentUser),
+            verificationStatus: "approved",
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
@@ -148,8 +155,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role,
         roles: [role],
         blocked: false,
-        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "basic",
-        verificationStatus: isConfiguredAdmin ? "approved" : "none",
+        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "pi_verified",
+        verificationStatus: "approved",
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
@@ -258,9 +265,11 @@ export default function mountUserEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Profile image or text is too large." });
     }
 
+    const nextVerificationLevel = !sellerActive && ["seller_verified", "trusted_seller"].includes(normalizeVerificationLevel(currentUser)) ? "pi_verified" : normalizeVerificationLevel(currentUser);
+
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], lastSeenAt: new Date() } },
+      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel: nextVerificationLevel, verificationStatus: "approved", lastSeenAt: new Date() } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
@@ -321,7 +330,7 @@ export default function mountUserEndpoints(router: Router) {
   router.post("/verification-request", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ user: null, message: "Verification request saved locally" });
-    const requestedLevel = req.body?.level === "trusted_seller" || currentUser.role === "seller" || currentUser.sellerActive ? "trusted_seller" : "verified";
+    const requestedLevel = req.body?.level === "trusted_seller" ? "trusted_seller" : currentUser.role === "seller" || currentUser.sellerActive ? "seller_verified" : "pi_verified";
     await req.app.locals.userCollection.updateOne(
       { uid: currentUser.uid },
       { $set: { verificationRequested: true, verificationStatus: "pending", verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
@@ -330,7 +339,7 @@ export default function mountUserEndpoints(router: Router) {
       userId: currentUser.uid,
       type: "verification_requested",
       title: "Verification request sent",
-      message: requestedLevel === "trusted_seller" ? "Team will review your trusted seller verification request." : "Team will review your verified account request.",
+      message: requestedLevel === "trusted_seller" ? "Team will review your trusted seller verification request." : requestedLevel === "seller_verified" ? "Team will review your seller verification request." : "Team will review your Pi verified account request.",
       relatedId: "settings",
     });
     const admins = await req.app.locals.userCollection.find({ role: "admin" }).project({ uid: 1 }).toArray();
@@ -338,7 +347,7 @@ export default function mountUserEndpoints(router: Router) {
       userId: admin.uid,
       type: "admin_verification_request",
       title: "New verification request",
-      message: `${currentUser.displayName || currentUser.username} requested ${requestedLevel === "trusted_seller" ? "Trusted Seller" : "Verified"} status.`,
+      message: `${currentUser.displayName || currentUser.username} requested ${requestedLevel === "trusted_seller" ? "Trusted Seller" : requestedLevel === "seller_verified" ? "Seller Verified" : "Pi Verified"} status.`,
       relatedId: currentUser.uid,
     })));
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });

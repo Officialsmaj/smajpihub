@@ -3532,6 +3532,15 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .setting-line span { display: grid; gap: 4px; }
 .setting-line small { color: #8e95a8; font-weight: 400; }
 .setting-line input { width: 18px; height: 18px; accent-color: #7d48e8; }
+.toggle-line input[type="checkbox"] { width: 44px; height: 24px; appearance: none; position: relative; border: 1px solid #d5d9e2; border-radius: 999px; background: #e8ebf1; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
+.toggle-line input[type="checkbox"]::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 4px rgba(15,23,42,.24); transition: transform .18s ease; }
+.toggle-line input[type="checkbox"]:checked { background: #7d48e8; border-color: #7d48e8; }
+.toggle-line input[type="checkbox"]:checked::after { transform: translateX(20px); }
+.settings-verification-badge { display: inline-flex !important; align-items: center; gap: 8px; }
+.account-verification-badge { display: inline-flex; align-items: center; width: fit-content; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 850; text-transform: uppercase; color: #14532d; background: #dcfce7; }
+.account-verification-badge.pi_verified { color: #5b21b6; background: #ede9fe; }
+.account-verification-badge.seller_verified { color: #713f12; background: #fef3c7; }
+.account-verification-badge.trusted_seller { color: #78350f; background: #fde68a; }
 
 .private-secondary-button { min-height: 42px; padding: 10px 16px; color: #d8dce6; background: #252c3a; border: 1px solid #3b4457; border-radius: 9px; font-weight: 700; cursor: pointer; }
 .private-secondary-button.danger, .row-actions .danger { color: #ffb5bd; border-color: #713343; background: #351c25; }
@@ -4159,7 +4168,9 @@ html[data-private-theme="dark"] .private-alert.success {
 .trust-badge { --trust-color: #1d9bf0; width: 17px; height: 17px; display: inline-grid; place-items: center; flex: 0 0 auto; margin-left: 6px; vertical-align: -2px; color: #ffffff; background: var(--trust-color); border: 0; border-radius: 0; clip-path: polygon(50% 0%,58% 12%,71% 7%,76% 21%,91% 22%,88% 38%,100% 50%,88% 62%,91% 78%,76% 79%,71% 93%,58% 88%,50% 100%,42% 88%,29% 93%,24% 79%,9% 78%,12% 62%,0% 50%,12% 38%,9% 22%,24% 21%,29% 7%,42% 12%); box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
 .trust-badge > span { width: auto; height: auto; display: block; color: #ffffff; background: transparent; border-radius: 0; font-size: 11px; line-height: 1; font-weight: 950; transform: translateY(-.5px); }
 .trust-badge.verified,
-.trust-badge.basic { --trust-color: #1d9bf0; }
+.trust-badge.pi_verified,
+.trust-badge.basic { --trust-color: #7c3aed; }
+.trust-badge.seller_verified { --trust-color: #f59e0b; color: #ffffff; }
 .trust-badge.trusted_seller { --trust-color: #f5c400; color: #ffffff; }
 .account-dashboard-identity h1,
 .real-profile-identity h1,

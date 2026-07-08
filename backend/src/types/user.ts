@@ -16,10 +16,10 @@ export interface UserData {
   language?: string,
   sellerActive?: boolean,
   blocked?: boolean,
-  verificationLevel?: "basic" | "verified" | "trusted_seller",
+  verificationLevel?: "basic" | "pi_verified" | "seller_verified" | "trusted_seller",
   verificationStatus?: "none" | "pending" | "approved" | "rejected",
   verificationRequested?: boolean,
-  verificationRequestType?: "verified" | "trusted_seller",
+  verificationRequestType?: "pi_verified" | "seller_verified" | "trusted_seller",
   settings?: {
     theme: "dark" | "light",
     language: string,
