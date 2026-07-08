@@ -106,6 +106,18 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
+    if (location.pathname === "/dashboard") return;
+    try {
+      const current = JSON.parse(window.localStorage.getItem("smaj_recent_pages") || "[]");
+      const items = Array.isArray(current) ? current : [];
+      const next = [{ label: pageTitle, to: `${location.pathname}${location.search}`, meta: "Recent page" }, ...items.filter((item) => item?.to !== `${location.pathname}${location.search}`)].slice(0, 8);
+      window.localStorage.setItem("smaj_recent_pages", JSON.stringify(next));
+    } catch {
+      window.localStorage.removeItem("smaj_recent_pages");
+    }
+  }, [location.pathname, location.search, pageTitle]);
+
+  useEffect(() => {
     document.documentElement.dataset.privateTheme = themeMode;
     document.documentElement.dataset.theme = themeMode;
     window.localStorage.setItem("smaj_private_theme_mode", themeMode);

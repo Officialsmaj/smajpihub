@@ -43,6 +43,14 @@ const ProductDetailPage = () => {
         setSaved(Boolean(data.saved));
         setSelectedImage(data.product.images?.[0] || data.product.image);
         window.localStorage.setItem("smaj_last_viewed_product", data.product._id);
+        try {
+          const current = JSON.parse(window.localStorage.getItem("smaj_recent_products") || "[]");
+          const items = Array.isArray(current) ? current : [];
+          const next = [{ label: data.product.title, to: `/product/${data.product._id}`, meta: data.product.category || "Product" }, ...items.filter((item) => item?.to !== `/product/${data.product._id}`)].slice(0, 8);
+          window.localStorage.setItem("smaj_recent_products", JSON.stringify(next));
+        } catch {
+          window.localStorage.removeItem("smaj_recent_products");
+        }
       })
       .catch(() => {
         setError("Product not found.");
