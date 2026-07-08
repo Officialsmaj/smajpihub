@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -23,6 +23,7 @@ import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutl
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
+import PrivateSkeleton from "../components/PrivateSkeleton";
 import WelcomeTour from "../components/WelcomeTour";
 import logoImage from "/logo.png";
 import { serviceCatalog } from "../content/serviceCatalog";
@@ -82,13 +83,23 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [showSignOut, setShowSignOut] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
+  const routeLoadingTimerRef = useRef<number | null>(null);
   const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
   const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
   const backFallback = backFallbackForPath(location.pathname);
+  const routeSkeleton = useMemo(() => {
+    if (location.pathname === "/dashboard") return { variant: "stats" as const, count: 4 };
+    if (location.pathname === "/store" || location.pathname === "/saved" || location.pathname === "/search") return { variant: "grid" as const, count: 6 };
+    if (location.pathname.startsWith("/product/")) return { variant: "product" as const, count: 1 };
+    if (location.pathname.startsWith("/seller/")) return { variant: "seller" as const, count: 1 };
+    if (location.pathname === "/orders" || location.pathname === "/messages" || location.pathname === "/notifications") return { variant: "list" as const, count: 5 };
+    return { variant: "page" as const, count: 4 };
+  }, [location.pathname]);
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
     : location.pathname.startsWith("/app/services/") ? "Service"
     : location.pathname.startsWith("/edit-product/") ? "Edit Product"
@@ -141,7 +152,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
   const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
   const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
-  const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); };
+  const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { startRouteLoading(); navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) { startRouteLoading(); navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); } };
   const positionProfileMenu = () => {
     const avatar = profileAvatarRef.current;
     if (!avatar) return;
@@ -166,8 +177,47 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     };
   }, [profileMenuOpen]);
 
+  const clearRouteLoadingTimer = useCallback(() => {
+    if (routeLoadingTimerRef.current !== null) {
+      window.clearTimeout(routeLoadingTimerRef.current);
+      routeLoadingTimerRef.current = null;
+    }
+  }, []);
+
+  const startRouteLoading = useCallback(() => {
+    clearRouteLoadingTimer();
+    setRouteLoading(true);
+    routeLoadingTimerRef.current = window.setTimeout(() => {
+      setRouteLoading(false);
+      routeLoadingTimerRef.current = null;
+    }, 420);
+  }, [clearRouteLoadingTimer]);
+
+  const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const anchor = target.closest("a[href]");
+    if (!(anchor instanceof HTMLAnchorElement)) return;
+    if (anchor.target || anchor.origin !== window.location.origin) return;
+    if (anchor.pathname === location.pathname && anchor.search === location.search && anchor.hash === location.hash) return;
+    startRouteLoading();
+  }, [location.hash, location.pathname, location.search, startRouteLoading]);
+
+  useEffect(() => {
+    if (!routeLoading) return undefined;
+    clearRouteLoadingTimer();
+    routeLoadingTimerRef.current = window.setTimeout(() => {
+      setRouteLoading(false);
+      routeLoadingTimerRef.current = null;
+    }, 220);
+    return clearRouteLoadingTimer;
+  }, [clearRouteLoadingTimer, location.key, routeLoading]);
+
+  useEffect(() => clearRouteLoadingTimer, [clearRouteLoadingTimer]);
+
   return (
-    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`} onClickCapture={handleRouteClick}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
@@ -184,7 +234,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         </button>
         <Link to="/dashboard" className="private-header-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="" /></Link>
         <span className="environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
-        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
+        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { startRouteLoading(); navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
           <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
@@ -229,6 +279,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               className="private-route-back"
               type="button"
               onClick={() => {
+                startRouteLoading();
                 if (window.history.length > 1) navigate(-1);
                 else navigate(backFallback, { replace: true });
               }}
@@ -237,7 +288,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               <span>Back</span>
             </button>
           ) : null}
-          {children}
+          {routeLoading ? (
+            <div className="private-route-loading" role="status" aria-live="polite" aria-label="Loading page">
+              <PrivateSkeleton variant={routeSkeleton.variant} count={routeSkeleton.count} />
+            </div>
+          ) : children}
         </div>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
