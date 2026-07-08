@@ -22,11 +22,20 @@ import type { Product } from "../../types/marketplace";
 const explore = [
   ["Shopping", ShoppingBagOutlinedIcon, "/store"], ["Food", RestaurantOutlinedIcon, "/app/services/food"], ["Jobs", WorkOutlineOutlinedIcon, "/app/services/jobs"], ["Education", SchoolOutlinedIcon, "/app/services/education"],
   ["Health", HealthAndSafetyOutlinedIcon, "/app/services/health"], ["Transport", DirectionsCarOutlinedIcon, "/app/services/transport"], ["Stream", LiveTvOutlinedIcon, "/app/services/stream"], ["Sports", SportsSoccerOutlinedIcon, "/app/services/sports"],
-  ["Events", EventOutlinedIcon, "/app/services/events"], ["Wallet", AccountBalanceWalletOutlinedIcon, "/wallet"], ["Housing", HomeWorkOutlinedIcon, "/app/services/housing"], ["Charity", VolunteerActivismOutlinedIcon, "/app/services/charity"],
+  ["Events", EventOutlinedIcon, "/app/services/events"], ["Wallet", AccountBalanceWalletOutlinedIcon, "/app/wallet"], ["Housing", HomeWorkOutlinedIcon, "/app/services/housing"], ["Charity", VolunteerActivismOutlinedIcon, "/app/services/charity"],
 ] as const;
 const suggestions = ["Mobile payments", "Sports tickets", "Food delivery", "Online shopping", "Find jobs", "Health services", "Movies", "Property rentals"];
 const RECENT_SEARCHES_KEY = "smaj_recent_searches";
 type SearchUser = { uid: string; username?: string; piUsername?: string; displayName: string; country?: string; role?: string; sellerActive?: boolean };
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: (event: { results?: ArrayLike<ArrayLike<{ transcript?: string }>> }) => void;
+  onerror: () => void;
+  start: () => void;
+};
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 
 const readLocalRecentSearches = () => {
   try {
@@ -70,11 +79,12 @@ const SearchPage = () => {
     }
 
     let mounted = true;
+    const controller = new AbortController();
     setLoading(true);
     setError("");
     Promise.all([
-      axiosClient.get<{ products: Product[] }>("/marketplace/products", { params: { search: query, sort: "newest" } }),
-      axiosClient.get<{ users: SearchUser[] }>("/user/search", { params: { q: query } }),
+      axiosClient.get<{ products: Product[] }>("/marketplace/products", { params: { search: query, sort: "newest" }, signal: controller.signal }),
+      axiosClient.get<{ users: SearchUser[] }>("/user/search", { params: { q: query }, signal: controller.signal }),
     ]).then(([productResponse, userResponse]) => {
       if (!mounted) return;
       setProducts(productResponse.data.products || []);
@@ -87,7 +97,7 @@ const SearchPage = () => {
     }).finally(() => {
       if (mounted) setLoading(false);
     });
-    return () => { mounted = false; };
+    return () => { mounted = false; controller.abort(); };
   }, [query]);
 
   const saveRecentSearch = (value: string) => {
@@ -116,6 +126,25 @@ const SearchPage = () => {
     axiosClient.delete("/user/recent-searches").catch(() => undefined);
   };
 
+  const startVoiceSearch = () => {
+    const speechWindow = window as unknown as { SpeechRecognition?: BrowserSpeechRecognitionConstructor; webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor };
+    const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("Voice search is not available in this browser yet.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      if (transcript) runSearch(transcript);
+    };
+    recognition.onerror = () => setError("Voice search could not start. Please type your search.");
+    recognition.start();
+  };
+
   const submit = (event: FormEvent) => { event.preventDefault(); runSearch(input); };
   const grouped = useMemo(() => {
     if (!query) return [];
@@ -135,7 +164,7 @@ const SearchPage = () => {
   const hasResults = grouped.some(([, items]) => items.length);
 
   return <main className="private-page mobile-search-page">
-    <form className="mobile-search-box" onSubmit={submit}><SearchOutlinedIcon /><input autoFocus value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search or ask SMAJ PI HUB" /><button type="button" aria-label="Voice search"><MicNoneOutlinedIcon /></button></form>
+    <form className="mobile-search-box" onSubmit={submit}><SearchOutlinedIcon /><input autoFocus value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search or ask SMAJ PI HUB" /><button type="button" aria-label="Voice search" onClick={startVoiceSearch}><MicNoneOutlinedIcon /></button></form>
     {!query ? <>
       <section className="mobile-search-section"><h1>Explore services</h1><div className="mobile-explore-grid">{explore.map(([label,Icon,to]) => <Link to={to} key={label}><span>{label}</span><Icon /></Link>)}</div></section>
       {recentSearches.length ? <section className="mobile-search-section"><div className="mobile-search-result-head"><h2>Recent searches</h2><button type="button" onClick={clearRecentSearches}>Clear All</button></div><div className="mobile-suggestion-grid">{recentSearches.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section> : null}
