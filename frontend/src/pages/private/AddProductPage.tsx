@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { axiosClient } from "../../lib/axiosClient";
 import { isAxiosError } from "axios";
@@ -16,8 +16,55 @@ const specFieldsByCategory: Record<string, string[]> = {
   Fashion: ["Size", "Color", "Material", "Gender", "Style"],
   Vehicles: ["Year", "Mileage", "Fuel Type", "Model"],
   Property: ["Bedrooms", "Bathrooms", "Square meters", "Property Type"],
+  Food: ["Food name", "Quantity / portion", "Fresh or packaged", "Expiry / best before", "Ingredients"],
+  Digital: ["File type", "License", "Version", "Delivery method"],
   Services: ["Duration", "Location", "Online / Offline", "Appointment Required"],
   Others: ["Brand", "Model", "Material"],
+};
+type ProductNameInsight = {
+  category: string;
+  confidence: "weak" | "good";
+  message: string;
+  fields: string[];
+  useVariants: boolean;
+};
+const titleSignals: Array<{ category: string; words: string[]; fields: string[]; useVariants?: boolean }> = [
+  { category: "Electronics", words: ["phone", "iphone", "samsung", "laptop", "computer", "pc", "tablet", "camera", "headphone", "tv", "monitor"], fields: ["Brand", "Model", "Storage", "RAM", "Screen Size", "Warranty"], useVariants: true },
+  { category: "Vehicles", words: ["car", "bike", "motorcycle", "scooter", "truck", "vehicle", "engine"], fields: ["Brand", "Model", "Year", "Mileage", "Fuel Type"], useVariants: false },
+  { category: "Fashion", words: ["shirt", "dress", "shoe", "sneaker", "bag", "watch", "jeans", "fashion"], fields: ["Brand", "Size", "Color", "Material", "Gender"], useVariants: true },
+  { category: "Food", words: ["food", "meal", "rice", "pizza", "burger", "cake", "drink", "coffee", "restaurant"], fields: ["Food name", "Quantity / portion", "Fresh or packaged", "Expiry / best before", "Delivery time"], useVariants: false },
+  { category: "Property", words: ["apartment", "villa", "house", "room", "office", "property", "rent"], fields: ["Property Type", "Bedrooms", "Bathrooms", "Square meters", "Location"], useVariants: false },
+  { category: "Services", words: ["service", "repair", "cleaning", "design", "delivery", "lesson", "appointment"], fields: ["Duration", "Location", "Online / Offline", "Appointment Required"], useVariants: false },
+  { category: "Digital", words: ["ebook", "template", "software", "license", "download", "course", "file"], fields: ["File type", "License", "Version", "Delivery method"], useVariants: false },
+];
+const analyzeProductTitle = (title: string): ProductNameInsight => {
+  const cleanTitle = title.trim().toLowerCase();
+  if (cleanTitle.length < 4) {
+    return {
+      category: "Electronics",
+      confidence: "weak",
+      message: "Start with the real product name. Add brand, model, size, storage, or type so buyers can find it.",
+      fields: ["Brand", "Model", "Condition", "Quantity"],
+      useVariants: false,
+    };
+  }
+  const match = titleSignals.find((signal) => signal.words.some((word) => cleanTitle.includes(word)));
+  if (!match) {
+    return {
+      category: "Others",
+      confidence: cleanTitle.split(/\s+/).length >= 4 ? "good" : "weak",
+      message: cleanTitle.split(/\s+/).length >= 4 ? "Good start. Add clear photos, price, location, and buyer-friendly details." : "Add more details like brand, model, size, quantity, or product type.",
+      fields: ["Brand", "Model", "Material", "Condition"],
+      useVariants: false,
+    };
+  }
+  return {
+    category: match.category,
+    confidence: "good",
+    message: `${match.category} detected. Complete the suggested details buyers usually compare before ordering.`,
+    fields: match.fields,
+    useVariants: Boolean(match.useVariants),
+  };
 };
 type VariantRow = Record<(typeof variantFields)[number], string> & { stock: string; priceInput: string; priceCurrency: "USDT" | "Pi"; image: string };
 const emptyVariant = (): VariantRow => ({ color: "", size: "", material: "", storage: "", ram: "", weight: "", model: "", edition: "", style: "", stock: "0", priceInput: "", priceCurrency: "USDT", image: "" });
@@ -65,7 +112,8 @@ const AddProductPage = () => {
   const priceUsdt = form.priceCurrency === "USDT" ? priceValue : priceValue * PI_USDT_RATE;
   const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
   const sellerActive = Boolean(sellerActivatedHere || user?.sellerActive || user?.role === "seller");
-  const activeSpecFields = specFieldsByCategory[form.category] || specFieldsByCategory.Others;
+  const productInsight = useMemo(() => analyzeProductTitle(form.title), [form.title]);
+  const activeSpecFields = productInsight.confidence === "good" ? productInsight.fields : specFieldsByCategory[form.category] || specFieldsByCategory.Others;
 
   useEffect(() => {
     if (!success && !error) return;
@@ -100,6 +148,16 @@ const AddProductPage = () => {
 
   const setSpec = (key: string, value: string) => setForm((current) => ({ ...current, specifications: { ...current.specifications, [key]: value } }));
   const setAttribute = (key: string, value: string) => setForm((current) => ({ ...current, attributes: { ...current.attributes, [key]: value } }));
+  const setProductTitle = (title: string) => {
+    const insight = analyzeProductTitle(title);
+    setForm((current) => ({
+      ...current,
+      title,
+      category: insight.confidence === "good" && insight.category !== "Others" ? insight.category : current.category,
+      digitalProduct: { ...current.digitalProduct, enabled: insight.category === "Digital" ? true : current.digitalProduct.enabled },
+      serviceDetails: { ...current.serviceDetails, enabled: insight.category === "Services" ? true : current.serviceDetails.enabled },
+    }));
+  };
   const updateVariant = (index: number, patch: Partial<VariantRow>) => setForm((current) => ({ ...current, variants: current.variants.map((variant, variantIndex) => variantIndex === index ? { ...variant, ...patch } : variant) }));
   const addVariant = () => setForm((current) => ({ ...current, variants: [...current.variants, emptyVariant()].slice(0, 50) }));
   const removeVariant = (index: number) => setForm((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }));
@@ -238,8 +296,18 @@ const AddProductPage = () => {
       ) : null}
       <form className="private-form product-form-accordions" onSubmit={(event) => void submit(event)}>
         <details className="product-accordion" open>
-          <summary><span><strong>Basic Information</strong><small>Name, category, status, and description.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
-          <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
+          <summary><span><strong>What are you selling?</strong><small>Start with the product name. The form will suggest the right details.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
+          <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setProductTitle(event.target.value)} placeholder="Example: iPhone 17 Pro 256GB Blue" /></label>
+          <div className={`product-name-guide ${productInsight.confidence}`}>
+            <div>
+              <strong>{productInsight.category === "Others" ? "Need more product details" : `${productInsight.category} listing guide`}</strong>
+              <p>{productInsight.message}</p>
+            </div>
+            <div className="product-name-guide-chips">
+              {productInsight.fields.map((field) => <span key={field}>{field}</span>)}
+              {productInsight.useVariants ? <span>Variants</span> : null}
+            </div>
+          </div>
           <div className="private-form-row">
             <label>Category<select required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{["Electronics", "Fashion", "Vehicles", "Property", "Food", "Services", "Digital", "Others"].map((item) => <option key={item}>{item}</option>)}</select></label>
             <label>Product status<select required value={form.productStatus} onChange={(event) => setForm({ ...form, productStatus: event.target.value as typeof form.productStatus })}>{[["draft", "Draft"], ["active", "Active"], ["out_of_stock", "Out of Stock"], ["hidden", "Hidden"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
