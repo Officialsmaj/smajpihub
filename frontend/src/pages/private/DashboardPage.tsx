@@ -300,6 +300,10 @@ const DashboardPage = () => {
 
   const recommendedServices = useMemo(() => recommendedServicesForCountry(user?.country), [user?.country]);
 
+  if (productsLoading) {
+    return <main className="private-home"><PrivateSkeleton variant="home" count={6} /></main>;
+  }
+
   return <main className="private-home"><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /></main>;
 };
 

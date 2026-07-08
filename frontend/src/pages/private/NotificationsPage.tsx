@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { axiosClient } from "../../lib/axiosClient";
 import type { AppNotification } from "../../types/marketplace";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 
 const tabs = ["All", "Orders", "Messages", "Payments", "Security", "Updates"];
 
@@ -20,6 +21,7 @@ const category = (type: string) =>
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<AppNotification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("All");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const refreshNotificationBadge = () => window.dispatchEvent(new Event("smaj:notifications-refresh"));
@@ -28,7 +30,8 @@ const NotificationsPage = () => {
     axiosClient
       .get<{ notifications: AppNotification[] }>("/notifications")
       .then(({ data }) => setItems(data.notifications || []))
-      .catch(() => setItems([]));
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
   }, []);
 
   const visible = useMemo(
@@ -90,7 +93,7 @@ const NotificationsPage = () => {
       </nav>
 
       <section className="notification-list rich">
-        {visible.length ? (
+        {loading ? <PrivateSkeleton variant="notifications" count={5} /> : visible.length ? (
           visible.map((item) => (
             <article key={item._id} className={item.read ? "" : "unread"}>
               <button className="notification-open" onClick={() => void open(item)}>

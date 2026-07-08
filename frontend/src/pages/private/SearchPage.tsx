@@ -18,6 +18,7 @@ import { privateSearchItems, privateSearchPopular } from "../../content/privateS
 import { serviceCatalog } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Product } from "../../types/marketplace";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 
 const explore = [
   ["Shopping", ShoppingBagOutlinedIcon, "/store"], ["Food", RestaurantOutlinedIcon, "/app/services/food"], ["Jobs", WorkOutlineOutlinedIcon, "/app/services/jobs"], ["Education", SchoolOutlinedIcon, "/app/services/education"],
@@ -169,7 +170,7 @@ const SearchPage = () => {
       <section className="mobile-search-section"><h1>Explore services</h1><div className="mobile-explore-grid">{explore.map(([label,Icon,to]) => <Link to={to} key={label}><span>{label}</span><Icon /></Link>)}</div></section>
       {recentSearches.length ? <section className="mobile-search-section"><div className="mobile-search-result-head"><h2>Recent searches</h2><button type="button" onClick={clearRecentSearches}>Clear All</button></div><div className="mobile-suggestion-grid">{recentSearches.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section> : null}
       <section className="mobile-search-section"><h2>Trending searches</h2><div className="mobile-suggestion-grid">{suggestions.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section>
-    </> : <section className="mobile-search-results"><div className="mobile-search-result-head"><h1>Results for “{query}”</h1><button onClick={() => { setInput(""); setQuery(""); }}>Clear</button></div>{loading ? <section><h2>Searching</h2><Link to="#">Loading results...</Link></section> : error ? <section><h2>Search error</h2><Link to="#">{error}</Link></section> : hasResults ? grouped.map(([group,items]) => items.length ? <section key={group}><h2>{group}</h2>{items.map((item) => <Link key={`${group}-${item.label}`} to={item.to} onClick={() => saveRecentSearch(query)}>{item.label}</Link>)}</section> : null) : <section><h2>No results</h2><Link to="/categories">No results found. Try another keyword or browse categories.</Link></section>}</section>}
+    </> : <section className="mobile-search-results"><div className="mobile-search-result-head"><h1>Results for “{query}”</h1><button onClick={() => { setInput(""); setQuery(""); }}>Clear</button></div>{loading ? <PrivateSkeleton variant="search" count={5} /> : error ? <section><h2>Search error</h2><Link to="#">{error}</Link></section> : hasResults ? grouped.map(([group,items]) => items.length ? <section key={group}><h2>{group}</h2>{items.map((item) => <Link key={`${group}-${item.label}`} to={item.to} onClick={() => saveRecentSearch(query)}>{item.label}</Link>)}</section> : null) : <section><h2>No results</h2><Link to="/categories">No results found. Try another keyword or browse categories.</Link></section>}</section>}
     <div className="search-desktop-fallback"><h2>Popular</h2>{privateSearchPopular.map((item) => <Link key={item.label} to={item.to}>{item.label}</Link>)}</div>
   </main>;
 };

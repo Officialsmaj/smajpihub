@@ -72,6 +72,23 @@ const backFallbackForPath = (pathname: string) => {
   return "";
 };
 
+const routeHasOwnLoader = (pathname: string) => {
+  const path = pathname.split("?")[0].split("#")[0];
+  return path === "/dashboard" ||
+    path === "/store" ||
+    path === "/saved" ||
+    path === "/orders" ||
+    path === "/messages" ||
+    path === "/notifications" ||
+    path === "/seller" ||
+    path === "/search" ||
+    path === "/profile" ||
+    path === "/settings" ||
+    path.startsWith("/settings/") ||
+    path.startsWith("/product/") ||
+    path.startsWith("/seller/");
+};
+
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
@@ -93,11 +110,16 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const isStoreShell = location.pathname === "/store";
   const backFallback = backFallbackForPath(location.pathname);
   const routeSkeleton = useMemo(() => {
-    if (location.pathname === "/dashboard") return { variant: "stats" as const, count: 4 };
-    if (location.pathname === "/store" || location.pathname === "/saved" || location.pathname === "/search") return { variant: "grid" as const, count: 6 };
+    if (location.pathname === "/dashboard") return { variant: "home" as const, count: 6 };
+    if (location.pathname === "/profile" || location.pathname === "/settings" || location.pathname.startsWith("/settings/")) return { variant: "profile" as const, count: 6 };
+    if (location.pathname === "/store" || location.pathname === "/saved") return { variant: "grid" as const, count: 6 };
+    if (location.pathname === "/search") return { variant: "search" as const, count: 5 };
     if (location.pathname.startsWith("/product/")) return { variant: "product" as const, count: 1 };
     if (location.pathname.startsWith("/seller/")) return { variant: "seller" as const, count: 1 };
-    if (location.pathname === "/orders" || location.pathname === "/messages" || location.pathname === "/notifications") return { variant: "list" as const, count: 5 };
+    if (location.pathname === "/seller") return { variant: "sellerDashboard" as const, count: 4 };
+    if (location.pathname === "/orders") return { variant: "orders" as const, count: 4 };
+    if (location.pathname === "/messages") return { variant: "messages" as const, count: 6 };
+    if (location.pathname === "/notifications") return { variant: "notifications" as const, count: 5 };
     return { variant: "page" as const, count: 4 };
   }, [location.pathname]);
   const pageTitle = location.pathname.startsWith("/product/") ? "Product Details"
@@ -164,7 +186,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
   const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
   const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
-  const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { startRouteLoading(); navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) { startRouteLoading(); navigate(`/store?search=${encodeURIComponent(headerSearch.trim())}`); } };
+  const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { startRouteLoading(headerResults[0].to); navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) { const target = `/store?search=${encodeURIComponent(headerSearch.trim())}`; startRouteLoading("/store"); navigate(target); } };
   const positionProfileMenu = () => {
     const avatar = profileAvatarRef.current;
     if (!avatar) return;
@@ -196,14 +218,19 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     }
   }, []);
 
-  const startRouteLoading = useCallback(() => {
+  const startRouteLoading = useCallback((targetPath = location.pathname) => {
+    if (isLoading || routeHasOwnLoader(targetPath)) {
+      clearRouteLoadingTimer();
+      setRouteLoading(false);
+      return;
+    }
     clearRouteLoadingTimer();
     setRouteLoading(true);
     routeLoadingTimerRef.current = window.setTimeout(() => {
       setRouteLoading(false);
       routeLoadingTimerRef.current = null;
     }, 420);
-  }, [clearRouteLoadingTimer]);
+  }, [clearRouteLoadingTimer, isLoading, location.pathname]);
 
   const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -213,7 +240,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     if (!(anchor instanceof HTMLAnchorElement)) return;
     if (anchor.target || anchor.origin !== window.location.origin) return;
     if (anchor.pathname === location.pathname && anchor.search === location.search && anchor.hash === location.hash) return;
-    startRouteLoading();
+    startRouteLoading(anchor.pathname);
   }, [location.hash, location.pathname, location.search, startRouteLoading]);
 
   useEffect(() => {
@@ -246,7 +273,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         </button>
         <Link to="/dashboard" className="private-header-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="" /></Link>
         <span className="environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
-        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { startRouteLoading(); navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
+        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { startRouteLoading(item.to); navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
         <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
         <div className="private-header-actions">
           <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
@@ -291,7 +318,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               className="private-route-back"
               type="button"
               onClick={() => {
-                startRouteLoading();
+                startRouteLoading(backFallback);
                 if (window.history.length > 1) navigate(-1);
                 else navigate(backFallback, { replace: true });
               }}
@@ -300,7 +327,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               <span>Back</span>
             </button>
           ) : null}
-          {routeLoading ? (
+          {routeLoading && !isLoading ? (
             <div className="private-route-loading" role="status" aria-live="polite" aria-label="Loading page">
               <PrivateSkeleton variant={routeSkeleton.variant} count={routeSkeleton.count} />
             </div>

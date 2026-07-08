@@ -3335,8 +3335,14 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-skeleton-grid,
 .private-skeleton-list,
 .private-skeleton-product,
-.private-skeleton-stats { width: 100%; }
+.private-skeleton-stats,
+.private-skeleton-home,
+.private-skeleton-profile-page,
+.private-skeleton-seller-dashboard { width: 100%; }
 .private-skeleton-page { padding: 24px; display: grid; gap: 14px; background: #ffffff; border: 1px solid #eef1f5; border-radius: 14px; }
+.private-skeleton-home,
+.private-skeleton-profile-page,
+.private-skeleton-seller-dashboard { display: grid; gap: 16px; }
 .private-skeleton-profile,
 .private-skeleton-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; }
 .private-skeleton-profile > div,
@@ -3359,6 +3365,7 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-skeleton-row,
 .private-skeleton-stat { padding: 16px; display: grid; gap: 12px; background: #ffffff; border: 1px solid #eef1f5; border-radius: 14px; }
 .private-skeleton-image { height: 190px; border-radius: 10px; }
+.private-skeleton-image.small { width: 74px; height: 74px; }
 .private-skeleton-image.tall { min-height: 420px; height: 100%; border-radius: 14px; }
 .private-skeleton-list { display: grid; gap: 12px; }
 .private-skeleton-product { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 1fr); gap: 22px; padding: 18px; background: #ffffff; border: 1px solid #eef1f5; border-radius: 14px; }
@@ -3377,7 +3384,10 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-route-loading .private-skeleton-grid,
 .private-route-loading .private-skeleton-list,
 .private-route-loading .private-skeleton-product,
-.private-route-loading .private-skeleton-stats { min-height: min(520px, calc(100dvh - 160px)); }
+.private-route-loading .private-skeleton-stats,
+.private-route-loading .private-skeleton-home,
+.private-route-loading .private-skeleton-profile-page,
+.private-route-loading .private-skeleton-seller-dashboard { min-height: min(520px, calc(100dvh - 160px)); }
 @keyframes privateRouteLoadingIn {
   from { opacity: .62; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }

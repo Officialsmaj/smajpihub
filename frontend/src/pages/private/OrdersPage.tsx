@@ -200,7 +200,7 @@ const OrdersPage = () => {
       ) : null}
       {message ? <div className="private-alert success">{message}</div> : null}
       {error ? <div className="private-alert error">{error}</div> : null}
-      {loading ? <PrivateSkeleton variant="list" count={4} /> : null}
+      {loading ? <PrivateSkeleton variant="orders" count={4} /> : null}
       {!loading ? (
         <>
           {orderSection("Buyer Orders", "Products you ordered from SMAJ sellers.", buyerOrders, "buyer")}

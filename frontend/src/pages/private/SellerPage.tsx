@@ -146,7 +146,7 @@ const SellerPage = () => {
       {message ? <div className="private-alert floating-alert success">{message}</div> : null}
       {error ? <div className="private-alert floating-alert error">{error}</div> : null}
 
-      {!data ? <PrivateSkeleton variant="stats" count={4} /> : (
+      {!data ? <PrivateSkeleton variant="sellerDashboard" count={4} /> : (
         <>
           {!sellerActive ? (
             <section className="private-form seller-activation-panel">

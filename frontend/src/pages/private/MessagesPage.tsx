@@ -13,6 +13,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
 import TrustBadge from "../../components/TrustBadge";
+import PrivateSkeleton from "../../components/PrivateSkeleton";
 
 type RichConversation = Conversation & {
   profileImage?: string;
@@ -47,6 +48,7 @@ const MessagesPage = () => {
   const [params, setParams] = useSearchParams();
   const [conversations, setConversations] = useState<RichConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loadingConversations, setLoadingConversations] = useState(true);
   const [text, setText] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -75,6 +77,8 @@ const MessagesPage = () => {
       setConversations(data.conversations || []);
     } catch {
       setConversations([]);
+    } finally {
+      setLoadingConversations(false);
     }
   }, []);
 
@@ -190,7 +194,7 @@ const MessagesPage = () => {
             <SearchOutlinedIcon />
             <input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" />
           </label>
-          {filteredConversations.length ? (
+          {loadingConversations ? <PrivateSkeleton variant="messages" count={6} /> : filteredConversations.length ? (
             filteredConversations.map((item) => (
               <button className={item._id === activeId ? "active" : ""} key={item._id} onClick={() => setParams({ conversation: item._id })}>
                 <span className="conversation-avatar">

@@ -1,5 +1,5 @@
 type PrivateSkeletonProps = {
-  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats";
+  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard";
   count?: number;
 };
 
@@ -8,6 +8,58 @@ const SkeletonLine = ({ className = "" }: { className?: string }) => (
 );
 
 const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) => {
+  if (variant === "home") {
+    return (
+      <section className="private-skeleton-home" aria-label="Loading">
+        <span className="private-skeleton-line hero" aria-hidden="true" />
+        <div className="private-skeleton-grid">
+          {Array.from({ length: count }).map((_, index) => (
+            <article className="private-skeleton-card" key={index}>
+              <span className="private-skeleton-avatar" aria-hidden="true" />
+              <SkeletonLine className="short" />
+              <SkeletonLine />
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "profile") {
+    return (
+      <section className="private-skeleton-profile-page" aria-label="Loading">
+        <article className="private-skeleton-page">
+          <div className="private-skeleton-profile">
+            <span className="private-skeleton-avatar large" aria-hidden="true" />
+            <div>
+              <SkeletonLine className="title" />
+              <SkeletonLine className="medium" />
+            </div>
+          </div>
+        </article>
+        <div className="private-skeleton-stats">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article className="private-skeleton-stat" key={index}>
+              <SkeletonLine className="short" />
+              <SkeletonLine className="large" />
+            </article>
+          ))}
+        </div>
+        <div className="private-skeleton-list">
+          {Array.from({ length: count }).map((_, index) => (
+            <article className="private-skeleton-row" key={index}>
+              <span className="private-skeleton-avatar" aria-hidden="true" />
+              <div>
+                <SkeletonLine className="medium" />
+                <SkeletonLine className="short" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   if (variant === "grid") {
     return (
       <section className="private-skeleton-grid" aria-label="Loading">
@@ -53,6 +105,23 @@ const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) 
     );
   }
 
+  if (variant === "messages" || variant === "notifications" || variant === "orders" || variant === "search") {
+    return (
+      <section className={`private-skeleton-list private-skeleton-${variant}`} aria-label="Loading">
+        {Array.from({ length: count }).map((_, index) => (
+          <article className="private-skeleton-row" key={index}>
+            {variant === "orders" || variant === "search" ? <span className="private-skeleton-image small" aria-hidden="true" /> : <span className="private-skeleton-avatar" aria-hidden="true" />}
+            <div>
+              <SkeletonLine className="medium" />
+              <SkeletonLine />
+              <SkeletonLine className="short" />
+            </div>
+          </article>
+        ))}
+      </section>
+    );
+  }
+
   if (variant === "product") {
     return (
       <section className="private-skeleton-product" aria-label="Loading">
@@ -67,6 +136,30 @@ const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) 
             <SkeletonLine />
             <SkeletonLine />
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === "sellerDashboard") {
+    return (
+      <section className="private-skeleton-seller-dashboard" aria-label="Loading">
+        <div className="private-skeleton-stats">
+          {Array.from({ length: count }).map((_, index) => (
+            <article className="private-skeleton-stat" key={index}>
+              <SkeletonLine className="short" />
+              <SkeletonLine className="large" />
+            </article>
+          ))}
+        </div>
+        <div className="private-skeleton-grid">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article className="private-skeleton-card" key={index}>
+              <SkeletonLine className="short" />
+              <SkeletonLine className="title" />
+              <SkeletonLine />
+            </article>
+          ))}
         </div>
       </section>
     );
