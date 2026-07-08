@@ -15,6 +15,16 @@ export type Product = {
   condition?: string;
   quantity?: number;
   deliveryOption?: string;
+  productStatus?: "draft" | "active" | "out_of_stock" | "hidden";
+  variants?: ProductVariant[];
+  specifications?: Record<string, string>;
+  attributes?: Record<string, string>;
+  shipping?: ProductShipping;
+  warranty?: string;
+  returnPolicy?: string;
+  seo?: { slug?: string; metaTitle?: string; metaDescription?: string };
+  digitalProduct?: { enabled?: boolean; fileUrl?: string; downloadLimit?: number; licenseKey?: string };
+  serviceDetails?: { enabled?: boolean; duration?: string; locationType?: string; appointmentRequired?: boolean };
   country?: string;
   stateRegion?: string;
   city?: string;
@@ -32,6 +42,30 @@ export type Product = {
   rating?: number;
   reviewCount?: number;
   viewCount?: number;
+};
+
+export type ProductVariant = {
+  color?: string;
+  size?: string;
+  material?: string;
+  storage?: string;
+  ram?: string;
+  weight?: string;
+  model?: string;
+  edition?: string;
+  style?: string;
+  stock?: number;
+  pricePi?: number;
+  priceUsdt?: number;
+  image?: string;
+};
+
+export type ProductShipping = {
+  weight?: string;
+  dimensions?: string;
+  method?: string;
+  deliveryTime?: string;
+  pickupAvailable?: boolean;
 };
 
 export type VerificationLevel = "basic" | "pi_verified" | "seller_verified" | "trusted_seller";

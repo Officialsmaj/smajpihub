@@ -67,6 +67,33 @@ const requireUser = async (req: Request, res: Response) => {
 const productFields = (body: any) => {
   const priceUsdt = Number(body?.priceUsdt);
   const pricePi = Number(body?.pricePi);
+  const cleanRecord = (value: unknown, limit = 20) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+      .map(([key, item]) => [String(key).trim().slice(0, 50), String(item || "").trim().slice(0, 180)])
+      .filter(([key, item]) => key && item)
+      .slice(0, limit));
+  };
+  const productStatus = ["draft", "active", "out_of_stock", "hidden"].includes(body?.productStatus) ? body.productStatus : "active";
+  const variants = Array.isArray(body?.variants) ? body.variants.map((variant: any) => {
+    const variantPriceUsdt = Number(variant?.priceUsdt);
+    const variantPricePi = Number(variant?.pricePi);
+    return {
+      color: String(variant?.color || "").trim().slice(0, 60),
+      size: String(variant?.size || "").trim().slice(0, 60),
+      material: String(variant?.material || "").trim().slice(0, 80),
+      storage: String(variant?.storage || "").trim().slice(0, 60),
+      ram: String(variant?.ram || "").trim().slice(0, 60),
+      weight: String(variant?.weight || "").trim().slice(0, 60),
+      model: String(variant?.model || "").trim().slice(0, 80),
+      edition: String(variant?.edition || "").trim().slice(0, 80),
+      style: String(variant?.style || "").trim().slice(0, 80),
+      stock: Number.isFinite(Number(variant?.stock)) ? Math.max(0, Number(variant.stock)) : 0,
+      pricePi: Number.isFinite(variantPricePi) && variantPricePi > 0 ? variantPricePi : Number.isFinite(variantPriceUsdt) && variantPriceUsdt > 0 ? piFromUsdt(variantPriceUsdt) : undefined,
+      priceUsdt: Number.isFinite(variantPriceUsdt) && variantPriceUsdt > 0 ? variantPriceUsdt : undefined,
+      image: String(variant?.image || "").trim(),
+    };
+  }).filter((variant: any) => Object.entries(variant).some(([key, value]) => key !== "stock" && key !== "pricePi" && key !== "priceUsdt" && key !== "image" && Boolean(value)) || Boolean(variant.image)).slice(0, 50) : [];
   return {
     title: String(body?.title || "").trim(),
     image: String(body?.image || "").trim(),
@@ -85,6 +112,36 @@ const productFields = (body: any) => {
     areaAddress: String(body?.areaAddress || "").trim(),
     sellerAgreementAccepted: Boolean(body?.sellerAgreementAccepted),
     images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
+    productStatus,
+    variants,
+    specifications: cleanRecord(body?.specifications),
+    attributes: cleanRecord(body?.attributes),
+    shipping: {
+      weight: String(body?.shipping?.weight || "").trim().slice(0, 60),
+      dimensions: String(body?.shipping?.dimensions || "").trim().slice(0, 80),
+      method: String(body?.shipping?.method || "").trim().slice(0, 80),
+      deliveryTime: String(body?.shipping?.deliveryTime || "").trim().slice(0, 80),
+      pickupAvailable: Boolean(body?.shipping?.pickupAvailable),
+    },
+    warranty: ["No Warranty", "7 Days", "30 Days", "6 Months", "1 Year"].includes(body?.warranty) ? body.warranty : "No Warranty",
+    returnPolicy: ["No Returns", "7 Days", "14 Days", "30 Days"].includes(body?.returnPolicy) ? body.returnPolicy : "No Returns",
+    seo: {
+      slug: String(body?.seo?.slug || "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120),
+      metaTitle: String(body?.seo?.metaTitle || "").trim().slice(0, 120),
+      metaDescription: String(body?.seo?.metaDescription || "").trim().slice(0, 240),
+    },
+    digitalProduct: {
+      enabled: Boolean(body?.digitalProduct?.enabled),
+      fileUrl: String(body?.digitalProduct?.fileUrl || "").trim().slice(0, 500),
+      downloadLimit: Number.isFinite(Number(body?.digitalProduct?.downloadLimit)) ? Math.max(0, Number(body.digitalProduct.downloadLimit)) : 0,
+      licenseKey: String(body?.digitalProduct?.licenseKey || "").trim().slice(0, 300),
+    },
+    serviceDetails: {
+      enabled: Boolean(body?.serviceDetails?.enabled),
+      duration: String(body?.serviceDetails?.duration || "").trim().slice(0, 80),
+      locationType: String(body?.serviceDetails?.locationType || "").trim().slice(0, 80),
+      appointmentRequired: Boolean(body?.serviceDetails?.appointmentRequired),
+    },
   };
 };
 
@@ -214,11 +271,11 @@ export default function mountMarketplaceEndpoints(router: Router) {
       ...fields,
       image: images[0],
       images,
-      active: true,
-      approved: autoApprove,
-      reviewStatus: autoApprove ? "approved" : "pending",
+      active: fields.productStatus !== "out_of_stock" && fields.productStatus !== "draft",
+      approved: fields.productStatus === "draft" ? false : autoApprove,
+      reviewStatus: fields.productStatus === "draft" ? "pending" : autoApprove ? "approved" : "pending",
       rejectionReason: "",
-      hidden: false,
+      hidden: fields.productStatus === "hidden",
       createdAt: new Date(),
     };
     const result = await req.app.locals.productCollection.insertOne(product);
@@ -476,7 +533,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const autoApprove = env.marketplace_auto_approve_products;
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
-      { $set: { ...fields, approved: autoApprove, reviewStatus: autoApprove ? "approved" : "pending", rejectionReason: "", hidden: false, updatedAt: new Date() } },
+      { $set: { ...fields, active: fields.productStatus !== "out_of_stock" && fields.productStatus !== "draft", approved: fields.productStatus === "draft" ? false : autoApprove, reviewStatus: fields.productStatus === "draft" ? "pending" : autoApprove ? "approved" : "pending", rejectionReason: "", hidden: fields.productStatus === "hidden", updatedAt: new Date() } },
     );
     if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });

@@ -3447,6 +3447,11 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-form input, .private-form textarea, .private-form select { width: 100%; padding: 12px 13px; color: #f5f3ff; background: #10151f; border: 1px solid #343d50; border-radius: 8px; outline: none; font: inherit; }
 .private-form input:focus, .private-form textarea:focus, .private-form select:focus { border-color: #8451ed; box-shadow: 0 0 0 3px rgba(132, 81, 237, .12); }
 .private-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.product-form-section-title { padding-top: 6px; display: grid; gap: 4px; border-top: 1px solid var(--smaj-border, #343d50); }
+.product-form-section-title:first-child { padding-top: 0; border-top: 0; }
+.product-form-section-title h2 { margin: 0; color: var(--smaj-text, #f5f3ff); font-size: 1.05rem; }
+.product-form-section-title p { margin: 0; color: var(--smaj-text-secondary, #aeb5c6); }
+.product-form-section-title .private-secondary-button { width: fit-content; margin-top: 6px; }
 .product-upload-preview { width: min(100%, 420px); height: 230px; overflow: hidden; background: #10151f; border: 1px solid #343d50; border-radius: 10px; }
 .product-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
 .product-gallery-preview {
@@ -3505,6 +3510,13 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
   font-weight: 850;
   cursor: pointer;
 }
+.product-variant-list { display: grid; gap: 12px; }
+.product-variant-list article { padding: 14px; display: grid; gap: 12px; background: var(--smaj-card, #171d29); border: 1px solid var(--smaj-border, #2c3446); border-radius: 12px; }
+.product-variant-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.product-variant-head button { padding: 7px 10px; color: #ff9eaa; background: transparent; border: 1px solid rgba(255,158,170,.35); border-radius: 8px; cursor: pointer; }
+.product-variant-image { width: 92px; height: 92px; object-fit: cover; border-radius: 10px; border: 1px solid var(--smaj-border, #2c3446); }
+.variant-preview-list { padding: 14px; display: grid; gap: 8px; color: var(--smaj-text, #f5f3ff); background: var(--smaj-card, #171d29); border: 1px solid var(--smaj-border, #2c3446); border-radius: 12px; }
+.variant-preview-list span { color: var(--smaj-text-secondary, #aeb5c6); }
 .profile-readonly { padding: 13px; display: flex; justify-content: space-between; gap: 20px; background: #111620; border-radius: 8px; }
 .profile-readonly span, .form-help { color: #8e95a8; }
 .profile-readonly strong { overflow-wrap: anywhere; }
