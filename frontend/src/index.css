@@ -3045,61 +3045,39 @@ h4, h5, h6 {
 .conversation-name .trust-badge,
 .seller-info-card .trust-badge,
 .storefront-seller-name .trust-badge {
-  --trust-bg: #eef2f7;
-  --trust-fg: #475569;
-  width: fit-content !important;
-  height: 22px !important;
-  min-width: 0 !important;
+  --trust-color: #64748b;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 5px !important;
   flex: 0 0 auto !important;
-  padding: 3px 8px !important;
-  color: var(--trust-fg) !important;
-  background: var(--trust-bg) !important;
-  border: 1px solid color-mix(in srgb, var(--trust-fg) 24%, transparent) !important;
-  border-radius: 999px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  color: var(--trust-color) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
   clip-path: none !important;
   box-shadow: none !important;
-  font-size: 11px !important;
-  font-weight: 850 !important;
-  line-height: 1 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
   vertical-align: middle !important;
   text-transform: none !important;
 }
 
-.trust-badge > span,
-.trust-badge > b {
-  width: auto !important;
-  height: auto !important;
-  display: inline-flex !important;
-  color: inherit !important;
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  font-size: 11px !important;
-  font-weight: 850 !important;
-  line-height: 1 !important;
-  transform: none !important;
+.trust-badge .trust-icon {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  color: var(--trust-color) !important;
+  fill: currentColor !important;
 }
 
-.trust-badge > span {
-  width: 14px !important;
-  height: 14px !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: #ffffff !important;
-  background: var(--trust-fg) !important;
-  border-radius: 50% !important;
-  font-size: 9px !important;
-}
-
-.trust-badge.basic { --trust-bg: #f1f5f9; --trust-fg: #64748b; }
-.trust-badge.pi_verified { --trust-bg: #f3e8ff; --trust-fg: #7c3aed; }
-.trust-badge.seller_verified { --trust-bg: #dbeafe; --trust-fg: #2563eb; }
-.trust-badge.trusted_seller { --trust-bg: #fef3c7; --trust-fg: #d97706; }
-.trust-badge.not-approved { --trust-bg: #f1f5f9; --trust-fg: #64748b; }
+.trust-badge.basic { --trust-color: #64748b; }
+.trust-badge.pi_verified { --trust-color: #7c3aed; }
+.trust-badge.seller_verified { --trust-color: #2563eb; }
+.trust-badge.trusted_seller { --trust-color: #d97706; }
+.trust-badge.not-approved { --trust-color: #94a3b8; }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .smaj-header-inner {
@@ -4271,13 +4249,6 @@ html[data-private-theme="dark"] .private-alert.success {
 .category-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 28px; }
 .category-grid a { border-radius: 14px; text-align: center; font-weight: 700; }
 .store-tools { grid-template-columns: 2fr 1fr 1fr; }
-.trust-badge { --trust-color: #1d9bf0; width: 17px; height: 17px; display: inline-grid; place-items: center; flex: 0 0 auto; margin-left: 6px; vertical-align: -2px; color: #ffffff; background: var(--trust-color); border: 0; border-radius: 0; clip-path: polygon(50% 0%,58% 12%,71% 7%,76% 21%,91% 22%,88% 38%,100% 50%,88% 62%,91% 78%,76% 79%,71% 93%,58% 88%,50% 100%,42% 88%,29% 93%,24% 79%,9% 78%,12% 62%,0% 50%,12% 38%,9% 22%,24% 21%,29% 7%,42% 12%); box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
-.trust-badge > span { width: auto; height: auto; display: block; color: #ffffff; background: transparent; border-radius: 0; font-size: 11px; line-height: 1; font-weight: 950; transform: translateY(-.5px); }
-.trust-badge.verified,
-.trust-badge.pi_verified,
-.trust-badge.basic { --trust-color: #7c3aed; }
-.trust-badge.seller_verified { --trust-color: #f59e0b; color: #ffffff; }
-.trust-badge.trusted_seller { --trust-color: #f5c400; color: #ffffff; }
 .account-dashboard-identity h1,
 .real-profile-identity h1,
 .seller-profile-hero h1,
@@ -13863,8 +13834,8 @@ select,
     flex-basis: 13px;
   }
 
-  .real-profile-identity .profile-name-line .trust-badge > span {
-    font-size: 8px;
+  .real-profile-identity .profile-name-line .trust-badge > .trust-icon {
+    font-size: 13px;
   }
 
   .seller-profile-hero {
@@ -14218,11 +14189,10 @@ button.private-primary-button {
 }
 
 .trust-badge,
-.trust-badge *,
-.trust-badge > span {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
+.trust-badge * {
+  color: var(--trust-color) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
 }
 
 .admin-shell .private-sidebar {
@@ -15050,10 +15020,9 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   box-shadow: none;
 }
 
-.trust-badge > span {
-  font-size: calc(var(--trust-size) * 0.66) !important;
+.trust-badge > .trust-icon {
+  font-size: var(--trust-size) !important;
   line-height: 1 !important;
-  transform: translateY(-0.5px);
 }
 
 .profile-name-line,
