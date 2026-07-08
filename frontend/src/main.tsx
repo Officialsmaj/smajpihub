@@ -18,8 +18,6 @@ if (redirectPath) {
   window.history.replaceState(null, '', redirectPath)
 }
 
-window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }))
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>

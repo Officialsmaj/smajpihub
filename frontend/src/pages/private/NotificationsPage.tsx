@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { axiosClient } from "../../lib/axiosClient";
 import type { AppNotification } from "../../types/marketplace";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 
 const tabs = ["All", "Orders", "Messages", "Payments", "Security", "Updates"];
 
@@ -20,19 +22,43 @@ const category = (type: string) =>
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("All");
+  const initialTab = tabs.includes(params.get("tab") || "") ? params.get("tab") || "All" : "All";
+  const [tab, setTabState] = useState(initialTab);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const refreshNotificationBadge = () => window.dispatchEvent(new Event("smaj:notifications-refresh"));
+  const loadNotifications = useCallback(async (showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const { data } = await axiosClient.get<{ notifications: AppNotification[] }>("/notifications");
+      setItems(data.notifications || []);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    axiosClient
-      .get<{ notifications: AppNotification[] }>("/notifications")
-      .then(({ data }) => setItems(data.notifications || []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
+    void loadNotifications(true);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const next = tabs.includes(params.get("tab") || "") ? params.get("tab") || "All" : "All";
+    setTabState(next);
+  }, [params]);
+
+  const setTab = (value: string) => {
+    setTabState(value);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value === "All") next.delete("tab");
+      else next.set("tab", value);
+      return next;
+    }, { replace: true });
+  };
 
   const visible = useMemo(
     () => (tab === "All" ? items : items.filter((item) => category(item.type) === tab)),
@@ -74,6 +100,7 @@ const NotificationsPage = () => {
 
   return (
     <main className="private-page notifications-page">
+      <PullToRefresh onRefresh={() => loadNotifications(false)} />
       <section className="private-page-head">
         <div>
           <p className="private-kicker">ACTIVITY CENTER</p>

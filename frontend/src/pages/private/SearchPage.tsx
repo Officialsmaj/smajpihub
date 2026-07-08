@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
@@ -48,8 +48,10 @@ const readLocalRecentSearches = () => {
 };
 
 const SearchPage = () => {
-  const [input, setInput] = useState("");
-  const [query, setQuery] = useState("");
+  const [params, setParams] = useSearchParams();
+  const initialQuery = params.get("q") || "";
+  const [input, setInput] = useState(initialQuery);
+  const [query, setQuery] = useState(initialQuery);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<SearchUser[]>([]);
@@ -66,9 +68,26 @@ const SearchPage = () => {
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setQuery(input.trim()), 180);
+    const next = params.get("q") || "";
+    if (next !== query) {
+      setInput(next);
+      setQuery(next);
+    }
+  }, [params, query]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const term = input.trim();
+      setQuery(term);
+      setParams((current) => {
+        const next = new URLSearchParams(current);
+        if (term) next.set("q", term);
+        else next.delete("q");
+        return next;
+      }, { replace: true });
+    }, 180);
     return () => window.clearTimeout(timer);
-  }, [input]);
+  }, [input, setParams]);
 
   useEffect(() => {
     if (!query) {
@@ -118,6 +137,12 @@ const SearchPage = () => {
     const term = value.trim();
     setInput(term);
     setQuery(term);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (term) next.set("q", term);
+      else next.delete("q");
+      return next;
+    }, { replace: true });
     saveRecentSearch(term);
   };
 
@@ -170,7 +195,7 @@ const SearchPage = () => {
       <section className="mobile-search-section"><h1>Explore services</h1><div className="mobile-explore-grid">{explore.map(([label,Icon,to]) => <Link to={to} key={label}><span>{label}</span><Icon /></Link>)}</div></section>
       {recentSearches.length ? <section className="mobile-search-section"><div className="mobile-search-result-head"><h2>Recent searches</h2><button type="button" onClick={clearRecentSearches}>Clear All</button></div><div className="mobile-suggestion-grid">{recentSearches.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section> : null}
       <section className="mobile-search-section"><h2>Trending searches</h2><div className="mobile-suggestion-grid">{suggestions.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section>
-    </> : <section className="mobile-search-results"><div className="mobile-search-result-head"><h1>Results for “{query}”</h1><button onClick={() => { setInput(""); setQuery(""); }}>Clear</button></div>{loading ? <PrivateSkeleton variant="search" count={5} /> : error ? <section><h2>Search error</h2><Link to="#">{error}</Link></section> : hasResults ? grouped.map(([group,items]) => items.length ? <section key={group}><h2>{group}</h2>{items.map((item) => <Link key={`${group}-${item.label}`} to={item.to} onClick={() => saveRecentSearch(query)}>{item.label}</Link>)}</section> : null) : <section><h2>No results</h2><Link to="/categories">No results found. Try another keyword or browse categories.</Link></section>}</section>}
+    </> : <section className="mobile-search-results"><div className="mobile-search-result-head"><h1>Results for “{query}”</h1><button onClick={() => runSearch("")}>Clear</button></div>{loading ? <PrivateSkeleton variant="search" count={5} /> : error ? <section><h2>Search error</h2><Link to="#">{error}</Link></section> : hasResults ? grouped.map(([group,items]) => items.length ? <section key={group}><h2>{group}</h2>{items.map((item) => <Link key={`${group}-${item.label}`} to={item.to} onClick={() => saveRecentSearch(query)}>{item.label}</Link>)}</section> : null) : <section><h2>No results</h2><Link to="/categories">No results found. Try another keyword or browse categories.</Link></section>}</section>}
     <div className="search-desktop-fallback"><h2>Popular</h2>{privateSearchPopular.map((item) => <Link key={item.label} to={item.to}>{item.label}</Link>)}</div>
   </main>;
 };

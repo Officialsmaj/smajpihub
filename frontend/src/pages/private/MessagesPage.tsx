@@ -14,6 +14,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 
 type RichConversation = Conversation & {
   profileImage?: string;
@@ -178,6 +179,7 @@ const MessagesPage = () => {
 
   return (
     <main className={`private-page messages-page ${selectedId ? "conversation-selected" : ""}`}>
+      <PullToRefresh onRefresh={() => Promise.all([loadConversations(), loadMessages()]).then(() => undefined)} />
       <header className="mobile-messages-heading">
         <h1>Messages</h1>
       </header>

@@ -6,6 +6,7 @@ import { formatPiAmount } from "../../lib/formatters";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 import type { Order, Product } from "../../types/marketplace";
 
 type SellerData = {
@@ -201,6 +202,7 @@ const SellerPage = () => {
 
   return (
     <main className="private-page">
+      <PullToRefresh onRefresh={() => load().catch((err: unknown) => setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not load seller dashboard. Please sign in again." : "Could not load seller dashboard."))} />
       <section className="private-page-head">
         <div>
           <p className="private-kicker">SELLER WORKSPACE</p>

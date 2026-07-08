@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -10,6 +10,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
@@ -250,11 +251,35 @@ const DesktopFeedHome = ({ activeTab, onTabChange, products, productsLoading, pr
 
 const DashboardPage = () => {
   const { user } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<DiscoveryTab>("for-you");
+  const [params, setParams] = useSearchParams();
+  const initialTab = discoveryTabs.some(([, tab]) => tab === params.get("tab")) ? params.get("tab") as DiscoveryTab : "for-you";
+  const [activeTab, setActiveTabState] = useState<DiscoveryTab>(initialTab);
   const [products, setProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
+  const setActiveTab = useCallback((tab: DiscoveryTab) => {
+    setActiveTabState(tab);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (tab === "for-you") next.delete("tab");
+      else next.set("tab", tab);
+      return next;
+    }, { replace: true });
+  }, [setParams]);
+  const loadProducts = useCallback(async (showSkeleton = false) => {
+    if (showSkeleton) setProductsLoading(true);
+    try {
+      const { data } = await axiosClient.get<{ products: Product[] }>("/marketplace/products");
+      setProducts(sortNewestProducts(data.products || []));
+      setProductsError("");
+    } catch {
+      setProducts([]);
+      setProductsError("Live marketplace data is not available right now.");
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setRecentItems([
@@ -265,17 +290,13 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
-    axiosClient.get<{ products: Product[] }>("/marketplace/products")
-      .then(({ data }) => {
-        setProducts(sortNewestProducts(data.products || []));
-        setProductsError("");
-      })
-      .catch(() => {
-        setProducts([]);
-        setProductsError("Live marketplace data is not available right now.");
-      })
-      .finally(() => setProductsLoading(false));
-  }, []);
+    const nextTab = discoveryTabs.some(([, tab]) => tab === params.get("tab")) ? params.get("tab") as DiscoveryTab : "for-you";
+    setActiveTabState(nextTab);
+  }, [params]);
+
+  useEffect(() => {
+    void loadProducts(true);
+  }, [loadProducts]);
 
   const sellers = useMemo(() => {
     const map = new Map<string, SellerCard>();
@@ -304,7 +325,7 @@ const DashboardPage = () => {
     return <main className="private-home"><PrivateSkeleton variant="home" count={6} /></main>;
   }
 
-  return <main className="private-home"><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /></main>;
+  return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /></main>;
 };
 
 export default DashboardPage;

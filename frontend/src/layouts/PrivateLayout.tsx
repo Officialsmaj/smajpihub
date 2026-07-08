@@ -31,6 +31,7 @@ import useRouteScrollTop from "../hooks/useRouteScrollTop";
 
 type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
+const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/store": "Store",
@@ -128,6 +129,13 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : pageTitles[location.pathname] || "SMAJ PI HUB";
 
   useEffect(() => {
+    const route = `${location.pathname}${location.search}${location.hash}`;
+    try {
+      window.sessionStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
+      window.localStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
+    } catch {
+      // Ignore storage failures in constrained browsers.
+    }
     if (location.pathname === "/dashboard") return;
     try {
       const current = JSON.parse(window.localStorage.getItem("smaj_recent_pages") || "[]");

@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import EngagementTasksPage from "./pages/EngagementTasksPage.tsx";
 import NotFoundPage from "./pages/NotFoundPage.tsx";
@@ -24,6 +25,7 @@ import { CookiesPage, PrivacyPage, ReportAbusePage, SellerAgreementPage, TermsPa
 import { platformDefinitions } from "./content/platforms";
 import { privatePages } from "./content/privatePages";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LastPrivateRouteRedirect from "./components/LastPrivateRouteRedirect";
 import PrivateLayout from "./layouts/PrivateLayout";
 import PrivatePage from "./pages/private/PrivatePage";
 import RoleRoute from "./components/RoleRoute";
@@ -51,6 +53,11 @@ import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
+
+const LegacyProductRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={id ? `/product/${id}` : "/store"} replace />;
+};
 
 const buildPrivatePageElement = (title: string, description: string, roles?: string[]) => {
   const page = <PrivatePage title={title} description={description} />;
@@ -239,7 +246,7 @@ export const router = createBrowserRouter(
     },
     {
       path: "/app",
-      element: <Navigate to="/app/dashboard" replace />,
+      element: <ProtectedRoute><LastPrivateRouteRedirect /></ProtectedRoute>,
     },
     {
       path: "/dashboard",
@@ -314,7 +321,7 @@ export const router = createBrowserRouter(
     },
     { path: "/app/dashboard", element: <Navigate to="/dashboard" replace /> },
     { path: "/app/store", element: <Navigate to="/store" replace /> },
-    { path: "/app/store/:id", element: <Navigate to="/store" replace /> },
+    { path: "/app/store/:id", element: <LegacyProductRedirect /> },
     { path: "/app/add-product", element: <Navigate to="/add-product" replace /> },
     { path: "/app/orders", element: <Navigate to="/orders" replace /> },
     { path: "/app/profile", element: <Navigate to="/profile" replace /> },
@@ -331,4 +338,3 @@ export const router = createBrowserRouter(
 );
 
 export default router;
-

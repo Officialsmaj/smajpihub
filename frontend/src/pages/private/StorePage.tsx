@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -11,6 +11,7 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { addToCart, setBuyNowItem } from "../../lib/storeCart";
 import type { Product } from "../../types/marketplace";
@@ -31,6 +32,7 @@ const mobileMenuSubcategories: Record<string, string[]> = {
   "Health & Nutrition": ["Vitamins", "Fitness", "Wellness", "Medical Supplies", "Nutrition", "All Health"],
 };
 const PRODUCT_BATCH_SIZE = 10;
+const STORE_PRODUCT_LIMIT_KEY = "smaj_store_product_limit";
 
 const StorePage = () => {
   const { user } = useAuthContext();
@@ -46,26 +48,34 @@ const StorePage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
   const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
-  const [productLimit, setProductLimit] = useState(PRODUCT_BATCH_SIZE);
+  const [productLimit, setProductLimit] = useState(() => Math.max(PRODUCT_BATCH_SIZE, Number(window.sessionStorage.getItem(STORE_PRODUCT_LIMIT_KEY) || PRODUCT_BATCH_SIZE)));
   const profileName = user?.displayName || user?.username || "Pi User";
 
-  useEffect(() => {
-    Promise.all([
-      axiosClient.get<{ latest?: Product[]; recommended?: Product[]; savedIds?: string[]; products?: Product[] }>("/marketplace/feed"),
-      axiosClient.get<{ products: Product[] }>("/marketplace/products"),
-      axiosClient.get<{ products: Product[] }>("/marketplace/saved").catch(() => null),
-    ]).then(([feed, all, saved]) => {
+  const loadCatalog = useCallback(async (showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const [feed, all, saved] = await Promise.all([
+        axiosClient.get<{ latest?: Product[]; recommended?: Product[]; savedIds?: string[]; products?: Product[] }>("/marketplace/feed"),
+        axiosClient.get<{ products: Product[] }>("/marketplace/products"),
+        axiosClient.get<{ products: Product[] }>("/marketplace/saved").catch(() => null),
+      ]);
       const live = feed?.data?.latest?.length ? [...(feed.data.recommended || []), ...(feed.data.latest || [])] : all?.data?.products || [];
       const unique = Array.from(new Map(live.map((item) => [item._id, item])).values());
       setProducts(unique);
       setSavedIds(feed?.data?.savedIds || saved?.data?.products.map((item) => item._id) || []);
       setCatalogError("");
-    }).catch(() => {
+    } catch {
       setProducts([]);
       setSavedIds([]);
       setCatalogError("SMAJ Store cannot reach the live catalog. Check the backend, MongoDB, session, and CORS settings.");
-    }).finally(() => setLoading(false));
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadCatalog(true);
+  }, [loadCatalog]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setHeroIndex((value) => (value + 1) % heroSlides.length), 4800);
@@ -84,7 +94,26 @@ const StorePage = () => {
 
   useEffect(() => {
     setProductLimit(PRODUCT_BATCH_SIZE);
+    window.sessionStorage.setItem(STORE_PRODUCT_LIMIT_KEY, String(PRODUCT_BATCH_SIZE));
   }, [category, search]);
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value.trim()) next.set("search", value);
+      else next.delete("search");
+      return next;
+    }, { replace: true });
+  };
+
+  const showMoreProducts = () => {
+    setProductLimit((value) => {
+      const next = value + PRODUCT_BATCH_SIZE;
+      window.sessionStorage.setItem(STORE_PRODUCT_LIMIT_KEY, String(next));
+      return next;
+    });
+  };
 
   const toggleFavorite = async (product: Product) => {
     const { data } = await axiosClient.post<{ saved: boolean }>(`/marketplace/products/${product._id}/favorite`);
@@ -117,13 +146,13 @@ const StorePage = () => {
       setMobileMenuPanel("subcategories");
       return;
     }
-    setSearch(value);
+    updateSearch(value);
     if (STORE_CATEGORIES.includes(value)) updateCategory(value);
     setMobileMenuOpen(false);
   };
 
   const chooseMobileSubcategory = (value: string) => {
-    setSearch(value);
+    updateSearch(value);
     const normalizedCategory = mobileMenuCategory.includes("Fashion")
       ? "Fashion"
       : mobileMenuCategory.startsWith("Home")
@@ -140,6 +169,7 @@ const StorePage = () => {
 
   return (
     <main className="private-page storefront-page">
+      <PullToRefresh onRefresh={() => loadCatalog(false)} />
       <section className="storefront-shell">
         <header className="storefront-header">
           <div className="storefront-header-main">
@@ -151,14 +181,14 @@ const StorePage = () => {
               <strong>SMAJ Store</strong>
               <span className="environment-badge storefront-environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
             </Link>
-            <button type="button" className="storefront-location storefront-location-button" onClick={() => setSearch("Abu Dhabi")}>
+            <button type="button" className="storefront-location storefront-location-button" onClick={() => updateSearch("Abu Dhabi")}>
               <LocationOnOutlinedIcon />
               <span>Location</span>
               <KeyboardArrowDownOutlinedIcon className="storefront-location-chevron" />
             </button>
             <label className="storefront-search">
               <SearchOutlinedIcon />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
+              <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
             </label>
             <nav className="storefront-quick-links">
               <Link to="/orders"><span>Orders</span></Link>
@@ -186,7 +216,7 @@ const StorePage = () => {
 
           <label className="storefront-search storefront-mobile-search">
             <SearchOutlinedIcon />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
+            <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
           </label>
 
           <nav className="storefront-category-nav">
@@ -252,7 +282,7 @@ const StorePage = () => {
                   <span>SMAJ Store</span>
                   <h1>{slide.title}</h1>
                   <p>{slide.subtitle}</p>
-                  <button type="button" onClick={() => setSearch(slide.search)}>Shop now</button>
+                  <button type="button" onClick={() => updateSearch(slide.search)}>Shop now</button>
                 </div>
               </article>
             ))}
@@ -282,7 +312,7 @@ const StorePage = () => {
               ))}
             </div>
             {hiddenProductCount ? (
-              <button type="button" className="storefront-load-more" onClick={() => setProductLimit((value) => value + PRODUCT_BATCH_SIZE)}>
+              <button type="button" className="storefront-load-more" onClick={showMoreProducts}>
                 Show more products
               </button>
             ) : null}
@@ -309,7 +339,7 @@ const StorePage = () => {
               ))}
             </div>
             {hiddenProductCount ? (
-              <button type="button" className="storefront-load-more" onClick={() => setProductLimit((value) => value + PRODUCT_BATCH_SIZE)}>
+              <button type="button" className="storefront-load-more" onClick={showMoreProducts}>
                 Show more products
               </button>
             ) : null}

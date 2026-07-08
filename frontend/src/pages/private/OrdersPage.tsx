@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -188,6 +189,7 @@ const OrdersPage = () => {
 
   return (
     <main className="private-page">
+      <PullToRefresh onRefresh={loadOrders} />
       <section className="private-page-head">
         <div>
           <p className="private-kicker">STORE ACTIVITY</p>

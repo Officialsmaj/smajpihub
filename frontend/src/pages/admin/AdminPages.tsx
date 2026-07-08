@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
+import PullToRefresh from "../../components/PullToRefresh";
 import { axiosClient, getBaseURL } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import type { Order, Product } from "../../types/marketplace";
@@ -114,6 +115,7 @@ export const AdminDashboardPage = () => {
 
   return (
     <main className="private-page">
+      <PullToRefresh onRefresh={() => load(false)} />
       <Head
         title="Admin Dashboard"
         description="Platform health, moderation, and marketplace operations."

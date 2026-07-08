@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -16,8 +16,10 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
+import useRouteScrollTop from "../hooks/useRouteScrollTop";
 
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
+const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
 const links = [
   ["/admin", "Dashboard", <DashboardOutlinedIcon />],
   ["/admin/users", "Users", <PeopleOutlineIcon />],
@@ -45,18 +47,30 @@ const adminSearchItems = [
 ] as const;
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {
+  useRouteScrollTop();
   const { user, signOut } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [showSignOut, setShowSignOut] = useState(false);
   const [adminSearch, setAdminSearch] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
   const adminInitial = adminName.slice(0, 1).toUpperCase();
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
   }, [user?.settings?.theme]);
+
+  useEffect(() => {
+    const route = `${location.pathname}${location.search}${location.hash}`;
+    try {
+      window.sessionStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
+      window.localStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
+    } catch {
+      // Ignore storage failures in constrained browsers.
+    }
+  }, [location.hash, location.pathname, location.search]);
 
   useEffect(() => {
     document.body.style.overflow = mobileSidebarOpen ? "hidden" : "";
