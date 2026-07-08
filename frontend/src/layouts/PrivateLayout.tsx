@@ -48,7 +48,7 @@ const pageTitles: Record<string, string> = {
   "/lifestyle": "Lifestyle",
   "/categories": "Categories",
   "/app/help-center": "Help Center",
-  "/app/wallet": "Wallet",
+  "/app/wallet": "SMAJ PI Activity",
 };
 
 const links = [
