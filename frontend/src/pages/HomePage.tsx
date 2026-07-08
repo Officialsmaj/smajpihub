@@ -99,7 +99,7 @@ const HomePage = () => {
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
   const getServiceStatus = (service: ServiceDefinition) => service.live || service.slug === "store";
 
-  if (isLoading || isAuthenticated) return null;
+  if (isAuthenticated) return null;
 
   return (
     <AppLayout>
