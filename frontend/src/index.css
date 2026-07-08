@@ -3045,49 +3045,39 @@ h4, h5, h6 {
 .conversation-name .trust-badge,
 .seller-info-card .trust-badge,
 .storefront-seller-name .trust-badge {
-  --trust-bg: #f1f5f9;
-  --trust-fg: #64748b;
-  --trust-size: 13px;
+  --trust-color: #64748b;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex: 0 0 auto !important;
-  gap: 5px !important;
-  padding: 3px 9px !important;
+  padding: 0 !important;
+  margin: 0 !important;
   min-width: 0 !important;
-  width: auto !important;
-  height: auto !important;
-  color: var(--trust-fg) !important;
-  background: var(--trust-bg) !important;
-  border: 1px solid color-mix(in srgb, var(--trust-fg) 22%, transparent) !important;
-  border-radius: 999px !important;
+  color: var(--trust-color) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
   clip-path: none !important;
   box-shadow: none !important;
-  font-size: 11px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
   vertical-align: middle !important;
   text-transform: none !important;
-  white-space: nowrap !important;
 }
 
 .trust-badge svg {
-  width: var(--trust-size) !important;
-  height: var(--trust-size) !important;
+  width: 100% !important;
+  height: 100% !important;
   display: block !important;
-  flex: 0 0 auto !important;
+  color: var(--trust-color) !important;
+  fill: currentColor !important;
 }
 
-.trust-badge-label {
-  display: inline-block !important;
-  line-height: 1 !important;
-}
-
-.trust-badge.basic { --trust-bg: #f1f5f9; --trust-fg: #64748b; }
-.trust-badge.pi_verified { --trust-bg: #f3e8ff; --trust-fg: #7c3aed; }
-.trust-badge.seller_verified { --trust-bg: #dbeafe; --trust-fg: #2563eb; }
-.trust-badge.trusted_seller { --trust-bg: #fef3c7; --trust-fg: #d97706; }
-.trust-badge.not-approved { --trust-bg: #f1f5f9; --trust-fg: #94a3b8; opacity: .92; }
+.trust-badge.basic { --trust-color: #64748b; }
+.trust-badge.pi_verified { --trust-color: #7c3aed; }
+.trust-badge.seller_verified { --trust-color: #2563eb; }
+.trust-badge.trusted_seller { --trust-color: #d97706; }
+.trust-badge.not-approved { --trust-color: #94a3b8; }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .smaj-header-inner {
@@ -14200,7 +14190,8 @@ button.private-primary-button {
 
 .trust-badge,
 .trust-badge * {
-  color: var(--trust-fg, #64748b);
+  color: var(--trust-color);
+  fill: currentColor;
 }
 
 .admin-shell .private-sidebar {
@@ -14408,8 +14399,8 @@ button.private-primary-button {
 
 .conversation-name .trust-badge {
   flex: 0 0 auto;
-  width: auto;
-  height: auto;
+  width: 15px;
+  height: 15px;
   font-size: 10px;
 }
 
@@ -15019,12 +15010,12 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
 
 /* Identity name + verified badge polish */
 .trust-badge {
-  --trust-size: 14px;
-  width: auto !important;
-  height: auto !important;
-  flex: 0 0 auto !important;
+  --trust-size: 15px;
+  width: var(--trust-size) !important;
+  height: var(--trust-size) !important;
+  flex: 0 0 var(--trust-size) !important;
   margin-left: 0 !important;
-  vertical-align: middle;
+  vertical-align: -2px;
   box-shadow: none;
 }
 

@@ -296,11 +296,11 @@ export const AdminReportsPage = () => {
   const [filter, setFilter] = useState("open");
   const load = useCallback(async () => {
     const [reportResponse, statsResponse, orderResponse, productResponse, userResponse] = await Promise.all([
-      axiosClient.get("/admin/reports", { cache: "no-store" }),
-      axiosClient.get("/admin/stats", { cache: "no-store" }),
-      axiosClient.get("/admin/orders", { cache: "no-store" }),
-      axiosClient.get("/admin/products", { cache: "no-store" }),
-      axiosClient.get("/admin/users", { cache: "no-store" }),
+      axiosClient.get("/admin/reports"),
+      axiosClient.get("/admin/stats"),
+      axiosClient.get("/admin/orders"),
+      axiosClient.get("/admin/products"),
+      axiosClient.get("/admin/users"),
     ]);
     setReports(reportResponse.data.reports);
     setStats(statsResponse.data.stats);
