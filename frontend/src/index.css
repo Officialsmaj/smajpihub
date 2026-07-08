@@ -15894,19 +15894,48 @@ svg {
 .conversation-name .trust-badge,
 .seller-info-card .trust-badge,
 .storefront-seller-name .trust-badge {
-  width: var(--trust-size, 16px) !important;
-  height: var(--trust-size, 16px) !important;
-  flex: 0 0 var(--trust-size, 16px) !important;
+  --trust-size: 16px;
+  width: var(--trust-size) !important;
+  height: var(--trust-size) !important;
+  flex: 0 0 var(--trust-size) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  align-self: center !important;
   color: var(--trust-color) !important;
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   line-height: 0 !important;
-  vertical-align: -2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  transform: translateY(0) !important;
+}
+
+.profile-name-line,
+.seller-name-line,
+.conversation-name,
+.seller-info-card .seller-name-line,
+.storefront-seller-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+
+.real-profile-identity h1.profile-name-line .trust-badge,
+.account-dashboard-identity h1.profile-name-line .trust-badge,
+.seller-profile-hero h1.profile-name-line .trust-badge {
+  --trust-size: 16px !important;
+}
+
+.storefront-seller-name .trust-badge,
+.seller-info-card .trust-badge,
+.conversation-name .trust-badge {
+  --trust-size: 14px !important;
 }
 
 .trust-badge.pi_verified {
