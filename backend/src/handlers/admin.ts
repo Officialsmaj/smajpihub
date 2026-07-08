@@ -2,9 +2,25 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
 import { resolveCurrentUser } from "../services/auth";
+import env from "../environments";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
 const verificationLabel = (level: string) => level === "trusted_seller" ? "Trusted Seller" : level === "seller_verified" ? "Seller Verified" : level === "pi_verified" || level === "verified" ? "Pi Verified" : "Basic";
+const normalizePiUsername = (username = "") => username.trim().replace(/^@+/, "").toLowerCase();
+const isConfiguredAdminUser = (user: Record<string, any>) => {
+  const usernames = [user.piUsername, user.username].map((value) => normalizePiUsername(String(value || "")));
+  return usernames.some((username) => env.admin_pi_usernames.includes(username));
+};
+const activityTime = (document: Record<string, any>, ...fields: string[]) => {
+  for (const field of fields) {
+    if (document[field]) return new Date(document[field]);
+  }
+  return new Date(0);
+};
+const serializeActivity = (item: { type: string; label: string; description: string; createdAt: Date; href?: string }) => ({
+  ...item,
+  createdAt: item.createdAt.toISOString(),
+});
 
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
@@ -12,29 +28,183 @@ const requireAdmin = async (req: Request, res: Response) => {
     res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     return null;
   }
-  if (currentUser.role !== "admin") {
+  const configuredAdmin = isConfiguredAdminUser(currentUser);
+  if (currentUser.role !== "admin" && !configuredAdmin) {
     res.status(403).json({ error: "forbidden", message: "Admin access required" });
     return null;
+  }
+  if (configuredAdmin && currentUser.role !== "admin") {
+    await req.app.locals.userCollection.updateOne(
+      { uid: currentUser.uid },
+      { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
+    );
+    req.session.currentUser = { ...currentUser, role: "admin", roles: ["admin"] };
   }
   return currentUser;
 };
 
 export default function mountAdminEndpoints(router: Router) {
+  router.use((_, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    next();
+  });
   router.use(async (req, res, next) => { if (await requireAdmin(req, res)) next(); });
 
   router.get("/stats", async (req, res) => {
-    const [totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, supportRequests, pendingOnboarding, pendingProducts] = await Promise.all([
+    const sellerQuery = { $or: [{ role: "seller" }, { sellerActive: true }] };
+    const activeProductQuery = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
+    const pendingProductQuery = { hidden: { $ne: true }, $or: [{ reviewStatus: "pending" }, { approved: false, reviewStatus: { $ne: "rejected" } }] };
+    const rejectedProductQuery = { $or: [{ reviewStatus: "rejected" }, { approved: false, rejectionReason: { $exists: true, $ne: "" } }] };
+    const failedCancelledPaymentQuery = { $or: [{ paymentStatus: { $in: ["failed", "cancelled"] } }, { status: "cancelled" }] };
+    const unreadReportQuery = { resolved: { $ne: true } };
+    const [
+      totalUsers,
+      activeUsers,
+      piVerifiedUsers,
+      sellers,
+      sellerVerifiedUsers,
+      trustedSellers,
+      totalProducts,
+      activeProducts,
+      pendingProducts,
+      rejectedProducts,
+      totalOrders,
+      pendingOrders,
+      paidOrders,
+      completedOrders,
+      failedCancelledPayments,
+      marketplaceReports,
+      unreadMarketplaceReports,
+      supportRequests,
+      unreadSupportRequests,
+      onboardingApplications,
+      pendingOnboarding,
+      notifications,
+      unreadNotifications,
+    ] = await Promise.all([
       req.app.locals.userCollection.countDocuments(),
+      req.app.locals.userCollection.countDocuments({ blocked: { $ne: true } }),
+      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: { $in: ["pi_verified", "seller_verified", "trusted_seller", "verified"] } }),
+      req.app.locals.userCollection.countDocuments(sellerQuery),
+      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: { $in: ["seller_verified", "trusted_seller"] } }),
+      req.app.locals.userCollection.countDocuments({ verificationStatus: "approved", verificationLevel: "trusted_seller" }),
       req.app.locals.productCollection.countDocuments(),
+      req.app.locals.productCollection.countDocuments(activeProductQuery),
+      req.app.locals.productCollection.countDocuments(pendingProductQuery),
+      req.app.locals.productCollection.countDocuments(rejectedProductQuery),
       req.app.locals.marketplaceOrderCollection.countDocuments(),
       req.app.locals.marketplaceOrderCollection.countDocuments({ status: "pending" }),
-      req.app.locals.marketplaceOrderCollection.countDocuments({ status: { $in: ["paid", "completed"] } }),
-      req.app.locals.reportCollection.countDocuments({ resolved: { $ne: true }, targetType: "product" }),
-      req.app.locals.supportCollection.countDocuments({ resolved: { $ne: true } }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ status: { $in: ["paid", "completed", "delivered"] } }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ status: "completed" }),
+      req.app.locals.marketplaceOrderCollection.countDocuments(failedCancelledPaymentQuery),
+      req.app.locals.reportCollection.countDocuments(),
+      req.app.locals.reportCollection.countDocuments(unreadReportQuery),
+      req.app.locals.supportCollection.countDocuments(),
+      req.app.locals.supportCollection.countDocuments(unreadReportQuery),
+      req.app.locals.onboardingCollection.countDocuments(),
       req.app.locals.onboardingCollection.countDocuments({ status: "pending" }),
-      req.app.locals.productCollection.countDocuments({ approved: false, hidden: { $ne: true } }),
+      req.app.locals.notificationCollection.countDocuments(),
+      req.app.locals.notificationCollection.countDocuments({ read: false }),
     ]);
-    return res.status(200).json({ stats: { totalUsers, totalProducts, totalOrders, pendingOrders, paidOrders, reportedProducts, supportRequests, pendingOnboarding, pendingProducts } });
+    const reports = marketplaceReports + supportRequests;
+    const unreadReports = unreadMarketplaceReports + unreadSupportRequests;
+    return res.status(200).json({
+      stats: {
+        totalUsers,
+        activeUsers,
+        piVerifiedUsers,
+        sellers,
+        sellerVerifiedUsers,
+        trustedSellers,
+        totalProducts,
+        activeProducts,
+        pendingProducts,
+        rejectedProducts,
+        totalOrders,
+        pendingOrders,
+        paidOrders,
+        completedOrders,
+        failedCancelledPayments,
+        reports,
+        unreadReports,
+        marketplaceReports,
+        unreadMarketplaceReports,
+        supportRequests,
+        unreadSupportRequests,
+        onboardingApplications,
+        pendingOnboarding,
+        notifications,
+        unreadNotifications,
+        reportedProducts: unreadMarketplaceReports,
+      },
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  router.get("/activity", async (req, res) => {
+    const [users, applications, products, orders, reports, supportRequests] = await Promise.all([
+      req.app.locals.userCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
+      req.app.locals.onboardingCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
+      req.app.locals.productCollection.find({}).sort({ updatedAt: -1, reviewedAt: -1, createdAt: -1 }).limit(12).toArray(),
+      req.app.locals.marketplaceOrderCollection.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(12).toArray(),
+      req.app.locals.reportCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
+      req.app.locals.supportCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
+    ]);
+    const activity = [
+      ...users.map((user: Record<string, any>) => ({
+        type: "user_joined",
+        label: "New user joined",
+        description: user.displayName || user.piUsername || user.username || "Pi user",
+        createdAt: activityTime(user, "createdAt"),
+        href: "/admin/users",
+      })),
+      ...applications.map((application: Record<string, any>) => ({
+        type: "seller_applied",
+        label: "Seller applied",
+        description: `${application.fullName || "Applicant"} - ${application.status || "pending"}`,
+        createdAt: activityTime(application, "createdAt"),
+        href: "/admin/onboarding",
+      })),
+      ...products.map((product: Record<string, any>) => {
+        const status = product.reviewStatus === "approved" ? "Product approved" : product.reviewStatus === "rejected" ? "Product rejected" : "Product submitted";
+        return {
+          type: product.reviewStatus === "approved" ? "product_approved" : product.reviewStatus === "rejected" ? "product_rejected" : "product_submitted",
+          label: status,
+          description: `${product.title || "Product"}${product.sellerName ? ` by ${product.sellerName}` : ""}`,
+          createdAt: activityTime(product, "reviewedAt", "updatedAt", "createdAt"),
+          href: "/admin/products",
+        };
+      }),
+      ...orders.map((order: Record<string, any>) => {
+        const failed = ["failed", "cancelled"].includes(order.paymentStatus) || order.status === "cancelled";
+        const completed = ["paid", "completed", "delivered"].includes(order.status) || order.paymentStatus === "paid";
+        return {
+          type: failed ? "payment_failed" : completed ? "payment_completed" : "order_created",
+          label: failed ? "Payment failed/cancelled" : completed ? "Payment completed" : "Order created",
+          description: order.productTitle || order.paymentId || order._id.toString(),
+          createdAt: activityTime(order, "updatedAt", "paidAt", "createdAt"),
+          href: "/admin/orders",
+        };
+      }),
+      ...reports.map((report: Record<string, any>) => ({
+        type: "report_submitted",
+        label: "Report submitted",
+        description: report.reason || report.targetName || report.targetType || "Marketplace report",
+        createdAt: activityTime(report, "createdAt"),
+        href: "/admin/reports",
+      })),
+      ...supportRequests.map((request: Record<string, any>) => ({
+        type: "report_submitted",
+        label: "Support report submitted",
+        description: request.topic || request.message || request.email || "Support request",
+        createdAt: activityTime(request, "createdAt"),
+        href: "/admin/reports",
+      })),
+    ].filter((item) => item.createdAt.getTime() > 0)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 20)
+      .map(serializeActivity);
+    return res.status(200).json({ activity, updatedAt: new Date().toISOString() });
   });
 
   router.get("/users", async (req, res) => {

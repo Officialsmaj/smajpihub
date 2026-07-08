@@ -1,58 +1,144 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
-import { axiosClient } from "../../lib/axiosClient";
+import { axiosClient, getBaseURL } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import type { Order, Product } from "../../types/marketplace";
 import type { User } from "../../types/pi";
 
-const Head = ({ title, description }: { title: string; description: string }) => (
+const PI_USER_STORAGE_KEY = "smaj_pi_user";
+
+type AdminStats = Record<string, number>;
+type AdminActivity = {
+  type: string;
+  label: string;
+  description: string;
+  createdAt: string;
+  href?: string;
+};
+
+const getStoredAccessToken = () => {
+  try {
+    const stored = window.localStorage.getItem(PI_USER_STORAGE_KEY);
+    if (!stored) return "";
+    const user = JSON.parse(stored) as { accessToken?: string };
+    return user.accessToken || "";
+  } catch {
+    return "";
+  }
+};
+
+const adminFetch = async <T,>(path: string): Promise<T> => {
+  const accessToken = getStoredAccessToken();
+  const response = await fetch(`${getBaseURL()}${path}`, {
+    credentials: "include",
+    cache: "no-store",
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}`, "X-SMAJ-Access-Token": accessToken } : undefined,
+  });
+  if (!response.ok) throw new Error(`Admin request failed: ${response.status}`);
+  return response.json() as Promise<T>;
+};
+
+const Head = ({ title, description, action }: { title: string; description: string; action?: ReactNode }) => (
   <section className="private-page-head">
     <div>
       <p className="private-kicker">ADMIN PANEL</p>
       <h1>{title}</h1>
       <p>{description}</p>
     </div>
+    {action}
   </section>
 );
 
 const Notice = ({ text }: { text: string }) => text ? <div className="private-alert success">{text}</div> : null;
 
 export const AdminDashboardPage = () => {
-  const [stats, setStats] = useState<Record<string, number> | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [activity, setActivity] = useState<AdminActivity[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const load = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshing(true);
+    try {
+      const [statsResponse, activityResponse] = await Promise.all([
+        adminFetch<{ stats: AdminStats; updatedAt: string }>("/admin/stats"),
+        adminFetch<{ activity: AdminActivity[]; updatedAt: string }>("/admin/activity"),
+      ]);
+      setStats(statsResponse.stats);
+      setActivity(activityResponse.activity);
+      setLastUpdated(new Date(statsResponse.updatedAt || activityResponse.updatedAt || Date.now()));
+      setError("");
+    } catch {
+      setError("Admin stats could not load. Check backend admin access, session, and database collections.");
+    } finally {
+      if (showRefreshing) setRefreshing(false);
+    }
+  }, []);
   useEffect(() => {
     let mounted = true;
-    axiosClient.get("/admin/stats")
-      .then(({ data }) => {
-        if (!mounted) return;
-        setStats(data.stats);
-        setError("");
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setStats({});
-        setError("Admin stats could not load. Check backend admin access, session, and database collections.");
-      });
-    return () => { mounted = false; };
-  }, []);
+    const run = async (showRefreshing = false) => {
+      if (!mounted) return;
+      await load(showRefreshing);
+    };
+    void run();
+    const interval = window.setInterval(() => void run(true), 15_000);
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, [load]);
   const cards = [
     ["totalUsers", "Total Users", "/admin/users"],
+    ["activeUsers", "Active Users", "/admin/users"],
+    ["piVerifiedUsers", "Pi Verified Users", "/admin/users"],
+    ["sellers", "Sellers", "/admin/users"],
+    ["sellerVerifiedUsers", "Seller Verified", "/admin/users"],
+    ["trustedSellers", "Trusted Sellers", "/admin/users"],
     ["totalProducts", "Total Products", "/admin/products"],
+    ["activeProducts", "Active Products", "/admin/products"],
     ["pendingProducts", "Pending Products", "/admin/products"],
-    ["pendingOnboarding", "Onboarding", "/admin/onboarding"],
-    ["supportRequests", "Support Requests", "/admin/reports"],
-    ["reportedProducts", "Reports", "/admin/reports"],
+    ["rejectedProducts", "Rejected Products", "/admin/products"],
+    ["totalOrders", "Total Orders", "/admin/orders"],
+    ["pendingOrders", "Pending Orders", "/admin/orders"],
+    ["completedOrders", "Completed Orders", "/admin/orders"],
+    ["failedCancelledPayments", "Failed/Cancelled Payments", "/admin/orders"],
+    ["reports", "Reports", "/admin/reports"],
+    ["unreadReports", "Unread Reports", "/admin/reports"],
+    ["onboardingApplications", "Seller Applications", "/admin/onboarding"],
+    ["pendingOnboarding", "Pending Applications", "/admin/onboarding"],
+    ["notifications", "Notifications", "/admin/reports"],
+    ["unreadNotifications", "Unread Notifications", "/admin/reports"],
   ] as const;
+  const updatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not loaded";
 
   return (
     <main className="private-page">
-      <Head title="Admin Dashboard" description="Platform health, moderation, and marketplace operations." />
+      <Head
+        title="Admin Dashboard"
+        description="Platform health, moderation, and marketplace operations."
+        action={<button className="private-secondary-button" type="button" onClick={() => void load(true)} disabled={refreshing}>{refreshing ? "Refreshing..." : "Refresh"}</button>}
+      />
       {error ? <div className="private-alert error">{error}</div> : null}
       {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
-        <section className="stats-grid admin-stats">
-          {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
-        </section>
+        <>
+          <div className="private-alert">Last updated: {updatedLabel}</div>
+          <section className="stats-grid admin-stats">
+            {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
+          </section>
+          <section className="management-list">
+            {activity.length ? activity.map((item) => (
+              <article className="report-card" key={`${item.type}-${item.createdAt}-${item.description}`}>
+                <div>
+                  <span>{item.label}</span>
+                  <h3>{item.description}</h3>
+                  <p>{new Date(item.createdAt).toLocaleString()}</p>
+                </div>
+                {item.href ? <Link to={item.href}>Open</Link> : null}
+              </article>
+            )) : <div className="private-state compact"><h3>No admin activity yet</h3><p>Real database activity will appear here when users, products, orders, reports, or applications are created.</p></div>}
+          </section>
+        </>
       )}
     </main>
   );
@@ -200,8 +286,6 @@ export const AdminOrdersPage = () => {
 };
 
 type Report = { _id: string; targetType: string; targetId: string; reason: string; details?: string; resolved?: boolean; createdAt: string; source?: "marketplace" | "support" };
-type AdminStats = Record<"totalUsers" | "totalProducts" | "totalOrders" | "pendingOrders" | "paidOrders" | "reportedProducts" | "supportRequests" | "pendingOnboarding" | "pendingProducts", number>;
-
 export const AdminReportsPage = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);

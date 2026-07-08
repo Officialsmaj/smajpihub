@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Link, NavLink, Navigate, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -63,7 +63,17 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     return () => { document.body.style.overflow = ""; };
   }, [mobileSidebarOpen]);
 
-  if (user?.role !== "admin") return <Navigate to="/dashboard" replace />;
+  if (user?.role !== "admin") {
+    return (
+      <main className="private-page">
+        <section className="private-state">
+          <h2>You do not have admin access.</h2>
+          <p>Use an authorized SMAJ PI HUB admin account to open this area.</p>
+          <Link className="private-primary-button" to="/dashboard">Back to Home</Link>
+        </section>
+      </main>
+    );
+  }
 
   const logout = async () => {
     await signOut();

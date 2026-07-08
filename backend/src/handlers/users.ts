@@ -13,6 +13,10 @@ type VerifiedPiUser = {
 
 const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
+const isConfiguredAdminUser = (user: any) => {
+  const usernames = [user?.piUsername, user?.username].map((value) => normalizePiUsername(String(value || "")));
+  return usernames.some((username) => env.admin_pi_usernames.includes(username));
+};
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
 const normalizeVerificationLevel = (user: any) => {
   const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
@@ -236,7 +240,15 @@ export default function mountUserEndpoints(router: Router) {
 
   // GET /user (session check)
   router.get("/", async (req: Request, res: Response) => {
-    const currentUser = await resolveCurrentUser(req);
+    let currentUser = await resolveCurrentUser(req);
+    if (currentUser && currentUser.role !== "admin" && isConfiguredAdminUser(currentUser)) {
+      await req.app.locals.userCollection.updateOne(
+        { uid: currentUser.uid },
+        { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
+      );
+      currentUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
+      req.session.currentUser = currentUser;
+    }
     return res.status(200).json({
       user: toClientUser(currentUser),
     });
