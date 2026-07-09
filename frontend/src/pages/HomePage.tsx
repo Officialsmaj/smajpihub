@@ -108,7 +108,7 @@ const HomePage = () => {
           <div className="home-hero-grid public-home-hero-grid">
             <div>
               <span className="home-kicker">ONE PI IDENTITY. ONE WALLET. MULTIPLE SERVICES.</span>
-              <h1>The Pi-Powered Super App for Real-World Utility</h1>
+              <h1>SMAJ PI HUB</h1>
               <p>
                 SMAJ PI HUB connects verified users to marketplace, services, opportunities, and daily digital tools
                 through one Pi identity and one Pi wallet.

@@ -1,9 +1,11 @@
 const countryCodeMap: Record<string, string> = {
   algeria: "DZ",
   bahrain: "BH",
+  germany: "DE",
   egypt: "EG",
   india: "IN",
   indonesia: "ID",
+  italy: "IT",
   jordan: "JO",
   kenya: "KE",
   kuwait: "KW",

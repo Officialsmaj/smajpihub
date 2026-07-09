@@ -14,6 +14,42 @@ import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from
 const PI_USDT_RATE = 314159;
 const usdt = (product: Product) => formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE);
 const pi = (product: Product) => product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
+const countryTokens = [
+  "United Arab Emirates",
+  "UAE",
+  "United States",
+  "USA",
+  "Germany",
+  "Italy",
+  "United Kingdom",
+  "UK",
+  "Nigeria",
+  "India",
+  "Pakistan",
+  "Philippines",
+  "Malaysia",
+  "Indonesia",
+  "Saudi Arabia",
+  "Qatar",
+  "Kuwait",
+  "Bahrain",
+  "Oman",
+  "Turkey",
+  "Egypt",
+  "Morocco",
+  "Kenya",
+];
+
+const productCountry = (product: Product) => {
+  const explicitCountry = product.country?.trim();
+  if (explicitCountry) return explicitCountry;
+
+  const location = product.location || "";
+  const splitCountry = location.split(/\s+-\s+|,/).map((item) => item.trim()).find((item) => countryFlag(item));
+  if (splitCountry) return splitCountry;
+
+  return countryTokens.find((country) => new RegExp(`\\b${country.replace(/\s+/g, "\\s+")}\\b`, "i").test(location)) || "";
+};
 
 type MarketplaceProductCardProps = {
   product: Product;
@@ -26,8 +62,9 @@ type MarketplaceProductCardProps = {
 
 const MarketplaceProductCard = ({ product, variant = "default", saved, onFavorite, onAddToCart, onBuy }: MarketplaceProductCardProps) => {
   const compact = variant === "compact";
-  const country = countryDisplayName(product.country || product.location.split(" - ")[0]);
-  const flag = countryFlag(product.country || product.location.split(" - ")[0]);
+  const countrySource = productCountry(product);
+  const country = countryDisplayName(countrySource);
+  const flag = countryFlag(countrySource);
   const location = [country, product.stateRegion, product.city].filter(Boolean).join(" - ") || product.location;
   const reviewLabel = `(${product.reviewCount || 0})`;
   const ratingLabel = product.rating ? product.rating.toFixed(1) : "";
@@ -37,7 +74,7 @@ const MarketplaceProductCard = ({ product, variant = "default", saved, onFavorit
 
   return (
     <article className={`product-card product-card-link storefront-product-card${compact ? " storefront-product-card-compact" : ""}`}>
-      <span className="storefront-card-country">{flag || "🌐"}</span>
+      {flag ? <span className="storefront-card-country" aria-label={country}>{flag}</span> : null}
       <span className="storefront-product-badge badge-real">{product.condition || "New"}</span>
       {onFavorite ? (
         <button className="favorite-button storefront-favorite-button" type="button" onClick={() => onFavorite(product)} aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}>
