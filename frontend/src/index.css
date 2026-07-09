@@ -8349,6 +8349,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 }
 
 .storefront-header,
+.storefront-shopping-tools,
 .storefront-promo-strip,
 .storefront-hero,
 .storefront-carousel-section,
@@ -8627,6 +8628,94 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   border-color: transparent;
 }
 
+.storefront-shopping-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  background: #ffffff;
+  border-radius: 18px;
+  scrollbar-width: none;
+}
+
+.storefront-shopping-tools::-webkit-scrollbar {
+  display: none;
+}
+
+.storefront-tool-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.storefront-tool-menu summary {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 850;
+  list-style: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.storefront-tool-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.storefront-tool-menu summary svg {
+  font-size: 18px !important;
+}
+
+.storefront-tool-menu[open] summary {
+  color: #ffffff;
+  background: var(--smaj-primary);
+  border-color: var(--smaj-primary);
+}
+
+.storefront-tool-menu > div {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  min-width: 190px;
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, .16);
+}
+
+.storefront-tool-menu > div button {
+  min-height: 36px;
+  padding: 0 10px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.storefront-tool-menu > div button:hover {
+  color: var(--smaj-primary);
+  background: var(--smaj-secondary-bg);
+}
+
 @media (max-width: 1200px) {
   .storefront-header-main {
     grid-template-columns: minmax(106px, auto) minmax(86px, auto) minmax(150px, 1fr) minmax(190px, auto);
@@ -8674,7 +8763,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .storefront-hero-slide {
   position: relative;
   flex: 0 0 100%;
-  min-height: 460px;
+  min-height: 210px;
 }
 
 .storefront-hero-slide > img {
@@ -8688,11 +8777,11 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .storefront-hero-slide > div {
   position: relative;
   z-index: 1;
-  min-height: 460px;
-  padding: 44px;
+  min-height: 210px;
+  padding: 24px 32px;
   display: grid;
   align-content: end;
-  gap: 12px;
+  gap: 7px;
   color: #fff;
   background: linear-gradient(180deg, rgba(15, 23, 42, .08), rgba(15, 23, 42, .72));
 }
@@ -8700,13 +8789,30 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .storefront-hero-slide > div h1,
 .storefront-hero-slide > div p {
   margin: 0;
-  max-width: 540px;
+  max-width: 460px;
+}
+
+.storefront-hero-slide > div span {
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.storefront-hero-slide > div h1 {
+  font-size: clamp(22px, 3.2vw, 34px);
+  line-height: 1.05;
+}
+
+.storefront-hero-slide > div p {
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .storefront-hero-slide > div button {
   width: fit-content;
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 38px;
+  padding: 0 14px;
   color: #fff;
   background: var(--smaj-primary);
   border: 0;
@@ -8719,8 +8825,8 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   position: absolute;
   top: 50%;
   z-index: 2;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   color: #fff;
@@ -8731,13 +8837,13 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   cursor: pointer;
 }
 
-.storefront-arrow.left { left: 16px; }
-.storefront-arrow.right { right: 16px; }
+.storefront-arrow.left { left: 12px; }
+.storefront-arrow.right { right: 12px; }
 
 .storefront-hero-dots {
   position: absolute;
   right: 20px;
-  bottom: 18px;
+  bottom: 12px;
   z-index: 2;
   display: flex;
   gap: 8px;
@@ -9439,6 +9545,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   }
 
   .storefront-header,
+  .storefront-shopping-tools,
   .storefront-promo-strip,
   .storefront-hero,
   .storefront-carousel-section,
@@ -9697,13 +9804,33 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     flex: 0 0 auto;
   }
 
+  .storefront-shopping-tools {
+    margin-top: 0;
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
+
+  .storefront-tool-menu summary {
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 13px;
+  }
+
   .storefront-hero-slide,
   .storefront-hero-slide > div {
-    min-height: 320px;
+    min-height: 200px;
   }
 
   .storefront-hero-slide > div {
-    padding: 22px 18px 54px;
+    padding: 18px 16px 42px;
+  }
+
+  .storefront-hero-slide > div h1 {
+    font-size: 24px;
+  }
+
+  .storefront-hero-slide > div p {
+    font-size: 12px;
   }
 
   .storefront-arrow,

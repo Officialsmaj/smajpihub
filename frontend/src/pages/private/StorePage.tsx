@@ -31,6 +31,12 @@ const mobileMenuSubcategories: Record<string, string[]> = {
   Baby: ["Diapers", "Feeding", "Strollers", "Baby Care", "Baby Clothing", "All Baby"],
   "Health & Nutrition": ["Vitamins", "Fitness", "Wellness", "Medical Supplies", "Nutrition", "All Health"],
 };
+const shoppingTools = [
+  { label: "Sort", items: ["Newest", "Oldest", "Price: Low to High", "Price: High to Low", "Most Popular", "Best Rated"] },
+  { label: "Filter", items: ["Category", "Condition", "Brand", "Verified Seller", "In Stock", "Delivery / Pickup"] },
+  { label: "Price", items: ["Min Price", "Max Price", "Currency: USDT / Pi", "Price Range"] },
+  { label: "Nearby", items: ["Near Me", "Country", "State/Region", "City"], globe: true },
+];
 const PRODUCT_BATCH_SIZE = 10;
 const STORE_PRODUCT_LIMIT_KEY = "smaj_store_product_limit";
 
@@ -267,6 +273,31 @@ const StorePage = () => {
             </div>
           ) : null}
         </header>
+
+        <section className="storefront-shopping-tools" aria-label="Shopping tools">
+          {shoppingTools.map((tool) => (
+            <details className="storefront-tool-menu" key={tool.label}>
+              <summary>
+                <span>{tool.label}</span>
+                {tool.globe ? <span aria-hidden="true">🌍</span> : <KeyboardArrowDownOutlinedIcon />}
+              </summary>
+              <div>
+                {tool.items.map((item) => (
+                  <button
+                    type="button"
+                    key={item}
+                    onClick={() => {
+                      if (tool.label === "Nearby" && item === "Near Me") updateSearch("Abu Dhabi");
+                      else updateSearch(item);
+                    }}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </details>
+          ))}
+        </section>
 
         <section className="storefront-promo-strip" aria-label="Store benefits">
           <div>{[...promoStripItems, ...promoStripItems, ...promoStripItems].map((item, index) => <span key={`${item}-${index}`}>{item}</span>)}</div>
