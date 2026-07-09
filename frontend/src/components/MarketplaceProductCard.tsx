@@ -3,6 +3,10 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import StarIcon from "@mui/icons-material/Star";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import TrustBadge from "./TrustBadge";
 import type { Product } from "../types/marketplace";
 import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from "../lib/formatters";
@@ -25,13 +29,16 @@ const MarketplaceProductCard = ({ product, variant = "default", saved, onFavorit
   const country = countryDisplayName(product.country || product.location.split(" - ")[0]);
   const flag = countryFlag(product.country || product.location.split(" - ")[0]);
   const location = [country, product.stateRegion, product.city].filter(Boolean).join(" - ") || product.location;
-  const reviewLabel = product.reviewCount ? `(${product.reviewCount} reviews)` : "No reviews yet";
-  const ratingLabel = product.rating ? product.rating.toFixed(1) : "New";
+  const reviewLabel = `(${product.reviewCount || 0})`;
+  const ratingLabel = product.rating ? product.rating.toFixed(1) : "";
   const deliveryLabel = product.deliveryOption || "Delivery updates in app";
+  const imageCount = Math.max(product.images?.length || (product.image ? 1 : 0), 1);
+  const availabilityLabel = product.quantity ? "In Stock" : "Stock updates";
 
   return (
     <article className={`product-card product-card-link storefront-product-card${compact ? " storefront-product-card-compact" : ""}`}>
-      <span className="storefront-product-badge badge-real">Real listing</span>
+      <span className="storefront-card-country">{flag || "🌐"}</span>
+      <span className="storefront-product-badge badge-real">{product.condition || "New"}</span>
       {onFavorite ? (
         <button className="favorite-button storefront-favorite-button" type="button" onClick={() => onFavorite(product)} aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}>
           {saved ? <FavoriteIcon /> : <FavoriteBorderIcon />}
@@ -44,39 +51,37 @@ const MarketplaceProductCard = ({ product, variant = "default", saved, onFavorit
       >
         <div className="product-image-wrap storefront-product-image-wrap">
           {product.image ? <img src={product.image} alt={product.title} /> : <span>No image</span>}
+          <span className="storefront-image-dots"><i /><i /><i /></span>
+          <span className="storefront-image-count">1/{imageCount}</span>
         </div>
 
         <div className="product-card-body storefront-product-body">
           <h2>{product.title}</h2>
-          {!compact ? (
-            <div className="storefront-product-rating">
-              <span>{ratingLabel} star</span>
-              <small>{reviewLabel}</small>
-            </div>
-          ) : null}
+          <div className="storefront-product-rating">
+            <span className="storefront-stars" aria-label={ratingLabel ? `${ratingLabel} rating` : "New rating"}>
+              {Array.from({ length: 5 }).map((_, index) => <StarIcon key={index} />)}
+            </span>
+            <small>{reviewLabel}</small>
+          </div>
           <div className="storefront-price-stack">
-            <strong>{usdt(product)} USDT</strong>
-            <small>{formatPiAmount(pi(product))}</small>
+            <strong>{usdt(product)}</strong>
+            <small><PaidOutlinedIcon /> {formatPiAmount(pi(product))}</small>
           </div>
-          <div className="storefront-product-meta">
-            <span className="storefront-product-discount">{product.condition}</span>
-            {!compact ? <small>{flag ? `${flag} ` : ""}{location}</small> : null}
-          </div>
-          <div className="storefront-product-meta">
+          <div className="storefront-product-meta storefront-seller-row">
+            <span className="storefront-seller-avatar">{product.sellerAvatar ? <img src={product.sellerAvatar} alt="" /> : <AccountCircleIcon />}</span>
             <span className="seller-name-line storefront-seller-name">
               <small className="seller-name-text">{product.sellerName}</small>
               <TrustBadge level={product.verificationLevel} status={product.verificationStatus} />
             </span>
           </div>
-          {!compact ? (
-            <>
-              <div className="storefront-product-meta">
-                <small>{deliveryLabel}</small>
-                <small>{product.quantity ? `${product.quantity} in stock` : "Stock updates in app"}</small>
-              </div>
-              {typeof product.viewCount === "number" ? <small className="storefront-real-views">{product.viewCount} views</small> : null}
-            </>
-          ) : null}
+          <div className="storefront-product-meta storefront-location-row">
+            <small><LocationOnOutlinedIcon /> {location}{flag ? ` ${flag}` : ""}</small>
+          </div>
+          <div className="storefront-stock-row">
+            <span><i /> {availabilityLabel}</span>
+            {!compact && typeof product.viewCount === "number" ? <small>{product.viewCount} views</small> : null}
+          </div>
+          {!compact ? <small className="storefront-real-views">{deliveryLabel}</small> : null}
         </div>
       </Link>
 
