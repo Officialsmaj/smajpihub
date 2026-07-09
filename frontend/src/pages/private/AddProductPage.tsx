@@ -39,6 +39,11 @@ const titleSignals: Array<{ category: CategoryName; words: string[]; fields?: st
   { category: "Digital Products", words: ["software", "template", "ebook", "graphic", "source code", "download"] },
   { category: "Services", words: ["design", "programming", "translation", "marketing", "tutoring", "cleaning", "repair", "consulting", "service"] },
 ];
+const selectOptionsByField: Record<string, string[]> = {
+  color: ["Black", "White", "Gray", "Silver", "Blue", "Red", "Green", "Yellow", "Pink", "Purple", "Brown", "Gold", "Orange", "Multicolor", "Other"],
+  size: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "One Size", "Other"],
+  "shoe size": ["EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "EU 46", "US 6", "US 7", "US 8", "US 9", "US 10", "US 11", "US 12", "Other"],
+};
 const variantFields = ["color", "size", "material", "storage", "ram", "weight", "model", "edition", "style"] as const;
 type VariantRow = Record<(typeof variantFields)[number], string> & { stock: string; priceUsdt: string; image: string };
 const emptyVariant = (): VariantRow => ({ color: "", size: "", material: "", storage: "", ram: "", weight: "", model: "", edition: "", style: "", stock: "0", priceUsdt: "", image: "" });
@@ -170,6 +175,22 @@ const AddProductPage = () => {
   };
 
   const setSpec = (key: string, value: string) => setForm((current) => ({ ...current, specifications: { ...current.specifications, [key]: value } }));
+  const renderSpecField = (field: string) => {
+    const options = selectOptionsByField[field.toLowerCase()];
+    return (
+      <label key={field}>
+        {field}
+        {options ? (
+          <select value={form.specifications[field] || ""} onChange={(event) => setSpec(field, event.target.value)}>
+            <option value="">Select {field.toLowerCase()}</option>
+            {options.map((option) => <option value={option} key={option}>{option}</option>)}
+          </select>
+        ) : (
+          <input value={form.specifications[field] || ""} onChange={(event) => setSpec(field, event.target.value)} />
+        )}
+      </label>
+    );
+  };
   const updateVariant = (index: number, patch: Partial<VariantRow>) => setForm((current) => ({ ...current, variants: current.variants.map((variant, variantIndex) => variantIndex === index ? { ...variant, ...patch } : variant) }));
   const addVariant = () => setForm((current) => ({ ...current, variants: [...current.variants, emptyVariant()].slice(0, 50) }));
   const removeVariant = (index: number) => setForm((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }));
@@ -338,14 +359,17 @@ const AddProductPage = () => {
 
         <details className="product-accordion" open>
           <summary><span><strong>5. Category-Specific Details</strong><small>Only details for {form.category}.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
-          <div className="private-form-row">{activeFields.map((field) => <label key={field}>{field}<input value={form.specifications[field] || ""} onChange={(event) => setSpec(field, event.target.value)} /></label>)}</div>
+          <div className="private-form-row">{activeFields.map((field) => renderSpecField(field))}</div>
         </details>
 
         <details className="product-accordion">
           <summary><span><strong>6. Variants</strong><small>Advanced options for size, color, storage, RAM, or model.</small></span><span className="section-tag">Advanced</span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
           {suggestedVariants.length ? <div className="product-name-guide good"><p>Suggested variant fields: {suggestedVariants.join(", ")}.</p></div> : null}
           <button type="button" className="private-secondary-button" onClick={addVariant}>Add Variant</button>
-          {form.variants.length ? <div className="product-variant-list">{form.variants.map((variant, index) => <article key={index}><div className="product-variant-head"><strong>Variant {index + 1}</strong><button type="button" onClick={() => removeVariant(index)}>Remove</button></div><div className="private-form-row">{variantFields.map((field) => <label key={field}>{field}<input value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)} /></label>)}</div><div className="private-form-row"><label>Variant stock<input type="number" min="0" value={variant.stock} onChange={(event) => updateVariant(index, { stock: event.target.value })} /></label><label>Variant USDT price<input type="number" min="0" step="any" value={variant.priceUsdt} onChange={(event) => updateVariant(index, { priceUsdt: event.target.value })} /></label><label>Variant image<input type="file" accept="image/*" onChange={(event) => { selectVariantImage(index, event.target.files?.[0]); event.currentTarget.value = ""; }} /></label></div>{variant.image ? <img className="product-variant-image" src={variant.image} alt="" /> : null}</article>)}</div> : <div className="private-state compact"><h3>No variants yet</h3><p>Add only if the item has choices like sizes, colors, storage, or models.</p></div>}
+          {form.variants.length ? <div className="product-variant-list">{form.variants.map((variant, index) => <article key={index}><div className="product-variant-head"><strong>Variant {index + 1}</strong><button type="button" onClick={() => removeVariant(index)}>Remove</button></div><div className="private-form-row">{variantFields.map((field) => {
+            const options = selectOptionsByField[field];
+            return <label key={field}>{field}{options ? <select value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)}><option value="">Select {field}</option>{options.map((option) => <option value={option} key={option}>{option}</option>)}</select> : <input value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)} />}</label>;
+          })}</div><div className="private-form-row"><label>Variant stock<input type="number" min="0" value={variant.stock} onChange={(event) => updateVariant(index, { stock: event.target.value })} /></label><label>Variant USDT price<input type="number" min="0" step="any" value={variant.priceUsdt} onChange={(event) => updateVariant(index, { priceUsdt: event.target.value })} /></label><label>Variant image<input type="file" accept="image/*" onChange={(event) => { selectVariantImage(index, event.target.files?.[0]); event.currentTarget.value = ""; }} /></label></div>{variant.image ? <img className="product-variant-image" src={variant.image} alt="" /> : null}</article>)}</div> : <div className="private-state compact"><h3>No variants yet</h3><p>Add only if the item has choices like sizes, colors, storage, or models.</p></div>}
         </details>
 
         <details className="product-accordion" open>
