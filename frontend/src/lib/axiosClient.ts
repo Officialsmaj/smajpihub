@@ -55,8 +55,14 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
+const resolveFetchInput = (input: RequestInfo | URL) => {
+  if (typeof input !== "string") return input;
+  if (!input.startsWith("/")) return input;
+  return `${getBaseURL().replace(/\/+$/, "")}${input}`;
+};
+
 export const apiFetch = (input: RequestInfo | URL, init: RequestInit = {}) =>
-  fetch(input, {
+  fetch(resolveFetchInput(input), {
     ...init,
     credentials: "include",
   });

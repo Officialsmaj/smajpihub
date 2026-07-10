@@ -69,10 +69,12 @@ app.use(express.json({ limit: "8mb" }));
 const configuredFrontendOrigins =
   (env.frontend_url || "")
     .split(",")
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
     .filter(Boolean);
 
 const corsAllowlist = [
+  "https://smaj.org",
+  "https://www.smaj.org",
   "https://smajpihub.com",
   "https://www.smajpihub.com",
   "https://sandbox.minepi.com",
@@ -95,7 +97,9 @@ app.use(
       }
 
       // Primary configured frontend origin(s).
-      if (allowedOrigins.has(origin)) {
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+
+      if (allowedOrigins.has(normalizedOrigin)) {
         callback(null, true);
         return;
       }
