@@ -85,6 +85,7 @@ type MarketplaceProductCardProps = {
   saved?: boolean;
   onFavorite?: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
+  onBuy?: (product: Product) => void;
 };
 
 const MarketplaceProductCard = ({
