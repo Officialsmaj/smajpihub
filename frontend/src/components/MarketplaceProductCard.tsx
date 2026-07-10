@@ -5,10 +5,10 @@ import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutl
 import StarIcon from "@mui/icons-material/Star";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import TrustBadge from "./TrustBadge";
 import type { Product } from "../types/marketplace";
 import {
+  countryCode,
   countryDisplayName,
   countryFlag,
   formatPiAmount,
@@ -98,14 +98,10 @@ const MarketplaceProductCard = ({
 
   const countrySource = productCountry(product);
   const country = countryDisplayName(countrySource);
-  const flag = countryFlag(countrySource);
+  const flagCode = countryCode(countrySource);
 
-  const location =
-    [product.city, product.stateRegion, country]
-      .filter(Boolean)
-      .join(", ") ||
-    product.location ||
-    "Location unavailable";
+  const locationParts = (product.location || "").split(/\s+-\s+/).map((item) => item.trim());
+  const city = product.city?.trim() || locationParts[2] || "City unavailable";
 
   const reviewLabel = `(${product.reviewCount || 0})`;
 
@@ -129,13 +125,13 @@ const MarketplaceProductCard = ({
         compact ? " storefront-product-card-compact" : ""
       }`}
     >
-      {flag ? (
+      {flagCode ? (
         <span
           className="storefront-card-country"
           aria-label={country}
           title={country}
         >
-          {flag}
+          <img src={`https://flagcdn.com/w40/${flagCode.toLowerCase()}.png`} alt="" loading="lazy" />
         </span>
       ) : null}
 
@@ -189,11 +185,11 @@ const MarketplaceProductCard = ({
           </div>
 
           <div className="storefront-price-stack">
-            <strong>{usdt(product)}</strong>
+            <strong><span aria-hidden="true">$</span>{usdt(product)}</strong>
 
             <small>
-              <PaidOutlinedIcon />
-              {formatPiAmount(pi(product))}
+              <span className="pi-currency-symbol" aria-label="Pi">π</span>
+              {formatPiAmount(pi(product)).replace(/ PI$/, "")}
             </small>
           </div>
 
@@ -224,14 +220,14 @@ const MarketplaceProductCard = ({
               <small className="storefront-seller-location">
                 <LocationOnOutlinedIcon />
 
-                <span>{location}</span>
+                <span>{city}</span>
 
-                {flag ? (
+                {flagCode ? (
                   <span
                     className="seller-country-flag"
                     aria-label={country}
                   >
-                    {flag}
+                    <img src={`https://flagcdn.com/w40/${flagCode.toLowerCase()}.png`} alt="" loading="lazy" />
                   </span>
                 ) : null}
               </small>

@@ -34,6 +34,32 @@ const countryNameByCode = Object.fromEntries(
 const titleCaseCountry = (country: string) =>
   country.replace(/\b[a-z]/g, (char) => char.toUpperCase());
 
+let countryCodesByName: Record<string, string> | null = null;
+
+const getCountryCodesByName = () => {
+  if (countryCodesByName) return countryCodesByName;
+
+  const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
+  const entries: [string, string][] = [];
+
+  for (let first = 65; first <= 90; first += 1) {
+    for (let second = 65; second <= 90; second += 1) {
+      const code = String.fromCharCode(first, second);
+      const name = displayNames.of(code);
+      if (name && name !== code) entries.push([name.toLowerCase(), code]);
+    }
+  }
+
+  countryCodesByName = { ...Object.fromEntries(entries), ...countryCodeMap };
+  return countryCodesByName;
+};
+
+export const countryCode = (country?: string) => {
+  const normalized = String(country || "").trim().toLowerCase();
+  const leadingCode = normalized.match(/^([a-z]{2})(?:\s+|$)/)?.[1]?.toUpperCase();
+  return leadingCode || getCountryCodesByName()[normalized] || "";
+};
+
 export const formatPiAmount = (value: number) => {
   if (!Number.isFinite(value) || value <= 0) return "0 PI";
   const formatted = value >= 1
@@ -56,9 +82,7 @@ export const formatUsdAmount = (value: number) =>
   Number.isFinite(value) && value > 0 ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
 
 export const countryFlag = (country?: string) => {
-  const normalized = String(country || "").trim().toLowerCase();
-  const leadingCode = normalized.match(/^([a-z]{2})(?:\s+|$)/)?.[1]?.toUpperCase();
-  const code = leadingCode || countryCodeMap[normalized];
+  const code = countryCode(country);
   if (!code) return "";
   return code
     .toUpperCase()
