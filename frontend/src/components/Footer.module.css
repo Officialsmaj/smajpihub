@@ -185,31 +185,6 @@
     justify-content: center;
   }
 
-  .legalLinksRow {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    line-height: 1.35;
-  }
-
-  .legalSeparator {
-    display: none;
-  }
-
-  .legalLinksRow a {
-    justify-content: center;
-    display: inline-flex;
-    min-height: 32px;
-    padding: 0.35rem 0.45rem;
-    align-items: center;
-    color: #ffffff;
-    border: 0;
-    border-radius: 0;
-    font-size: 0.72rem;
-    text-align: center;
-    white-space: normal;
-  }
 }
 
 .scrollToTop {
