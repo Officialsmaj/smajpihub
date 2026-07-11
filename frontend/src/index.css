@@ -17386,3 +17386,88 @@ svg {
     border-radius: 9px !important;
   }
 }
+/* Store product card spacing and visual polish */
+.storefront-page .storefront-product-grid {
+  gap: clamp(16px, 2vw, 24px);
+}
+
+.storefront-page .storefront-product-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+@media (hover: hover) {
+  .storefront-page .storefront-product-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--smaj-primary) 24%, #e7e9ee);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.13);
+  }
+}
+
+.storefront-page .storefront-product-card .storefront-product-image-wrap {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.storefront-page .storefront-product-card .storefront-product-body {
+  min-height: 250px;
+  padding: 16px 16px 68px;
+  gap: 10px;
+}
+
+.storefront-page .storefront-product-card .storefront-product-body h2 {
+  min-height: 42px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.storefront-page .storefront-product-card .storefront-price-stack {
+  padding-block: 2px 5px;
+  gap: 10px;
+}
+
+.storefront-page .storefront-product-card .storefront-price-stack strong {
+  font-size: 17px;
+}
+
+.storefront-page .storefront-product-card .storefront-seller-block {
+  padding-top: 10px;
+  border-top: 1px solid #eef0f4;
+  gap: 10px;
+}
+
+.storefront-page .storefront-product-card .storefront-product-actions {
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+}
+
+.storefront-page .storefront-product-card .storefront-product-cart {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+@media (max-width: 767px) {
+  .storefront-page .storefront-product-grid {
+    gap: 14px;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body {
+    min-height: 230px;
+    padding: 13px 13px 62px;
+    gap: 8px;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body h2 {
+    min-height: 38px;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-actions {
+    right: 13px;
+    bottom: 13px;
+    left: 13px;
+  }
+}
