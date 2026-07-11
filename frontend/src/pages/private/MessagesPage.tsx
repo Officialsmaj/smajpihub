@@ -213,8 +213,13 @@ const MessagesPage = () => {
     if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
     setTyping(false);
     nearBottomRef.current = true;
-    await axiosClient.post(`/messages/${activeId}`, { message });
-    await Promise.all([loadMessages(), loadConversations()]);
+    try {
+      const { data } = await axiosClient.post<{ message: ChatMessage }>(`/messages/${activeId}`, { message });
+      if (data.message) setMessages((current) => [...current, data.message]);
+      await Promise.all([loadMessages(), loadConversations()]);
+    } catch {
+      setText(message);
+    }
   };
 
   const clearVoicePreview = useCallback(() => {
@@ -428,7 +433,7 @@ const MessagesPage = () => {
                         <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
                       </div>
                     ) : (
-                      <p>{item.message}</p>
+                      <p>{item.message || "Message"}</p>
                     )}
                     <small className="chat-message-meta">
                       <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>

@@ -16087,6 +16087,19 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   line-height: 1.35;
 }
 
+.chat-messages article:not(.mine) {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb;
+}
+
+.chat-messages article:not(.mine) p,
+.chat-messages article:not(.mine) small,
+.chat-messages article:not(.mine) time,
+.chat-messages article:not(.mine) .message-checks {
+  color: #0f172a !important;
+}
+
 .chat-messages article.mine {
   align-self: flex-end;
   color: #fff;

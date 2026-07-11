@@ -104,7 +104,7 @@ const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/seller/")) return "/store";
   if (pathname === "/add-product") return "/seller";
   if (pathname === "/cart" || pathname === "/checkout" || pathname === "/payment-method") return "/store";
-  if (pathname === "/profile" || pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
+  if (pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
   if (pathname === "/saved" || pathname === "/orders") return "/settings";
   if (pathname === "/notifications" || pathname === "/app/help-center" || pathname === "/help") return "/dashboard";
   if (pathname === "/trending" || pathname === "/lifestyle" || pathname === "/categories") return "/dashboard";
@@ -427,8 +427,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               type="button"
               onClick={() => {
                 startRouteLoading(backFallback);
-                if (window.history.length > 1) navigate(-1);
-                else navigate(backFallback, { replace: true });
+                navigate(backFallback, { replace: true });
               }}
             >
               <ArrowBackIosNewOutlinedIcon />
