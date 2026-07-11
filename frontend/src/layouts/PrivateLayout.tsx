@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type TouchEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -59,6 +59,39 @@ const links = [
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
 ];
 
+const mainTabs = [
+  { to: "/dashboard", label: "Home", icon: <DashboardOutlinedIcon /> },
+  { to: "/app/services", label: "Services", icon: <AppsOutlinedIcon /> },
+  { to: "/search", label: "Search", icon: <SearchOutlinedIcon /> },
+  { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
+  { to: "/profile", label: "You", icon: <PersonOutlineIcon /> },
+];
+
+const SWIPE_MIN_DISTANCE = 72;
+const SWIPE_MAX_VERTICAL_DRIFT = 80;
+const swipeBlockedSelector = [
+  "input",
+  "textarea",
+  "select",
+  "option",
+  "button",
+  "a",
+  "[contenteditable='true']",
+  "[role='slider']",
+  "[data-no-swipe]",
+  ".carousel",
+  ".product-carousel",
+  ".storefront-media",
+  ".storefront-product-image-wrap",
+  ".map",
+  "iframe",
+].join(",");
+
+const getMainTabIndex = (pathname: string) => mainTabs.findIndex((tab) => tab.to === pathname);
+
+const shouldIgnoreSwipeTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest(swipeBlockedSelector));
+
 const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/product/")) return "/store";
   if (pathname.startsWith("/edit-product/")) return "/seller";
@@ -100,13 +133,19 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [routeLoading, setRouteLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => Math.max(0, getMainTabIndex(window.location.pathname)));
+  const [tabTransition, setTabTransition] = useState<"left" | "right" | "none">("none");
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
   const routeLoadingTimerRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; tabIndex: number } | null>(null);
+  const previousTabRef = useRef(getMainTabIndex(window.location.pathname));
   const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
   const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
+  const currentTabIndex = getMainTabIndex(location.pathname);
+  const isMainTabRoute = currentTabIndex >= 0;
   const backFallback = backFallbackForPath(location.pathname);
   const routeSkeleton = useMemo(() => {
     if (location.pathname === "/dashboard") return { variant: "home" as const, count: 6 };
@@ -145,7 +184,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     } catch {
       window.localStorage.removeItem("smaj_recent_pages");
     }
-  }, [location.pathname, location.search, pageTitle]);
+  }, [location.hash, location.pathname, location.search, pageTitle]);
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = themeMode;
@@ -249,6 +288,62 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     }, 420);
   }, [clearRouteLoadingTimer, isLoading, location.pathname]);
 
+  useEffect(() => {
+    const nextIndex = getMainTabIndex(location.pathname);
+    const previousIndex = previousTabRef.current;
+    if (nextIndex >= 0) {
+      setActiveTab(nextIndex);
+      if (previousIndex >= 0 && previousIndex !== nextIndex) {
+        setTabTransition(nextIndex > previousIndex ? "left" : "right");
+      }
+    } else {
+      setTabTransition("none");
+    }
+    previousTabRef.current = nextIndex;
+  }, [location.pathname]);
+
+  const navigateMainTab = useCallback((nextIndex: number) => {
+    if (nextIndex < 0 || nextIndex >= mainTabs.length || nextIndex === activeTab) return;
+    const nextTab = mainTabs[nextIndex];
+    setTabTransition(nextIndex > activeTab ? "left" : "right");
+    startRouteLoading(nextTab.to);
+    navigate(nextTab.to);
+  }, [activeTab, navigate, startRouteLoading]);
+
+  const handleSwipeStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    if (!isMainTabRoute || event.touches.length !== 1 || shouldIgnoreSwipeTarget(event.target)) {
+      touchStartRef.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, tabIndex: currentTabIndex };
+  }, [currentTabIndex, isMainTabRoute]);
+
+  const handleSwipeMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    if (!start || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 24) {
+      touchStartRef.current = null;
+    }
+  }, []);
+
+  const handleSwipeEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || event.changedTouches.length !== 1) return;
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    if (absX < SWIPE_MIN_DISTANCE || absY > SWIPE_MAX_VERTICAL_DRIFT || absX < absY * 1.45) return;
+    const nextIndex = deltaX < 0 ? start.tabIndex + 1 : start.tabIndex - 1;
+    navigateMainTab(nextIndex);
+  }, [navigateMainTab]);
+
   const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const target = event.target;
@@ -348,15 +443,32 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             <div className="private-route-loading" role="status" aria-live="polite" aria-label="Loading page">
               <PrivateSkeleton variant={routeSkeleton.variant} count={routeSkeleton.count} />
             </div>
-          ) : children}
+          ) : (
+            <div
+              key={location.key}
+              className={`private-tab-page private-tab-page-${tabTransition}`}
+              onTouchStart={handleSwipeStart}
+              onTouchMove={handleSwipeMove}
+              onTouchEnd={handleSwipeEnd}
+            >
+              {children}
+            </div>
+          )}
         </div>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
-        <NavLink to="/dashboard"><DashboardOutlinedIcon /><span>Home</span></NavLink>
-        <NavLink to="/app/services"><AppsOutlinedIcon /><span>Services</span></NavLink>
-        <NavLink to="/search"><SearchOutlinedIcon /><span>Search</span></NavLink>
-        <NavLink to="/messages"><ChatOutlinedIcon /><span>Messages</span></NavLink>
-        <NavLink to="/settings"><PersonOutlineIcon /><span>You</span></NavLink>
+        {mainTabs.map((tab, index) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            onClick={() => {
+              if (isMainTabRoute && index !== activeTab) setTabTransition(index > activeTab ? "left" : "right");
+            }}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </NavLink>
+        ))}
       </nav>
       <WelcomeTour />
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
