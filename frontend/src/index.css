@@ -16021,7 +16021,8 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   outline: 0;
 }
 
-.conversation-role-label {
+.conversation-role-label,
+.conversation-meta-line {
   width: max-content;
   display: inline-flex;
   margin-top: 3px;
@@ -16029,6 +16030,28 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   font-size: 11px;
   font-style: normal;
   font-weight: 800;
+}
+
+.conversation-meta-line {
+  width: 100%;
+  max-width: 100%;
+  margin: 2px 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.messages-layout.rich .conversation-list .conversation-meta-line {
+  display: block;
+  width: 100%;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--smaj-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .messages-layout.rich .conversation-list button > div {
@@ -16052,7 +16075,7 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   margin-left: 2px;
 }
 
-.messages-layout.rich .conversation-list p {
+.messages-layout.rich .conversation-list p:not(.conversation-meta-line) {
   display: -webkit-box;
   margin: 2px 0;
   overflow: hidden;

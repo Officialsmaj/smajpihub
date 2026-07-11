@@ -31,6 +31,13 @@ const getConversationInitial = (conversation: RichConversation, currentUserId?: 
 const getConversationRoleLabel = (conversation: RichConversation, currentUserId?: string) =>
   conversation.sellerId === currentUserId ? "Buyer" : "Seller";
 
+const getConversationMeta = (conversation: RichConversation, currentUserId?: string) =>
+  [
+    getConversationRoleLabel(conversation, currentUserId),
+    conversation.lastMessage || "No messages yet",
+    conversation.productTitle,
+  ].filter(Boolean).join(" · ");
+
 const formatLastSeen = (conversation: RichConversation) => {
   if (conversation.online) return "Online";
   const value = conversation.lastSeenAt || conversation.updatedAt;
@@ -205,9 +212,8 @@ const MessagesPage = () => {
                 </span>
                 <div>
                   <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} status={item.verificationStatus} /></strong>
-                  <em className="conversation-role-label">{getConversationRoleLabel(item, user?.uid)}</em>
-                  <p>{item.lastMessage || "No messages yet."}</p>
-                  <small>{item.productTitle} - {formatLastSeen(item)}</small>
+                  <p className="conversation-meta-line">{getConversationMeta(item, user?.uid)}</p>
+                  <small>{formatLastSeen(item)}</small>
                 </div>
                 {item.unreadBy?.length ? <b>{item.unreadBy.length}</b> : null}
               </button>
