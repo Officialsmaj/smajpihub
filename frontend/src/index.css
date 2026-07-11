@@ -13341,6 +13341,14 @@ select,
   background: #ffffff !important;
 }
 
+.legal-company-page .legal-text-document,
+.legal-company-page .legal-text-intro,
+.legal-company-page .legal-text-section,
+.legal-company-page .legal-policy-panel,
+.legal-company-page .legal-report-card {
+  color: #111827 !important;
+}
+
 .legal-company-page h1,
 .legal-company-page h2,
 .legal-company-page h3,
@@ -16380,9 +16388,16 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   .legal-company-page .legal-text-section li,
   .legal-company-page .legal-policy-panel,
   .legal-company-page .legal-policy-panel li {
-    color: var(--smaj-text, #111827) !important;
+    color: #111827 !important;
     opacity: 1 !important;
     visibility: visible !important;
+  }
+
+  .legal-company-page .legal-text-intro p,
+  .legal-company-page .legal-text-section p,
+  .legal-company-page .legal-text-section li,
+  .legal-company-page .legal-policy-panel li {
+    color: #334155 !important;
   }
 }
 
