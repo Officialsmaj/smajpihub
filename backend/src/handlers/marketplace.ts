@@ -259,15 +259,14 @@ export default function mountMarketplaceEndpoints(router: Router) {
 
     const images = fields.images.length ? fields.images : [fields.image];
     const autoApprove = env.marketplace_auto_approve_products;
-    const currentVerificationLevel = publicVerificationLevel(user);
-    const sellerVerificationLevel = currentVerificationLevel === "trusted_seller" ? "trusted_seller" : user.sellerActive || user.role === "seller" ? "seller_verified" : currentVerificationLevel;
+    const sellerVerificationLevel = publicVerificationLevel(user);
     const product = {
       sellerId: user.uid,
       sellerName: user.displayName || user.piUsername || user.username,
       sellerAvatar: user.avatar || "",
       piUsername: user.piUsername || user.username,
       verificationLevel: sellerVerificationLevel,
-      verificationStatus: "approved",
+      verificationStatus: verificationStatus(user),
       ...fields,
       image: images[0],
       images,
@@ -281,7 +280,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const result = await req.app.locals.productCollection.insertOne(product);
     await req.app.locals.userCollection.updateOne(
       { uid: user.uid },
-      { $set: { role: user.role === "admin" ? "admin" : "seller", roles: [user.role === "admin" ? "admin" : "seller"], sellerActive: true, verificationLevel: sellerVerificationLevel, verificationStatus: "approved" } },
+      { $set: { role: user.role === "admin" ? "admin" : "seller", roles: [user.role === "admin" ? "admin" : "seller"], sellerActive: true } },
     );
     return res.status(201).json({ product: serialize({ ...product, _id: result.insertedId }) });
   });

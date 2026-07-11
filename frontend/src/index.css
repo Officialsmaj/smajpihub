@@ -4376,6 +4376,112 @@ html[data-private-theme="dark"] .private-alert.success {
 .seller-quick-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .seller-verification-progress { height: 8px; overflow: hidden; background: var(--smaj-secondary-bg); border: 1px solid var(--smaj-border); border-radius: 999px; }
 .seller-verification-progress span { width: var(--progress); height: 100%; display: block; background: var(--smaj-primary); border-radius: inherit; }
+.settings-verification-card {
+  margin-top: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 14px;
+}
+
+.settings-verification-card > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-verification-card > div:first-child small,
+.settings-verification-card p {
+  margin: 0;
+  color: var(--smaj-text-secondary);
+  line-height: 1.5;
+}
+
+.settings-verification-card ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  list-style: none;
+}
+
+.settings-verification-card li {
+  padding: 7px 9px;
+  color: var(--smaj-text-secondary);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.settings-verification-card li.done {
+  color: #047857;
+  background: #d1fae5;
+  border-color: #a7f3d0;
+}
+
+.settings-verification-card .private-primary-button:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+
+.verification-progress-line {
+  height: 9px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--smaj-border) 70%, transparent);
+  border-radius: 999px;
+}
+
+.verification-progress-line span {
+  width: 0;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, var(--smaj-primary), var(--smaj-accent));
+  border-radius: inherit;
+  transition: width .2s ease;
+}
+
+.verification-profile-popover {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, .56);
+  backdrop-filter: blur(8px);
+}
+
+.verification-profile-popover section {
+  width: min(420px, 100%);
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 18px;
+  box-shadow: 0 26px 70px rgba(15, 23, 42, .32);
+}
+
+.verification-profile-popover h2,
+.verification-profile-popover p {
+  margin: 0;
+}
+
+.verification-profile-popover p {
+  color: var(--smaj-text-secondary);
+}
+
+.verification-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 .seller-verification-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .seller-verification-steps article { min-width: 0; padding: 12px; color: var(--smaj-text-secondary); background: var(--smaj-card); border: 1px solid var(--smaj-border); border-radius: 12px; }
 .seller-verification-steps article.done { color: var(--smaj-text); border-color: var(--smaj-primary); }
@@ -17668,4 +17774,72 @@ svg {
   .private-tab-page-right {
     animation: none;
   }
+}
+
+/* Final legal readability guard: privacy, terms, cookies, seller agreement, and reports. */
+.legal-company-page {
+  color: #0f172a !important;
+  background: #ffffff !important;
+}
+
+.legal-company-page .legal-company-hero,
+.legal-company-page .legal-text-document,
+.legal-company-page .legal-policy-panel,
+.legal-company-page .legal-report-card,
+.legal-company-page .legal-text-section {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.legal-company-page .legal-company-hero {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 18px !important;
+  padding: clamp(22px, 5vw, 42px) !important;
+}
+
+.legal-company-page .legal-text-document {
+  padding: clamp(18px, 4vw, 34px) !important;
+}
+
+.legal-company-page h1,
+.legal-company-page h2,
+.legal-company-page h3,
+.legal-company-page h4,
+.legal-company-page strong,
+.legal-company-page b,
+.legal-company-page .legal-company-hero h1,
+.legal-company-page .legal-text-intro h2,
+.legal-company-page .legal-text-section h3,
+.legal-company-page .legal-policy-panel h2,
+.legal-company-page .legal-report-card h2 {
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.legal-company-page p,
+.legal-company-page li,
+.legal-company-page small,
+.legal-company-page span:not(.home-kicker),
+.legal-company-page .legal-company-hero p,
+.legal-company-page .legal-text-intro p,
+.legal-company-page .legal-text-section p,
+.legal-company-page .legal-text-section li,
+.legal-company-page .legal-policy-panel li,
+.legal-company-page .legal-report-card p {
+  color: #334155 !important;
+  opacity: 1 !important;
+}
+
+.legal-company-page .home-kicker,
+.legal-company-page .legal-company-hero .home-kicker,
+.legal-company-page a {
+  color: #6b3fe6 !important;
+  opacity: 1 !important;
+}
+
+.legal-company-page svg {
+  color: #6b3fe6 !important;
 }

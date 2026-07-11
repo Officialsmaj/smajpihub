@@ -139,8 +139,6 @@ const ProfilePage = () => {
   const cropDragRef = useRef<{ handle: CropHandle; startX: number; startY: number; startFrame: CropFrame } | null>(null);
   const [saving, setSaving] = useState(false);
   const [sellerSaving, setSellerSaving] = useState(false);
-  const [requestingVerification, setRequestingVerification] = useState(false);
-  const [verificationRequested, setVerificationRequested] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
@@ -342,22 +340,6 @@ const ProfilePage = () => {
     }
   };
 
-  const requestVerification = async () => {
-    setAlert(null);
-    setRequestingVerification(true);
-    try {
-      await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
-      setVerificationRequested(true);
-      setAlert({ type: "success", text: "Trusted seller verification requested. Team will review your account." });
-    } catch {
-      setAlert({ type: "error", text: "Could not request trusted seller verification. Activate seller tools first." });
-    } finally {
-      setRequestingVerification(false);
-    }
-  };
-
-  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
-
   return (
     <main className="private-page real-profile-page">
       <input id="profileAvatarUpload" className="profile-file-input" ref={avatarInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
@@ -444,7 +426,6 @@ const ProfilePage = () => {
               <div className="form-actions">
                 <button className="private-secondary-button" type="button" disabled={sellerSaving} onClick={() => void toggleSeller()}>{sellerSaving ? "Saving..." : sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
-                {sellerActive && !(user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller") ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
               </div>
             </article>
 

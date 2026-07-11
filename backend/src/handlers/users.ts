@@ -135,8 +135,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            verificationLevel: normalizeVerificationLevel(currentUser) === "basic" ? "pi_verified" : normalizeVerificationLevel(currentUser),
-            verificationStatus: "approved",
+            verificationLevel: currentUser.verificationLevel === "verified" ? "pi_verified" : currentUser.verificationLevel || "basic",
+            verificationStatus: currentUser.verificationStatus || "none",
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
@@ -159,8 +159,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role,
         roles: [role],
         blocked: false,
-        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "pi_verified",
-        verificationStatus: "approved",
+        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "basic",
+        verificationStatus: isConfiguredAdmin ? "approved" : "none",
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
@@ -281,7 +281,7 @@ export default function mountUserEndpoints(router: Router) {
 
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel: nextVerificationLevel, verificationStatus: "approved", lastSeenAt: new Date() } },
+      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel: nextVerificationLevel, verificationStatus: currentUser.verificationStatus || "none", lastSeenAt: new Date() } },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
@@ -291,12 +291,14 @@ export default function mountUserEndpoints(router: Router) {
 
   router.get("/stats", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
-    if (!currentUser) return res.status(200).json({ stats: { totalProducts: 0, successfulOrders: 0 } });
-    const [totalProducts, successfulOrders] = await Promise.all([
+    if (!currentUser) return res.status(200).json({ stats: { totalProducts: 0, approvedListings: 0, successfulOrders: 0, completedSales: 0 } });
+    const [totalProducts, approvedListings, successfulOrders, completedSales] = await Promise.all([
       req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid }),
+      req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }),
       req.app.locals.marketplaceOrderCollection.countDocuments({ $or: [{ sellerId: currentUser.uid }, { buyerId: currentUser.uid }], status: "completed" }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: currentUser.uid, status: "completed" }),
     ]);
-    return res.status(200).json({ stats: { totalProducts, successfulOrders } });
+    return res.status(200).json({ stats: { totalProducts, approvedListings, successfulOrders, completedSales } });
   });
 
   router.get("/search", async (req: Request, res: Response) => {
@@ -342,7 +344,21 @@ export default function mountUserEndpoints(router: Router) {
   router.post("/verification-request", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ user: null, message: "Verification request saved locally" });
-    const requestedLevel = req.body?.level === "trusted_seller" ? "trusted_seller" : currentUser.role === "seller" || currentUser.sellerActive ? "seller_verified" : "pi_verified";
+    const requestedLevel = ["pi_verified", "seller_verified", "trusted_seller"].includes(req.body?.level) ? req.body.level : "pi_verified";
+    const profileComplete = Boolean(currentUser.displayName && currentUser.piUsername && currentUser.country && currentUser.contactPhone && currentUser.avatar && currentUser.bio);
+    const [approvedListings, completedSales] = await Promise.all([
+      req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: currentUser.uid, status: "completed" }),
+    ]);
+    if (requestedLevel === "pi_verified" && !profileComplete) {
+      return res.status(400).json({ error: "profile_incomplete", message: "Complete your profile before requesting Real Pi User verification." });
+    }
+    if (requestedLevel === "seller_verified" && (!(currentUser.sellerActive || currentUser.role === "seller") || approvedListings < 10)) {
+      return res.status(400).json({ error: "seller_locked", message: "Seller verification unlocks after seller tools are active and 10 approved listings are completed." });
+    }
+    if (requestedLevel === "trusted_seller" && (approvedListings < 100 || completedSales < 20)) {
+      return res.status(400).json({ error: "trusted_locked", message: "Trusted Seller unlocks after 100 approved listings and 20 completed sales." });
+    }
     await req.app.locals.userCollection.updateOne(
       { uid: currentUser.uid },
       { $set: { verificationRequested: true, verificationStatus: "pending", verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
