@@ -64,7 +64,7 @@ const mainTabs = [
   { to: "/app/services", label: "Services", icon: <AppsOutlinedIcon /> },
   { to: "/search", label: "Search", icon: <SearchOutlinedIcon /> },
   { to: "/messages", label: "Messages", icon: <ChatOutlinedIcon /> },
-  { to: "/profile", label: "You", icon: <PersonOutlineIcon /> },
+  { to: "/settings", label: "You", icon: <PersonOutlineIcon /> },
 ];
 
 const SWIPE_MIN_DISTANCE = 86;
@@ -104,7 +104,7 @@ const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/seller/")) return "/store";
   if (pathname === "/add-product") return "/seller";
   if (pathname === "/cart" || pathname === "/checkout" || pathname === "/payment-method") return "/store";
-  if (pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
+  if (pathname === "/profile" || pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
   if (pathname === "/saved" || pathname === "/orders") return "/settings";
   if (pathname === "/notifications" || pathname === "/app/help-center" || pathname === "/help") return "/dashboard";
   if (pathname === "/trending" || pathname === "/lifestyle" || pathname === "/categories") return "/dashboard";
