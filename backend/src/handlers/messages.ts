@@ -15,6 +15,8 @@ const normalizeVerificationLevel = (user: any) => {
   return "basic";
 };
 const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
+const MAX_VOICE_NOTE_BYTES = 2_000_000;
+const voiceDataPattern = /^data:audio\/(webm|mp4|mpeg|ogg|wav)(;codecs=[a-z0-9-]+)?;base64,[a-z0-9+/=]+$/i;
 
 const enrichConversations = async (req: any, currentUser: Record<string, any>, conversations: Array<Record<string, any>>) => {
   const otherUserIds = conversations
@@ -119,12 +121,27 @@ export default function mountMessageEndpoints(router: Router) {
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     const message = String(req.body?.message || "").trim();
-    if (!message || message.length > 1000) return res.status(400).json({ error: "bad_request", message: "Message must be 1-1000 characters" });
+    const messageType = req.body?.messageType === "voice" ? "voice" : "text";
+    const audioDataUrl = String(req.body?.audioDataUrl || "");
+    const audioMimeType = String(req.body?.audioMimeType || "");
+    const audioDurationSeconds = Math.max(1, Math.min(180, Math.round(Number(req.body?.audioDurationSeconds) || 0)));
+    if (messageType === "text" && (!message || message.length > 1000)) return res.status(400).json({ error: "bad_request", message: "Message must be 1-1000 characters" });
+    if (messageType === "voice" && (!voiceDataPattern.test(audioDataUrl) || audioDataUrl.length > MAX_VOICE_NOTE_BYTES)) {
+      return res.status(400).json({ error: "bad_request", message: "Voice note must be a valid audio file under 2MB." });
+    }
     const receiverId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
-    const document = { conversationId: req.params.id, senderId: user.uid, senderName: user.displayName || user.username, message, createdAt: new Date() };
+    const document = {
+      conversationId: req.params.id,
+      senderId: user.uid,
+      senderName: user.displayName || user.username,
+      message: messageType === "voice" ? "Voice note" : message,
+      messageType,
+      ...(messageType === "voice" ? { audioDataUrl, audioMimeType, audioDurationSeconds } : {}),
+      createdAt: new Date(),
+    };
     const result = await req.app.locals.messageCollection.insertOne(document);
-    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: message, updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
-    await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${message.slice(0, 100)}`, relatedId: req.params.id, image: user.avatar || "" });
+    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: document.message, updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
+    await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${document.message.slice(0, 100)}`, relatedId: req.params.id, image: user.avatar || "" });
     return res.status(201).json({ message: serialize({ ...document, _id: result.insertedId }) });
   });
 }

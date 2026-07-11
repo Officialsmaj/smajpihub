@@ -67,8 +67,8 @@ const mainTabs = [
   { to: "/profile", label: "You", icon: <PersonOutlineIcon /> },
 ];
 
-const SWIPE_MIN_DISTANCE = 72;
-const SWIPE_MAX_VERTICAL_DRIFT = 80;
+const SWIPE_MIN_DISTANCE = 86;
+const SWIPE_MAX_VERTICAL_DRIFT = 54;
 const swipeBlockedSelector = [
   "input",
   "textarea",
@@ -76,9 +76,14 @@ const swipeBlockedSelector = [
   "option",
   "button",
   "a",
+  "audio",
+  "video",
   "[contenteditable='true']",
   "[role='slider']",
   "[data-no-swipe]",
+  ".mobile-search-box",
+  ".private-search-results",
+  ".chat-messages",
   ".carousel",
   ".product-carousel",
   ".storefront-media",
@@ -146,6 +151,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const isStoreShell = location.pathname === "/store";
   const currentTabIndex = getMainTabIndex(location.pathname);
   const isMainTabRoute = currentTabIndex >= 0;
+  const tabPageKey = isMainTabRoute ? mainTabs[currentTabIndex].to : location.key;
   const backFallback = backFallbackForPath(location.pathname);
   const routeSkeleton = useMemo(() => {
     if (location.pathname === "/dashboard") return { variant: "home" as const, count: 6 };
@@ -319,17 +325,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, tabIndex: currentTabIndex };
   }, [currentTabIndex, isMainTabRoute]);
 
-  const handleSwipeMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    if (!start || event.touches.length !== 1) return;
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 24) {
-      touchStartRef.current = null;
-    }
-  }, []);
-
   const handleSwipeEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
     const start = touchStartRef.current;
     touchStartRef.current = null;
@@ -339,10 +334,11 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     const deltaY = touch.clientY - start.y;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
-    if (absX < SWIPE_MIN_DISTANCE || absY > SWIPE_MAX_VERTICAL_DRIFT || absX < absY * 1.45) return;
+    if (start.tabIndex !== currentTabIndex) return;
+    if (absX < SWIPE_MIN_DISTANCE || absY > SWIPE_MAX_VERTICAL_DRIFT || absX < absY * 1.8) return;
     const nextIndex = deltaX < 0 ? start.tabIndex + 1 : start.tabIndex - 1;
     navigateMainTab(nextIndex);
-  }, [navigateMainTab]);
+  }, [currentTabIndex, navigateMainTab]);
 
   const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -445,10 +441,9 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             </div>
           ) : (
             <div
-              key={location.key}
+              key={tabPageKey}
               className={`private-tab-page private-tab-page-${tabTransition}`}
               onTouchStart={handleSwipeStart}
-              onTouchMove={handleSwipeMove}
               onTouchEnd={handleSwipeEnd}
             >
               {children}

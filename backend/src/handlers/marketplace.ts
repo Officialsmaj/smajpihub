@@ -353,7 +353,11 @@ export default function mountMarketplaceEndpoints(router: Router) {
       ],
     };
     const result = await req.app.locals.marketplaceOrderCollection.insertOne(order);
-    await createNotification(req.app, { userId: product.sellerId, type: "new_order", title: "New order", message: `${order.buyerName} ordered ${product.title}`, relatedId: result.insertedId.toString(), image: product.image });
+    await Promise.all([
+      createNotification(req.app, { userId: user.uid, type: "order_created", title: "Order created", message: `${product.title} order was created. Payment is pending.`, relatedId: result.insertedId.toString(), image: product.image }),
+      createNotification(req.app, { userId: user.uid, type: "payment_pending", title: "Payment pending", message: `Complete payment for ${product.title} to confirm your order.`, relatedId: result.insertedId.toString(), image: product.image }),
+      createNotification(req.app, { userId: product.sellerId, type: "new_order", title: "New order", message: `${order.buyerName} ordered ${product.title}`, relatedId: result.insertedId.toString(), image: product.image }),
+    ]);
     return res.status(201).json({ order: serialize({ ...order, _id: result.insertedId }) });
   });
 
