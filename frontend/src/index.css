@@ -16489,12 +16489,61 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   }
 
   .legal-company-page .legal-company-hero h1 {
-    color: #f8fafc !important;
+    color: #0f172a !important;
   }
 
   .legal-company-page .legal-company-hero p {
-    color: #cbd5e1 !important;
+    color: #475569 !important;
   }
+}
+
+.legal-company-page,
+.legal-company-page .home-hero,
+.legal-company-page .home-section,
+.legal-company-page .legal-company-hero,
+.legal-company-page .legal-company-hero > div,
+.legal-company-page .legal-company-section,
+.legal-company-page .legal-text-document,
+.legal-company-page .legal-text-intro,
+.legal-company-page .legal-text-section,
+.legal-company-page .legal-policy-panel,
+.legal-company-page .legal-report-card {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.legal-company-page h1,
+.legal-company-page h2,
+.legal-company-page h3,
+.legal-company-page h4,
+.legal-company-page strong,
+.legal-company-page .legal-company-hero h1,
+.legal-company-page .legal-text-intro h2,
+.legal-company-page .legal-text-section h3,
+.legal-company-page .legal-policy-panel h2,
+.legal-company-page .legal-report-card h2 {
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.legal-company-page p,
+.legal-company-page li,
+.legal-company-page small,
+.legal-company-page .legal-company-hero p,
+.legal-company-page .legal-text-intro p,
+.legal-company-page .legal-text-section p,
+.legal-company-page .legal-text-section li,
+.legal-company-page .legal-policy-panel li,
+.legal-company-page .legal-report-card p {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.legal-company-page .home-kicker,
+.legal-company-page .legal-company-hero .home-kicker {
+  color: #6b3fe6 !important;
 }
 
 /* Device-wide responsive guardrails */
