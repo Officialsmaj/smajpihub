@@ -35,12 +35,6 @@ export const sanitizeAssetName = (value: unknown, fallback = "image") => {
   return safeName || fallback;
 };
 
-const safeFolder = () => String(env.cloudinary_folder || "smajpihub")
-  .split(/[\/\\]+/)
-  .map((part) => sanitizeAssetName(part, "assets"))
-  .filter(Boolean)
-  .join("/");
-
 export const safePurpose = (value: unknown) => sanitizeAssetName(value, "image").toLowerCase().slice(0, 40) || "image";
 
 export const uploadImageToCloudinary = async (image: string, purpose = "image", originalName = "image"): Promise<CloudinaryUpload> => {
@@ -61,7 +55,6 @@ export const uploadImageToCloudinary = async (image: string, purpose = "image", 
   const params = new URLSearchParams();
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
-  params.set("folder", `${safeFolder()}/${cleanPurpose}`);
   params.set("public_id", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {

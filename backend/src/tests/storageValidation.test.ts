@@ -28,6 +28,8 @@ const main = async () => {
   assert.equal(savedBody.includes("file=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgo%3D"), true);
   assert.equal(savedBody.includes("public_id=product-gallery-slash-name.png"), true);
   assert.equal(savedBody.includes("display_name="), false);
+  assert.equal(savedBody.includes("folder="), false);
+  assert.equal(savedBody.includes("public_id=product-gallery-slash%2Fname.png"), false);
 
   global.fetch = (async () => ({ ok: false, text: async () => "nope" }) as Response) as typeof fetch;
   await assert.rejects(() => imageStorage.resolveImageValue(base64Png, "avatar", "avatar"), /Cloudinary upload failed/);
