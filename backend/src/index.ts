@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -147,6 +148,24 @@ app.use(
         }),
   }) as unknown as express.RequestHandler,
 );
+
+if (env.session_debug) {
+  app.use((req, _, next) => {
+    const cookieHeader = req.get("cookie") || "";
+    const sessionFingerprint = req.sessionID
+      ? crypto.createHash("sha256").update(req.sessionID).digest("hex").slice(0, 12)
+      : "none";
+    console.info("[session-debug]", {
+      method: req.method,
+      path: req.path,
+      sessionFingerprint,
+      hasSessionCookie: cookieHeader.includes("connect.sid="),
+      hasSessionUser: Boolean(req.session.user?.userId),
+      hasBearerAuth: Boolean(req.get("authorization") || req.get("x-smaj-access-token")),
+    });
+    next();
+  });
+}
 
 //
 // II. Mount app endpoints:

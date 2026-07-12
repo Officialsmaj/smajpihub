@@ -47,7 +47,7 @@ const requireAdmin = async (req: Request, res: Response) => {
       { uid: currentUser.uid },
       { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
     );
-    setSessionUser(req, { ...currentUser, role: "admin", roles: ["admin"] });
+    if (req.session.user?.userId) setSessionUser(req, { ...currentUser, role: "admin", roles: ["admin"] });
   }
   return currentUser;
 };

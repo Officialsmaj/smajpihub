@@ -44,6 +44,28 @@ const main = async () => {
   });
   assert.deepEqual(sessionUser, { userId: "user-object-id", piUsername: "seller", role: "seller" });
 
+  const request: any = {
+    session: {},
+    get: (header: string) => header.toLowerCase() === "authorization" ? "Bearer token-123" : "",
+    app: {
+      locals: {
+        userCollection: {
+          findOne: async () => ({
+            _id: { toString: () => "user-object-id" },
+            uid: "pi-uid",
+            username: "seller",
+            piUsername: "seller",
+            role: "seller",
+            blocked: false,
+          }),
+        },
+      },
+    },
+  };
+  const resolvedUser = await auth.resolveCurrentUser(request);
+  assert.equal(resolvedUser?.uid, "pi-uid");
+  assert.equal(request.session.user, undefined);
+
   global.fetch = originalFetch;
   console.log("storage validation tests passed");
 };

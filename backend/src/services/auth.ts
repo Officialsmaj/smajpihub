@@ -24,7 +24,6 @@ export const resolveCurrentUser = async (req: Request): Promise<UserData | null>
   const currentUser = await userCollection.findOne({ accessToken });
   if (!currentUser || currentUser.blocked) return null;
 
-  setSessionUser(req, currentUser);
   return currentUser;
 };
 

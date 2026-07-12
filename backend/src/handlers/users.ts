@@ -3,7 +3,7 @@ import { Router, Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { getUserPlatformAPIClient } from "../services/platformAPIClient";
 import env from "../environments";
-import { minimalSessionUser, resolveCurrentUser, setSessionUser } from "../services/auth";
+import { minimalSessionUser, resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
 import { assertNoBase64Images, resolveImageValue } from "../services/imageStorage";
 
@@ -74,6 +74,12 @@ const establishAuthSession = async (req: Request, currentUser: any) => {
     await regenerateSession(req);
   }
   req.session.user = nextUser;
+  await saveSession(req);
+};
+
+const refreshExistingAuthSession = async (req: Request, currentUser: any) => {
+  if (!currentUser || !req.session.user?.userId) return;
+  req.session.user = minimalSessionUser(currentUser);
   await saveSession(req);
 };
 
@@ -273,10 +279,7 @@ export default function mountUserEndpoints(router: Router) {
         { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
       );
       currentUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-      if (currentUser) {
-        setSessionUser(req, currentUser);
-        await saveSession(req);
-      }
+      if (currentUser) await refreshExistingAuthSession(req, currentUser);
     }
     return res.status(200).json({
       user: toClientUser(currentUser),
@@ -328,8 +331,7 @@ export default function mountUserEndpoints(router: Router) {
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
-    setSessionUser(req, updatedUser);
-    await saveSession(req);
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser) });
   });
 
@@ -371,8 +373,7 @@ export default function mountUserEndpoints(router: Router) {
     const searches = [query, ...current.filter((item: string) => item.toLowerCase() !== query.toLowerCase())].slice(0, 10);
     await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: searches } });
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    setSessionUser(req, updatedUser);
-    await saveSession(req);
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ searches });
   });
 
@@ -381,8 +382,7 @@ export default function mountUserEndpoints(router: Router) {
     if (currentUser) {
       await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: [] } });
       const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-      setSessionUser(req, updatedUser);
-      await saveSession(req);
+      await refreshExistingAuthSession(req, updatedUser);
     }
     return res.status(200).json({ searches: [] });
   });
@@ -425,8 +425,7 @@ export default function mountUserEndpoints(router: Router) {
       relatedId: currentUser.uid,
     })));
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    setSessionUser(req, updatedUser);
-    await saveSession(req);
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });
   });
 
@@ -446,8 +445,7 @@ export default function mountUserEndpoints(router: Router) {
     const settings = { theme, language, notifications };
     await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { settings } });
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    setSessionUser(req, updatedUser);
-    await saveSession(req);
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser) });
   });
 
