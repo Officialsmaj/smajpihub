@@ -63,7 +63,6 @@ export const uploadImageToCloudinary = async (image: string, purpose = "image", 
   params.set("upload_preset", env.cloudinary_upload_preset);
   params.set("folder", `${safeFolder()}/${cleanPurpose}`);
   params.set("public_id", assetName);
-  params.set("display_name", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
     method: "POST",
