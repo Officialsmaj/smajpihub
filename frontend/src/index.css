@@ -15923,15 +15923,6 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   background: #ffffff;
 }
 
-.real-profile-avatar img,
-.account-dashboard-avatar img,
-.private-header-avatar img,
-.private-profile-avatar img,
-.mobile-private-avatar img {
-  object-fit: contain !important;
-  background: transparent !important;
-}
-
 .public-home-page .mobile-home-hero-copy > a,
 .public-home-page .mobile-home-hero-copy > a *,
 .mobile-feature-card div > span,

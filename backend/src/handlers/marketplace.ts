@@ -18,6 +18,8 @@ const timelineEntry = (status: string, label: string, note?: string) => ({
 const serialize = (document: Record<string, any> | null) =>
   document ? { ...document, _id: document._id.toString() } : null;
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const hasCompletePiProfile = (user: any) => Boolean(user?.displayName && user?.piUsername && user?.country && user?.contactPhone && user?.avatar && user?.bio);
+const canShowPublicVerification = (user: any) => user?.role === "admin" || hasCompletePiProfile(user);
 const normalizeVerificationLevel = (user: any) => {
   const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
   if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
@@ -25,7 +27,7 @@ const normalizeVerificationLevel = (user: any) => {
   if (level === "pi_verified") return "pi_verified";
   return "basic";
 };
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const piFromUsdt = (priceUsdt: unknown) => {

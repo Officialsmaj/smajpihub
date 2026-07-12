@@ -7,6 +7,8 @@ const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toStr
 const ONLINE_WINDOW_MS = 2 * 60 * 1000;
 const TYPING_WINDOW_MS = 5 * 1000;
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const hasCompletePiProfile = (user: any) => Boolean(user?.displayName && user?.piUsername && user?.country && user?.contactPhone && user?.avatar && user?.bio);
+const canShowPublicVerification = (user: any) => user?.role === "admin" || hasCompletePiProfile(user);
 const normalizeVerificationLevel = (user: any) => {
   const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
   if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
@@ -14,7 +16,7 @@ const normalizeVerificationLevel = (user: any) => {
   if (level === "pi_verified") return "pi_verified";
   return "basic";
 };
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const MAX_VOICE_NOTE_BYTES = 2_000_000;
 const voiceDataPattern = /^data:audio\/(webm|mp4|mpeg|ogg|wav)(;codecs=[a-z0-9-]+)?;base64,[a-z0-9+/=]+$/i;
 

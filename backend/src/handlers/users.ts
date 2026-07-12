@@ -25,6 +25,8 @@ const isConfiguredAdminUser = (user: any) => {
   return usernames.some((username) => env.admin_pi_usernames.includes(username));
 };
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const hasCompletePiProfile = (user: any) => Boolean(user?.displayName && user?.piUsername && user?.country && user?.contactPhone && user?.avatar && user?.bio);
+const canShowPublicVerification = (user: any) => user?.role === "admin" || hasCompletePiProfile(user);
 const normalizeVerificationLevel = (user: any) => {
   const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
   if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
@@ -32,7 +34,7 @@ const normalizeVerificationLevel = (user: any) => {
   if (level === "pi_verified") return "pi_verified";
   return "basic";
 };
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toClientUser = (user: any) => user ? ({
@@ -389,7 +391,7 @@ export default function mountUserEndpoints(router: Router) {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ user: null, message: "Verification request saved locally" });
     const requestedLevel = ["pi_verified", "seller_verified", "trusted_seller"].includes(req.body?.level) ? req.body.level : "pi_verified";
-    const profileComplete = Boolean(currentUser.displayName && currentUser.piUsername && currentUser.country && currentUser.contactPhone && currentUser.avatar && currentUser.bio);
+    const profileComplete = hasCompletePiProfile(currentUser);
     const [approvedListings, completedSales] = await Promise.all([
       req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }),
       req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: currentUser.uid, status: "completed" }),

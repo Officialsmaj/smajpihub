@@ -118,11 +118,7 @@ const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => 
 
 const uploadProfileImage = async (image: string, purpose: string) => {
   if (!image) return "";
-  try {
-    return await uploadImage(image, purpose);
-  } catch {
-    return image;
-  }
+  return uploadImage(image, purpose);
 };
 
 const ProfilePage = () => {
@@ -361,23 +357,15 @@ const ProfilePage = () => {
           </span>
         </button>
         <div className="real-profile-identity">
-          <label
+          <button
+            type="button"
             className="real-profile-avatar"
-            htmlFor="profileAvatarUpload"
-            role="button"
-            tabIndex={0}
             aria-label="Upload profile picture"
             onClick={() => avatarInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                avatarInputRef.current?.click();
-              }
-            }}
           >
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
             <span><CameraAltOutlinedIcon /></span>
-          </label>
+          </button>
           <div>
             <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} status={profileVerificationStatus} /></h1>
             <span className="profile-username">@{username}</span>

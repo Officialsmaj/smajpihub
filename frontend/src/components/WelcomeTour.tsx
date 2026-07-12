@@ -58,16 +58,20 @@ const WelcomeTour = () => {
   const [started, setStarted] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
 
+  const userWelcomeStorageKey = useMemo(() => {
+    const userKey = user?.uid || user?.piUsername || user?.username;
+    return userKey ? `${WELCOME_STORAGE_KEY}:${userKey}` : WELCOME_STORAGE_KEY;
+  }, [user?.piUsername, user?.uid, user?.username]);
   const displayName = user?.displayName || user?.piUsername || user?.username || "Pi user";
   const currentStep = tourSteps[stepIndex];
   const initials = useMemo(() => displayName.trim().slice(0, 1).toUpperCase() || "S", [displayName]);
 
   const closeTour = useCallback(() => {
-    window.localStorage.setItem(WELCOME_STORAGE_KEY, "true");
+    window.localStorage.setItem(userWelcomeStorageKey, "true");
     setOpen(false);
     setStarted(false);
     setStepIndex(0);
-  }, []);
+  }, [userWelcomeStorageKey]);
 
   useEffect(() => {
     const openTour = () => {
@@ -89,10 +93,10 @@ const WelcomeTour = () => {
   }, [closeTour, open]);
 
   useEffect(() => {
-    if (!isAuthenticated || isLoading || window.localStorage.getItem(WELCOME_STORAGE_KEY) === "true") return;
+    if (!isAuthenticated || isLoading || !user || window.localStorage.getItem(userWelcomeStorageKey) === "true") return;
     const timer = window.setTimeout(() => setOpen(true), 450);
     return () => window.clearTimeout(timer);
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user, userWelcomeStorageKey]);
 
   const goNext = () => {
     if (stepIndex === tourSteps.length - 1) {
