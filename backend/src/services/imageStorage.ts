@@ -50,12 +50,9 @@ export const uploadImageToCloudinary = async (image: string, purpose = "image", 
     throw Object.assign(new Error("Cloudinary upload is not configured."), { statusCode: 503 });
   }
 
-  const cleanPurpose = safePurpose(purpose);
-  const assetName = `${cleanPurpose}-${sanitizeAssetName(originalName)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const params = new URLSearchParams();
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
-  params.set("public_id", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
     method: "POST",
