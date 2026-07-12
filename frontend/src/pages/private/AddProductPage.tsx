@@ -10,6 +10,7 @@ import { LocationFields } from "../../components/LocationFields";
 
 const PI_USDT_RATE = 314159;
 const MAX_PRODUCT_IMAGES = 5;
+const PRODUCT_DRAFT_KEY = "smaj_add_product_draft";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
 type CategoryName = (typeof categoryNames)[number];
 const categoryFields: Record<CategoryName, string[]> = {
@@ -77,10 +78,30 @@ const initialForm = {
   sellerAgreementAccepted: false,
 };
 
+const loadProductDraft = (): typeof initialForm => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_DRAFT_KEY) || "null") as Partial<typeof initialForm> | null;
+    if (!saved) return initialForm;
+    return {
+      ...initialForm,
+      ...saved,
+      shipping: { ...initialForm.shipping, ...saved.shipping },
+      digitalProduct: { ...initialForm.digitalProduct, ...saved.digitalProduct },
+      serviceDetails: { ...initialForm.serviceDetails, ...saved.serviceDetails },
+      specifications: saved.specifications || {},
+      images: saved.images || [],
+      variants: saved.variants || [],
+      sellerAgreementAccepted: false,
+    };
+  } catch {
+    return initialForm;
+  }
+};
+
 const AddProductPage = () => {
   const navigate = useNavigate();
   const { user, updateProfile, refreshPiSession } = useAuthContext();
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(loadProductDraft);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
@@ -107,6 +128,13 @@ const AddProductPage = () => {
     }, 3000);
     return () => window.clearTimeout(timer);
   }, [success, error]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      localStorage.setItem(PRODUCT_DRAFT_KEY, JSON.stringify({ ...form, sellerAgreementAccepted: false }));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [form]);
 
   useEffect(() => {
     if (!user || !profileLocationLocked) return;
@@ -297,6 +325,7 @@ const AddProductPage = () => {
       }
       const { data } = response;
       setSuccess(data.product.reviewStatus === "approved" ? "Product saved and is live in SMAJ Store." : "Product submitted for pending review.");
+      localStorage.removeItem(PRODUCT_DRAFT_KEY);
       window.setTimeout(() => navigate("/seller"), 900);
     } catch (err: unknown) {
       setError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Could not add product." : err instanceof Error ? err.message : "Could not add product.");
