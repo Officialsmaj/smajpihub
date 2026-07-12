@@ -12,18 +12,10 @@ type CloudinaryResponse = {
 
 const isDataImage = (value: string) => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value);
 const isExistingImageReference = (value: string) => /^https:\/\/[^\s]+$/i.test(value) || isDataImage(value);
-const safeCloudinaryName = (purpose: string) => {
-  const cleanPurpose = purpose.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "image";
-  return `${cleanPurpose}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-};
-
-const uploadToCloudinary = async (image: string, purpose: string) => {
-  const assetName = safeCloudinaryName(purpose);
+const uploadToCloudinary = async (image: string) => {
   const params = new URLSearchParams();
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
-  params.set("folder", `${env.cloudinary_folder}/${purpose}`);
-  params.set("public_id", assetName);
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
     method: "POST",
@@ -52,9 +44,7 @@ const uploadToCloudinary = async (image: string, purpose: string) => {
 };
 
 export default function mountUploadEndpoints(router: Router) {
-  const cleanPurpose = (value: unknown) => String(value || "image").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) || "image";
-
-  const uploadImageValue = async (image: string, purpose: string) => {
+  const uploadImageValue = async (image: string) => {
     if (!isDataImage(image)) {
       if (isExistingImageReference(image)) return { url: image, storage: "existing" };
       return null;
@@ -69,7 +59,7 @@ export default function mountUploadEndpoints(router: Router) {
     }
 
     try {
-      return await uploadToCloudinary(image, purpose);
+      return await uploadToCloudinary(image);
     } catch (err) {
       console.error("Image upload failed:", err);
       return { url: image, storage: "inline-fallback", warning: "Cloudinary upload failed, using inline image." };
@@ -78,7 +68,7 @@ export default function mountUploadEndpoints(router: Router) {
 
   router.post("/image", async (req: Request, res: Response) => {
     try {
-      const upload = await uploadImageValue(String(req.body?.image || req.body?.dataUrl || ""), cleanPurpose(req.body?.purpose));
+      const upload = await uploadImageValue(String(req.body?.image || req.body?.dataUrl || ""));
       if (!upload) return res.status(400).json({ error: "bad_request", message: "Upload a valid image file." });
       return res.status(201).json(upload);
     } catch (err: any) {
@@ -93,7 +83,7 @@ export default function mountUploadEndpoints(router: Router) {
       const images: string[] = Array.isArray(req.body?.images) ? req.body.images.map((item: unknown) => String(item || "")).filter(Boolean).slice(0, 5) : [];
       if (!images.length) return res.status(400).json({ error: "bad_request", message: "Upload at least one image." });
 
-      const uploads = await Promise.all(images.map((image) => uploadImageValue(image, cleanPurpose(req.body?.purpose))));
+      const uploads = await Promise.all(images.map((image) => uploadImageValue(image)));
       if (uploads.some((upload) => !upload)) return res.status(400).json({ error: "bad_request", message: "Upload valid image files." });
 
       return res.status(201).json({ urls: uploads.map((upload) => upload!.url), uploads });
