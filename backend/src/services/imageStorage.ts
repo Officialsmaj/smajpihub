@@ -53,6 +53,7 @@ export const uploadImageToCloudinary = async (image: string, purpose = "image", 
   const params = new URLSearchParams();
   params.set("file", image);
   params.set("upload_preset", env.cloudinary_upload_preset);
+  params.set("filename_override", sanitizeAssetName(originalName || purpose));
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/image/upload`, {
     method: "POST",

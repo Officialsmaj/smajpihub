@@ -26,6 +26,7 @@ const main = async () => {
   const uploaded = await imageStorage.resolveImageValue(base64Png, "product/gallery", "slash/name.png");
   assert.equal(uploaded, "https://res.cloudinary.com/demo/image/upload/v1/product.jpg");
   assert.equal(savedBody.includes("file=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgo%3D"), true);
+  assert.equal(savedBody.includes("filename_override=slash-name.png"), true);
   assert.equal(savedBody.includes("display_name="), false);
   assert.equal(savedBody.includes("folder="), false);
   assert.equal(savedBody.includes("public_id="), false);
