@@ -6,10 +6,10 @@ import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { uploadImage, uploadImages } from "../../lib/uploadImage";
 import type { Product } from "../../types/marketplace";
+import { LocationFields } from "../../components/LocationFields";
 
 const PI_USDT_RATE = 314159;
 const MAX_PRODUCT_IMAGES = 5;
-const SELLER_AGREEMENT_READ_KEY = "smaj_seller_agreement_read";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
 type CategoryName = (typeof categoryNames)[number];
 const categoryFields: Record<CategoryName, string[]> = {
@@ -85,7 +85,6 @@ const AddProductPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const [activatingSeller, setActivatingSeller] = useState(false);
-  const [sellerAgreementRead, setSellerAgreementRead] = useState(() => localStorage.getItem(SELLER_AGREEMENT_READ_KEY) === "true");
   const [sellerActivatedHere, setSellerActivatedHere] = useState(false);
   const [profileLocationLocked, setProfileLocationLocked] = useState(true);
   const sellerActive = Boolean(sellerActivatedHere || user?.sellerActive || user?.role === "seller");
@@ -98,7 +97,7 @@ const AddProductPage = () => {
   const priceUsdt = Number(form.priceUsdt);
   const pricePi = Number(form.pricePi);
   const location = [form.country, form.stateRegion, form.city, form.areaAddress].map((item) => item.trim()).filter(Boolean).join(" - ");
-  const publishDisabled = submitting || !form.sellerAgreementAccepted || !sellerAgreementRead;
+  const publishDisabled = submitting || !form.sellerAgreementAccepted;
 
   useEffect(() => {
     if (!success && !error) return;
@@ -203,10 +202,6 @@ const AddProductPage = () => {
     reader.readAsDataURL(file);
   };
 
-  const markSellerAgreementRead = () => {
-    localStorage.setItem(SELLER_AGREEMENT_READ_KEY, "true");
-    setSellerAgreementRead(true);
-  };
 
   const activateSeller = async () => {
     if (!user) return;
@@ -246,7 +241,6 @@ const AddProductPage = () => {
     if (form.description.trim().length < 20) return setError("Description must be at least 20 characters.");
     if (!form.country.trim() || !form.city.trim() || !form.areaAddress.trim() || !form.sellerContact.trim()) return setError("Location and seller contact are required.");
     if (!form.deliveryOption) return setError("Choose a delivery or service method.");
-    if (!sellerAgreementRead) return setError("Open and read the seller agreement before accepting it.");
     if (!form.sellerAgreementAccepted) return setError("Accept the seller agreement before publishing.");
     setSubmitting(true);
     try {
@@ -395,14 +389,13 @@ const AddProductPage = () => {
             <div><strong>Using your profile location</strong><p>{[form.country, form.stateRegion, form.city].filter(Boolean).join(" - ") || "Add location details before publishing."}</p></div>
             <button type="button" className="private-secondary-button" onClick={() => setProfileLocationLocked(false)}>Edit</button>
           </div>
-          <div className="private-form-row"><label>Country<input required disabled={profileLocationLocked && Boolean(form.country)} value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} /></label><label>State/Region<input value={form.stateRegion} onChange={(event) => setForm({ ...form, stateRegion: event.target.value })} /></label></div>
-          <div className="private-form-row"><label>City<input required value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} /></label><label>Area/Address summary<input required value={form.areaAddress} onChange={(event) => setForm({ ...form, areaAddress: event.target.value })} /></label></div>
+          <LocationFields value={form} countryDisabled={profileLocationLocked && Boolean(form.country)} onChange={(location) => setForm({ ...form, ...location })} />
           <label>Seller contact<input required value={form.sellerContact} onChange={(event) => setForm({ ...form, sellerContact: event.target.value })} placeholder="+971 50 123 4567, email, or Pi username" /></label>
         </details>
 
         <details className="product-accordion" open>
           <summary><span><strong>10. Seller Agreement</strong><small>Required before publish.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
-          <label className="setting-line"><span><strong>Seller agreement</strong><small>Read the official <Link className="seller-agreement-link" to="/seller-agreement" target="_blank" rel="noreferrer" onClick={markSellerAgreementRead}>SMAJ PI HUB Seller Agreement</Link> before accepting. I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.</small>{!sellerAgreementRead ? <small className="seller-agreement-required">Open the agreement link first to enable this checkbox.</small> : null}</span><input type="checkbox" disabled={!sellerAgreementRead} checked={form.sellerAgreementAccepted} onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })} /></label>
+          <label className="setting-line"><span><strong>Seller agreement</strong><small>Read the official <Link className="seller-agreement-link" to="/seller-agreement" target="_blank" rel="noreferrer">SMAJ PI HUB Seller Agreement</Link> before accepting. I confirm this product is real, photos are clear, pricing is fair, location is valid, and SMAJ PI HUB may review before publishing.</small></span><input type="checkbox" checked={form.sellerAgreementAccepted} onChange={(event) => setForm({ ...form, sellerAgreementAccepted: event.target.checked })} /></label>
         </details>
 
         {error ? <div className="private-alert floating-alert error">{error}</div> : null}

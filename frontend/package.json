@@ -18,6 +18,7 @@
     "@mui/material": "^7.3.8",
     "@mui/styled-engine-sc": "^7.3.9",
     "axios": "^1.13.2",
+    "country-state-city": "^3.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
@@ -28,8 +29,8 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
     "@vitejs/plugin-legacy": "^7.2.1",
+    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -45,4 +46,3 @@
     "@mui/styled-engine": "@mui/styled-engine-sc"
   }
 }
-
