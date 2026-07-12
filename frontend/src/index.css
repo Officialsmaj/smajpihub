@@ -15758,12 +15758,14 @@ button.private-primary-button {
     width: 270px;
     height: calc(100vh - 68px);
     padding: 24px 16px;
+    overflow: hidden !important;
   }
 
   .admin-shell .private-sidebar.private-sidebar-open {
     left: 0;
     display: flex !important;
-    overflow-y: auto !important;
+    flex-direction: column;
+    overflow-y: hidden !important;
   }
 
   .admin-shell .private-sidebar .private-sidebar-top,
@@ -15782,11 +15784,16 @@ button.private-primary-button {
   }
 
   .admin-shell .private-sidebar nav {
+    flex: 1 1 auto;
+    min-height: 0;
     display: grid !important;
+    align-content: start;
     gap: 6px;
     width: 100%;
     padding: 8px 0 16px;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .admin-shell .private-sidebar nav a,
