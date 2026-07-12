@@ -22,6 +22,13 @@ type RichConversation = Conversation & {
   displayTime?: string;
 };
 
+type VoicePreview = {
+  blob: Blob;
+  url: string;
+  mimeType: string;
+  durationSeconds: number;
+};
+
 const getConversationName = (conversation: RichConversation, currentUserId?: string) =>
   conversation.participantName || (conversation.sellerId === currentUserId ? conversation.buyerName : conversation.sellerName) || "SMAJ user";
 
@@ -30,6 +37,13 @@ const getConversationInitial = (conversation: RichConversation, currentUserId?: 
 
 const getConversationRoleLabel = (conversation: RichConversation, currentUserId?: string) =>
   conversation.sellerId === currentUserId ? "Buyer" : "Seller";
+
+const getConversationMeta = (conversation: RichConversation, currentUserId?: string) =>
+  [
+    getConversationRoleLabel(conversation, currentUserId),
+    conversation.lastMessage || "No messages yet",
+    conversation.productTitle,
+  ].filter(Boolean).join(" · ");
 
 const formatLastSeen = (conversation: RichConversation) => {
   if (conversation.online) return "Online";
@@ -44,6 +58,19 @@ const formatLastSeen = (conversation: RichConversation) => {
   return `Last seen ${new Date(value).toLocaleDateString()}`;
 };
 
+const formatVoiceTime = (seconds: number) => {
+  const safeSeconds = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  return `${minutes}:${String(safeSeconds % 60).padStart(2, "0")}`;
+};
+
+const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(String(reader.result || ""));
+  reader.onerror = () => reject(reader.error);
+  reader.readAsDataURL(blob);
+});
+
 const MessagesPage = () => {
   const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
@@ -53,9 +80,20 @@ const MessagesPage = () => {
   const [text, setText] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [voicePreview, setVoicePreview] = useState<VoicePreview | null>(null);
+  const [voiceError, setVoiceError] = useState("");
+  const [sendingVoice, setSendingVoice] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
   const typingTimeoutRef = useRef<number | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingStartedAtRef = useRef(0);
+  const recordingTimerRef = useRef<number | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const keepRecordingRef = useRef(true);
   const selectedId = params.get("conversation");
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
@@ -119,6 +157,8 @@ const MessagesPage = () => {
 
   useEffect(() => () => {
     if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+    if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
 
   const setTyping = useCallback((typing: boolean) => {
@@ -173,8 +213,130 @@ const MessagesPage = () => {
     if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
     setTyping(false);
     nearBottomRef.current = true;
-    await axiosClient.post(`/messages/${activeId}`, { message });
-    await Promise.all([loadMessages(), loadConversations()]);
+    try {
+      const { data } = await axiosClient.post<{ message: ChatMessage }>(`/messages/${activeId}`, { message });
+      if (data.message) setMessages((current) => [...current, data.message]);
+      await Promise.all([loadMessages(), loadConversations()]);
+    } catch {
+      setText(message);
+    }
+  };
+
+  const clearVoicePreview = useCallback(() => {
+    setVoicePreview((current) => {
+      if (current) URL.revokeObjectURL(current.url);
+      return null;
+    });
+  }, []);
+
+  const stopRecordingTimer = () => {
+    if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
+  };
+
+  const stopRecordingTracks = () => {
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    recordingStreamRef.current = null;
+  };
+
+  const startVoiceRecording = async () => {
+    if (!activeId || recording) return;
+    clearVoicePreview();
+    setVoiceError("");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setVoiceError("Voice recording is not supported in this browser.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+      ].find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recordingStreamRef.current = stream;
+      recorderRef.current = recorder;
+      recordingChunksRef.current = [];
+      recordingStartedAtRef.current = Date.now();
+      keepRecordingRef.current = true;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        stopRecordingTimer();
+        stopRecordingTracks();
+        setRecording(false);
+        const durationSeconds = Math.max(1, Math.round((Date.now() - recordingStartedAtRef.current) / 1000));
+        const chunks = recordingChunksRef.current;
+        recordingChunksRef.current = [];
+        if (!keepRecordingRef.current) return;
+        const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        if (!blob.size) {
+          setVoiceError("Could not capture audio. Please try again.");
+          return;
+        }
+        setVoicePreview({
+          blob,
+          url: URL.createObjectURL(blob),
+          mimeType: blob.type || "audio/webm",
+          durationSeconds,
+        });
+      };
+
+      recorder.start();
+      setRecording(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordingSeconds(Math.max(0, Math.round((Date.now() - recordingStartedAtRef.current) / 1000)));
+      }, 500);
+    } catch {
+      stopRecordingTimer();
+      stopRecordingTracks();
+      setRecording(false);
+      setVoiceError("Microphone permission is needed to record a voice note.");
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    keepRecordingRef.current = true;
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+  };
+
+  const cancelVoiceRecording = () => {
+    keepRecordingRef.current = false;
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    stopRecordingTimer();
+    stopRecordingTracks();
+    setRecording(false);
+    setRecordingSeconds(0);
+    clearVoicePreview();
+    setVoiceError("");
+  };
+
+  const sendVoiceNote = async () => {
+    if (!activeId || !voicePreview || sendingVoice) return;
+    setSendingVoice(true);
+    setVoiceError("");
+    try {
+      const audioDataUrl = await blobToDataUrl(voicePreview.blob);
+      await axiosClient.post(`/messages/${activeId}`, {
+        messageType: "voice",
+        audioDataUrl,
+        audioMimeType: voicePreview.mimeType,
+        audioDurationSeconds: voicePreview.durationSeconds,
+      });
+      clearVoicePreview();
+      nearBottomRef.current = true;
+      await Promise.all([loadMessages(), loadConversations()]);
+    } catch {
+      setVoiceError("Voice note could not be sent. Try a shorter recording.");
+    } finally {
+      setSendingVoice(false);
+    }
   };
 
   return (
@@ -205,9 +367,8 @@ const MessagesPage = () => {
                 </span>
                 <div>
                   <strong className="conversation-name">{getConversationName(item, user?.uid)}<TrustBadge level={item.verificationLevel} status={item.verificationStatus} /></strong>
-                  <em className="conversation-role-label">{getConversationRoleLabel(item, user?.uid)}</em>
-                  <p>{item.lastMessage || "No messages yet."}</p>
-                  <small>{item.productTitle} - {formatLastSeen(item)}</small>
+                  <p className="conversation-meta-line">{getConversationMeta(item, user?.uid)}</p>
+                  <small>{formatLastSeen(item)}</small>
                 </div>
                 {item.unreadBy?.length ? <b>{item.unreadBy.length}</b> : null}
               </button>
@@ -263,7 +424,17 @@ const MessagesPage = () => {
                 </div>
                 {messages.map((item) => (
                   <article className={item.senderId === user?.uid ? "mine" : ""} key={item._id}>
-                    <p>{item.message}</p>
+                    {item.messageType === "voice" && item.audioDataUrl ? (
+                      <div className="voice-message">
+                        <MicNoneOutlinedIcon />
+                        <audio controls src={item.audioDataUrl}>
+                          <track kind="captions" />
+                        </audio>
+                        <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
+                      </div>
+                    ) : (
+                      <p>{item.message || "Message"}</p>
+                    )}
                     <small className="chat-message-meta">
                       <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
                       {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
@@ -277,18 +448,46 @@ const MessagesPage = () => {
                   <KeyboardArrowDownOutlinedIcon />
                 </button>
               ) : null}
-              <form onSubmit={send}>
-                <button type="button" aria-label="Emoji">
-                  <SentimentSatisfiedAltOutlinedIcon />
-                </button>
-                <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
-                <button type="button" aria-label="Attach file">
-                  <AttachFileOutlinedIcon />
-                </button>
-                <button className="chat-send-button" aria-label={text.trim() ? "Send" : "Voice message"}>
-                  {text.trim() ? <SendOutlinedIcon /> : <MicNoneOutlinedIcon />}
-                </button>
-              </form>
+              {recording || voicePreview ? (
+                <div className="voice-recorder-bar">
+                  <button type="button" onClick={cancelVoiceRecording} aria-label="Cancel voice note">Cancel</button>
+                  <span className={recording ? "recording-live" : ""}>
+                    <MicNoneOutlinedIcon />
+                    {recording ? `Recording ${formatVoiceTime(recordingSeconds)}` : `Voice note ${formatVoiceTime(voicePreview?.durationSeconds || 0)}`}
+                  </span>
+                  {voicePreview ? (
+                    <audio controls src={voicePreview.url}>
+                      <track kind="captions" />
+                    </audio>
+                  ) : null}
+                  {recording ? (
+                    <button type="button" className="chat-send-button" onClick={stopVoiceRecording} aria-label="Stop recording">Stop</button>
+                  ) : (
+                    <button type="button" className="chat-send-button" onClick={sendVoiceNote} disabled={sendingVoice} aria-label="Send voice note">
+                      <SendOutlinedIcon />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <form onSubmit={send}>
+                  <button type="button" aria-label="Emoji">
+                    <SentimentSatisfiedAltOutlinedIcon />
+                  </button>
+                  <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
+                  <button type="button" aria-label="Attach file">
+                    <AttachFileOutlinedIcon />
+                  </button>
+                  <button
+                    type={text.trim() ? "submit" : "button"}
+                    className="chat-send-button"
+                    onClick={text.trim() ? undefined : startVoiceRecording}
+                    aria-label={text.trim() ? "Send" : "Record voice note"}
+                  >
+                    {text.trim() ? <SendOutlinedIcon /> : <MicNoneOutlinedIcon />}
+                  </button>
+                </form>
+              )}
+              {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
             </>
           ) : (
             <div className="private-state">Select a conversation.</div>

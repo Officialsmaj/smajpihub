@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
-import { resolveCurrentUser } from "../services/auth";
+import { resolveCurrentUser, setSessionUser } from "../services/auth";
 import env from "../environments";
 
 const serialize = (document: Record<string, any>) => ({ ...document, _id: document._id.toString(), accessToken: undefined });
@@ -31,6 +31,30 @@ const safeCount = async (collection: { countDocuments?: (query?: Record<string, 
   }
 };
 
+const safeSessionSummary = (document: Record<string, any>) => {
+  let payload: Record<string, any> = {};
+  try {
+    payload = typeof document.session === "string" ? JSON.parse(document.session) : document.session || {};
+  } catch {
+    payload = {};
+  }
+
+  const fieldBytes = Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, Buffer.byteLength(JSON.stringify(value))]));
+  return {
+    documentBytes: Buffer.byteLength(JSON.stringify(document)),
+    sessionKeys: Object.keys(payload),
+    userKeys: payload.user && typeof payload.user === "object" ? Object.keys(payload.user) : [],
+    cookie: payload.cookie ? {
+      originalMaxAge: payload.cookie.originalMaxAge ?? null,
+      expires: payload.cookie.expires ?? null,
+      secure: payload.cookie.secure ?? null,
+      sameSite: payload.cookie.sameSite ?? null,
+      httpOnly: payload.cookie.httpOnly ?? null,
+    } : null,
+    fieldBytes,
+  };
+};
+
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
   if (!currentUser) {
@@ -47,7 +71,7 @@ const requireAdmin = async (req: Request, res: Response) => {
       { uid: currentUser.uid },
       { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
     );
-    req.session.currentUser = { ...currentUser, role: "admin", roles: ["admin"] };
+    if (req.session.user?.userId) setSessionUser(req, { ...currentUser, role: "admin", roles: ["admin"] });
   }
   return currentUser;
 };
@@ -154,6 +178,39 @@ export default function mountAdminEndpoints(router: Router) {
       console.error("Failed to load admin stats:", error);
       return res.status(500).json({ error: "Failed to load admin stats" });
     }
+  });
+
+  router.get("/session-diagnostics", async (req, res) => {
+    const sessionCollection = req.app.locals.sessionCollection;
+    if (!sessionCollection) return res.status(503).json({ error: "service_unavailable", message: "Session collection is not available" });
+
+    const now = new Date();
+    const [activeSessions, expiredSessions, indexes, sampleSessions] = await Promise.all([
+      sessionCollection.countDocuments({ expires: { $gt: now } }),
+      sessionCollection.countDocuments({ expires: { $lte: now } }),
+      sessionCollection.indexes(),
+      sessionCollection.find({}, { projection: { _id: 0, session: 1, expires: 1 } }).limit(25).toArray(),
+    ]);
+    const sizes = sampleSessions.map((item: Record<string, unknown>) => Buffer.byteLength(JSON.stringify(item)));
+    const averageDocumentBytes = sizes.length ? Math.round(sizes.reduce((sum: number, size: number) => sum + size, 0) / sizes.length) : 0;
+    const expiryIndex = indexes.find((index: Record<string, any>) => index.key?.expires === 1);
+    const sessionSamples = sampleSessions.slice(0, 5).map(safeSessionSummary);
+
+    return res.status(200).json({
+      collectionName: "user_sessions",
+      activeSessions,
+      expiredSessions,
+      averageDocumentBytes,
+      expiryIndex: expiryIndex ? {
+        name: expiryIndex.name,
+        key: expiryIndex.key,
+        expireAfterSeconds: expiryIndex.expireAfterSeconds,
+      } : null,
+      sessionSamples,
+      expectedSessionKeys: ["cookie", "user"],
+      expectedUserKeys: ["userId", "piUsername", "role"],
+      ttlSeconds: 60 * 60 * 24 * 7,
+    });
   });
 
   router.get("/activity", async (req, res) => {
@@ -290,7 +347,7 @@ export default function mountAdminEndpoints(router: Router) {
       updates.reviewStatus = req.body.approved ? "approved" : "rejected";
       updates.rejectionReason = req.body.approved ? "" : String(req.body?.rejectionReason || "Product did not meet marketplace review requirements.").trim().slice(0, 500);
       updates.reviewedAt = new Date();
-      updates.reviewedBy = req.session.currentUser?.uid;
+      updates.reviewedBy = req.session.user?.userId;
     }
     if (typeof req.body?.hidden === "boolean") updates.hidden = req.body.hidden;
     if (!Object.keys(updates).length) return res.status(400).json({ error: "bad_request", message: "No valid product update supplied" });
@@ -321,7 +378,7 @@ export default function mountAdminEndpoints(router: Router) {
     }
     await req.app.locals.onboardingCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { status, reviewedAt: new Date(), reviewedBy: req.session.currentUser?.uid, updatedAt: new Date() } },
+      { $set: { status, reviewedAt: new Date(), reviewedBy: req.session.user?.userId, updatedAt: new Date() } },
     );
     return res.status(200).json({ message: "Application updated" });
   });
@@ -374,7 +431,7 @@ export default function mountAdminEndpoints(router: Router) {
     const report = await req.app.locals.reportCollection.findOne({ _id: new ObjectId(req.params.id) });
     await req.app.locals.reportCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { resolved: true, resolvedAt: new Date(), resolvedBy: req.session.currentUser?.uid } },
+      { $set: { resolved: true, resolvedAt: new Date(), resolvedBy: req.session.user?.userId } },
     );
     if (report?.reportedBy) await createNotification(req.app, { userId: report.reportedBy, type: "report_update", title: "Report resolved", message: `Your report about ${report.targetName || report.targetType} was reviewed`, relatedId: req.params.id });
     return res.status(200).json({ message: "Report resolved" });
@@ -384,7 +441,7 @@ export default function mountAdminEndpoints(router: Router) {
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid support request id" });
     await req.app.locals.supportCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { resolved: true, status: "resolved", resolvedAt: new Date(), resolvedBy: req.session.currentUser?.uid, updatedAt: new Date() } },
+      { $set: { resolved: true, status: "resolved", resolvedAt: new Date(), resolvedBy: req.session.user?.userId, updatedAt: new Date() } },
     );
     return res.status(200).json({ message: "Support request resolved" });
   });

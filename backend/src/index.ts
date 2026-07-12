@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import cors from "cors";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -45,12 +46,32 @@ const maskMongoUri = (uri: string) => uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, 
 
 const app: express.Application = express();
 const serviceStartedAt = new Date();
-const isProduction = env.node_env === "production";
+const isProduction = env.is_production;
 const crossSiteSession = isProduction;
+const sessionTtlSeconds = 60 * 60 * 24 * 7;
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: crossSiteSession ? "none" as const : "lax" as const,
+  secure: crossSiteSession,
+  maxAge: 1000 * sessionTtlSeconds,
+};
 
 if (isProduction) {
   app.set("trust proxy", 1);
 }
+
+console.info("[session-config]", {
+  nodeEnv: env.node_env,
+  renderDetected: env.is_render,
+  production: isProduction,
+  secure: sessionCookieOptions.secure,
+  sameSite: sessionCookieOptions.sameSite,
+  maxAge: sessionCookieOptions.maxAge,
+  httpOnly: sessionCookieOptions.httpOnly,
+  trustProxy: app.get("trust proxy"),
+  sessionCollection: "user_sessions",
+  ttlSeconds: sessionTtlSeconds,
+});
 
 // Log requests to the console in a compact format:
 app.use(logger("dev"));
@@ -69,10 +90,12 @@ app.use(express.json({ limit: "8mb" }));
 const configuredFrontendOrigins =
   (env.frontend_url || "")
     .split(",")
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
     .filter(Boolean);
 
 const corsAllowlist = [
+  "https://smaj.org",
+  "https://www.smaj.org",
   "https://smajpihub.com",
   "https://www.smajpihub.com",
   "https://sandbox.minepi.com",
@@ -85,6 +108,11 @@ const corsAllowlist = [
 
 const allowedOrigins = new Set(corsAllowlist);
 
+console.info("[cors-config]", {
+  credentials: true,
+  allowedOrigins: [...allowedOrigins],
+});
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -95,7 +123,9 @@ app.use(
       }
 
       // Primary configured frontend origin(s).
-      if (allowedOrigins.has(origin)) {
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+
+      if (allowedOrigins.has(normalizedOrigin)) {
         callback(null, true);
         return;
       }
@@ -121,10 +151,7 @@ app.use(
     secret: env.session_secret,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      sameSite: crossSiteSession ? "none" : "lax",
-      secure: crossSiteSession,
-    },
+    cookie: sessionCookieOptions,
     ...(env.use_memory_db
       ? {}
       : {
@@ -133,10 +160,30 @@ app.use(
             mongoOptions: mongoClientOptions,
             dbName: dbName,
             collectionName: "user_sessions",
+            ttl: sessionTtlSeconds,
+            autoRemove: "native",
           }),
         }),
   }) as unknown as express.RequestHandler,
 );
+
+if (env.session_debug) {
+  app.use((req, _, next) => {
+    const cookieHeader = req.get("cookie") || "";
+    const sessionFingerprint = req.sessionID
+      ? crypto.createHash("sha256").update(req.sessionID).digest("hex").slice(0, 12)
+      : "none";
+    console.info("[session-debug]", {
+      method: req.method,
+      path: req.path,
+      sessionFingerprint,
+      hasSessionCookie: cookieHeader.includes("connect.sid="),
+      hasSessionUser: Boolean(req.session.user?.userId),
+      hasBearerAuth: Boolean(req.get("authorization") || req.get("x-smaj-access-token")),
+    });
+    next();
+  });
+}
 
 //
 // II. Mount app endpoints:
@@ -228,6 +275,7 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
       app.locals.onboardingCollection = db.collection("onboarding_applications");
       app.locals.supportCollection = db.collection("support_requests");
+      app.locals.sessionCollection = db.collection("user_sessions");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -239,6 +287,7 @@ const start = async () => {
         app.locals.conversationCollection.createIndex({ participants: 1, updatedAt: -1 }),
         app.locals.messageCollection.createIndex({ conversationId: 1, createdAt: 1 }),
         app.locals.notificationCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.sessionCollection.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
       ]);
     }
 

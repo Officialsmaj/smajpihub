@@ -50,8 +50,6 @@ const SellerPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [activatingSeller, setActivatingSeller] = useState(false);
-  const [requestingVerification, setRequestingVerification] = useState(false);
-  const [verificationRequested, setVerificationRequested] = useState(false);
 
   const load = useCallback(async () => {
     const response = await axiosClient.get<SellerData>("/marketplace/seller");
@@ -94,21 +92,6 @@ const SellerPage = () => {
     }
   };
 
-  const requestVerification = async () => {
-    setError("");
-    setMessage("");
-    setRequestingVerification(true);
-    try {
-      await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
-      setVerificationRequested(true);
-      setMessage("Trusted seller verification requested. Team will review your account.");
-    } catch (err: unknown) {
-      setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not request verification. Make sure seller tools are active." : "Could not request verification. Make sure seller tools are active.");
-    } finally {
-      setRequestingVerification(false);
-    }
-  };
-
   const activateSeller = async () => {
     if (!user) return;
     setError("");
@@ -135,10 +118,9 @@ const SellerPage = () => {
     }
   };
 
-  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
   const sellerActive = Boolean(user?.sellerActive || user?.role === "seller");
   const isTrustedSeller = user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller";
-  const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : hasRequestedVerification ? "Team is reviewing your trusted seller request." : "Request trusted seller review to increase buyer confidence.";
+  const verificationText = isTrustedSeller ? "Your account is trusted by SMAJ PI HUB." : "Verification requests are managed from Settings and Preferences.";
   const sellerMetrics = useMemo(() => {
     const products = data?.products || [];
     const orders = data?.orders || [];
@@ -237,11 +219,7 @@ const SellerPage = () => {
               <p>{verificationText}</p>
               <TrustBadge level={user?.verificationLevel} status={user?.verificationStatus} />
             </div>
-            {sellerActive && !isTrustedSeller ? (
-              <button className="private-primary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>
-                {hasRequestedVerification ? "Review Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller Verification"}
-              </button>
-            ) : null}
+            {sellerActive && !isTrustedSeller ? <Link className="private-primary-button" to="/settings">Open Verification Settings</Link> : null}
           </section>
 
           <section className="stats-grid">

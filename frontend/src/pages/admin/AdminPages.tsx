@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Link } from "react-router-dom";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
-import { axiosClient, getBaseURL } from "../../lib/axiosClient";
+import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import type { Order, Product } from "../../types/marketplace";
 import type { User } from "../../types/pi";
@@ -31,13 +31,11 @@ const getStoredAccessToken = () => {
 
 const adminFetch = async <T,>(path: string): Promise<T> => {
   const accessToken = getStoredAccessToken();
-  const response = await fetch(`${getBaseURL()}${path}`, {
-    credentials: "include",
-    cache: "no-store",
+  const response = await axiosClient.get<T>(path, {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}`, "X-SMAJ-Access-Token": accessToken } : undefined,
+    withCredentials: true,
   });
-  if (!response.ok) throw new Error(`Admin request failed: ${response.status}`);
-  return response.json() as Promise<T>;
+  return response.data;
 };
 
 const Head = ({ title, description, action }: { title: string; description: string; action?: ReactNode }) => (

@@ -217,6 +217,10 @@ export const router = createBrowserRouter(
       element: <BlogPage />,
     },
     {
+      path: "/news",
+      element: <BlogPage />,
+    },
+    {
       path: "/blog/:slug",
       element: <BlogPostPage />,
     },

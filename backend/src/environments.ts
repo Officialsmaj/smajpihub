@@ -14,6 +14,8 @@ if (result.error) {
 
 interface Environment {
   node_env: string;
+  is_production: boolean;
+  is_render: boolean;
   port: number;
   session_secret: string;
   pi_api_key: string;
@@ -31,10 +33,12 @@ interface Environment {
   cloudinary_upload_preset: string;
   cloudinary_folder: string;
   marketplace_auto_approve_products: boolean;
+  session_debug: boolean;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
-const isProduction = nodeEnv === "production";
+const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_EXTERNAL_URL);
+const isProduction = nodeEnv === "production" || isRender;
 const defaultSessionSecret = "This is my session secret";
 const productionPiPlatformAPIURL = "https://api.minepi.com";
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
@@ -43,6 +47,8 @@ const platformApiURL = process.env.PLATFORM_API_URL || productionPiPlatformAPIUR
 
 const env: Environment = {
   node_env: nodeEnv,
+  is_production: isProduction,
+  is_render: isRender,
   port: parseInt(process.env.PORT || "8000"),
   session_secret: process.env.SESSION_SECRET || defaultSessionSecret,
   pi_api_key: process.env.PI_API_KEY || "",
@@ -63,6 +69,7 @@ const env: Environment = {
   cloudinary_upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "",
   cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
   marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
+  session_debug: String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
 };
 
 if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {

@@ -118,11 +118,7 @@ const cropImage = (crop: CropState) => new Promise<string>((resolve, reject) => 
 
 const uploadProfileImage = async (image: string, purpose: string) => {
   if (!image) return "";
-  try {
-    return await uploadImage(image, purpose);
-  } catch {
-    return image;
-  }
+  return uploadImage(image, purpose);
 };
 
 const ProfilePage = () => {
@@ -139,8 +135,6 @@ const ProfilePage = () => {
   const cropDragRef = useRef<{ handle: CropHandle; startX: number; startY: number; startFrame: CropFrame } | null>(null);
   const [saving, setSaving] = useState(false);
   const [sellerSaving, setSellerSaving] = useState(false);
-  const [requestingVerification, setRequestingVerification] = useState(false);
-  const [verificationRequested, setVerificationRequested] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const [form, setForm] = useState({
@@ -342,22 +336,6 @@ const ProfilePage = () => {
     }
   };
 
-  const requestVerification = async () => {
-    setAlert(null);
-    setRequestingVerification(true);
-    try {
-      await axiosClient.post("/user/verification-request", { level: "trusted_seller" });
-      setVerificationRequested(true);
-      setAlert({ type: "success", text: "Trusted seller verification requested. Team will review your account." });
-    } catch {
-      setAlert({ type: "error", text: "Could not request trusted seller verification. Activate seller tools first." });
-    } finally {
-      setRequestingVerification(false);
-    }
-  };
-
-  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
-
   return (
     <main className="private-page real-profile-page">
       <input id="profileAvatarUpload" className="profile-file-input" ref={avatarInputRef} type="file" accept="image/*" onChange={(event) => beginCrop("avatar", event)} />
@@ -379,23 +357,15 @@ const ProfilePage = () => {
           </span>
         </button>
         <div className="real-profile-identity">
-          <label
+          <button
+            type="button"
             className="real-profile-avatar"
-            htmlFor="profileAvatarUpload"
-            role="button"
-            tabIndex={0}
             aria-label="Upload profile picture"
             onClick={() => avatarInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                avatarInputRef.current?.click();
-              }
-            }}
           >
             {form.avatar ? <img src={form.avatar} alt="Profile" /> : name.slice(0, 1).toUpperCase()}
             <span><CameraAltOutlinedIcon /></span>
-          </label>
+          </button>
           <div>
             <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={profileVerificationLevel} status={profileVerificationStatus} /></h1>
             <span className="profile-username">@{username}</span>
@@ -444,7 +414,6 @@ const ProfilePage = () => {
               <div className="form-actions">
                 <button className="private-secondary-button" type="button" disabled={sellerSaving} onClick={() => void toggleSeller()}>{sellerSaving ? "Saving..." : sellerActive ? "Deactivate Seller Tools" : "Activate Seller Tools"}</button>
                 {sellerActive ? <Link className="private-primary-button" to="/add-product">Add Product</Link> : null}
-                {sellerActive && !(user?.verificationStatus === "approved" && user?.verificationLevel === "trusted_seller") ? <button className="private-secondary-button" type="button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification Requested" : requestingVerification ? "Requesting..." : "Request Trusted Seller"}</button> : null}
               </div>
             </article>
 

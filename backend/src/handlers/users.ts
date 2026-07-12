@@ -3,21 +3,30 @@ import { Router, Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { getUserPlatformAPIClient } from "../services/platformAPIClient";
 import env from "../environments";
-import { resolveCurrentUser } from "../services/auth";
+import { minimalSessionUser, resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
+import { assertNoBase64Images, resolveImageValue } from "../services/imageStorage";
 
 type VerifiedPiUser = {
   uid?: string;
   username?: string;
 };
 
-const isImageReference = (value: string) => !value || value.startsWith("data:image/") || /^https:\/\/[^\s]+/i.test(value);
+const crossSiteSession = env.is_production;
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: crossSiteSession ? "none" as const : "lax" as const,
+  secure: crossSiteSession,
+  maxAge: 1000 * 60 * 60 * 24 * 7,
+};
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
 const isConfiguredAdminUser = (user: any) => {
   const usernames = [user?.piUsername, user?.username].map((value) => normalizePiUsername(String(value || "")));
   return usernames.some((username) => env.admin_pi_usernames.includes(username));
 };
 const verificationStatus = (user: any) => ["none", "pending", "approved", "rejected"].includes(user?.verificationStatus) ? user.verificationStatus : user?.verificationRequested ? "pending" : "none";
+const hasCompletePiProfile = (user: any) => Boolean(user?.displayName && user?.piUsername && user?.country && user?.contactPhone && user?.avatar && user?.bio);
+const canShowPublicVerification = (user: any) => user?.role === "admin" || hasCompletePiProfile(user);
 const normalizeVerificationLevel = (user: any) => {
   const level = user?.verificationLevel === "verified" ? "pi_verified" : user?.verificationLevel;
   if (level === "trusted_seller") return user?.sellerActive || user?.role === "seller" || user?.role === "admin" ? "trusted_seller" : "pi_verified";
@@ -25,7 +34,7 @@ const normalizeVerificationLevel = (user: any) => {
   if (level === "pi_verified") return "pi_verified";
   return "basic";
 };
-const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" ? normalizeVerificationLevel(user) : "basic";
+const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toClientUser = (user: any) => user ? ({
@@ -51,6 +60,55 @@ const toClientUser = (user: any) => user ? ({
   createdAt: user.createdAt,
 }) : null;
 
+const saveSession = (req: Request) => new Promise<void>((resolve, reject) => {
+  req.session.save((err) => (err ? reject(err) : resolve()));
+});
+
+const regenerateSession = (req: Request) => new Promise<void>((resolve, reject) => {
+  req.session.regenerate((err) => (err ? reject(err) : resolve()));
+});
+
+const establishAuthSession = async (req: Request, currentUser: any) => {
+  const nextUser = minimalSessionUser(currentUser);
+  if (req.session.user?.userId !== nextUser.userId) {
+    await regenerateSession(req);
+  }
+  delete (req.session as any).currentUser;
+  delete (req.session as any).accessToken;
+  delete (req.session as any).piUser;
+  req.session.user = nextUser;
+  await saveSession(req);
+  if (env.session_debug) {
+    console.info("[session-signin]", {
+      expectedCookie: {
+        secure: sessionCookieOptions.secure,
+        sameSite: sessionCookieOptions.sameSite,
+        httpOnly: sessionCookieOptions.httpOnly,
+        maxAge: sessionCookieOptions.maxAge,
+      },
+      resolvedCookie: {
+        originalMaxAge: req.session.cookie.originalMaxAge,
+        expires: req.session.cookie.expires,
+        secure: req.session.cookie.secure,
+        sameSite: req.session.cookie.sameSite,
+        httpOnly: req.session.cookie.httpOnly,
+      },
+      sessionKeys: Object.keys(req.session).filter((key) => key !== "id"),
+      userKeys: Object.keys(req.session.user || {}),
+      sessionPayloadBytes: Buffer.byteLength(JSON.stringify({ user: req.session.user, cookie: req.session.cookie })),
+    });
+  }
+};
+
+const refreshExistingAuthSession = async (req: Request, currentUser: any) => {
+  if (!currentUser || !req.session.user?.userId) return;
+  delete (req.session as any).currentUser;
+  delete (req.session as any).accessToken;
+  delete (req.session as any).piUser;
+  req.session.user = minimalSessionUser(currentUser);
+  await saveSession(req);
+};
+
 const destroySession = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req).catch(() => null);
   if (currentUser) {
@@ -69,7 +127,7 @@ const destroySession = async (req: Request, res: Response) => {
       return res.status(500).json({ error: "internal_error", message: "Failed to sign out" });
     }
 
-    res.clearCookie("connect.sid");
+    res.clearCookie("connect.sid", sessionCookieOptions);
     return res.status(200).json({ message: "User signed out" });
   });
 };
@@ -135,8 +193,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
             role,
             roles: [role],
             blocked: false,
-            verificationLevel: normalizeVerificationLevel(currentUser) === "basic" ? "pi_verified" : normalizeVerificationLevel(currentUser),
-            verificationStatus: "approved",
+            verificationLevel: currentUser.verificationLevel === "verified" ? "pi_verified" : currentUser.verificationLevel || "basic",
+            verificationStatus: currentUser.verificationStatus || "none",
             verificationRequested: Boolean(currentUser.verificationRequested),
             settings: currentUser.settings || { theme: "light", language: "English", notifications: true },
             createdAt: currentUser.createdAt || new Date(),
@@ -159,8 +217,8 @@ export const handleSignIn = async (req: Request, res: Response) => {
         role,
         roles: [role],
         blocked: false,
-        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "pi_verified",
-        verificationStatus: "approved",
+        verificationLevel: isConfiguredAdmin ? "trusted_seller" : "basic",
+        verificationStatus: isConfiguredAdmin ? "approved" : "none",
         verificationRequested: false,
         settings: { theme: "light", language: "English", notifications: true },
         createdAt: new Date(),
@@ -168,10 +226,10 @@ export const handleSignIn = async (req: Request, res: Response) => {
         accessToken: auth.accessToken,
       });
 
-      currentUser = await userCollection.findOne(insertResult.insertedId);
+      currentUser = await userCollection.findOne({ _id: insertResult.insertedId });
     }
 
-    req.session.currentUser = currentUser;
+    await establishAuthSession(req, currentUser);
     if (currentUser?.uid) {
       await createNotification(req.app, {
         userId: currentUser.uid,
@@ -190,7 +248,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
 
 export default function mountUserEndpoints(router: Router) {
   router.post("/dev-signin", async (req: Request, res: Response) => {
-    if (!env.dev_auth || process.env.NODE_ENV === "production") {
+    if (!env.dev_auth || env.is_production) {
       return res.status(404).json({ error: "not_found", message: "Development sign-in is disabled" });
     }
 
@@ -222,7 +280,7 @@ export default function mountUserEndpoints(router: Router) {
       { upsert: true },
     );
     const currentUser = await userCollection.findOne({ uid });
-    req.session.currentUser = currentUser;
+    await establishAuthSession(req, currentUser);
     if (currentUser?.uid) {
       await createNotification(req.app, {
         userId: currentUser.uid,
@@ -247,7 +305,7 @@ export default function mountUserEndpoints(router: Router) {
         { $set: { role: "admin", roles: ["admin"], updatedAt: new Date() } },
       );
       currentUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-      req.session.currentUser = currentUser;
+      if (currentUser) await refreshExistingAuthSession(req, currentUser);
     }
     return res.status(200).json({
       user: toClientUser(currentUser),
@@ -265,38 +323,54 @@ export default function mountUserEndpoints(router: Router) {
     const displayName = String(req.body?.displayName || currentUser.displayName || currentUser.username || "Pi User").trim();
     const country = String(req.body?.country || "").trim();
     const contactPhone = String(req.body?.contactPhone || "").trim();
-    const avatar = String(req.body?.avatar || currentUser.avatar || "");
-    const coverImage = String(req.body?.coverImage || currentUser.coverImage || "");
+    const avatarInput = String(req.body?.avatar || currentUser.avatar || "");
+    const coverImageInput = String(req.body?.coverImage || currentUser.coverImage || "");
     const bio = String(req.body?.bio || currentUser.bio || "").trim();
     const language = String(req.body?.language || currentUser.language || currentUser.settings?.language || "English").trim();
     const sellerActive = typeof req.body?.sellerActive === "boolean" ? req.body.sellerActive : Boolean(currentUser.sellerActive || currentUser.role === "seller");
     const requestedRole = req.body?.role;
     const role = currentUser.role === "admin" ? "admin" : sellerActive ? "seller" : requestedRole === "seller" ? "seller" : "buyer";
 
-    if (displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatar.length > 6_500_000 || coverImage.length > 6_500_000 || !isImageReference(avatar) || !isImageReference(coverImage) || !["buyer", "seller", "admin"].includes(role)) {
+    if (displayName.length > 80 || country.length > 80 || contactPhone.length > 40 || bio.length > 500 || language.length > 40 || avatarInput.length > 6_500_000 || coverImageInput.length > 6_500_000 || !["buyer", "seller", "admin"].includes(role)) {
       return res.status(400).json({ error: "bad_request", message: "Profile image or text is too large." });
+    }
+
+    let avatar = "";
+    let coverImage = "";
+    try {
+      avatar = await resolveImageValue(avatarInput, "avatar", "avatar");
+      coverImage = await resolveImageValue(coverImageInput, "profile-banner", "cover-image");
+    } catch (err: any) {
+      if (err?.statusCode === 413) return res.status(413).json({ error: "payload_too_large", message: err.message });
+      if (err?.statusCode === 400 || err?.statusCode === 503) return res.status(err.statusCode).json({ error: "image_upload_failed", message: err.message });
+      console.error("Profile image upload failed:", err);
+      return res.status(500).json({ error: "image_upload_failed", message: "Profile image upload failed." });
     }
 
     const nextVerificationLevel = !sellerActive && ["seller_verified", "trusted_seller"].includes(normalizeVerificationLevel(currentUser)) ? "pi_verified" : normalizeVerificationLevel(currentUser);
 
+    const profileUpdates = { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel: nextVerificationLevel, verificationStatus: currentUser.verificationStatus || "none", lastSeenAt: new Date() };
+    assertNoBase64Images(profileUpdates, "user");
     await userCollection.updateOne(
       { uid: currentUser.uid },
-      { $set: { displayName, country, contactPhone, avatar, coverImage, bio, language, sellerActive, role, roles: [role], verificationLevel: nextVerificationLevel, verificationStatus: "approved", lastSeenAt: new Date() } },
+      { $set: profileUpdates },
     );
 
     const updatedUser = await userCollection.findOne({ uid: currentUser.uid });
-    req.session.currentUser = updatedUser;
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser) });
   });
 
   router.get("/stats", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
-    if (!currentUser) return res.status(200).json({ stats: { totalProducts: 0, successfulOrders: 0 } });
-    const [totalProducts, successfulOrders] = await Promise.all([
+    if (!currentUser) return res.status(200).json({ stats: { totalProducts: 0, approvedListings: 0, successfulOrders: 0, completedSales: 0 } });
+    const [totalProducts, approvedListings, successfulOrders, completedSales] = await Promise.all([
       req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid }),
+      req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }),
       req.app.locals.marketplaceOrderCollection.countDocuments({ $or: [{ sellerId: currentUser.uid }, { buyerId: currentUser.uid }], status: "completed" }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: currentUser.uid, status: "completed" }),
     ]);
-    return res.status(200).json({ stats: { totalProducts, successfulOrders } });
+    return res.status(200).json({ stats: { totalProducts, approvedListings, successfulOrders, completedSales } });
   });
 
   router.get("/search", async (req: Request, res: Response) => {
@@ -325,7 +399,7 @@ export default function mountUserEndpoints(router: Router) {
     const searches = [query, ...current.filter((item: string) => item.toLowerCase() !== query.toLowerCase())].slice(0, 10);
     await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: searches } });
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    req.session.currentUser = updatedUser;
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ searches });
   });
 
@@ -334,7 +408,7 @@ export default function mountUserEndpoints(router: Router) {
     if (currentUser) {
       await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { recentSearches: [] } });
       const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-      req.session.currentUser = updatedUser;
+      await refreshExistingAuthSession(req, updatedUser);
     }
     return res.status(200).json({ searches: [] });
   });
@@ -342,7 +416,21 @@ export default function mountUserEndpoints(router: Router) {
   router.post("/verification-request", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ user: null, message: "Verification request saved locally" });
-    const requestedLevel = req.body?.level === "trusted_seller" ? "trusted_seller" : currentUser.role === "seller" || currentUser.sellerActive ? "seller_verified" : "pi_verified";
+    const requestedLevel = ["pi_verified", "seller_verified", "trusted_seller"].includes(req.body?.level) ? req.body.level : "pi_verified";
+    const profileComplete = hasCompletePiProfile(currentUser);
+    const [approvedListings, completedSales] = await Promise.all([
+      req.app.locals.productCollection.countDocuments({ sellerId: currentUser.uid, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }),
+      req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: currentUser.uid, status: "completed" }),
+    ]);
+    if (requestedLevel === "pi_verified" && !profileComplete) {
+      return res.status(400).json({ error: "profile_incomplete", message: "Complete your profile before requesting Real Pi User verification." });
+    }
+    if (requestedLevel === "seller_verified" && (!(currentUser.sellerActive || currentUser.role === "seller") || approvedListings < 10)) {
+      return res.status(400).json({ error: "seller_locked", message: "Seller verification unlocks after seller tools are active and 10 approved listings are completed." });
+    }
+    if (requestedLevel === "trusted_seller" && (approvedListings < 100 || completedSales < 20)) {
+      return res.status(400).json({ error: "trusted_locked", message: "Trusted Seller unlocks after 100 approved listings and 20 completed sales." });
+    }
     await req.app.locals.userCollection.updateOne(
       { uid: currentUser.uid },
       { $set: { verificationRequested: true, verificationStatus: "pending", verificationRequestType: requestedLevel, verificationRequestedAt: new Date() } },
@@ -363,7 +451,7 @@ export default function mountUserEndpoints(router: Router) {
       relatedId: currentUser.uid,
     })));
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    req.session.currentUser = updatedUser;
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });
   });
 
@@ -383,7 +471,7 @@ export default function mountUserEndpoints(router: Router) {
     const settings = { theme, language, notifications };
     await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { settings } });
     const updatedUser = await req.app.locals.userCollection.findOne({ uid: currentUser.uid });
-    req.session.currentUser = updatedUser;
+    await refreshExistingAuthSession(req, updatedUser);
     return res.status(200).json({ user: toClientUser(updatedUser) });
   });
 

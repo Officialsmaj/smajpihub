@@ -9,7 +9,11 @@
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "start": "ts-node-dev ./src/index.ts"
+    "start": "ts-node-dev ./src/index.ts",
+    "test:validation": "ts-node ./src/tests/storageValidation.test.ts",
+    "sessions:cleanup": "ts-node ./src/scripts/cleanupUserSessions.ts",
+    "storage:report": "ts-node ./src/scripts/storageReport.ts",
+    "storage:migrate-images": "ts-node ./src/scripts/migrateBase64ImagesToCloudinary.ts"
   },
   "dependencies": {
     "axios": "^1.7.9",

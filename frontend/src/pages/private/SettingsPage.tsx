@@ -26,6 +26,15 @@ type SavedSettings = {
   allowContact: boolean;
 };
 
+type VerificationStats = {
+  totalProducts: number;
+  approvedListings: number;
+  successfulOrders: number;
+  completedSales: number;
+};
+
+type VerificationLevel = "pi_verified" | "seller_verified" | "trusted_seller";
+
 const STORAGE_KEY = "smaj_account_settings";
 const socialLinks = [
   ["X", "https://x.com/smajpihub", XIcon],
@@ -42,6 +51,15 @@ const readSavedSettings = (): Partial<SavedSettings> => {
   } catch {
     return {};
   }
+};
+
+const clampPercent = (value: number, target: number) => `${Math.min(100, Math.round((value / target) * 100))}%`;
+
+const levelRank = (level?: string) => {
+  if (level === "trusted_seller") return 3;
+  if (level === "seller_verified") return 2;
+  if (level === "pi_verified" || level === "verified") return 1;
+  return 0;
 };
 
 const SettingsPage = () => {
@@ -68,6 +86,7 @@ const SettingsPage = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
+  const [verificationStats, setVerificationStats] = useState<VerificationStats>({ totalProducts: 0, approvedListings: 0, successfulOrders: 0, completedSales: 0 });
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = form.theme;
@@ -76,6 +95,17 @@ const SettingsPage = () => {
     window.localStorage.setItem("smaj_public_theme", form.theme);
     window.dispatchEvent(new CustomEvent("smaj:theme-change", { detail: form.theme }));
   }, [form.theme]);
+
+  useEffect(() => {
+    axiosClient.get<{ stats: VerificationStats }>("/user/stats").then(({ data }) => {
+      setVerificationStats({
+        totalProducts: data.stats?.totalProducts || 0,
+        approvedListings: data.stats?.approvedListings || 0,
+        successfulOrders: data.stats?.successfulOrders || 0,
+        completedSales: data.stats?.completedSales || 0,
+      });
+    }).catch(() => undefined);
+  }, []);
 
   const setField = <Key extends keyof SavedSettings>(key: Key, value: SavedSettings[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -120,11 +150,59 @@ const SettingsPage = () => {
     setMessage("Account deletion request submitted for support review.");
   };
 
+  const verificationLevel = user?.verificationLevel || "basic";
+  const verificationStatus = user?.verificationStatus || "none";
+  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested) || verificationStatus === "pending";
+  const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
+  const profileRequirements = [
+    ["Display name", Boolean((form.fullName || user?.displayName || "").trim())],
+    ["Pi username", Boolean(user?.piUsername || user?.username || form.username.trim())],
+    ["Country/location", Boolean((form.location || user?.country || "").trim())],
+    ["Phone/contact", Boolean((form.phone || user?.contactPhone || "").trim())],
+    ["Profile photo", Boolean(user?.avatar)],
+    ["Bio/intro", Boolean(user?.bio?.trim())],
+  ] as const;
+  const profileCompleted = profileRequirements.filter(([, done]) => done).length;
+  const profileComplete = profileCompleted === profileRequirements.length;
+  const approvedRank = verificationStatus === "approved" ? levelRank(verificationLevel) : 0;
+  const nextVerificationLevel: VerificationLevel | null = approvedRank >= 3 ? null : approvedRank >= 2 ? "trusted_seller" : approvedRank >= 1 ? "seller_verified" : "pi_verified";
+  const sellerListingReady = verificationStats.approvedListings >= 10;
+  const trustedListingReady = verificationStats.approvedListings >= 100;
+  const trustedSalesReady = verificationStats.completedSales >= 20;
+  const sellerReady = Boolean(user?.sellerActive || user?.role === "seller") && sellerListingReady;
+  const trustedReady = trustedListingReady && trustedSalesReady;
+  const verificationReady = nextVerificationLevel === "pi_verified"
+    ? profileComplete
+    : nextVerificationLevel === "seller_verified"
+      ? sellerReady
+      : nextVerificationLevel === "trusted_seller"
+        ? trustedReady
+        : false;
+  const verificationButtonLabel = !nextVerificationLevel
+    ? "Trusted Seller Approved"
+    : hasRequestedVerification
+      ? "Verification Pending"
+      : requestingVerification
+        ? "Requesting..."
+        : nextVerificationLevel === "pi_verified"
+          ? "Request Real Pi User Verification"
+          : nextVerificationLevel === "seller_verified"
+            ? "Request Seller Verification"
+            : "Request Trusted Seller";
+  const verificationLockedText = nextVerificationLevel === "pi_verified"
+    ? `${profileCompleted} / ${profileRequirements.length} profile items completed`
+    : nextVerificationLevel === "seller_verified"
+      ? `${Math.min(verificationStats.approvedListings, 10)} / 10 approved listings completed`
+      : nextVerificationLevel === "trusted_seller"
+        ? `${Math.min(verificationStats.approvedListings, 100)} / 100 listings and ${Math.min(verificationStats.completedSales, 20)} / 20 sales completed`
+        : "Highest verification level approved";
+
   const requestVerification = async () => {
+    if (!nextVerificationLevel || !verificationReady || hasRequestedVerification) return;
     setMessage("");
     setRequestingVerification(true);
     try {
-      await axiosClient.post("/user/verification-request", { level: "pi_verified" });
+      await axiosClient.post("/user/verification-request", { level: nextVerificationLevel });
       setVerificationRequested(true);
       setMessage("Verification request submitted. Team will review your account.");
     } catch {
@@ -142,10 +220,6 @@ const SettingsPage = () => {
   const replayWelcomeTour = () => {
     window.dispatchEvent(new Event(WELCOME_REPLAY_EVENT));
   };
-
-  const verificationLevel = user?.verificationLevel || "basic";
-  const hasRequestedVerification = verificationRequested || Boolean(user?.verificationRequested);
-  const piAccount = user?.piUsername || user?.username ? `@${user.piUsername || user.username}` : "Not connected";
 
   return (
     <main className="private-page settings-page">
@@ -170,8 +244,34 @@ const SettingsPage = () => {
           <h2>Account Settings</h2>
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
           <div className="settings-info-row"><span>Verification status</span><strong className="settings-verification-badge"><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
+          <div className="settings-verification-card">
+            <div>
+              <strong>{verificationButtonLabel}</strong>
+              <small>{verificationLockedText}</small>
+            </div>
+            {nextVerificationLevel === "pi_verified" ? (
+              <>
+                <div className="verification-progress-line"><span style={{ width: clampPercent(profileCompleted, profileRequirements.length) }} /></div>
+                <ul>
+                  {profileRequirements.map(([label, done]) => <li className={done ? "done" : ""} key={label}>{label}</li>)}
+                </ul>
+              </>
+            ) : nextVerificationLevel === "seller_verified" ? (
+              <>
+                <div className="verification-progress-line"><span style={{ width: clampPercent(Math.min(verificationStats.approvedListings, 10), 10) }} /></div>
+                <p>Seller Verified unlocks after seller tools are active and 10 approved/live listings are completed.</p>
+              </>
+            ) : nextVerificationLevel === "trusted_seller" ? (
+              <>
+                <div className="verification-progress-line"><span style={{ width: clampPercent(Math.min(verificationStats.approvedListings, 100) + Math.min(verificationStats.completedSales, 20), 120) }} /></div>
+                <p>Trusted Seller unlocks after 100 approved/live listings and 20 completed sales.</p>
+              </>
+            ) : (
+              <p>Your account has the highest trust level.</p>
+            )}
+            <button type="button" className="private-primary-button" disabled={!verificationReady || hasRequestedVerification || requestingVerification || !nextVerificationLevel} onClick={() => void requestVerification()}>{verificationButtonLabel}</button>
+          </div>
           <div className="settings-action-row">
-            {user?.verificationStatus !== "approved" && user?.verificationStatus !== "pending" ? <button type="button" className="private-secondary-button" disabled={requestingVerification || hasRequestedVerification} onClick={() => void requestVerification()}>{hasRequestedVerification ? "Verification requested" : requestingVerification ? "Requesting..." : "Request Verified"}</button> : null}
             <button type="button" className="private-secondary-button" onClick={replayWelcomeTour}>Replay welcome tour</button>
             <button type="button" className="private-secondary-button danger" onClick={() => setShowSignOut(true)}>Logout</button>
           </div>

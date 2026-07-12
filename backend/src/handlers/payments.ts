@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { platformAPIKeyClient } from "../services/platformAPIClient";
+import { createNotification } from "../services/notifications";
 
 const timelineEntry = (status: string, label: string, note?: string) => ({
   status,
@@ -102,6 +103,15 @@ export default function mountPaymentsEndpoints(router: Router) {
       }
     );
 
+    await createNotification(req.app, {
+      userId: order.buyerId,
+      type: "payment_processing",
+      title: "Payment pending confirmation",
+      message: `${order.productTitle} payment is approved and waiting for confirmation.`,
+      relatedId: order._id.toString(),
+      image: order.productImage,
+    });
+
     return res.status(200).json({ message: "Payment approved.", paymentId });
   });
 
@@ -137,6 +147,25 @@ export default function mountPaymentsEndpoints(router: Router) {
       }
     );
 
+    await Promise.all([
+      createNotification(req.app, {
+        userId: order.buyerId,
+        type: "payment_successful",
+        title: "Payment successful",
+        message: `${order.productTitle} payment was confirmed successfully.`,
+        relatedId: order._id.toString(),
+        image: order.productImage,
+      }),
+      createNotification(req.app, {
+        userId: order.sellerId,
+        type: "payment_received",
+        title: "Payment received",
+        message: `${order.buyerName} paid for ${order.productTitle}.`,
+        relatedId: order._id.toString(),
+        image: order.productImage,
+      }),
+    ]);
+
     return res.status(200).json({ message: "Payment completed.", paymentId, txid });
   });
 
@@ -164,6 +193,15 @@ export default function mountPaymentsEndpoints(router: Router) {
       }
     );
 
+    await createNotification(req.app, {
+      userId: order.buyerId,
+      type: "payment_cancelled",
+      title: "Payment cancelled",
+      message: `${order.productTitle} payment was cancelled.`,
+      relatedId: order._id.toString(),
+      image: order.productImage,
+    });
+
     return res.status(200).json({ message: "Payment cancelled." });
   });
 
@@ -190,6 +228,15 @@ export default function mountPaymentsEndpoints(router: Router) {
         },
       }
     );
+
+    await createNotification(req.app, {
+      userId: order.buyerId,
+      type: "payment_failed",
+      title: "Payment failed",
+      message: `${order.productTitle} payment failed. Please try again.`,
+      relatedId: order._id.toString(),
+      image: order.productImage,
+    });
 
     return res.status(200).json({ message: "Payment failed. Order remains pending." });
   });
