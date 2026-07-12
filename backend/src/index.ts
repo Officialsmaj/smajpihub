@@ -46,7 +46,7 @@ const maskMongoUri = (uri: string) => uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, 
 
 const app: express.Application = express();
 const serviceStartedAt = new Date();
-const isProduction = env.node_env === "production";
+const isProduction = env.is_production;
 const crossSiteSession = isProduction;
 const sessionTtlSeconds = 60 * 60 * 24 * 7;
 const sessionCookieOptions = {
@@ -59,6 +59,19 @@ const sessionCookieOptions = {
 if (isProduction) {
   app.set("trust proxy", 1);
 }
+
+console.info("[session-config]", {
+  nodeEnv: env.node_env,
+  renderDetected: env.is_render,
+  production: isProduction,
+  secure: sessionCookieOptions.secure,
+  sameSite: sessionCookieOptions.sameSite,
+  maxAge: sessionCookieOptions.maxAge,
+  httpOnly: sessionCookieOptions.httpOnly,
+  trustProxy: app.get("trust proxy"),
+  sessionCollection: "user_sessions",
+  ttlSeconds: sessionTtlSeconds,
+});
 
 // Log requests to the console in a compact format:
 app.use(logger("dev"));
@@ -94,6 +107,11 @@ const corsAllowlist = [
 ];
 
 const allowedOrigins = new Set(corsAllowlist);
+
+console.info("[cors-config]", {
+  credentials: true,
+  allowedOrigins: [...allowedOrigins],
+});
 
 app.use(
   cors({

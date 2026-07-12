@@ -12,7 +12,7 @@ type VerifiedPiUser = {
   username?: string;
 };
 
-const crossSiteSession = env.node_env === "production";
+const crossSiteSession = env.is_production;
 const sessionCookieOptions = {
   httpOnly: true,
   sameSite: crossSiteSession ? "none" as const : "lax" as const,
@@ -73,12 +73,38 @@ const establishAuthSession = async (req: Request, currentUser: any) => {
   if (req.session.user?.userId !== nextUser.userId) {
     await regenerateSession(req);
   }
+  delete (req.session as any).currentUser;
+  delete (req.session as any).accessToken;
+  delete (req.session as any).piUser;
   req.session.user = nextUser;
   await saveSession(req);
+  if (env.session_debug) {
+    console.info("[session-signin]", {
+      expectedCookie: {
+        secure: sessionCookieOptions.secure,
+        sameSite: sessionCookieOptions.sameSite,
+        httpOnly: sessionCookieOptions.httpOnly,
+        maxAge: sessionCookieOptions.maxAge,
+      },
+      resolvedCookie: {
+        originalMaxAge: req.session.cookie.originalMaxAge,
+        expires: req.session.cookie.expires,
+        secure: req.session.cookie.secure,
+        sameSite: req.session.cookie.sameSite,
+        httpOnly: req.session.cookie.httpOnly,
+      },
+      sessionKeys: Object.keys(req.session).filter((key) => key !== "id"),
+      userKeys: Object.keys(req.session.user || {}),
+      sessionPayloadBytes: Buffer.byteLength(JSON.stringify({ user: req.session.user, cookie: req.session.cookie })),
+    });
+  }
 };
 
 const refreshExistingAuthSession = async (req: Request, currentUser: any) => {
   if (!currentUser || !req.session.user?.userId) return;
+  delete (req.session as any).currentUser;
+  delete (req.session as any).accessToken;
+  delete (req.session as any).piUser;
   req.session.user = minimalSessionUser(currentUser);
   await saveSession(req);
 };
@@ -222,7 +248,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
 
 export default function mountUserEndpoints(router: Router) {
   router.post("/dev-signin", async (req: Request, res: Response) => {
-    if (!env.dev_auth || process.env.NODE_ENV === "production") {
+    if (!env.dev_auth || env.is_production) {
       return res.status(404).json({ error: "not_found", message: "Development sign-in is disabled" });
     }
 

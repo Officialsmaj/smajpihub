@@ -31,6 +31,30 @@ const safeCount = async (collection: { countDocuments?: (query?: Record<string, 
   }
 };
 
+const safeSessionSummary = (document: Record<string, any>) => {
+  let payload: Record<string, any> = {};
+  try {
+    payload = typeof document.session === "string" ? JSON.parse(document.session) : document.session || {};
+  } catch {
+    payload = {};
+  }
+
+  const fieldBytes = Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, Buffer.byteLength(JSON.stringify(value))]));
+  return {
+    documentBytes: Buffer.byteLength(JSON.stringify(document)),
+    sessionKeys: Object.keys(payload),
+    userKeys: payload.user && typeof payload.user === "object" ? Object.keys(payload.user) : [],
+    cookie: payload.cookie ? {
+      originalMaxAge: payload.cookie.originalMaxAge ?? null,
+      expires: payload.cookie.expires ?? null,
+      secure: payload.cookie.secure ?? null,
+      sameSite: payload.cookie.sameSite ?? null,
+      httpOnly: payload.cookie.httpOnly ?? null,
+    } : null,
+    fieldBytes,
+  };
+};
+
 const requireAdmin = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req);
   if (!currentUser) {
@@ -170,6 +194,7 @@ export default function mountAdminEndpoints(router: Router) {
     const sizes = sampleSessions.map((item: Record<string, unknown>) => Buffer.byteLength(JSON.stringify(item)));
     const averageDocumentBytes = sizes.length ? Math.round(sizes.reduce((sum: number, size: number) => sum + size, 0) / sizes.length) : 0;
     const expiryIndex = indexes.find((index: Record<string, any>) => index.key?.expires === 1);
+    const sessionSamples = sampleSessions.slice(0, 5).map(safeSessionSummary);
 
     return res.status(200).json({
       collectionName: "user_sessions",
@@ -181,6 +206,9 @@ export default function mountAdminEndpoints(router: Router) {
         key: expiryIndex.key,
         expireAfterSeconds: expiryIndex.expireAfterSeconds,
       } : null,
+      sessionSamples,
+      expectedSessionKeys: ["cookie", "user"],
+      expectedUserKeys: ["userId", "piUsername", "role"],
       ttlSeconds: 60 * 60 * 24 * 7,
     });
   });

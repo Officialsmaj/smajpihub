@@ -14,6 +14,8 @@ if (result.error) {
 
 interface Environment {
   node_env: string;
+  is_production: boolean;
+  is_render: boolean;
   port: number;
   session_secret: string;
   pi_api_key: string;
@@ -35,7 +37,8 @@ interface Environment {
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
-const isProduction = nodeEnv === "production";
+const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_EXTERNAL_URL);
+const isProduction = nodeEnv === "production" || isRender;
 const defaultSessionSecret = "This is my session secret";
 const productionPiPlatformAPIURL = "https://api.minepi.com";
 const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
@@ -44,6 +47,8 @@ const platformApiURL = process.env.PLATFORM_API_URL || productionPiPlatformAPIUR
 
 const env: Environment = {
   node_env: nodeEnv,
+  is_production: isProduction,
+  is_render: isRender,
   port: parseInt(process.env.PORT || "8000"),
   session_secret: process.env.SESSION_SECRET || defaultSessionSecret,
   pi_api_key: process.env.PI_API_KEY || "",

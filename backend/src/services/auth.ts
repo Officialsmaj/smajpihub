@@ -34,5 +34,8 @@ export const minimalSessionUser = (user: UserData | Record<string, any>): AuthSe
 });
 
 export const setSessionUser = (req: Request, user: UserData | Record<string, any>) => {
+  delete (req.session as any).currentUser;
+  delete (req.session as any).accessToken;
+  delete (req.session as any).piUser;
   req.session.user = minimalSessionUser(user);
 };

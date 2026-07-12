@@ -46,19 +46,58 @@ const countBase64Fields = async (collection: any, collectionName: string) => {
   return { collection: collectionName, fields: counts, total: Object.values(counts).reduce((sum, value) => sum + value, 0) };
 };
 
+const parseSessionPayload = (session: unknown): Record<string, any> => {
+  try {
+    return typeof session === "string" ? JSON.parse(session) : session && typeof session === "object" ? session as Record<string, any> : {};
+  } catch {
+    return {};
+  }
+};
+
+const sessionPayloadReport = async (collection: any) => {
+  const samples = await collection.find({}, { projection: { _id: 0, session: 1, expires: 1 } })
+    .sort({ expires: -1 })
+    .limit(10)
+    .toArray();
+  const summaries = samples.map((document: Record<string, any>) => {
+    const payload = parseSessionPayload(document.session);
+    return {
+      documentBytes: Buffer.byteLength(JSON.stringify(document)),
+      sessionKeys: Object.keys(payload),
+      userKeys: payload.user && typeof payload.user === "object" ? Object.keys(payload.user) : [],
+      hasCurrentUser: Boolean(payload.currentUser),
+      hasAccessToken: Boolean(payload.accessToken || payload.user?.accessToken || payload.currentUser?.accessToken),
+      cookie: payload.cookie ? {
+        originalMaxAge: payload.cookie.originalMaxAge ?? null,
+        expires: payload.cookie.expires ?? null,
+        secure: payload.cookie.secure ?? null,
+        sameSite: payload.cookie.sameSite ?? null,
+        httpOnly: payload.cookie.httpOnly ?? null,
+      } : null,
+      fieldBytes: Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, Buffer.byteLength(JSON.stringify(value))])),
+    };
+  });
+  return {
+    sampled: summaries.length,
+    summaries,
+  };
+};
+
 const main = async () => {
   const client = await MongoClient.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
   try {
     const db = client.db(dbName);
     const now = new Date();
-    const [products, users, onboarding, oversizedSessions, expiredSessions] = await Promise.all([
+    const sessionCollection = db.collection("user_sessions");
+    const [products, users, onboarding, oversizedSessions, expiredSessions, sessionPayloads] = await Promise.all([
       countBase64Fields(db.collection("products"), "products"),
       countBase64Fields(db.collection("users"), "users"),
       countBase64Fields(db.collection("onboarding_applications"), "onboarding_applications"),
-      db.collection("user_sessions").countDocuments({ $expr: { $gt: [{ $bsonSize: "$$ROOT" }, 16_384] } }),
-      db.collection("user_sessions").countDocuments({ expires: { $lte: now } }),
+      sessionCollection.countDocuments({ $expr: { $gt: [{ $bsonSize: "$$ROOT" }, 16_384] } }),
+      sessionCollection.countDocuments({ expires: { $lte: now } }),
+      sessionPayloadReport(sessionCollection),
     ]);
-    console.log(JSON.stringify({ products, users, onboarding, oversizedSessions, expiredSessions }, null, 2));
+    console.log(JSON.stringify({ products, users, onboarding, oversizedSessions, expiredSessions, sessionPayloads }, null, 2));
   } finally {
     await client.close();
   }
