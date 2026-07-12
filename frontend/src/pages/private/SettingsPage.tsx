@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
 import TelegramIcon from "@mui/icons-material/Telegram";
@@ -87,7 +87,6 @@ const SettingsPage = () => {
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [requestingVerification, setRequestingVerification] = useState(false);
   const [verificationStats, setVerificationStats] = useState<VerificationStats>({ totalProducts: 0, approvedListings: 0, successfulOrders: 0, completedSales: 0 });
-  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = form.theme;
@@ -198,10 +197,6 @@ const SettingsPage = () => {
         ? `${Math.min(verificationStats.approvedListings, 100)} / 100 listings and ${Math.min(verificationStats.completedSales, 20)} / 20 sales completed`
         : "Highest verification level approved";
 
-  useEffect(() => {
-    setShowProfilePrompt(Boolean(user?.uid) && approvedRank === 0 && !profileComplete);
-  }, [approvedRank, profileComplete, user?.uid]);
-
   const requestVerification = async () => {
     if (!nextVerificationLevel || !verificationReady || hasRequestedVerification) return;
     setMessage("");
@@ -228,20 +223,6 @@ const SettingsPage = () => {
 
   return (
     <main className="private-page settings-page">
-      {showProfilePrompt ? (
-        <div className="verification-profile-popover" role="dialog" aria-modal="true" aria-labelledby="profile-complete-title">
-          <section>
-            <h2 id="profile-complete-title">Complete your profile</h2>
-            <p>Complete your profile information to unlock Real Pi User verification.</p>
-            <div className="verification-progress-line"><span style={{ width: clampPercent(profileCompleted, profileRequirements.length) }} /></div>
-            <strong>{profileCompleted} / {profileRequirements.length} completed</strong>
-            <div className="verification-modal-actions">
-              <Link className="private-primary-button" to="/profile">Complete Profile</Link>
-              <button type="button" className="private-secondary-button" onClick={() => setShowProfilePrompt(false)}>Later</button>
-            </div>
-          </section>
-        </div>
-      ) : null}
       <section className="private-page-head">
         <div>
           <p className="private-kicker">ACCOUNT</p>
