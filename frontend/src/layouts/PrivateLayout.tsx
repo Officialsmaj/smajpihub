@@ -34,7 +34,7 @@ type PrivateLayoutProps = { children: ReactNode };
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
 const PROFILE_VERIFY_REMINDER_KEY = "smaj_profile_verify_reminder_completed";
-const PROFILE_VERIFY_REMINDER_INTERVAL_MS = 10 * 60 * 1000;
+const PROFILE_VERIFY_REMINDER_INTERVAL_MS = 60 * 1000;
 const PROFILE_VERIFY_REMINDER_VISIBLE_MS = 10 * 1000;
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
