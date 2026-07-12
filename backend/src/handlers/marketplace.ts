@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { createNotification } from "../services/notifications";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
+import { assertNoBase64Images, resolveImageValue } from "../services/imageStorage";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const PI_USDT_RATE = 314159;
@@ -173,6 +174,24 @@ const validProduct = (product: ReturnType<typeof productFields>) =>
   && product.condition && product.deliveryOption && product.country && product.stateRegion && product.city && product.areaAddress
   && Number.isFinite(product.quantity) && product.quantity > 0 && product.sellerAgreementAccepted;
 
+const resolveProductImageFields = async (fields: ReturnType<typeof productFields>) => {
+  const sourceImages: string[] = fields.images.length ? fields.images : [fields.image];
+  const resolvedImages = await Promise.all(sourceImages
+    .map((image: string, index: number) => resolveImageValue(image, "product", `product-${index + 1}`)));
+  const variants = await Promise.all(fields.variants.map(async (variant: any, index: number) => ({
+    ...variant,
+    image: variant.image ? await resolveImageValue(variant.image, "product-variant", `variant-${index + 1}`) : "",
+  })));
+  const nextFields = {
+    ...fields,
+    image: resolvedImages[0],
+    images: resolvedImages,
+    variants,
+  };
+  assertNoBase64Images(nextFields, "product");
+  return nextFields;
+};
+
 export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/products", async (req, res) => {
     const query: Record<string, any> = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
@@ -245,7 +264,6 @@ export default function mountMarketplaceEndpoints(router: Router) {
     if (!sessionUser) return;
     const freshUser = await req.app.locals.userCollection.findOne({ uid: sessionUser.uid });
     const user = freshUser || sessionUser;
-    if (freshUser) req.session.currentUser = freshUser;
     if (user.role !== "seller" && !user.sellerActive) {
       return res.status(403).json({ error: "seller_required", message: "Activate seller tools before listing products." });
     }
@@ -257,7 +275,17 @@ export default function mountMarketplaceEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: validationMessage || "Complete all required product fields" });
     }
 
-    const images = fields.images.length ? fields.images : [fields.image];
+    let resolvedFields: Awaited<ReturnType<typeof resolveProductImageFields>>;
+    try {
+      resolvedFields = await resolveProductImageFields(fields);
+    } catch (err: any) {
+      if (err?.statusCode === 413) return res.status(413).json({ error: "payload_too_large", message: err.message });
+      if (err?.statusCode === 400 || err?.statusCode === 503) return res.status(err.statusCode).json({ error: "image_upload_failed", message: err.message });
+      console.error("Product image upload failed:", err);
+      return res.status(500).json({ error: "image_upload_failed", message: "Product image upload failed." });
+    }
+
+    const images = resolvedFields.images;
     const autoApprove = env.marketplace_auto_approve_products;
     const sellerVerificationLevel = publicVerificationLevel(user);
     const product = {
@@ -267,7 +295,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       piUsername: user.piUsername || user.username,
       verificationLevel: sellerVerificationLevel,
       verificationStatus: verificationStatus(user),
-      ...fields,
+      ...resolvedFields,
       image: images[0],
       images,
       active: fields.productStatus !== "out_of_stock" && fields.productStatus !== "draft",
@@ -277,6 +305,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
       hidden: fields.productStatus === "hidden",
       createdAt: new Date(),
     };
+    assertNoBase64Images(product, "product");
     const result = await req.app.locals.productCollection.insertOne(product);
     await req.app.locals.userCollection.updateOne(
       { uid: user.uid },
@@ -521,7 +550,7 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const [seller, related, favorite] = await Promise.all([
       req.app.locals.userCollection.findOne({ uid: product.sellerId }),
       req.app.locals.productCollection.find({ category: product.category, _id: { $ne: product._id }, active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).limit(4).toArray(),
-      req.app.locals.favoriteCollection.findOne({ userId: req.session.currentUser!.uid, productId: req.params.id }),
+      req.app.locals.favoriteCollection.findOne({ userId: user.uid, productId: req.params.id }),
     ]);
     return res.status(200).json({ product: serialize(withResolvedPiPrice(product)), seller: seller ? { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt } : null, related: related.map(withResolvedPiPrice).map(serialize), saved: Boolean(favorite) });
   });
@@ -533,10 +562,21 @@ export default function mountMarketplaceEndpoints(router: Router) {
     const fields = productFields(req.body);
     const validationMessage = productValidationMessage(fields);
     if (validationMessage || !validProduct(fields)) return res.status(400).json({ error: "bad_request", message: validationMessage || "Complete all required product fields" });
+    let resolvedFields: Awaited<ReturnType<typeof resolveProductImageFields>>;
+    try {
+      resolvedFields = await resolveProductImageFields(fields);
+    } catch (err: any) {
+      if (err?.statusCode === 413) return res.status(413).json({ error: "payload_too_large", message: err.message });
+      if (err?.statusCode === 400 || err?.statusCode === 503) return res.status(err.statusCode).json({ error: "image_upload_failed", message: err.message });
+      console.error("Product image upload failed:", err);
+      return res.status(500).json({ error: "image_upload_failed", message: "Product image upload failed." });
+    }
     const autoApprove = env.marketplace_auto_approve_products;
+    const updates = { ...resolvedFields, active: resolvedFields.productStatus !== "out_of_stock" && resolvedFields.productStatus !== "draft", approved: resolvedFields.productStatus === "draft" ? false : autoApprove, reviewStatus: resolvedFields.productStatus === "draft" ? "pending" : autoApprove ? "approved" : "pending", rejectionReason: "", hidden: resolvedFields.productStatus === "hidden", updatedAt: new Date() };
+    assertNoBase64Images(updates, "product");
     const result = await req.app.locals.productCollection.updateOne(
       { _id: new ObjectId(req.params.id), sellerId: user.uid },
-      { $set: { ...fields, active: fields.productStatus !== "out_of_stock" && fields.productStatus !== "draft", approved: fields.productStatus === "draft" ? false : autoApprove, reviewStatus: fields.productStatus === "draft" ? "pending" : autoApprove ? "approved" : "pending", rejectionReason: "", hidden: fields.productStatus === "hidden", updatedAt: new Date() } },
+      { $set: updates },
     );
     if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Product not found" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(req.params.id) });

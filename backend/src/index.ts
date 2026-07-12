@@ -47,6 +47,13 @@ const app: express.Application = express();
 const serviceStartedAt = new Date();
 const isProduction = env.node_env === "production";
 const crossSiteSession = isProduction;
+const sessionTtlSeconds = 60 * 60 * 24 * 7;
+const sessionCookieOptions = {
+  httpOnly: true,
+  sameSite: crossSiteSession ? "none" as const : "lax" as const,
+  secure: crossSiteSession,
+  maxAge: 1000 * sessionTtlSeconds,
+};
 
 if (isProduction) {
   app.set("trust proxy", 1);
@@ -125,10 +132,7 @@ app.use(
     secret: env.session_secret,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      sameSite: crossSiteSession ? "none" : "lax",
-      secure: crossSiteSession,
-    },
+    cookie: sessionCookieOptions,
     ...(env.use_memory_db
       ? {}
       : {
@@ -137,6 +141,8 @@ app.use(
             mongoOptions: mongoClientOptions,
             dbName: dbName,
             collectionName: "user_sessions",
+            ttl: sessionTtlSeconds,
+            autoRemove: "native",
           }),
         }),
   }) as unknown as express.RequestHandler,
@@ -232,6 +238,7 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
       app.locals.onboardingCollection = db.collection("onboarding_applications");
       app.locals.supportCollection = db.collection("support_requests");
+      app.locals.sessionCollection = db.collection("user_sessions");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -243,6 +250,7 @@ const start = async () => {
         app.locals.conversationCollection.createIndex({ participants: 1, updatedAt: -1 }),
         app.locals.messageCollection.createIndex({ conversationId: 1, createdAt: 1 }),
         app.locals.notificationCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.sessionCollection.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
       ]);
     }
 
