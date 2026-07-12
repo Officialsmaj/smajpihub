@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const skeleton = (() => {
     if (location.pathname === "/dashboard") return { variant: "home" as const, count: 6 };
     if (location.pathname === "/profile") return { variant: "profile" as const, count: 6 };
-    if (location.pathname === "/settings" || location.pathname.startsWith("/settings/")) return { variant: "settings" as const, count: 6 };
+    if (location.pathname === "/settings" || location.pathname.startsWith("/settings/")) return { variant: "page" as const, count: 4 };
     if (location.pathname === "/store" || location.pathname === "/saved") return { variant: "grid" as const, count: 6 };
     if (location.pathname === "/messages") return { variant: "messages" as const, count: 6 };
     if (location.pathname === "/notifications") return { variant: "notifications" as const, count: 5 };
