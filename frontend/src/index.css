@@ -17188,7 +17188,7 @@ svg {
 }
 
 .beta-product-card img,
-.beta-product-card > span {
+.beta-product-card > .beta-product-placeholder {
   width: 100%;
   aspect-ratio: 1.25;
   display: block;
@@ -17303,6 +17303,14 @@ svg {
     flex: 0 0 auto;
     color: var(--smaj-primary);
     font-size: 12px;
+  }
+
+  .mobile-product-details .pi-currency-symbol {
+    margin-right: 2px;
+    color: #7c3aed;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1;
   }
 
   .mobile-product-details small {
