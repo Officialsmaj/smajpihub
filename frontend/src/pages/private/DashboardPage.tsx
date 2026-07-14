@@ -8,6 +8,13 @@ import RocketLaunchOutlinedIcon from "@mui/icons-material/RocketLaunchOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import FeedbackOutlinedIcon from "@mui/icons-material/FeedbackOutlined";
+import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
@@ -93,14 +100,26 @@ const SectionState = ({ loading, error, empty, children, skeleton = "grid" }: { 
   return <>{children}</>;
 };
 
-const ContinueSection = ({ items, compact = false }: { items: RecentItem[]; compact?: boolean }) => (
-  <section className={compact ? "mobile-feed-section beta-home-section" : "desktop-feed-section beta-home-section"}>
-    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Continue Where You Left Off</h2><p>Recent services, products, and pages.</p></div></div>
-    <SectionState empty={!items.length ? "No history yet" : ""} skeleton="list">
-      <div className="beta-recent-list">{items.map((item) => <Link to={item.to} key={`${item.to}-${item.label}`}><strong>{item.label}</strong><span>{item.meta || "Open again"}</span></Link>)}</div>
+const recentItemIcon = (to: string) => {
+  if (to.startsWith("/app/services")) return <AppsOutlinedIcon />;
+  if (to.startsWith("/search")) return <SearchOutlinedIcon />;
+  if (to.startsWith("/messages")) return <ChatOutlinedIcon />;
+  if (to.startsWith("/settings")) return <SettingsOutlinedIcon />;
+  if (to.startsWith("/wallet") || to.startsWith("/app/wallet")) return <AccountBalanceWalletOutlinedIcon />;
+  return <HistoryOutlinedIcon />;
+};
+
+const ContinueSection = ({ items, compact = false }: { items: RecentItem[]; compact?: boolean }) => {
+  const [showAll, setShowAll] = useState(false);
+  const usefulItems = items.filter((item) => item.to !== "/dashboard" && item.label.toLowerCase() !== "smaj pi hub");
+  const visibleItems = compact && !showAll ? usefulItems.slice(0, 3) : usefulItems;
+  return <section className={compact ? "mobile-feed-section beta-home-section mobile-continue-section" : "desktop-feed-section beta-home-section"}>
+    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>{compact ? "Pick up where you left off" : "Continue Where You Left Off"}</h2><p>{compact ? "Jump back into your recent activity." : "Recent services, products, and pages."}</p></div>{compact && usefulItems.length > 3 ? <button className="mobile-section-link" type="button" onClick={() => setShowAll((current) => !current)}>{showAll ? "Show less" : "See all"}</button> : null}</div>
+    <SectionState empty={!usefulItems.length ? "No history yet" : ""} skeleton="list">
+      {compact ? <div className="mobile-recent-strip">{visibleItems.map((item) => <Link className="mobile-recent-card" to={item.to} key={`${item.to}-${item.label}`}><span className="mobile-recent-icon">{recentItemIcon(item.to)}</span><ChevronRightOutlinedIcon className="mobile-recent-arrow" /><strong>{item.label}</strong><small>{item.meta && item.meta !== "Recent page" ? item.meta : "Recently viewed"}</small></Link>)}</div> : <div className="beta-recent-list">{visibleItems.map((item) => <Link to={item.to} key={`${item.to}-${item.label}`}><strong>{item.label}</strong><span>{item.meta || "Open again"}</span></Link>)}</div>}
     </SectionState>
-  </section>
-);
+  </section>;
+};
 
 const PopularSearchSection = ({ compact = false }: { compact?: boolean }) => (
   <section className={compact ? "mobile-feed-section beta-home-section" : "desktop-feed-section beta-home-section"}>
