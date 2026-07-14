@@ -17,6 +17,7 @@ import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import ServiceArt from "../../components/ServiceArt";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
@@ -160,11 +161,22 @@ const RecommendedSection = ({ services, compact = false }: { services: ServiceDe
 );
 
 const ActivityFeedSection = ({ products, loading, error, compact = false }: { products: Product[]; loading: boolean; error: string; compact?: boolean }) => {
-  const activity = products.slice(0, 3).map((product) => `New product listed: ${product.title}`).concat(betaActivity).slice(0, 5);
-  return <section className={compact ? "mobile-feed-section beta-home-section" : "desktop-feed-section beta-home-section"}>
-    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Live Activity</h2><p>What is moving across SMAJ PI HUB.</p></div></div>
+  const [showAll, setShowAll] = useState(false);
+  const relativeTime = (date?: string) => {
+    if (!date) return "Recently";
+    const minutes = Math.max(1, Math.floor((Date.now() - new Date(date).getTime()) / 60000));
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr ago`;
+    return `${Math.floor(hours / 24)} day${hours >= 48 ? "s" : ""} ago`;
+  };
+  const productActivity = products.slice(0, 6).map((product) => ({ title: product.title, meta: `New ${product.category || "marketplace"} listing · ${relativeTime(product.createdAt)}`, to: `/product/${product._id}`, image: product.image }));
+  const activity = productActivity.length ? productActivity : betaActivity.slice(0, 3).map((title) => ({ title, meta: "Beta update", to: "", image: "" }));
+  const visibleActivity = compact && !showAll ? activity.slice(0, 3) : activity;
+  return <section className={compact ? "mobile-feed-section beta-home-section mobile-activity-section" : "desktop-feed-section beta-home-section"}>
+    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Live Activity</h2><p>{compact ? "Latest updates across SMAJ PI HUB." : "What is moving across SMAJ PI HUB."}</p></div>{compact && activity.length > 3 ? <button className="mobile-section-link" type="button" onClick={() => setShowAll((current) => !current)}>{showAll ? "Show less" : "See all"}</button> : null}</div>
     <SectionState loading={loading} error={error} empty={!activity.length ? "No live activity yet" : ""} skeleton="list">
-      <div className="beta-activity-list">{activity.map((item) => <article key={item}><span />{item}</article>)}</div>
+      {compact ? <div className="mobile-activity-list">{visibleActivity.map((item) => { const content = <><span className="mobile-activity-media">{item.image ? <img src={item.image} alt="" /> : <Inventory2OutlinedIcon />}</span><span className="mobile-activity-copy"><strong>{item.title}</strong><small>{item.meta}</small></span>{item.to ? <ChevronRightOutlinedIcon className="mobile-activity-arrow" /> : null}</>; return item.to ? <Link to={item.to} className="mobile-activity-row" key={`${item.to}-${item.title}`}>{content}</Link> : <article className="mobile-activity-row" key={item.title}>{content}</article>; })}</div> : <div className="beta-activity-list">{activity.slice(0, 5).map((item) => <article key={item.title}><span />{item.title}</article>)}</div>}
     </SectionState>
   </section>;
 };

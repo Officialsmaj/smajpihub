@@ -17437,6 +17437,82 @@ svg {
     font-size: 17px;
   }
 
+  .mobile-activity-section {
+    padding-bottom: 8px;
+  }
+
+  .mobile-activity-section .mobile-section-heading {
+    align-items: center;
+  }
+
+  .mobile-activity-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mobile-activity-row {
+    min-height: 68px;
+    padding: 9px 11px;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    color: var(--smaj-text);
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
+    border-radius: 14px;
+    text-decoration: none;
+  }
+
+  .mobile-activity-media {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: var(--smaj-primary);
+    background: color-mix(in srgb, var(--smaj-primary) 11%, transparent);
+    border-radius: 11px;
+  }
+
+  .mobile-activity-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mobile-activity-media svg {
+    font-size: 20px;
+  }
+
+  .mobile-activity-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .mobile-activity-copy strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .mobile-activity-copy small {
+    overflow: hidden;
+    color: var(--smaj-text-secondary);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-activity-arrow {
+    color: var(--smaj-text-secondary);
+    font-size: 18px !important;
+  }
+
   .beta-product-strip,
   .beta-seller-grid,
   .beta-trust-grid,
