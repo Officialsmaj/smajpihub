@@ -18201,6 +18201,155 @@ svg {
   }
 }
 
+/* Final compact private mobile marketplace cards. */
+@media (max-width: 767px) {
+  .storefront-page .storefront-product-grid,
+  .storefront-page .storefront-product-grid.search-grid {
+    gap: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card,
+  .storefront-page .storefront-product-card-compact {
+    border-radius: 16px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-image-wrap,
+  .storefront-page .storefront-product-card-compact .storefront-product-image-wrap {
+    height: 112px !important;
+    aspect-ratio: auto !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body,
+  .storefront-page .storefront-product-card-compact .storefront-product-body {
+    min-height: 182px !important;
+    padding: 9px 9px 48px !important;
+    gap: 5px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body h2,
+  .storefront-page .storefront-product-card-compact .storefront-product-body h2 {
+    min-height: 31px !important;
+    font-size: 12px !important;
+    line-height: 1.28 !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-rating {
+    gap: 3px !important;
+  }
+
+  .storefront-page .storefront-stars svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-rating small {
+    font-size: 9px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-price-stack {
+    padding: 1px 0 3px !important;
+    gap: 4px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-price-stack strong,
+  .storefront-page .storefront-product-card-compact .storefront-price-stack strong {
+    font-size: 14px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-price-stack small,
+  .storefront-page .storefront-product-card-compact .storefront-price-stack small {
+    font-size: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card .pi-currency-symbol {
+    font-size: 14px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-seller-block {
+    grid-template-columns: 27px minmax(0, 1fr) !important;
+    gap: 6px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid #eef0f4 !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-seller-avatar {
+    width: 27px !important;
+    height: 27px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-seller-name .seller-name-text {
+    font-size: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-seller-location {
+    font-size: 8px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-stock-row {
+    left: 9px !important;
+    bottom: 15px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-stock-row span {
+    font-size: 9px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-stock-row i {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-actions,
+  .storefront-page .storefront-product-card-compact .storefront-product-actions {
+    right: 9px !important;
+    bottom: 9px !important;
+    left: auto !important;
+    padding: 0 !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-cart,
+  .storefront-page .storefront-product-card-compact .storefront-product-cart {
+    width: 52px !important;
+    min-width: 52px !important;
+    height: 35px !important;
+    min-height: 35px !important;
+    padding: 0 !important;
+    color: #ffffff !important;
+    background: #020617 !important;
+    border-color: #020617 !important;
+    border-radius: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-cart svg,
+  .storefront-page .storefront-product-card-compact .storefront-product-cart svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .storefront-page .storefront-card-country {
+    top: 7px !important;
+    left: 7px !important;
+    width: 23px !important;
+    height: 17px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-badge {
+    top: 7px !important;
+    left: 35px !important;
+    min-height: 18px !important;
+    padding: 3px 7px !important;
+    font-size: 8px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-favorite-button {
+    top: 7px !important;
+    right: 7px !important;
+    width: 27px !important;
+    min-width: 27px !important;
+    height: 27px !important;
+  }
+}
+
 .private-tab-page {
   min-width: 0;
 }
