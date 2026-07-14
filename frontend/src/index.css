@@ -17382,6 +17382,13 @@ svg {
     font-weight: 850;
   }
 
+  .mobile-seller-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
   .mobile-seller-identity > div {
     min-width: 0;
   }
@@ -17397,6 +17404,17 @@ svg {
     flex: 0 0 auto;
     color: var(--smaj-primary);
     font-size: 15px;
+  }
+
+  .mobile-seller-identity .trust-badge {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    margin-left: 0;
+  }
+
+  .mobile-seller-identity .trust-badge svg {
+    color: var(--trust-color);
   }
 
   .mobile-seller-identity > div > span {

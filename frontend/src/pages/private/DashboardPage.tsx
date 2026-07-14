@@ -15,17 +15,17 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import ServiceArt from "../../components/ServiceArt";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
+import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName } from "../../lib/formatters";
-import type { Product } from "../../types/marketplace";
+import type { Product, VerificationLevel, VerificationStatus } from "../../types/marketplace";
 
 type DiscoveryTab = "for-you" | "trending" | "lifestyle" | "categories";
 
@@ -78,7 +78,7 @@ const tabServices = (tab: DiscoveryTab) => {
 };
 const tabTitle = (tab: DiscoveryTab) => tab === "categories" ? "All categories" : tab === "trending" ? "Trending services" : tab === "lifestyle" ? "Lifestyle services" : "Suggested for you";
 type RecentItem = { label: string; to: string; meta?: string };
-type SellerCard = { id: string; name: string; location: string; rating: string; listings: number };
+type SellerCard = { id: string; name: string; location: string; rating: string; listings: number; avatar?: string; verificationLevel?: VerificationLevel; verificationStatus?: VerificationStatus };
 
 const readRecentItems = (key: string) => {
   try {
@@ -144,9 +144,9 @@ const RecentlyAddedSection = ({ products, loading, error, compact = false }: { p
 
 const FeaturedSellersSection = ({ sellers, loading, error, compact = false }: { sellers: SellerCard[]; loading: boolean; error: string; compact?: boolean }) => (
   <section className={compact ? "mobile-feed-section beta-home-section" : "desktop-feed-section beta-home-section"}>
-    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Featured Sellers</h2><p>{compact ? "Verified marketplace sellers." : "Trusted sellers active in beta."}</p></div></div>
+    <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Featured Sellers</h2><p>{compact ? "Marketplace sellers with active listings." : "Trusted sellers active in beta."}</p></div></div>
     <SectionState loading={loading} error={error} empty={!sellers.length ? "No featured sellers yet" : ""}>
-      <div className="beta-seller-grid">{sellers.map((seller) => compact ? <Link className="beta-seller-card mobile-seller-card" to={`/seller/${seller.id}`} key={seller.id}><div className="mobile-seller-identity"><span className="mobile-seller-avatar">{seller.name.slice(0, 1).toUpperCase()}</span><div><strong>{seller.name}<VerifiedOutlinedIcon /></strong><span>{seller.location.toLowerCase().includes("united arab emirates") ? `${seller.location.split(" - ")[1]?.replace(" Emirate", "") || "UAE"}, UAE` : seller.location.split(" - ").slice(0, 2).join(", ")}</span></div></div><div className="mobile-seller-meta"><span><StarRoundedIcon /> {seller.rating}</span><small>{seller.listings} listings</small><ChevronRightOutlinedIcon /></div></Link> : <article className="beta-seller-card" key={seller.id}><div><strong>{seller.name}</strong><span>{seller.location}</span></div><b>Trusted</b><small>{seller.rating} star - {seller.listings} listings</small></article>)}</div>
+      <div className="beta-seller-grid">{sellers.map((seller) => compact ? <Link className="beta-seller-card mobile-seller-card" to={`/seller/${seller.id}`} key={seller.id}><div className="mobile-seller-identity"><span className="mobile-seller-avatar">{seller.avatar ? <img src={seller.avatar} alt="" /> : seller.name.slice(0, 1).toUpperCase()}</span><div><strong>{seller.name}<TrustBadge level={seller.verificationLevel} status={seller.verificationStatus} /></strong><span>{seller.location.toLowerCase().includes("united arab emirates") ? `${seller.location.split(" - ")[1]?.replace(" Emirate", "") || "UAE"}, UAE` : seller.location.split(" - ").slice(0, 2).join(", ")}</span></div></div><div className="mobile-seller-meta"><span><StarRoundedIcon /> {seller.rating}</span><small>{seller.listings} listings</small><ChevronRightOutlinedIcon /></div></Link> : <article className="beta-seller-card" key={seller.id}><div><strong>{seller.name}</strong><span>{seller.location}</span></div><b>Trusted</b><small>{seller.rating} star - {seller.listings} listings</small></article>)}</div>
     </SectionState>
   </section>
 );
@@ -391,6 +391,9 @@ const DashboardPage = () => {
         location: product.location || product.country || "Global",
         rating: (product.rating || 4.6).toFixed(1),
         listings: 1,
+        avatar: product.sellerAvatar,
+        verificationLevel: product.verificationLevel,
+        verificationStatus: product.verificationStatus,
       });
     });
     const realSellers = Array.from(map.values()).sort((a, b) => b.listings - a.listings).slice(0, 4);
