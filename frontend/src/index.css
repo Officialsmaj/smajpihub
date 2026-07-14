@@ -17265,6 +17265,56 @@ svg {
     padding-bottom: 8px;
   }
 
+  .beta-product-strip .mobile-recent-product-card {
+    gap: 5px;
+    padding-bottom: 10px;
+  }
+
+  .mobile-recent-product-card > strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .mobile-product-category {
+    width: max-content;
+    max-width: calc(100% - 24px);
+    margin: 0 12px;
+    overflow: hidden;
+    color: var(--smaj-text-secondary);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-product-details {
+    min-width: 0;
+    margin: 2px 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobile-product-details b {
+    flex: 0 0 auto;
+    color: var(--smaj-primary);
+    font-size: 12px;
+  }
+
+  .mobile-product-details small {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--smaj-text-secondary);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .mobile-continue-section .mobile-section-heading {
     align-items: center;
   }

@@ -24,7 +24,7 @@ import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
-import { countryDisplayName } from "../../lib/formatters";
+import { countryDisplayName, countryFlag, formatPiAmount } from "../../lib/formatters";
 import type { Product, VerificationLevel, VerificationStatus } from "../../types/marketplace";
 
 type DiscoveryTab = "for-you" | "trending" | "lifestyle" | "categories";
@@ -137,7 +137,7 @@ const RecentlyAddedSection = ({ products, loading, error, compact = false }: { p
   <section className={compact ? "mobile-feed-section beta-home-section" : "desktop-feed-section beta-home-section"}>
     <div className="desktop-feed-section-head mobile-section-heading"><div><h2>Recently Added</h2><p>Newest live listings and services.</p></div><Link to="/store">See all</Link></div>
     <SectionState loading={loading} error={error} empty={!products.length ? "No recent listings yet" : ""}>
-      <div className="beta-product-strip">{products.slice(0, 6).map((product) => <Link to={`/product/${product._id}`} className="beta-product-card" key={product._id}>{product.image ? <img src={product.image} alt="" /> : <span /> }<strong>{product.title}</strong><small>{product.category} - {product.location || "Global"}</small></Link>)}</div>
+      <div className="beta-product-strip">{products.slice(0, 6).map((product) => { const country = countryDisplayName(product.country || product.location?.split(" - ")[0]); const flag = countryFlag(country); const city = product.city || product.stateRegion?.replace(" Emirate", "") || product.location?.split(" - ")[1]?.replace(" Emirate", "") || ""; return <Link to={`/product/${product._id}`} className={`beta-product-card${compact ? " mobile-recent-product-card" : ""}`} key={product._id}>{product.image ? <img src={product.image} alt="" /> : <span /> }<strong>{product.title}</strong>{compact ? <><span className="mobile-product-category">{product.category}</span><span className="mobile-product-details"><b>{formatPiAmount(product.pricePi)}</b><small>{flag ? <span role="img" aria-label={country}>{flag}</span> : "📍"} {city || country || "Global"}</small></span></> : <small>{product.category} - {product.location || "Global"}</small>}</Link>; })}</div>
     </SectionState>
   </section>
 );
