@@ -18235,6 +18235,7 @@ svg {
 
   .storefront-page .storefront-product-card .storefront-product-rating {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
     flex-wrap: nowrap !important;
@@ -18261,6 +18262,7 @@ svg {
 
   .storefront-page .storefront-product-card .storefront-price-stack {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     flex-wrap: nowrap !important;
