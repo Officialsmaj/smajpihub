@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
@@ -40,6 +40,11 @@ const betaActivity = [
   "Pi users are exploring services globally",
 ];
 const trustIndicators = ["Pi verified users", "Reviewed listings", "Buyer/seller chat", "Safer marketplace support"];
+const mobileHeroImages = [
+  "/assets/smaj-mobile-hero-v2.png",
+  "/assets/smaj-mobile-hero-business.jpg",
+  "/assets/smaj-mobile-hero-work.jpg",
+];
 
 const featureCards = [
   { title: "Take care of your health", text: "Find doctors, pharmacies and health services", slug: "health", image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=900&q=85" },
@@ -189,7 +194,11 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
 
 const MobileHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[] }) => {
   const [tabsPinned, setTabsPinned] = useState(false);
+  const [heroSlide, setHeroSlide] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
+  const [heroReducedMotion, setHeroReducedMotion] = useState(false);
   const tabsAnchorRef = useRef<HTMLDivElement>(null);
+  const heroTouchStartRef = useRef<number | null>(null);
   useEffect(() => {
     const updatePinnedState = () => {
       const anchor = tabsAnchorRef.current;
@@ -204,8 +213,44 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     };
   }, []);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => setHeroReducedMotion(mediaQuery.matches);
+    updateMotionPreference();
+    mediaQuery.addEventListener("change", updateMotionPreference);
+    return () => mediaQuery.removeEventListener("change", updateMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    if (heroPaused || heroReducedMotion) return;
+    const timer = window.setInterval(() => setHeroSlide((current) => (current + 1) % mobileHeroImages.length), 5500);
+    return () => window.clearInterval(timer);
+  }, [heroPaused, heroReducedMotion]);
+
+  const handleHeroTouchStart = (event: TouchEvent<HTMLElement>) => {
+    if (event.touches.length !== 1 || (event.target instanceof Element && Boolean(event.target.closest("a, button")))) return;
+    heroTouchStartRef.current = event.touches[0].clientX;
+    setHeroPaused(true);
+  };
+
+  const handleHeroTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const startX = heroTouchStartRef.current;
+    heroTouchStartRef.current = null;
+    setHeroPaused(false);
+    if (startX === null || event.changedTouches.length !== 1) return;
+    const distance = event.changedTouches[0].clientX - startX;
+    if (Math.abs(distance) < 45) return;
+    setHeroSlide((current) => (current + (distance < 0 ? 1 : mobileHeroImages.length - 1)) % mobileHeroImages.length);
+  };
+
   return <div className="mobile-super-home">
-    <section className="mobile-home-hero"><div className="mobile-home-hero-copy"><span>WELCOME TO</span><h1>SMAJ PI HUB</h1><p>Everything you need. One place.</p><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div></section>
+    <section className="mobile-home-hero" onTouchStart={handleHeroTouchStart} onTouchEnd={handleHeroTouchEnd}>
+      <div className="mobile-home-hero-track" style={{ transform: `translateX(-${heroSlide * 100}%)`, transition: heroReducedMotion ? "none" : undefined }} aria-hidden="true">
+        {mobileHeroImages.map((image) => <div className="mobile-home-hero-slide" style={{ backgroundImage: `url("${image}")` }} key={image} />)}
+      </div>
+      <div className="mobile-home-hero-copy"><span>WELCOME TO</span><h1>SMAJ PI HUB</h1><p>Everything you need. One place.</p><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div>
+      <div className="mobile-home-hero-dots" aria-label="Hero slides">{mobileHeroImages.map((_, index) => <button type="button" className={index === heroSlide ? "active" : ""} aria-label={`Show hero image ${index + 1}`} aria-current={index === heroSlide ? "true" : undefined} onClick={() => setHeroSlide(index)} key={index} />)}</div>
+    </section>
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={onTabChange} /></div>
     <ContinueSection compact items={recentItems} />
     <PopularSearchSection compact />

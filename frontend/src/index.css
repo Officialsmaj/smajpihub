@@ -7312,12 +7312,36 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   .mobile-home-shell .mobile-home-hero {
     min-height: 350px;
     padding: 84px 20px 25px;
-    background-image: linear-gradient(180deg, rgba(10,18,36,.02) 42%, rgba(19,24,52,.68) 100%), url("/assets/smaj-mobile-hero-v2.png");
-    background-position: 50% 24%;
+    overflow: hidden;
+    background: #111936;
     border-radius: 0 0 27px 27px;
   }
 
+  .mobile-home-shell .mobile-home-hero-track {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    transition: transform 500ms ease;
+  }
+
+  .mobile-home-shell .mobile-home-hero-slide {
+    position: relative;
+    min-width: 100%;
+    background-position: 50% 24%;
+    background-size: cover;
+  }
+
+  .mobile-home-shell .mobile-home-hero-slide::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(180deg, rgba(10,18,36,.05) 34%, rgba(19,24,52,.76) 100%);
+  }
+
   .mobile-home-shell .mobile-home-hero-copy {
+    position: relative;
+    z-index: 2;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
@@ -7328,6 +7352,31 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   .mobile-home-shell .mobile-home-hero h1,
   .mobile-home-shell .mobile-home-hero-copy > p {
     grid-column: 1 / -1;
+  }
+
+  .mobile-home-shell .mobile-home-hero-dots {
+    position: absolute;
+    right: 20px;
+    bottom: 8px;
+    left: 20px;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-dots button {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    background: rgba(255,255,255,.52);
+    border: 0;
+    border-radius: 999px;
+  }
+
+  .mobile-home-shell .mobile-home-hero-dots button.active {
+    width: 18px;
+    background: #ffffff;
   }
 
   .mobile-home-shell .mobile-home-hero-copy > span {
