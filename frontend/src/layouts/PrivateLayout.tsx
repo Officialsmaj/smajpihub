@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type TouchEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
@@ -71,35 +71,7 @@ const mainTabs = [
   { to: "/settings", label: "You", icon: <PersonOutlineIcon /> },
 ];
 
-const SWIPE_MIN_DISTANCE = 86;
-const SWIPE_MAX_VERTICAL_DRIFT = 54;
-const swipeBlockedSelector = [
-  "input",
-  "textarea",
-  "select",
-  "option",
-  "button",
-  "a",
-  "audio",
-  "video",
-  "[contenteditable='true']",
-  "[role='slider']",
-  "[data-no-swipe]",
-  ".mobile-search-box",
-  ".private-search-results",
-  ".chat-messages",
-  ".carousel",
-  ".product-carousel",
-  ".storefront-media",
-  ".storefront-product-image-wrap",
-  ".map",
-  "iframe",
-].join(",");
-
 const getMainTabIndex = (pathname: string) => mainTabs.findIndex((tab) => tab.to === pathname);
-
-const shouldIgnoreSwipeTarget = (target: EventTarget | null) =>
-  target instanceof Element && Boolean(target.closest(swipeBlockedSelector));
 
 const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/product/")) return "/store";
@@ -147,7 +119,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [showProfileReminder, setShowProfileReminder] = useState(false);
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
   const routeLoadingTimerRef = useRef<number | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number; tabIndex: number } | null>(null);
   const previousTabRef = useRef(getMainTabIndex(window.location.pathname));
   const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
   const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
@@ -317,38 +288,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     previousTabRef.current = nextIndex;
   }, [location.pathname]);
 
-  const navigateMainTab = useCallback((nextIndex: number) => {
-    if (nextIndex < 0 || nextIndex >= mainTabs.length || nextIndex === activeTab) return;
-    const nextTab = mainTabs[nextIndex];
-    setTabTransition(nextIndex > activeTab ? "left" : "right");
-    startRouteLoading(nextTab.to);
-    navigate(nextTab.to);
-  }, [activeTab, navigate, startRouteLoading]);
-
-  const handleSwipeStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
-    if (!isMainTabRoute || event.touches.length !== 1 || shouldIgnoreSwipeTarget(event.target)) {
-      touchStartRef.current = null;
-      return;
-    }
-    const touch = event.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, tabIndex: currentTabIndex };
-  }, [currentTabIndex, isMainTabRoute]);
-
-  const handleSwipeEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (!start || event.changedTouches.length !== 1) return;
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    if (start.tabIndex !== currentTabIndex) return;
-    if (absX < SWIPE_MIN_DISTANCE || absY > SWIPE_MAX_VERTICAL_DRIFT || absX < absY * 1.8) return;
-    const nextIndex = deltaX < 0 ? start.tabIndex + 1 : start.tabIndex - 1;
-    navigateMainTab(nextIndex);
-  }, [currentTabIndex, navigateMainTab]);
-
   const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const target = event.target;
@@ -480,8 +419,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
             <div
               key={tabPageKey}
               className={`private-tab-page private-tab-page-${tabTransition}`}
-              onTouchStart={handleSwipeStart}
-              onTouchEnd={handleSwipeEnd}
             >
               {children}
             </div>
