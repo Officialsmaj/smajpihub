@@ -18234,7 +18234,17 @@ svg {
   }
 
   .storefront-page .storefront-product-card .storefront-product-rating {
-    gap: 3px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+
+  .storefront-page .storefront-stars {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
   }
 
   .storefront-page .storefront-stars svg {
@@ -18243,22 +18253,39 @@ svg {
   }
 
   .storefront-page .storefront-product-card .storefront-product-rating small {
+    width: auto !important;
+    margin: 0 !important;
     font-size: 9px !important;
+    white-space: nowrap !important;
   }
 
   .storefront-page .storefront-product-card .storefront-price-stack {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
     padding: 1px 0 3px !important;
     gap: 4px !important;
   }
 
   .storefront-page .storefront-product-card .storefront-price-stack strong,
   .storefront-page .storefront-product-card-compact .storefront-price-stack strong {
-    font-size: 14px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    flex: 0 1 auto !important;
+    font-size: clamp(12px, 3.6vw, 14px) !important;
+    white-space: nowrap !important;
   }
 
   .storefront-page .storefront-product-card .storefront-price-stack small,
   .storefront-page .storefront-product-card-compact .storefront-price-stack small {
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 0 0 auto !important;
+    flex: 0 1 auto !important;
     font-size: 10px !important;
+    white-space: nowrap !important;
   }
 
   .storefront-page .storefront-product-card .pi-currency-symbol {
