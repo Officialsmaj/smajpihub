@@ -298,7 +298,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
       {mediaSections.map((section) => <section className="mobile-feed-section" key={section.slug}><div className="mobile-section-heading"><h2>{section.title}</h2></div><div className="mobile-media-strip">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="mobile-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>{section.slug === "stream" ? "SMAJ Stream" : section.slug === "sports" ? "SMAJ Sports" : "SMAJ Events"}</small></div></Link>)}</div></section>)}
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Need help?</h2></div><div className="mobile-help-grid">{support.map(([Icon, title, , items, to]) => <Link to={to} key={title}><Icon /><div><strong>{title}</strong><span>{items.slice(0, 3).join(" - ")}</span></div><ArrowForwardOutlinedIcon /></Link>)}</div></section>
     </> : <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>{tabTitle(activeTab)}</h2><Link to="/app/services">See all</Link></div><ServiceList services={tabServices(activeTab)} mode="mobile" /></section>}
-    <footer className="mobile-private-footer"><small>Part of the SMAJ Ecosystem</small><small>© 2026 SMAJ PI HUB</small></footer>
+    <footer className="mobile-private-footer"><small>Part of the SMAJ Ecosystem</small><small>© 2026 SMAJ PI HUB. All rights reserved.</small></footer>
   </div>;
 };
 
