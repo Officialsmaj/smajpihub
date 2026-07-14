@@ -17842,8 +17842,9 @@ svg {
 
 @media (max-width: 767px) {
   .mobile-private-footer {
-    margin-bottom: calc(10px + 64px + env(safe-area-inset-bottom, 0px)) !important;
+    margin: 18px 0 0 !important;
     padding: 12px 18px !important;
+    border-bottom: 0 !important;
   }
 }
 
