@@ -286,7 +286,6 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     </section>
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={onTabChange} /></div>
     <ContinueSection compact items={recentItems} />
-    <PopularSearchSection compact />
     <RecentlyAddedSection compact products={products} loading={productsLoading} error={productsError} />
     <FeaturedSellersSection compact sellers={sellers} loading={productsLoading} error={productsError} />
     <RecommendedSection compact services={recommendedServices} />
