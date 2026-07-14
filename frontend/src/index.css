@@ -17816,40 +17816,6 @@ svg {
 
 .private-tab-page {
   min-width: 0;
-  will-change: transform;
-}
-
-.private-tab-page-left {
-  animation: smajTabSlideLeft 140ms ease-out both;
-}
-
-.private-tab-page-right {
-  animation: smajTabSlideRight 140ms ease-out both;
-}
-
-@keyframes smajTabSlideLeft {
-  from {
-    transform: translateX(12px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes smajTabSlideRight {
-  from {
-    transform: translateX(-12px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .private-tab-page-left,
-  .private-tab-page-right {
-    animation: none;
-  }
 }
 
 /* Final legal readability guard: privacy, terms, cookies, seller agreement, and reports. */

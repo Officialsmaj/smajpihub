@@ -71,8 +71,6 @@ const mainTabs = [
   { to: "/settings", label: "You", icon: <PersonOutlineIcon /> },
 ];
 
-const getMainTabIndex = (pathname: string) => mainTabs.findIndex((tab) => tab.to === pathname);
-
 const backFallbackForPath = (pathname: string) => {
   if (pathname.startsWith("/product/")) return "/store";
   if (pathname.startsWith("/edit-product/")) return "/seller";
@@ -114,20 +112,14 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [headerSearch, setHeaderSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [routeLoading, setRouteLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => Math.max(0, getMainTabIndex(window.location.pathname)));
-  const [tabTransition, setTabTransition] = useState<"left" | "right" | "none">("none");
   const [showProfileReminder, setShowProfileReminder] = useState(false);
   const profileAvatarRef = useRef<HTMLButtonElement | null>(null);
   const routeLoadingTimerRef = useRef<number | null>(null);
-  const previousTabRef = useRef(getMainTabIndex(window.location.pathname));
   const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; left: number }>({ top: 64, left: 16 });
   const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
   const navigate = useNavigate();
   const location = useLocation();
   const isStoreShell = location.pathname === "/store";
-  const currentTabIndex = getMainTabIndex(location.pathname);
-  const isMainTabRoute = currentTabIndex >= 0;
-  const tabPageKey = isMainTabRoute ? mainTabs[currentTabIndex].to : location.key;
   const backFallback = backFallbackForPath(location.pathname);
   const profileReminderStorageKey = user?.uid ? `${PROFILE_VERIFY_REMINDER_KEY}:${user.uid}` : PROFILE_VERIFY_REMINDER_KEY;
   const profileReadyForVerification = Boolean(user?.displayName?.trim() && (user?.piUsername || user?.username) && user?.country?.trim() && user?.contactPhone?.trim() && user?.avatar && user?.bio?.trim());
@@ -274,20 +266,6 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     }, 420);
   }, [clearRouteLoadingTimer, isLoading, location.pathname]);
 
-  useEffect(() => {
-    const nextIndex = getMainTabIndex(location.pathname);
-    const previousIndex = previousTabRef.current;
-    if (nextIndex >= 0) {
-      setActiveTab(nextIndex);
-      if (previousIndex >= 0 && previousIndex !== nextIndex) {
-        setTabTransition(nextIndex > previousIndex ? "left" : "right");
-      }
-    } else {
-      setTabTransition("none");
-    }
-    previousTabRef.current = nextIndex;
-  }, [location.pathname]);
-
   const handleRouteClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const target = event.target;
@@ -416,23 +394,17 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               <PrivateSkeleton variant={routeSkeleton.variant} count={routeSkeleton.count} />
             </div>
           ) : (
-            <div
-              key={tabPageKey}
-              className={`private-tab-page private-tab-page-${tabTransition}`}
-            >
+            <div className="private-tab-page">
               {children}
             </div>
           )}
         </div>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
-        {mainTabs.map((tab, index) => (
+        {mainTabs.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
-            onClick={() => {
-              if (isMainTabRoute && index !== activeTab) setTabTransition(index > activeTab ? "left" : "right");
-            }}
           >
             {tab.icon}
             <span>{tab.label}</span>
