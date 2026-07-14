@@ -205,7 +205,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
   }, []);
 
   return <div className="mobile-super-home">
-    <section className="mobile-home-hero"><div className="mobile-home-hero-copy"><span>SMAJ PI HUB</span><h1>Everything you need.<br />One place.</h1><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div></section>
+    <section className="mobile-home-hero"><div className="mobile-home-hero-copy"><span>WELCOME TO</span><h1>SMAJ PI HUB</h1><p>Everything you need. One place.</p><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div></section>
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={onTabChange} /></div>
     <ContinueSection compact items={recentItems} />
     <PopularSearchSection compact />

@@ -7325,7 +7325,8 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   }
 
   .mobile-home-shell .mobile-home-hero-copy > span,
-  .mobile-home-shell .mobile-home-hero h1 {
+  .mobile-home-shell .mobile-home-hero h1,
+  .mobile-home-shell .mobile-home-hero-copy > p {
     grid-column: 1 / -1;
   }
 
@@ -7337,11 +7338,19 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 
   .mobile-home-shell .mobile-home-hero h1 {
     max-width: 330px;
-    margin: 0 0 19px;
+    margin: 0 0 5px;
     color: #ffffff !important;
     font-size: clamp(2.15rem, 10.4vw, 3.1rem);
     line-height: .98;
     text-shadow: 0 3px 16px rgba(0,0,0,.48);
+  }
+
+  .mobile-home-shell .mobile-home-hero-copy > p {
+    margin: 0 0 19px;
+    color: rgba(255,255,255,.92);
+    font-size: 14px;
+    font-weight: 650;
+    text-shadow: 0 2px 10px rgba(0,0,0,.42);
   }
 
   .mobile-home-shell .mobile-hero-icons {
