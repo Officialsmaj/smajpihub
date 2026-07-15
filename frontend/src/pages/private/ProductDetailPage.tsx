@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { isAxiosError } from "axios";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
@@ -34,6 +35,7 @@ const ProductDetailPage = () => {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Misleading or inappropriate listing");
   const { addProductToCart, cartToast } = useAddToCartToast();
+  const galleryTouchStart = useRef<number | null>(null);
 
   useEffect(() => {
     axiosClient
@@ -122,22 +124,36 @@ const ProductDetailPage = () => {
   const sellerFlag = countryFlag(seller?.country || product.country || product.location.split(" - ")[0]);
   const sellerLocation = [sellerCountry, product.stateRegion, product.city, product.areaAddress].filter(Boolean).join(" - ") || product.location;
   const piPrice = product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
+  const selectedImageIndex = Math.max(0, images.indexOf(selectedImage));
+  const visibleThumbnails = images.slice(0, 4);
+  const selectAdjacentImage = (direction: number) => {
+    if (images.length < 2) return;
+    const nextIndex = (selectedImageIndex + direction + images.length) % images.length;
+    setSelectedImage(images[nextIndex]);
+  };
 
   return (
     <main className="private-page product-detail-page">
       {cartToast}
-      <Link to="/store" className="private-back-link">
-        <ArrowBackIcon /> Back to Store
-      </Link>
 
       <section className="product-detail">
         <div className="product-gallery">
-          <div className="product-detail-image">
+          <div
+            className="product-detail-image"
+            onTouchStart={(event) => { galleryTouchStart.current = event.touches[0]?.clientX ?? null; }}
+            onTouchEnd={(event) => {
+              if (galleryTouchStart.current === null) return;
+              const distance = event.changedTouches[0]?.clientX - galleryTouchStart.current;
+              if (Math.abs(distance) > 45) selectAdjacentImage(distance < 0 ? 1 : -1);
+              galleryTouchStart.current = null;
+            }}
+          >
             {selectedImage ? <img src={selectedImage} alt={product.title} /> : <span>No image supplied</span>}
+            {images.length ? <span className="product-gallery-count">{selectedImageIndex + 1} / {images.length}</span> : null}
           </div>
           {images.length > 1 ? (
             <div className="gallery-thumbnails">
-              {images.map((image) => (
+              {visibleThumbnails.map((image) => (
                 <button
                   className={selectedImage === image ? "active" : ""}
                   key={image.slice(-30)}
@@ -146,6 +162,7 @@ const ProductDetailPage = () => {
                   <img src={image} alt="" />
                 </button>
               ))}
+              {images.length > visibleThumbnails.length ? <span className="gallery-more">+{images.length - visibleThumbnails.length}</span> : null}
             </div>
           ) : null}
         </div>
@@ -153,10 +170,9 @@ const ProductDetailPage = () => {
         <div className="product-detail-content">
           <span className="product-category inline">{product.category}</span>
           <h1>{product.title}</h1>
-          <p className="product-detail-price">
-            {formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE)} USDT <small>{formatPiAmount(piPrice)}</small>
-          </p>
-          <p>{product.description}</p>
+          <div className="product-detail-rating"><span>{Array.from({ length: 5 }).map((_, index) => index < Math.round(product.rating || 0) ? <StarRoundedIcon key={index} /> : <StarBorderRoundedIcon key={index} />)}</span><small>{product.rating?.toFixed(1) || "New"} ({product.reviewCount || 0} reviews)</small></div>
+          <div className="product-detail-price-row"><strong>{formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE)}</strong><small>{formatPiAmount(piPrice)}</small></div>
+          <p className="product-delivery-line">{sellerFlag ? `${sellerFlag} ` : ""}{product.city || sellerCountry} · {product.shipping?.deliveryTime || "Contact seller for delivery"}</p>
 
           <Link className="seller-info-card" to={`/seller/${product.sellerId}`}>
             <div className="profile-avatar small">
@@ -173,6 +189,15 @@ const ProductDetailPage = () => {
               </p>
             </div>
           </Link>
+
+          <details className="product-info-disclosure" open>
+            <summary>Description</summary>
+            <p>{product.description}</p>
+          </details>
+          <details className="product-info-disclosure">
+            <summary>Product details</summary>
+            <dl><div><dt>Condition</dt><dd>{product.condition || "New"}</dd></div><div><dt>Category</dt><dd>{product.category}</dd></div><div><dt>Location</dt><dd>{sellerLocation}</dd></div></dl>
+          </details>
 
           {message ? <div className="private-alert success">{message}</div> : null}
           {error ? <div className="private-alert error">{error}</div> : null}
@@ -198,6 +223,14 @@ const ProductDetailPage = () => {
           )}
         </div>
       </section>
+
+      {product.sellerId !== user?.uid ? (
+        <aside className="product-mobile-purchase" aria-label="Purchase actions">
+          <span><small>Price</small><strong>{formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE)}</strong><small>{formatPiAmount(piPrice)}</small></span>
+          <button type="button" className="mobile-add-cart" onClick={() => addProductToCart(product)}>Add to Cart</button>
+          <button type="button" className="mobile-buy-now" disabled={submitting} onClick={() => void action("order")}>Buy Now</button>
+        </aside>
+      ) : null}
 
       {related.length ? (
         <>

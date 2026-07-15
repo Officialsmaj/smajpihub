@@ -18659,6 +18659,62 @@ svg {
   .related-products-rail .storefront-product-cart { width: 42px !important; min-width: 42px !important; height: 38px !important; min-height: 38px !important; border-radius: 11px !important; }
 }
 
+/* Product detail mobile shopping layout */
+.product-detail-page .product-detail { align-items: start; }
+.product-detail-page .product-detail-image { position: relative; overflow: hidden; }
+.product-detail-page .product-detail-image img { object-fit: contain; }
+.product-gallery-count { position: absolute; right: 12px; bottom: 12px; padding: 5px 8px; color: #ffffff; background: rgba(15, 23, 42, .72); border-radius: 999px; font-size: 11px; font-weight: 800; }
+.gallery-more { width: 58px; height: 54px; flex: 0 0 58px; display: grid; place-items: center; color: #6d28d9; background: #f3e8ff; border: 1px solid #ddd6fe; border-radius: 10px; font-size: 12px; font-weight: 900; }
+.product-detail-rating { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.product-detail-rating > span { display: inline-flex; color: #fbbf24; }
+.product-detail-rating svg { width: 17px; height: 17px; }
+.product-detail-rating small { color: #64748b; font-size: 12px; }
+.product-detail-price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 10px 0; }
+.product-detail-price-row strong { color: #111827; font-size: 24px; }
+.product-detail-price-row small { color: #6d28d9; font-size: 14px; font-weight: 850; }
+.product-delivery-line { padding: 10px 12px; color: #475569 !important; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 12px; line-height: 1.4 !important; }
+.product-info-disclosure { margin-top: 10px; padding: 0 12px; border: 1px solid var(--smaj-border); border-radius: 11px; }
+.product-info-disclosure summary { padding: 12px 0; color: var(--smaj-text); font-size: 13px; font-weight: 850; cursor: pointer; }
+.product-info-disclosure p { margin: 0; padding: 0 0 12px; color: var(--smaj-text-secondary); font-size: 13px; line-height: 1.6; }
+.product-info-disclosure dl { margin: 0; padding-bottom: 10px; }
+.product-info-disclosure dl div { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-top: 1px solid var(--smaj-border); font-size: 12px; }
+.product-info-disclosure dt { color: var(--smaj-text-secondary); }
+.product-info-disclosure dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.product-mobile-purchase { display: none; }
+
+@media (max-width: 600px) {
+  .product-detail-page { padding-top: 0 !important; padding-bottom: 150px !important; }
+  .product-detail-page .product-detail { display: block; overflow: visible; background: #ffffff !important; border-color: #e5e7eb !important; border-radius: 15px !important; }
+  .product-detail-page .product-gallery { padding: 8px 8px 0; }
+  .product-detail-page .product-detail-image { width: 100%; min-height: 0 !important; height: clamp(300px, 88vw, 360px); background: #f8fafc !important; border-radius: 12px; }
+  .product-detail-page .product-detail-image img { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+  .product-detail-page .gallery-thumbnails { gap: 7px; margin: 8px 0 0; padding-bottom: 4px; }
+  .product-detail-page .gallery-thumbnails button { width: 56px; height: 54px; flex: 0 0 56px; padding: 2px; }
+  .product-detail-page .gallery-more { width: 56px; height: 54px; flex-basis: 56px; }
+  .product-detail-page .product-detail-content { padding: 14px 14px 18px !important; }
+  .product-detail-page .product-category.inline { padding: 5px 9px; font-size: 10px; }
+  .product-detail-page .product-detail-content h1 { margin: 10px 0 4px; overflow: hidden; color: #111827 !important; font-size: 22px !important; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .product-detail-page .product-detail-rating { margin: 7px 0; }
+  .product-detail-page .product-detail-rating svg { width: 15px; height: 15px; }
+  .product-detail-page .product-detail-price-row { margin: 8px 0; }
+  .product-detail-page .product-detail-price-row strong { font-size: 21px; }
+  .product-detail-page .product-detail-price-row small { font-size: 12px; }
+  .product-detail-page .seller-info-card { margin: 12px 0; padding: 11px; gap: 9px; }
+  .product-detail-page .seller-info-card .profile-avatar.small { width: 40px; height: 40px; }
+  .product-detail-page .seller-info-card p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .product-detail-page .product-detail-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+  .product-detail-page .product-detail-actions .private-primary-button { display: none; }
+  .product-detail-page .product-detail-actions .private-secondary-button { min-width: 0; min-height: 38px; padding: 7px 5px; font-size: 10px; }
+  .product-detail-page .product-detail-actions .private-secondary-button svg { width: 16px; height: 16px; }
+  .product-mobile-purchase { position: fixed; left: 0; right: 0; bottom: calc(62px + env(safe-area-inset-bottom)); z-index: 45; min-height: 66px; padding: 8px 10px; display: grid; grid-template-columns: minmax(70px, .8fr) 1fr 1fr; align-items: center; gap: 7px; background: rgba(255, 255, 255, .98); border-top: 1px solid #e2e8f0; box-shadow: 0 -8px 24px rgba(15, 23, 42, .12); backdrop-filter: blur(12px); }
+  .product-mobile-purchase > span { min-width: 0; display: grid; }
+  .product-mobile-purchase > span small { overflow: hidden; color: #64748b; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+  .product-mobile-purchase > span strong { overflow: hidden; color: #111827; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .product-mobile-purchase > button { min-width: 0; min-height: 44px; padding: 8px 6px; border-radius: 10px; font-size: 11px; font-weight: 850; }
+  .mobile-add-cart { color: #6d28d9; background: #f3e8ff; border: 1px solid #d8b4fe; }
+  .mobile-buy-now { color: #ffffff; background: #6d28d9; border: 1px solid #6d28d9; }
+}
+
 .legal-company-page {
   color: #0f172a !important;
   background: #ffffff !important;
