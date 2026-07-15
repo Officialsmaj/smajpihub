@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
@@ -6,14 +6,49 @@ import TrustBadge from "../../components/TrustBadge";
 import { axiosClient } from "../../lib/axiosClient";
 import type { Product, Review, SellerSummary } from "../../types/marketplace";
 
+type SellerProfileResponse = {
+  seller: SellerSummary;
+  products: Product[];
+  reviews: Review[];
+  pagination: { page: number; limit: number; total: number; hasMore: boolean };
+};
+
+const categories = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
+
 const SellerProfilePage = () => {
   const { id } = useParams();
-  const [data, setData] = useState<{ seller: SellerSummary; products: Product[]; reviews: Review[] } | null>(null);
+  const [data, setData] = useState<SellerProfileResponse | null>(null);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  const query = useMemo(() => ({ page, limit: 20, search, category, sort }), [page, search, category, sort]);
 
   useEffect(() => {
-    axiosClient.get(`/marketplace/sellers/${id}`).then(({ data }) => setData(data)).catch(() => setError("Seller profile not found."));
-  }, [id]);
+    const timer = window.setTimeout(() => {
+      setLoadingMore(page > 1);
+      axiosClient.get<SellerProfileResponse>(`/marketplace/sellers/${id}`, { params: query })
+        .then(({ data: next }) => {
+          setData((current) => page > 1 && current ? { ...next, products: [...current.products, ...next.products] } : next);
+          setError("");
+        })
+        .catch(() => setError("Seller profile not found."))
+        .finally(() => setLoadingMore(false));
+    }, search ? 300 : 0);
+    return () => window.clearTimeout(timer);
+  }, [id, page, query, search]);
+
+  useEffect(() => {
+    const updateBackToTop = () => setShowBackToTop(window.scrollY > 700);
+    window.addEventListener("scroll", updateBackToTop, { passive: true });
+    return () => window.removeEventListener("scroll", updateBackToTop);
+  }, []);
+
+  const resetPage = () => setPage(1);
 
   if (!data) {
     return <main className="private-page">{error ? <div className="private-state error">{error}</div> : <PrivateSkeleton variant="seller" />}</main>;
@@ -35,14 +70,36 @@ const SellerProfilePage = () => {
           <Link className="private-secondary-button seller-report-button" to="/report-abuse">Report seller</Link>
         </div>
         <div className="seller-profile-stats">
-          <strong>{data.products.length}<span>Products</span></strong>
+          <strong>{data.seller.totalProducts || 0}<span>Products</span></strong>
           <strong>{data.seller.successfulOrders || 0}<span>Successful orders</span></strong>
           <strong>{data.seller.averageRating?.toFixed(1) || "New"}<span>Rating</span></strong>
         </div>
       </section>
       <p className="seller-joined">Joined {data.seller.createdAt ? new Date(data.seller.createdAt).toLocaleDateString() : "recently"}</p>
-      <section className="section-title"><div><h2>Products listed</h2></div></section>
-      <section className="product-grid">{data.products.map((product) => <MarketplaceProductCard key={product._id} product={product} />)}</section>
+
+      <section className="section-title seller-products-title"><div><h2>Products listed</h2><p>Showing {data.products.length} of {data.pagination.total}</p></div></section>
+      <section className="seller-product-tools" aria-label="Filter seller products">
+        <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="Search products" aria-label="Search products" />
+        <select value={category} onChange={(event) => { setCategory(event.target.value); resetPage(); }} aria-label="Filter by category">
+          <option value="">All categories</option>
+          {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+        </select>
+        <select value={sort} onChange={(event) => { setSort(event.target.value); resetPage(); }} aria-label="Sort products">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="price_low">Price: low to high</option>
+          <option value="price_high">Price: high to low</option>
+        </select>
+      </section>
+
+      {data.products.length ? (
+        <section className="product-grid seller-product-grid">
+          {data.products.map((product) => <MarketplaceProductCard key={product._id} product={product} variant="compact" />)}
+        </section>
+      ) : <div className="private-state"><h2>No matching products</h2><p>Try another search or category.</p></div>}
+
+      {data.pagination.hasMore ? <div className="seller-load-more"><button type="button" className="private-secondary-button" disabled={loadingMore} onClick={() => setPage((value) => value + 1)}>{loadingMore ? "Loading..." : "Load 20 more"}</button></div> : null}
+
       <section className="reviews-panel">
         <div className="section-title"><div><h2>Buyer reviews</h2><p>{data.reviews.length ? `${data.reviews.length} marketplace reviews` : "No reviews yet"}</p></div></div>
         {data.reviews.map((review) => (
@@ -53,6 +110,7 @@ const SellerProfilePage = () => {
           </article>
         ))}
       </section>
+      {showBackToTop ? <button type="button" className="seller-back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Back to top">↑</button> : null}
     </main>
   );
 };

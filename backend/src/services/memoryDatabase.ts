@@ -74,6 +74,11 @@ class MemoryCursor {
     return this;
   }
 
+  skip(count: number) {
+    this.documents = this.documents.slice(count);
+    return this;
+  }
+
   async toArray() {
     return this.documents.map((document) => ({ ...document }));
   }

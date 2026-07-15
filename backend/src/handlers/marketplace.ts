@@ -507,13 +507,24 @@ export default function mountMarketplaceEndpoints(router: Router) {
   router.get("/sellers/:id", async (req, res) => {
     const seller = await req.app.locals.userCollection.findOne({ uid: req.params.id });
     if (!seller) return res.status(404).json({ error: "not_found", message: "Seller not found" });
-    const [products, reviews, completedOrders] = await Promise.all([
-      req.app.locals.productCollection.find({ sellerId: seller.uid, hidden: { $ne: true }, active: true, approved: true, reviewStatus: "approved" }).sort({ createdAt: -1 }).toArray(),
+    const page = Math.max(1, Number.parseInt(String(req.query.page || "1"), 10) || 1);
+    const limit = Math.min(40, Math.max(1, Number.parseInt(String(req.query.limit || "20"), 10) || 20));
+    const search = String(req.query.search || "").trim().slice(0, 80);
+    const category = String(req.query.category || "").trim().slice(0, 50);
+    const sort = String(req.query.sort || "newest");
+    const productQuery: Record<string, unknown> = { sellerId: seller.uid, hidden: { $ne: true }, active: true, approved: true, reviewStatus: "approved" };
+    if (search) productQuery.$or = ["title", "description", "category"].map((field) => ({ [field]: { $regex: escapeRegex(search), $options: "i" } }));
+    if (category) productQuery.category = category;
+    const productSort = sort === "oldest" ? { createdAt: 1 } : sort === "price_low" ? { priceUsdt: 1 } : sort === "price_high" ? { priceUsdt: -1 } : { createdAt: -1 };
+    const [products, filteredProducts, reviews, completedOrders, totalProducts] = await Promise.all([
+      req.app.locals.productCollection.find(productQuery).sort(productSort).skip((page - 1) * limit).limit(limit).toArray(),
+      req.app.locals.productCollection.countDocuments(productQuery),
       req.app.locals.reviewCollection.find({ sellerId: seller.uid }).sort({ createdAt: -1 }).toArray(),
       req.app.locals.marketplaceOrderCollection.countDocuments({ sellerId: seller.uid, status: "completed" }),
+      req.app.locals.productCollection.countDocuments({ sellerId: seller.uid, hidden: { $ne: true }, active: true, approved: true, reviewStatus: "approved" }),
     ]);
     const averageRating = reviews.length ? reviews.reduce((sum: number, review: any) => sum + Number(review.rating), 0) / reviews.length : 0;
-    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt, totalProducts: products.length, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(withResolvedPiPrice).map(serialize), reviews: reviews.map(serialize) });
+    return res.status(200).json({ seller: { uid: seller.uid, displayName: seller.displayName, piUsername: seller.piUsername, avatar: seller.avatar || "", country: seller.country, verificationLevel: publicVerificationLevel(seller), verificationStatus: verificationStatus(seller), createdAt: seller.createdAt, totalProducts, successfulOrders: completedOrders, averageRating, reviewCount: reviews.length }, products: products.map(withResolvedPiPrice).map(serialize), reviews: reviews.map(serialize), pagination: { page, limit, total: filteredProducts, hasMore: page * limit < filteredProducts } });
   });
 
   router.post("/orders/:id/review", async (req, res) => {
