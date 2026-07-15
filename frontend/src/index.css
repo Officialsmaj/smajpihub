@@ -18575,6 +18575,22 @@ svg {
 }
 
 /* Final legal readability guard: privacy, terms, cookies, seller agreement, and reports. */
+/* One cart-button color across every marketplace product card */
+.storefront-product-card .storefront-product-cart,
+.storefront-page .storefront-product-card .storefront-product-cart,
+.storefront-page .storefront-product-card-compact .storefront-product-cart {
+  color: #ffffff !important;
+  background: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+  opacity: 1 !important;
+}
+
+.storefront-product-card .storefront-product-cart svg,
+.storefront-page .storefront-product-card .storefront-product-cart svg,
+.storefront-page .storefront-product-card-compact .storefront-product-cart svg {
+  color: #ffffff !important;
+}
+
 .legal-company-page {
   color: #0f172a !important;
   background: #ffffff !important;
