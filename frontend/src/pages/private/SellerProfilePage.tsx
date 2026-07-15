@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import TrustBadge from "../../components/TrustBadge";
@@ -82,7 +83,10 @@ const SellerProfilePage = () => {
 
       <section className="section-title seller-products-title"><div><h2>Products listed</h2><p>Showing {data.products.length} of {productTotal}</p></div></section>
       <section className="seller-product-tools" aria-label="Filter seller products">
-        <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="Search products" aria-label="Search products" />
+        <label className="seller-product-search">
+          <SearchOutlinedIcon aria-hidden="true" />
+          <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="Search products" aria-label="Search products" />
+        </label>
         <select value={category} onChange={(event) => { setCategory(event.target.value); resetPage(); }} aria-label="Filter by category">
           <option value="">All categories</option>
           {categories.map((name) => <option key={name} value={name}>{name}</option>)}

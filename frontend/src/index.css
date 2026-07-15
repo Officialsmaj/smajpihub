@@ -13725,6 +13725,164 @@ select,
   color: #6b3fe6 !important;
 }
 
+/* Seller profile mobile catalog — final readability and spacing */
+.seller-profile-page .seller-products-title {
+  margin: 10px 0 8px !important;
+}
+
+.seller-profile-page .seller-product-tools {
+  gap: 8px !important;
+  padding: 9px !important;
+  margin: 0 0 14px !important;
+  background: #ffffff !important;
+  border-color: #d8dee9 !important;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.08) !important;
+}
+
+.seller-product-search {
+  position: relative;
+  min-width: 0;
+  display: block;
+}
+
+.seller-product-search > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  color: #64748b;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.seller-profile-page .seller-product-tools input,
+.seller-profile-page .seller-product-tools select {
+  height: 44px !important;
+  padding: 0 12px !important;
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+}
+
+.seller-profile-page .seller-product-tools input {
+  padding-left: 39px !important;
+}
+
+.seller-profile-page .seller-product-tools input::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+.seller-profile-page .seller-product-tools input:focus,
+.seller-profile-page .seller-product-tools select:focus {
+  border-color: #7c3aed !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14) !important;
+}
+
+@media (max-width: 600px) {
+  .seller-profile-page .seller-product-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .seller-profile-page .seller-product-search {
+    grid-column: 1 / -1;
+  }
+
+  .seller-profile-page .seller-product-grid {
+    gap: 10px !important;
+  }
+
+  .seller-profile-page .storefront-product-card {
+    min-height: 324px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-image-wrap {
+    height: 120px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-body {
+    min-height: 202px !important;
+    padding: 10px 9px 58px !important;
+    gap: 6px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-body h2 {
+    min-height: 32px !important;
+    color: #111827 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-rating {
+    min-height: 16px;
+    gap: 4px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-stars svg {
+    width: 11px !important;
+    height: 11px !important;
+    color: #fbbf24 !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-rating small {
+    color: #64748b !important;
+    font-size: 9px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-price-stack {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    gap: 5px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-price-stack strong {
+    color: #111827 !important;
+    font-size: 13px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-price-stack small {
+    margin-left: auto !important;
+    color: #6d28d9 !important;
+    font-size: 9px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-stock-row {
+    left: 9px !important;
+    bottom: 17px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-actions {
+    right: 9px !important;
+    bottom: 10px !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-cart {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    color: #ffffff !important;
+    background: #6d28d9 !important;
+    border-color: #6d28d9 !important;
+    border-radius: 11px !important;
+    opacity: 1 !important;
+  }
+
+  .seller-profile-page .storefront-product-card .storefront-product-cart svg {
+    color: #ffffff !important;
+  }
+}
+
 .setting-line input:disabled {
   cursor: not-allowed;
   opacity: 0.45;
