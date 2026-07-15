@@ -18717,6 +18717,50 @@ svg {
   .mobile-buy-now { color: #ffffff; background: #6d28d9; border: 1px solid #6d28d9; }
 }
 
+/* Final shared rating row: stars and review text always stay inline */
+.storefront-product-card .storefront-product-rating,
+.seller-profile-page .storefront-product-card .storefront-product-rating,
+.related-products-rail .storefront-product-card .storefront-product-rating {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+.storefront-product-card .storefront-product-rating .storefront-stars {
+  min-width: 0 !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+}
+
+.storefront-product-card .storefront-product-rating small {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  display: inline !important;
+  overflow: hidden !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.storefront-product-card .storefront-stars svg {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+.storefront-product-card .storefront-stars .star-empty {
+  color: #cbd5e1 !important;
+}
+
 .legal-company-page {
   color: #0f172a !important;
   background: #ffffff !important;
