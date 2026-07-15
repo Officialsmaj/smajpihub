@@ -18635,6 +18635,30 @@ svg {
   .cart-success-toast { right: 12px; bottom: calc(74px + env(safe-area-inset-bottom)); width: calc(100vw - 24px); }
 }
 
+/* Compact related-products swipe rail */
+.related-products-title { align-items: end; margin: 28px 0 12px; }
+.related-products-title > a { flex: 0 0 auto; padding: 7px 2px; color: #6d28d9; font-size: 13px; font-weight: 850; text-decoration: none; }
+.related-products-rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(190px, 230px); gap: 12px; overflow-x: auto; overscroll-behavior-inline: contain; padding: 3px 2px 16px; scroll-padding-inline: 2px; scroll-snap-type: inline mandatory; scrollbar-width: thin; }
+.related-products-rail > .storefront-product-card { min-width: 0; scroll-snap-align: start; }
+
+@media (max-width: 600px) {
+  .related-products-title { margin-top: 23px; }
+  .related-products-title h2 { font-size: 1.45rem; }
+  .related-products-title p { font-size: .78rem; }
+  .related-products-rail { grid-auto-columns: minmax(0, calc((100vw - 52px) / 1.7)); gap: 10px; margin-right: -13px; padding-right: 13px; }
+  .related-products-rail > .storefront-product-card { min-height: 300px; }
+  .related-products-rail .storefront-product-image-wrap { height: 120px !important; }
+  .related-products-rail .storefront-product-body { min-height: 178px; padding: 9px 9px 54px !important; gap: 5px; }
+  .related-products-rail .storefront-product-body h2 { min-height: 31px; font-size: 11px !important; line-height: 1.35; }
+  .related-products-rail .storefront-seller-block { display: none; }
+  .related-products-rail .storefront-product-rating { min-height: 15px; }
+  .related-products-rail .storefront-stars svg { width: 10px !important; height: 10px !important; }
+  .related-products-rail .storefront-price-stack { display: flex !important; align-items: center !important; justify-content: space-between !important; flex-direction: row !important; gap: 5px !important; }
+  .related-products-rail .storefront-price-stack strong { font-size: 12px !important; }
+  .related-products-rail .storefront-price-stack small { margin-left: auto !important; font-size: 9px !important; }
+  .related-products-rail .storefront-product-cart { width: 42px !important; min-width: 42px !important; height: 38px !important; min-height: 38px !important; border-radius: 11px !important; }
+}
+
 .legal-company-page {
   color: #0f172a !important;
   background: #ffffff !important;

@@ -13,6 +13,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { setBuyNowItem } from "../../lib/storeCart";
+import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
 const supportEmail = "info@smajpihub.com";
@@ -32,6 +33,7 @@ const ProductDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Misleading or inappropriate listing");
+  const { addProductToCart, cartToast } = useAddToCartToast();
 
   useEffect(() => {
     axiosClient
@@ -122,7 +124,8 @@ const ProductDetailPage = () => {
   const piPrice = product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
 
   return (
-    <main className="private-page">
+    <main className="private-page product-detail-page">
+      {cartToast}
       <Link to="/store" className="private-back-link">
         <ArrowBackIcon /> Back to Store
       </Link>
@@ -198,15 +201,16 @@ const ProductDetailPage = () => {
 
       {related.length ? (
         <>
-          <section className="section-title">
+          <section className="section-title related-products-title">
             <div>
               <h2>Related products</h2>
-              <p>More listings in {product.category}</p>
+              <p>Similar {product.category} you may like</p>
             </div>
+            <Link to={`/store?category=${encodeURIComponent(product.category)}`}>See all</Link>
           </section>
-          <section className="product-grid">
+          <section className="related-products-rail" aria-label="Related products">
             {related.map((item) => (
-              <MarketplaceProductCard product={item} key={item._id} />
+              <MarketplaceProductCard product={item} key={item._id} variant="compact" onAddToCart={addProductToCart} />
             ))}
           </section>
         </>
