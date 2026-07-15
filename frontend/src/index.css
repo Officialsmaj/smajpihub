@@ -18668,6 +18668,8 @@ svg {
 .product-detail-rating { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
 .product-detail-rating > span { display: inline-flex; color: #fbbf24; }
 .product-detail-rating svg { width: 17px; height: 17px; }
+.storefront-stars .star-filled, .storefront-stars .star-half, .product-detail-rating .star-filled, .product-detail-rating .star-half { color: #fbbf24 !important; }
+.storefront-stars .star-empty, .product-detail-rating .star-empty { color: #cbd5e1 !important; }
 .product-detail-rating small { color: #64748b; font-size: 12px; }
 .product-detail-price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 10px 0; }
 .product-detail-price-row strong { color: #111827; font-size: 24px; }

@@ -3,6 +3,8 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
 import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import StarHalfIcon from "@mui/icons-material/StarHalf";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import TrustBadge from "./TrustBadge";
@@ -104,11 +106,13 @@ const MarketplaceProductCard = ({
   const locationParts = (product.location || "").split(/\s+-\s+/).map((item) => item.trim());
   const city = product.city?.trim() || locationParts[2] || "City unavailable";
 
-  const reviewLabel = `(${product.reviewCount || 0})`;
+  const reviewCount = product.reviewCount || 0;
+  const rating = reviewCount > 0 ? Math.max(0, Math.min(5, product.rating || 0)) : 0;
+  const reviewLabel = reviewCount > 0 ? `${rating.toFixed(1)} (${reviewCount})` : "No reviews yet";
 
-  const ratingLabel = product.rating
-    ? `${product.rating.toFixed(1)} rating`
-    : "No rating yet";
+  const ratingLabel = reviewCount > 0
+    ? `${rating.toFixed(1)} out of 5 from ${reviewCount} reviews`
+    : "No reviews yet";
 
   const imageCount = Math.max(
     product.images?.length || (product.image ? 1 : 0),
@@ -177,9 +181,11 @@ const MarketplaceProductCard = ({
               className="storefront-stars"
               aria-label={ratingLabel}
             >
-              {Array.from({ length: 5 }).map((_, index) => (
-                <StarIcon key={index} />
-              ))}
+              {Array.from({ length: 5 }).map((_, index) => {
+                if (rating >= index + 1) return <StarIcon className="star-filled" key={index} />;
+                if (rating >= index + 0.5) return <StarHalfIcon className="star-half" key={index} />;
+                return <StarBorderIcon className="star-empty" key={index} />;
+              })}
             </span>
 
             <small>{reviewLabel}</small>

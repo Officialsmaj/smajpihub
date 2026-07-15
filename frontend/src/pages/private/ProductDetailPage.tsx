@@ -5,6 +5,7 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import StarHalfRoundedIcon from "@mui/icons-material/StarHalfRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { isAxiosError } from "axios";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
@@ -126,6 +127,8 @@ const ProductDetailPage = () => {
   const piPrice = product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
   const selectedImageIndex = Math.max(0, images.indexOf(selectedImage));
   const visibleThumbnails = images.slice(0, 4);
+  const productReviewCount = product.reviewCount || 0;
+  const productRating = productReviewCount > 0 ? Math.max(0, Math.min(5, product.rating || 0)) : 0;
   const selectAdjacentImage = (direction: number) => {
     if (images.length < 2) return;
     const nextIndex = (selectedImageIndex + direction + images.length) % images.length;
@@ -170,7 +173,7 @@ const ProductDetailPage = () => {
         <div className="product-detail-content">
           <span className="product-category inline">{product.category}</span>
           <h1>{product.title}</h1>
-          <div className="product-detail-rating"><span>{Array.from({ length: 5 }).map((_, index) => index < Math.round(product.rating || 0) ? <StarRoundedIcon key={index} /> : <StarBorderRoundedIcon key={index} />)}</span><small>{product.rating?.toFixed(1) || "New"} ({product.reviewCount || 0} reviews)</small></div>
+          <div className="product-detail-rating"><span>{Array.from({ length: 5 }).map((_, index) => productRating >= index + 1 ? <StarRoundedIcon className="star-filled" key={index} /> : productRating >= index + 0.5 ? <StarHalfRoundedIcon className="star-half" key={index} /> : <StarBorderRoundedIcon className="star-empty" key={index} />)}</span><small>{productReviewCount ? `${productRating.toFixed(1)} (${productReviewCount} reviews)` : "No reviews yet"}</small></div>
           <div className="product-detail-price-row"><strong>{formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE)}</strong><small>{formatPiAmount(piPrice)}</small></div>
           <p className="product-delivery-line">{sellerFlag ? `${sellerFlag} ` : ""}{product.city || sellerCountry} · {product.shipping?.deliveryTime || "Contact seller for delivery"}</p>
 
