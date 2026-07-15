@@ -61,13 +61,13 @@ export const countryCode = (country?: string) => {
 };
 
 export const formatPiAmount = (value: number) => {
-  if (!Number.isFinite(value) || value <= 0) return "0 PI";
+  if (!Number.isFinite(value) || value <= 0) return "π 0";
   const formatted = value >= 1
     ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
     : value >= 0.01
       ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })
       : formatPiInputValue(value);
-  return `${formatted} PI`;
+  return `π ${formatted}`;
 };
 
 export const formatPiInputValue = (value: number) => {
@@ -79,7 +79,7 @@ export const formatPiInputValue = (value: number) => {
 };
 
 export const formatUsdAmount = (value: number) =>
-  Number.isFinite(value) && value > 0 ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
+  Number.isFinite(value) && value > 0 ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00";
 
 export const countryFlag = (country?: string) => {
   const code = countryCode(country);

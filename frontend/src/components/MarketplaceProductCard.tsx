@@ -192,12 +192,8 @@ const MarketplaceProductCard = ({
           </div>
 
           <div className="storefront-price-stack">
-            <strong><span aria-hidden="true">$</span>{usdt(product)}</strong>
-
-            <small>
-              <span className="pi-currency-symbol" aria-label="Pi">π</span>
-              {formatPiAmount(pi(product)).replace(/ PI$/, "")}
-            </small>
+            <strong>{usdt(product)}</strong>
+            <small>{formatPiAmount(pi(product))}</small>
           </div>
 
           <div className="storefront-seller-block">

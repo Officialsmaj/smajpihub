@@ -264,7 +264,7 @@ const AddProductPage = () => {
     if (!sellerActive) return setError("Activate seller tools before submitting a product.");
     if (form.title.trim().length < 3) return setError("Product name must be at least 3 characters.");
     if (!form.image) return setError("Choose a product image before publishing.");
-    if (!Number.isFinite(priceUsdt) || priceUsdt <= 0 || !Number.isFinite(pricePi) || pricePi <= 0) return setError("Enter a valid USDT or Pi price greater than zero.");
+    if (!Number.isFinite(priceUsdt) || priceUsdt <= 0 || !Number.isFinite(pricePi) || pricePi <= 0) return setError("Enter a valid $ or π price greater than zero.");
     if (!form.condition || !Number.isFinite(quantity) || quantity < 1) return setError("Condition and quantity are required.");
     if (form.description.trim().length < 20) return setError("Description must be at least 20 characters.");
     if (!form.country.trim() || !form.city.trim() || !form.areaAddress.trim() || !form.sellerContact.trim()) return setError("Location and seller contact are required.");
@@ -374,8 +374,8 @@ const AddProductPage = () => {
         <details className="product-accordion" open>
           <summary><span><strong>4. Price in USDT + PI</strong><small>1 PI = 314159 USDT. Edit either field.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
           <div className="private-form-row">
-            <label>USDT price<input required type="number" min="0.01" step="any" value={form.priceUsdt} onChange={(event) => setUsdtPrice(event.target.value)} /></label>
-            <label>PI price<input required type="number" min="0.00000001" step="any" value={form.pricePi} onChange={(event) => setPiPrice(event.target.value)} /></label>
+            <label>$ price (USDT)<input required type="number" min="0.01" step="any" value={form.priceUsdt} onChange={(event) => setUsdtPrice(event.target.value)} /></label>
+            <label>π price<input required type="number" min="0.00000001" step="any" value={form.pricePi} onChange={(event) => setPiPrice(event.target.value)} /></label>
           </div>
           <div className="private-alert success">This listing will show {formatUsdAmount(priceUsdt || 0)} USDT and {formatPiAmount(pricePi || 0)}.</div>
         </details>
@@ -392,7 +392,7 @@ const AddProductPage = () => {
           {form.variants.length ? <div className="product-variant-list">{form.variants.map((variant, index) => <article key={index}><div className="product-variant-head"><strong>Variant {index + 1}</strong><button type="button" onClick={() => removeVariant(index)}>Remove</button></div><div className="private-form-row">{variantFields.map((field) => {
             const options = selectOptionsByField[field];
             return <label key={field}>{field}{options ? <select value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)}><option value="">Select {field}</option>{options.map((option) => <option value={option} key={option}>{option}</option>)}</select> : <input value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)} />}</label>;
-          })}</div><div className="private-form-row"><label>Variant stock<input type="number" min="0" value={variant.stock} onChange={(event) => updateVariant(index, { stock: event.target.value })} /></label><label>Variant USDT price<input type="number" min="0" step="any" value={variant.priceUsdt} onChange={(event) => updateVariant(index, { priceUsdt: event.target.value })} /></label><label>Variant image<input type="file" accept="image/*" onChange={(event) => { selectVariantImage(index, event.target.files?.[0]); event.currentTarget.value = ""; }} /></label></div>{variant.image ? <img className="product-variant-image" src={variant.image} alt="" /> : null}</article>)}</div> : <div className="private-state compact"><h3>No variants yet</h3><p>Add only if the item has choices like sizes, colors, storage, or models.</p></div>}
+          })}</div><div className="private-form-row"><label>Variant stock<input type="number" min="0" value={variant.stock} onChange={(event) => updateVariant(index, { stock: event.target.value })} /></label><label>Variant $ price (USDT)<input type="number" min="0" step="any" value={variant.priceUsdt} onChange={(event) => updateVariant(index, { priceUsdt: event.target.value })} /></label><label>Variant image<input type="file" accept="image/*" onChange={(event) => { selectVariantImage(index, event.target.files?.[0]); event.currentTarget.value = ""; }} /></label></div>{variant.image ? <img className="product-variant-image" src={variant.image} alt="" /> : null}</article>)}</div> : <div className="private-state compact"><h3>No variants yet</h3><p>Add only if the item has choices like sizes, colors, storage, or models.</p></div>}
         </details>
 
         <details className="product-accordion" open>

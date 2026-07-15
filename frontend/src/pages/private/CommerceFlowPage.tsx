@@ -221,7 +221,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                 <span>Total</span>
                 <strong>{formatPiAmount(cartTotalPi)}</strong>
               </div>
-              <small>approx ${formatUsdAmount(cartTotalPi * PI_USD)}</small>
+              <small>approx {formatUsdAmount(cartTotalPi * PI_USD)}</small>
               <button
                 type="button"
                 className="private-primary-button"
@@ -292,7 +292,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <span>Total</span>
                     <strong>{formatPiAmount(checkoutTotalPi)}</strong>
                   </div>
-                  <small className="commerce-usd">approx ${formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
+                  <small className="commerce-usd">approx {formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
                 </div>
                 <div className="form-actions commerce-checkout-actions">
                   <button
@@ -338,7 +338,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <div className="commerce-payment-copy">
                       <strong>{order.productTitle}</strong>
                       <span>{formatPiAmount(order.pricePi)}</span>
-                      <small>approx ${formatUsdAmount(order.pricePi * PI_USD)}</small>
+                      <small>approx {formatUsdAmount(order.pricePi * PI_USD)}</small>
                     </div>
                     <div className="commerce-payment-actions">
                       <button
