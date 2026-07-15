@@ -10,7 +10,7 @@ type SellerProfileResponse = {
   seller: SellerSummary;
   products: Product[];
   reviews: Review[];
-  pagination: { page: number; limit: number; total: number; hasMore: boolean };
+  pagination?: { page: number; limit: number; total: number; hasMore: boolean };
 };
 
 const categories = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
@@ -54,6 +54,9 @@ const SellerProfilePage = () => {
     return <main className="private-page">{error ? <div className="private-state error">{error}</div> : <PrivateSkeleton variant="seller" />}</main>;
   }
 
+  const productTotal = data.pagination?.total ?? data.seller.totalProducts ?? data.products.length;
+  const hasMoreProducts = data.pagination?.hasMore ?? false;
+
   return (
     <main className="private-page seller-profile-page">
       <section className="seller-profile-hero">
@@ -77,7 +80,7 @@ const SellerProfilePage = () => {
       </section>
       <p className="seller-joined">Joined {data.seller.createdAt ? new Date(data.seller.createdAt).toLocaleDateString() : "recently"}</p>
 
-      <section className="section-title seller-products-title"><div><h2>Products listed</h2><p>Showing {data.products.length} of {data.pagination.total}</p></div></section>
+      <section className="section-title seller-products-title"><div><h2>Products listed</h2><p>Showing {data.products.length} of {productTotal}</p></div></section>
       <section className="seller-product-tools" aria-label="Filter seller products">
         <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); resetPage(); }} placeholder="Search products" aria-label="Search products" />
         <select value={category} onChange={(event) => { setCategory(event.target.value); resetPage(); }} aria-label="Filter by category">
@@ -98,7 +101,7 @@ const SellerProfilePage = () => {
         </section>
       ) : <div className="private-state"><h2>No matching products</h2><p>Try another search or category.</p></div>}
 
-      {data.pagination.hasMore ? <div className="seller-load-more"><button type="button" className="private-secondary-button" disabled={loadingMore} onClick={() => setPage((value) => value + 1)}>{loadingMore ? "Loading..." : "Load 20 more"}</button></div> : null}
+      {hasMoreProducts ? <div className="seller-load-more"><button type="button" className="private-secondary-button" disabled={loadingMore} onClick={() => setPage((value) => value + 1)}>{loadingMore ? "Loading..." : "Load 20 more"}</button></div> : null}
 
       <section className="reviews-panel">
         <div className="section-title"><div><h2>Buyer reviews</h2><p>{data.reviews.length ? `${data.reviews.length} marketplace reviews` : "No reviews yet"}</p></div></div>
