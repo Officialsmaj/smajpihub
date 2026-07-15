@@ -134,13 +134,11 @@ const OrdersPage = () => {
             </button>
           ) : null}
           {mode === "seller" && order.status === "shipped" ? (
-            <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "delivered")}>
-              Mark Delivered
-            </button>
+            <span className="order-note">Waiting for buyer confirmation.</span>
           ) : null}
-          {mode === "buyer" && order.status === "delivered" ? (
+          {mode === "buyer" && order.status === "shipped" ? (
             <button disabled={updatingId === order._id} onClick={() => void updateStatus(order._id, "completed")}>
-              Complete Order
+              Confirm Received
             </button>
           ) : null}
           {mode === "buyer" && order.status === "completed" ? (

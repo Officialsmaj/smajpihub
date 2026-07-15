@@ -132,13 +132,11 @@ const OrderTrackingPage = () => {
               </button>
             ) : null}
             {isSeller && order.status === "shipped" ? (
-              <button type="button" className="private-primary-button" disabled={updating} onClick={() => void updateStatus("delivered")}>
-                Mark Delivered
-              </button>
+              <div className="private-alert">Shipped. Waiting for the buyer to confirm receipt.</div>
             ) : null}
-            {isBuyer && order.status === "delivered" ? (
+            {isBuyer && order.status === "shipped" ? (
               <button type="button" className="private-primary-button" disabled={updating} onClick={() => void updateStatus("completed")}>
-                Complete Order
+                Confirm Received
               </button>
             ) : null}
             <button type="button" className="private-secondary-button" onClick={() => navigate("/orders")}>
