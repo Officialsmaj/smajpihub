@@ -13,7 +13,8 @@ import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { addToCart, setBuyNowItem } from "../../lib/storeCart";
+import { setBuyNowItem } from "../../lib/storeCart";
+import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product } from "../../types/marketplace";
 import { heroSlides, promoStripItems, storeTopNav } from "../../content/storefront";
 import logoImage from "/logo.png";
@@ -55,6 +56,7 @@ const StorePage = () => {
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
   const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
   const [productLimit, setProductLimit] = useState(() => Math.max(PRODUCT_BATCH_SIZE, Number(window.sessionStorage.getItem(STORE_PRODUCT_LIMIT_KEY) || PRODUCT_BATCH_SIZE)));
+  const { addProductToCart, cartToast } = useAddToCartToast();
   const profileName = user?.displayName || user?.username || "Pi User";
 
   const loadCatalog = useCallback(async (showSkeleton = false) => {
@@ -131,11 +133,6 @@ const StorePage = () => {
     navigate("/checkout");
   };
 
-  const addProductToCart = (product: Product) => {
-    addToCart(product);
-    navigate("/cart", { state: { message: `${product.title} added to cart.` } });
-  };
-
   const updateCategory = (value: string) => {
     setCategory(value);
     setParams((current) => {
@@ -176,6 +173,7 @@ const StorePage = () => {
   return (
     <main className="private-page storefront-page">
       <PullToRefresh onRefresh={() => loadCatalog(false)} />
+      {cartToast}
       <section className="storefront-shell">
         <header className="storefront-header">
           <div className="storefront-header-main">

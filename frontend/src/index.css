@@ -18591,6 +18591,50 @@ svg {
   color: #ffffff !important;
 }
 
+/* Add-to-cart confirmation above the private mobile navigation */
+.cart-success-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 7000;
+  width: min(380px, calc(100vw - 24px));
+  display: grid;
+  grid-template-columns: 34px 46px minmax(0, 1fr) 28px;
+  grid-template-areas: "icon image copy close" ". actions actions actions";
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #dfe5ec;
+  border-left: 4px solid #22c55e;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, .22);
+  animation: cart-toast-up .22s ease-out;
+}
+
+@keyframes cart-toast-up {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+.cart-success-toast-icon { grid-area: icon; width: 32px; height: 32px; display: grid; place-items: center; color: #16a34a; background: #dcfce7; border-radius: 50%; }
+.cart-success-toast-icon svg { width: 21px; height: 21px; }
+.cart-success-toast-image { grid-area: image; width: 46px; height: 46px; display: block; overflow: hidden; background: #f1f5f9; border-radius: 9px; }
+.cart-success-toast-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.cart-success-toast-copy { grid-area: copy; min-width: 0; display: grid; gap: 2px; text-align: left; }
+.cart-success-toast-copy strong { color: #111827; font-size: 14px; }
+.cart-success-toast-copy small { overflow: hidden; color: #64748b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.cart-success-toast-close { grid-area: close; width: 28px; height: 28px; padding: 0; display: grid; place-items: center; color: #64748b; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
+.cart-success-toast-close svg { width: 18px; height: 18px; }
+.cart-success-toast-actions { grid-area: actions; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.cart-success-toast-actions button { min-height: 34px; padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.cart-toast-undo { color: #475569; background: transparent; border: 0; }
+.cart-toast-view { color: #ffffff; background: #6d28d9; border: 1px solid #6d28d9; }
+
+@media (max-width: 767px) {
+  .cart-success-toast { right: 12px; bottom: calc(74px + env(safe-area-inset-bottom)); width: calc(100vw - 24px); }
+}
+
 .legal-company-page {
   color: #0f172a !important;
   background: #ffffff !important;

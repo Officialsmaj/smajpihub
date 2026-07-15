@@ -5,6 +5,7 @@ import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import TrustBadge from "../../components/TrustBadge";
 import { axiosClient } from "../../lib/axiosClient";
+import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product, Review, SellerSummary } from "../../types/marketplace";
 
 type SellerProfileResponse = {
@@ -26,6 +27,7 @@ const SellerProfilePage = () => {
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const { addProductToCart, cartToast } = useAddToCartToast();
 
   const query = useMemo(() => ({ page, limit: 20, search, category, sort }), [page, search, category, sort]);
 
@@ -60,6 +62,7 @@ const SellerProfilePage = () => {
 
   return (
     <main className="private-page seller-profile-page">
+      {cartToast}
       <section className="seller-profile-hero">
         <div className="profile-avatar seller-profile-avatar">
           {data.seller.avatar ? <img src={data.seller.avatar} alt="" /> : data.seller.displayName.slice(0, 1).toUpperCase()}
@@ -101,7 +104,7 @@ const SellerProfilePage = () => {
 
       {data.products.length ? (
         <section className="product-grid seller-product-grid">
-          {data.products.map((product) => <MarketplaceProductCard key={product._id} product={product} variant="compact" />)}
+          {data.products.map((product) => <MarketplaceProductCard key={product._id} product={product} variant="compact" onAddToCart={addProductToCart} />)}
         </section>
       ) : <div className="private-state"><h2>No matching products</h2><p>Try another search or category.</p></div>}
 
