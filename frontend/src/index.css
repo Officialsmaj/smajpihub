@@ -13859,6 +13859,75 @@ a.service-in-progress-card[aria-disabled="true"],
   border-color: #ded2ff !important;
 }
 
+/* One compact product-card and filter system for Store and seller profiles. */
+@media (max-width: 767px) {
+  .storefront-page .storefront-product-grid,
+  .storefront-page .storefront-product-grid.search-grid,
+  .seller-profile-page .seller-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .storefront-page .storefront-product-card,
+  .storefront-page .storefront-product-card-compact,
+  .seller-profile-page .storefront-product-card,
+  .seller-profile-page .storefront-product-card-compact {
+    border-radius: 16px !important;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-image-wrap,
+  .storefront-page .storefront-product-card-compact .storefront-product-image-wrap,
+  .seller-profile-page .storefront-product-card .storefront-product-image-wrap,
+  .seller-profile-page .storefront-product-card-compact .storefront-product-image-wrap {
+    height: 112px !important;
+    aspect-ratio: auto !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body,
+  .storefront-page .storefront-product-card-compact .storefront-product-body,
+  .seller-profile-page .storefront-product-card .storefront-product-body,
+  .seller-profile-page .storefront-product-card-compact .storefront-product-body {
+    min-height: 182px !important;
+    padding: 9px 9px 48px !important;
+    gap: 5px !important;
+  }
+
+  .storefront-page .storefront-product-card .storefront-product-body h2,
+  .storefront-page .storefront-product-card-compact .storefront-product-body h2,
+  .seller-profile-page .storefront-product-card .storefront-product-body h2,
+  .seller-profile-page .storefront-product-card-compact .storefront-product-body h2 {
+    min-height: 31px !important;
+    font-size: 12px !important;
+    line-height: 1.28 !important;
+  }
+
+  .seller-profile-page .seller-product-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 9px !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .seller-profile-page .seller-product-search {
+    grid-column: 1 / -1;
+  }
+
+  .seller-profile-page .seller-product-tools input,
+  .seller-profile-page .seller-product-tools select {
+    height: 42px !important;
+    color: #0f172a !important;
+    background: #f8fafc !important;
+    border: 1px solid #dbe3ee !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+}
+
 
 /* Seller profile mobile catalog — final readability and spacing */
 .seller-profile-page .seller-products-title {
