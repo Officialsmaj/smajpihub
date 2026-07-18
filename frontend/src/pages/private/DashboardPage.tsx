@@ -92,7 +92,7 @@ const readRecentItems = (key: string) => {
 const sortNewestProducts = (products: Product[]) => [...products].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 const recommendedServicesForCountry = (country?: string) => {
   const normalized = countryDisplayName(country || "").toLowerCase();
-  const localSlugs = normalized.includes("united arab emirates") || normalized.includes("uae") ? ["store", "transport", "food", "jobs", "housing", "health"] : ["store", "jobs", "education", "health", "transport", "housing"];
+  const localSlugs = normalized.includes("united arab emirates") || normalized.includes("uae") ? ["store", "stream", "sports", "transport", "food", "jobs", "housing", "health"] : ["store", "stream", "sports", "jobs", "education", "health", "transport", "housing"];
   return localSlugs.map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[];
 };
 
