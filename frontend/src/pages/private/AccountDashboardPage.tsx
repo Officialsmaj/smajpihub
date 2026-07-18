@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
@@ -18,7 +19,7 @@ const quickLinks = [
 ] as const;
 
 const marketplaceCards = [
-  ["Seller tools", "Manage shop", "/seller", StorefrontOutlinedIcon],
+  ["Seller tools", "Manage shop", "/seller", DashboardOutlinedIcon],
   ["Saved products", "Your items", "/saved", BookmarkBorderOutlinedIcon],
   ["Orders", "Purchases", "/orders", ReceiptLongOutlinedIcon],
 ] as const;
