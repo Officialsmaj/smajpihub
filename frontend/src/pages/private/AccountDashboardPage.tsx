@@ -19,7 +19,7 @@ const quickLinks = [
 
 const marketplaceCards = [
   ["Seller tools", "Manage shop", "/seller", StorefrontOutlinedIcon],
-  ["Saved", "Your items", "/saved", BookmarkBorderOutlinedIcon],
+  ["Saved products", "Your items", "/saved", BookmarkBorderOutlinedIcon],
   ["Orders", "Purchases", "/orders", ReceiptLongOutlinedIcon],
 ] as const;
 
@@ -32,6 +32,9 @@ const AccountDashboardPage = () => {
   const { user } = useAuthContext();
   const name = user?.displayName || user?.username || "Pi User";
   const sellerActive = user?.sellerActive || user?.role === "seller";
+  const sellerCard = sellerActive
+    ? ["Seller dashboard", "/seller", StorefrontOutlinedIcon] as const
+    : ["Become a seller", "/profile", StorefrontOutlinedIcon] as const;
 
   return (
     <main className="private-page account-dashboard-page">
@@ -54,13 +57,11 @@ const AccountDashboardPage = () => {
         ))}
       </section>
 
-      <section className="account-marketplace-grid" aria-label="Marketplace shortcuts">
-        {marketplaceCards.map(([label, description, to, Icon]) => (
+      <section className="account-quick-grid account-marketplace-actions" aria-label="Marketplace shortcuts">
+        {[...marketplaceCards.map(([label, , to, Icon]) => [label, to, Icon] as const), sellerCard].map(([label, to, Icon]) => (
           <Link to={to} key={label}>
-            <span className="account-marketplace-icon"><Icon /></span>
-            <strong>{label}</strong>
-            <small>{description}</small>
-            <ChevronRightOutlinedIcon />
+            <Icon />
+            <span>{label}</span>
           </Link>
         ))}
       </section>
@@ -78,14 +79,6 @@ const AccountDashboardPage = () => {
         </div>
       </section>
 
-      <section className="account-checkup real-account-checkup">
-        <StorefrontOutlinedIcon />
-        <div>
-          <h2>{sellerActive ? "Seller Dashboard" : "Become a Seller"}</h2>
-          <p>{sellerActive ? "Manage products, orders, and your marketplace activity." : "List products and start selling with Pi."}</p>
-        </div>
-        <Link className="private-secondary-button" to={sellerActive ? "/seller" : "/profile"}>{sellerActive ? "Open Seller Tools" : "Start Seller Setup"}</Link>
-      </section>
     </main>
   );
 };
