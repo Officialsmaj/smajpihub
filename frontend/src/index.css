@@ -10131,12 +10131,13 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   background: var(--smaj-secondary-bg);
   border: 1px solid var(--smaj-border);
   border-radius: 18px;
-  opacity: .72;
+  opacity: .65;
 }
 
-.tracking-step.complete {
+.tracking-step.is-complete {
   opacity: 1;
-  border-color: color-mix(in srgb, var(--smaj-primary) 25%, var(--smaj-border));
+  background: #fffdf7;
+  border-color: #e4b34b;
 }
 
 .tracking-step-icon {
@@ -10144,9 +10145,24 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   height: 44px;
   display: grid;
   place-items: center;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 14px;
+}
+
+.tracking-step.is-complete .tracking-step-icon {
+  color: #c78308;
+  background: #fff1c9;
+}
+
+.tracking-step.is-current {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--smaj-primary) 38%, var(--smaj-border));
+}
+
+.tracking-step.is-current .tracking-step-icon {
   color: var(--smaj-primary);
   background: color-mix(in srgb, var(--smaj-primary) 12%, transparent);
-  border-radius: 14px;
 }
 
 .tracking-history {
@@ -13723,6 +13739,11 @@ select,
 
 .legal-company-page svg {
   color: #6b3fe6 !important;
+}
+
+/* Gold is reserved for account shortcuts and completed order milestones. */
+.account-dashboard-page .account-quick-grid > a > svg {
+  color: #d99a1a;
 }
 
 

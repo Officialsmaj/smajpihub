@@ -154,9 +154,10 @@ const OrderTrackingPage = () => {
           </div>
           <div className="tracking-timeline">
             {statusSteps.map((step, index) => {
-              const complete = index <= activeIndex || (step.key === "payment_pending" && order.status !== "pending");
+              const complete = index < activeIndex;
+              const current = index === activeIndex;
               return (
-                <div className={`tracking-step ${complete ? "complete" : ""}`} key={step.key}>
+                <div className={`tracking-step ${complete ? "is-complete" : ""} ${current ? "is-current" : ""}`} key={step.key}>
                   <div className="tracking-step-icon">
                     {step.key === "completed" ? <TaskAltOutlinedIcon /> : step.key === "shipped" ? <LocalShippingOutlinedIcon /> : <ReceiptLongOutlinedIcon />}
                   </div>
