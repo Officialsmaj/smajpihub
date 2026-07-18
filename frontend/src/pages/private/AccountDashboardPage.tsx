@@ -3,6 +3,8 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -15,10 +17,13 @@ const quickLinks = [
   ["Inbox", "/messages", InboxOutlinedIcon],
 ] as const;
 
+const marketplaceCards = [
+  ["Seller tools", "Manage shop", "/seller", StorefrontOutlinedIcon],
+  ["Saved", "Your items", "/saved", BookmarkBorderOutlinedIcon],
+  ["Orders", "Purchases", "/orders", ReceiptLongOutlinedIcon],
+] as const;
+
 const accountRows = [
-  ["Seller tools", "Products, orders, and marketplace status", "/seller"],
-  ["Saved products", "Products you saved from SMAJ Store", "/saved"],
-  ["Orders", "Purchases and sales activity", "/orders"],
   ["Help center", "Support and marketplace guidance", "/help"],
   ["Legal", "Terms, privacy, and platform rules", "/terms"],
 ] as const;
@@ -26,6 +31,7 @@ const accountRows = [
 const AccountDashboardPage = () => {
   const { user } = useAuthContext();
   const name = user?.displayName || user?.username || "Pi User";
+  const sellerActive = user?.sellerActive || user?.role === "seller";
 
   return (
     <main className="private-page account-dashboard-page">
@@ -48,6 +54,17 @@ const AccountDashboardPage = () => {
         ))}
       </section>
 
+      <section className="account-marketplace-grid" aria-label="Marketplace shortcuts">
+        {marketplaceCards.map(([label, description, to, Icon]) => (
+          <Link to={to} key={label}>
+            <span className="account-marketplace-icon"><Icon /></span>
+            <strong>{label}</strong>
+            <small>{description}</small>
+            <ChevronRightOutlinedIcon />
+          </Link>
+        ))}
+      </section>
+
       <section className="account-dashboard-list">
         {accountRows.map(([label, description, to]) => (
           <Link to={to} key={label}>
@@ -64,10 +81,10 @@ const AccountDashboardPage = () => {
       <section className="account-checkup real-account-checkup">
         <StorefrontOutlinedIcon />
         <div>
-          <h2>Become a Seller</h2>
-          <p>Accept the seller agreement, add products, and start selling with Pi.</p>
+          <h2>{sellerActive ? "Seller Dashboard" : "Become a Seller"}</h2>
+          <p>{sellerActive ? "Manage products, orders, and your marketplace activity." : "List products and start selling with Pi."}</p>
         </div>
-        <Link className="private-secondary-button" to="/profile">Start Seller Setup</Link>
+        <Link className="private-secondary-button" to={sellerActive ? "/seller" : "/profile"}>{sellerActive ? "Open Seller Tools" : "Start Seller Setup"}</Link>
       </section>
     </main>
   );
