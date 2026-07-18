@@ -73,7 +73,7 @@ const SearchPage = () => {
       setInput(next);
       setQuery(next);
     }
-  }, [params, query]);
+  }, [params]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -146,6 +146,11 @@ const SearchPage = () => {
     saveRecentSearch(term);
   };
 
+  const updateSearchInput = (value: string) => {
+    setInput(value);
+    setQuery(value.trim());
+  };
+
   const clearRecentSearches = () => {
     setRecentSearches([]);
     window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify([]));
@@ -190,7 +195,7 @@ const SearchPage = () => {
   const hasResults = grouped.some(([, items]) => items.length);
 
   return <main className="private-page mobile-search-page">
-    <form className="mobile-search-box" onSubmit={submit}><SearchOutlinedIcon /><input autoFocus value={input} onChange={(event) => setInput(event.target.value)} placeholder="Search or ask SMAJ PI HUB" /><button type="button" aria-label="Voice search" onClick={startVoiceSearch}><MicNoneOutlinedIcon /></button></form>
+    <form className="mobile-search-box" onSubmit={submit}><SearchOutlinedIcon /><input autoFocus value={input} onChange={(event) => updateSearchInput(event.target.value)} placeholder="Search or ask SMAJ PI HUB" /><button type="button" aria-label="Voice search" onClick={startVoiceSearch}><MicNoneOutlinedIcon /></button></form>
     {!query ? <>
       <section className="mobile-search-section"><h1>Explore services</h1><div className="mobile-explore-grid">{explore.map(([label,Icon,to]) => <Link to={to} key={label}><span>{label}</span><Icon /></Link>)}</div></section>
       {recentSearches.length ? <section className="mobile-search-section"><div className="mobile-search-result-head"><h2>Recent searches</h2><button type="button" onClick={clearRecentSearches}>Clear All</button></div><div className="mobile-suggestion-grid">{recentSearches.map((item) => <button type="button" key={item} onClick={() => runSearch(item)}><span>{item}</span><SearchOutlinedIcon /></button>)}</div></section> : null}
