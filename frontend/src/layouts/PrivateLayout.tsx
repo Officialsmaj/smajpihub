@@ -17,6 +17,8 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
@@ -30,6 +32,16 @@ import { serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
 
 type PrivateLayoutProps = { children: ReactNode };
+type LiveConversation = {
+  _id: string;
+  participantName?: string;
+  sellerName?: string;
+  buyerName?: string;
+  sellerId?: string;
+  lastMessage?: string;
+  productTitle?: string;
+  unreadBy?: string[];
+};
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
 const PROFILE_VERIFY_REMINDER_KEY = "smaj_profile_verify_reminder_completed";
@@ -90,6 +102,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [liveFeedOpen, setLiveFeedOpen] = useState(false);
+  const [liveConversations, setLiveConversations] = useState<LiveConversation[]>([]);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState<"light" | "dark">(() => window.localStorage.getItem("smaj_private_theme_mode") === "dark" ? "dark" : "light");
   const [showSignOut, setShowSignOut] = useState(false);
@@ -151,6 +165,12 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     axiosClient.get("/notifications").then(({ data }) => setUnreadCount(data.unreadCount || 0)).catch(() => undefined);
   }, []);
 
+  const loadLiveConversations = useCallback(() => {
+    axiosClient.get<{ conversations?: LiveConversation[] }>("/messages")
+      .then(({ data }) => setLiveConversations(data.conversations || []))
+      .catch(() => setLiveConversations([]));
+  }, []);
+
   useEffect(() => {
     loadUnreadCount();
   }, [loadUnreadCount, location.pathname]);
@@ -164,6 +184,12 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       window.removeEventListener("smaj:notifications-refresh", onRefresh);
     };
   }, [loadUnreadCount]);
+
+  useEffect(() => {
+    loadLiveConversations();
+    const timer = window.setInterval(loadLiveConversations, 15000);
+    return () => window.clearInterval(timer);
+  }, [loadLiveConversations]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
   const toggleSidebar = () => {
     setSidebarCollapsed((collapsed) => {
@@ -238,6 +264,15 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     window.localStorage.setItem(profileReminderStorageKey, "true");
     setShowProfileReminder(false);
     navigate("/profile");
+  };
+  const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(conversation.unreadBy?.length));
+  const liveMessageCount = unreadLiveConversations.reduce((total, conversation) => total + (conversation.unreadBy?.length || 0), 0);
+  const liveBadgeLabel = liveMessageCount > 99 ? "99+" : liveMessageCount;
+  const liveActivityItems = (unreadLiveConversations.length ? unreadLiveConversations : liveConversations).slice(0, 3);
+  const liveConversationName = (conversation: LiveConversation) => conversation.participantName || (conversation.sellerId === user?.uid ? conversation.buyerName : conversation.sellerName) || "SMAJ user";
+  const openLiveConversation = (conversationId: string) => {
+    setLiveFeedOpen(false);
+    navigate(`/messages?conversation=${encodeURIComponent(conversationId)}`);
   };
 
   return (
@@ -326,6 +361,33 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </NavLink>
         ))}
       </nav>
+      {location.pathname !== "/messages" ? (
+        <aside className={`live-activity-float ${liveFeedOpen ? "open" : ""}`} aria-label="Live activity">
+          {liveFeedOpen ? (
+            <section className="live-activity-panel" aria-live="polite">
+              <header>
+                <span><i />Live activity</span>
+                <button type="button" onClick={() => setLiveFeedOpen(false)} aria-label="Close live activity"><CloseOutlinedIcon /></button>
+              </header>
+              <p>New messages and marketplace updates.</p>
+              <div className="live-activity-items">
+                {liveActivityItems.length ? liveActivityItems.map((conversation) => (
+                  <button type="button" key={conversation._id} onClick={() => openLiveConversation(conversation._id)}>
+                    <span className="live-activity-message-icon"><ChatOutlinedIcon /></span>
+                    <span><strong>{liveConversationName(conversation)}</strong><small>{conversation.lastMessage || `Message about ${conversation.productTitle || "your listing"}`}</small></span>
+                    {conversation.unreadBy?.length ? <b>{conversation.unreadBy.length}</b> : null}
+                  </button>
+                )) : <div className="live-activity-empty">You are all caught up.</div>}
+              </div>
+              <button className="live-activity-inbox" type="button" onClick={() => { setLiveFeedOpen(false); navigate("/messages"); }}>Open Messages</button>
+            </section>
+          ) : null}
+          <button className="live-activity-trigger" type="button" onClick={() => setLiveFeedOpen((open) => !open)} aria-expanded={liveFeedOpen} aria-label="Open live activity">
+            <ForumOutlinedIcon />
+            {liveMessageCount ? <b>{liveBadgeLabel}</b> : <i className="live-activity-status" />}
+          </button>
+        </aside>
+      ) : null}
       {showProfileReminder ? (
         <aside className="profile-verify-reminder" role="alert" aria-live="polite">
           <span><VerifiedUserOutlinedIcon /></span>
