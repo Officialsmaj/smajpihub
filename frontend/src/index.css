@@ -13928,6 +13928,62 @@ a.service-in-progress-card[aria-disabled="true"],
   }
 }
 
+/* Private marketplace cards and filters must inherit the active dark theme. */
+html[data-private-theme="dark"] .storefront-product-card,
+html[data-private-theme="dark"] .storefront-product-card-compact {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-product-card .storefront-product-body h2,
+html[data-private-theme="dark"] .storefront-product-card .storefront-price-stack strong,
+html[data-private-theme="dark"] .storefront-product-card .storefront-seller-name,
+html[data-private-theme="dark"] .storefront-product-card .storefront-stock-row {
+  color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .storefront-product-card .storefront-product-image-wrap {
+  background: var(--smaj-bg-secondary) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-product-card .storefront-seller-block,
+html[data-private-theme="dark"] .storefront-product-card .storefront-price-stack {
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .seller-profile-page .seller-product-tools {
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .seller-profile-page .seller-product-tools input,
+html[data-private-theme="dark"] .seller-profile-page .seller-product-tools select {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-input) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .seller-profile-page .seller-product-tools input::placeholder {
+  color: var(--smaj-text-secondary) !important;
+}
+
+html[data-private-theme="dark"] .storefront-search,
+html[data-private-theme="dark"] .storefront-category-nav button {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-search input {
+  color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .storefront-search input::placeholder {
+  color: var(--smaj-text-secondary) !important;
+}
+
 
 /* Seller profile mobile catalog — final readability and spacing */
 .seller-profile-page .seller-products-title {
