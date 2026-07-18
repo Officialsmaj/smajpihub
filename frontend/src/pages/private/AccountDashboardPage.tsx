@@ -16,7 +16,6 @@ const quickLinks = [
 ] as const;
 
 const accountRows = [
-  ["Manage profile", "Name, photo, contact, seller status", "/profile"],
   ["Seller tools", "Products, orders, and marketplace status", "/seller"],
   ["Saved products", "Products you saved from SMAJ Store", "/saved"],
   ["Orders", "Purchases and sales activity", "/orders"],
