@@ -33,7 +33,7 @@ const AccountDashboardPage = () => {
   const name = user?.displayName || user?.username || "Pi User";
   const sellerActive = user?.sellerActive || user?.role === "seller";
   const sellerCard = sellerActive
-    ? ["Seller dashboard", "/seller", StorefrontOutlinedIcon] as const
+    ? ["Seller profile", `/seller/${user?.uid}`, StorefrontOutlinedIcon] as const
     : ["Become a seller", "/profile", StorefrontOutlinedIcon] as const;
 
   return (
