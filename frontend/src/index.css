@@ -13741,6 +13741,67 @@ select,
   color: #6b3fe6 !important;
 }
 
+/* Complete the Store dark theme for controls that have dedicated light styles. */
+html[data-private-theme="dark"] .storefront-shopping-tools {
+  background: var(--smaj-bg-secondary) !important;
+}
+
+html[data-private-theme="dark"] .storefront-tool-menu summary,
+html[data-private-theme="dark"] .storefront-tool-menu > div {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-tool-menu > div button {
+  color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .storefront-tool-menu > div button:hover {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-bg-secondary) !important;
+}
+
+html[data-private-theme="dark"] .storefront-mobile-drawer,
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+}
+
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel h3,
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel nav button,
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel header > button,
+html[data-private-theme="dark"] .storefront-mobile-drawer-back {
+  color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel nav,
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel nav button {
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-mobile-drawer-panel nav button svg {
+  color: var(--smaj-text-secondary) !important;
+}
+
+html[data-private-theme="dark"] .orders-section .section-title > span {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border: 1px solid var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-mobile-menu-button,
+html[data-private-theme="dark"] .storefront-mobile-actions a:not(.storefront-avatar-link) {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-bg-secondary) !important;
+  border: 1px solid var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .storefront-page .storefront-product-card .storefront-seller-name .seller-name-text,
+html[data-private-theme="dark"] .storefront-product-card .storefront-seller-name .seller-name-text {
+  color: var(--smaj-text) !important;
+}
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;
