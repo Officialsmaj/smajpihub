@@ -13901,6 +13901,20 @@ html[data-private-theme="dark"] .storefront-product-card .storefront-seller-name
   .live-activity-panel { animation: none !important; }
 }
 
+/* Real article content inside the private Help Center accordion. */
+.help-article-content {
+  padding: 0 0 14px;
+  color: var(--smaj-text-secondary);
+}
+
+.help-article-content > p { margin: 10px 0 8px; }
+.help-article-content ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 13px; line-height: 1.45; }
+.help-article-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+.help-article-footer > a { min-height: 34px; display: inline-flex; align-items: center; padding: 0 12px; color: #ffffff; background: var(--smaj-primary); border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; }
+.help-article-footer > span { display: inline-flex; align-items: center; gap: 6px; color: var(--smaj-text-secondary); font-size: 11px; }
+.help-article-footer button { min-height: 30px !important; width: auto !important; padding: 0 9px !important; color: var(--smaj-text-secondary) !important; background: var(--smaj-bg-secondary) !important; border: 1px solid var(--smaj-border) !important; border-radius: 999px !important; font-size: 11px !important; }
+.help-article-footer button.active { color: #ffffff !important; background: var(--smaj-primary) !important; border-color: var(--smaj-primary) !important; }
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;
