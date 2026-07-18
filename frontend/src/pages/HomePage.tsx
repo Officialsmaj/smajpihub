@@ -201,14 +201,14 @@ const HomePage = () => {
                     {page.map((group, groupIndex) => (
                       <div className="public-home-service-group" key={`${pageIndex}-${groupIndex}`}>
                         {group.map((service) => (
-                          <Link to={publicServicePath(service)} key={service.slug} className="public-home-service-card">
+                          <Link to={publicServicePath(service)} key={service.slug} className={`public-home-service-card ${service.inProgress ? "service-in-progress-card" : ""}`} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
                             <ServiceArt index={service.atlasIndex} />
                             <div>
                               <h3>{service.name}</h3>
                               <p>{service.items.slice(0, 2).join(" • ")}</p>
                             </div>
-                            <small className={getServiceStatus(service) ? "live-rating-badge" : undefined}>
-                              {getServiceStatus(service) ? "LIVE" : "SOON"}
+                            <small className={getServiceStatus(service) ? "live-rating-badge" : service.inProgress ? "status-chip in-progress" : undefined}>
+                              {getServiceStatus(service) ? "LIVE" : service.inProgress ? "IN PROGRESS" : "SOON"}
                             </small>
                           </Link>
                         ))}

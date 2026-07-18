@@ -9,6 +9,8 @@ type WhitePaperSection = {
   lines: string[];
 };
 
+const platformRowPriority = ["SMAJ STORE", "SMAJ PI STREAM", "SMAJ PI SPORTS"];
+
 const platformRows = [
   ["SMAJ STORE", "Commerce", "A Pi-powered e-commerce marketplace featuring vendor verification, payment confirmation, dispute support, and seamless Pi cryptocurrency payments. It aims to provide a secure and transparent environment for buying and selling goods."],
   ["SMAJ FOOD DELIVERY", "Daily Life", "A direct-to-customer food delivery service connecting users with verified restaurants. Features include real-time tracking, loyalty rewards, and efficient logistics powered by Pi payments."],
@@ -25,14 +27,18 @@ const platformRows = [
   ["SMAJ PI STREAM", "Entertainment", "A premium content streaming service, offering movies, series, and documentaries. It provides a seamless entertainment experience integrated within the SMAJ PI HUB."],
   ["SMAJ PI SPORTS", "Sports", "A dedicated platform for live sports broadcasting, real-time scores, news, and community engagement. It aims to be the go-to hub for sports enthusiasts within the Pi Network."],
   ["SMAJ TOKEN", "Governance & Utility", "The native utility asset powering rewards, governance voting rights, staking opportunities, loyalty/cashback programs, and service fee discounts."],
-];
+].sort((left, right) => {
+  const leftIndex = platformRowPriority.indexOf(left[0]);
+  const rightIndex = platformRowPriority.indexOf(right[0]);
+  return (leftIndex === -1 ? platformRowPriority.length : leftIndex) - (rightIndex === -1 ? platformRowPriority.length : rightIndex);
+});
 
 const roadmapRows = [
-  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, payment confirmation, reviews, ratings, dispute support, and initial AI assistant deployment."],
+  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, payment confirmation, reviews, ratings, dispute support, and initial AI assistant deployment. SMAJ PI STREAM and SMAJ PI SPORTS are in progress."],
   ["Phase 2", "Q3 2026", "Marketplace & Employment", "Expansion of SMAJ STORE features and vendor onboarding. Launch of SMAJ PI JOBS for freelancers and employers within the Pi ecosystem."],
   ["Phase 3", "Q4 2026", "Essential Services", "Launch of SMAJ FOOD DELIVERY and SMAJ PI HEALTH, providing critical daily services to the community."],
   ["Phase 4", "Q1 2027", "Mobility & Social Impact", "Introduction of SMAJ PI TRANSPORT and SMAJ PI CHARITY, expanding the hub's utility into mobility and social good."],
-  ["Phase 5", "Q2 2027", "Entertainment & Circular Economy", "Launch of SMAJ PI STREAM, SMAJ PI SPORTS, and SMAJ PI SWAP, enriching the user experience with entertainment and sustainable exchange options."],
+  ["Phase 5", "Q2 2027", "Entertainment & Circular Economy", "SMAJ PI SWAP expansion, enriching the ecosystem with sustainable exchange options. SMAJ PI STREAM and SMAJ PI SPORTS remain marked In Progress until their launch readiness is confirmed."],
   ["Phase 6", "Q3-Q4 2027", "Token Utility & Global Scaling", "Full SMAJ TOKEN utility integration, global scaling, localization, developer ecosystem expansion, and launch of SMAJ PI EDU, SMAJ PI AGRO, SMAJ PI ENERGY, SMAJ PI HOUSING, and SMAJ PI EVENTS."],
 ];
 

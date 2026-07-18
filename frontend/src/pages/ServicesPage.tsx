@@ -7,7 +7,7 @@ import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
-import { platformDefinitions } from "../content/platforms";
+import { orderedPlatformDefinitions } from "../content/platforms";
 import { serviceCatalog } from "../content/serviceCatalog";
 import useSliceReveal from "../hooks/useSliceReveal";
 
@@ -76,21 +76,23 @@ const ServicesPage = () => {
             </p>
           </div>
           <div className="services-directory-grid">
-            {platformDefinitions.map((platform, index) => {
-              const catalogItem = serviceCatalog[index];
+            {orderedPlatformDefinitions.map((platform) => {
+              const catalogItem = serviceCatalog.find((item) => item.slug === (platform.routeSegment === "food-delivery" ? "food" : platform.routeSegment));
               const isLive = platform.status === "Live" || platform.routeSegment === "store";
+              const inProgress = platform.status === "In Progress";
+              const card = <>
+                {catalogItem ? <ServiceArt index={catalogItem.atlasIndex} /> : <StorefrontOutlinedIcon />}
+                <div>
+                  <span className={isLive ? "live-rating-badge" : inProgress ? "status-chip in-progress" : "status-chip"}>{isLive ? "LIVE" : inProgress ? "IN PROGRESS" : "SOON"}</span>
+                  <h3>{platform.name}</h3>
+                  <p>{platform.description}</p>
+                </div>
+                {!inProgress ? <ArrowForwardOutlinedIcon /> : null}
+              </>;
 
-              return (
-                <Link to={servicePath(platform.routeSegment)} key={platform.routeSegment} className="services-directory-card">
-                  {catalogItem ? <ServiceArt index={catalogItem.atlasIndex} /> : <StorefrontOutlinedIcon />}
-                  <div>
-                    <span className={isLive ? "live-rating-badge" : "status-chip"}>{isLive ? "LIVE" : "SOON"}</span>
-                    <h3>{platform.name}</h3>
-                    <p>{platform.description}</p>
-                  </div>
-                  <ArrowForwardOutlinedIcon />
-                </Link>
-              );
+              return inProgress
+                ? <article key={platform.routeSegment} className="services-directory-card service-in-progress-card">{card}</article>
+                : <Link to={servicePath(platform.routeSegment)} key={platform.routeSegment} className="services-directory-card">{card}</Link>;
             })}
           </div>
         </section>

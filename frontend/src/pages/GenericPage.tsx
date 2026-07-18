@@ -12,7 +12,7 @@ type GenericPageProps = {
   title: string;
   description: string;
   routeSegment?: string;
-  status?: "Live" | "Coming Soon";
+  status?: "Live" | "Coming Soon" | "In Progress";
 };
 
 const normalizeRoute = (routeSegment?: string) => routeSegment === "food-delivery" ? "food" : routeSegment;
@@ -20,6 +20,7 @@ const normalizeRoute = (routeSegment?: string) => routeSegment === "food-deliver
 const GenericPage = ({ title, description, routeSegment, status = "Coming Soon" }: GenericPageProps) => {
   const service = serviceCatalog.find((item) => item.slug === normalizeRoute(routeSegment));
   const isLive = status === "Live" || service?.slug === "store";
+  const inProgress = status === "In Progress" || service?.inProgress;
   const serviceItems = service?.items ?? ["Verified access", "Pi wallet flow", "Provider onboarding", "Support"];
 
   return (
@@ -41,7 +42,7 @@ const GenericPage = ({ title, description, routeSegment, status = "Coming Soon" 
           </div>
           <aside className="service-detail-status-card">
             {service ? <ServiceArt index={service.atlasIndex} /> : <CheckCircleOutlineOutlinedIcon />}
-            <span className={isLive ? "live-rating-badge" : "status-chip"}>{isLive ? "LIVE" : "COMING SOON"}</span>
+            <span className={isLive ? "live-rating-badge" : inProgress ? "status-chip in-progress" : "status-chip"}>{isLive ? "LIVE" : inProgress ? "IN PROGRESS" : "COMING SOON"}</span>
             <strong>{service?.experience ?? "Service preview"}</strong>
             <p>{service?.description ?? "A connected SMAJ PI HUB service built around identity, wallet, and trust."}</p>
           </aside>

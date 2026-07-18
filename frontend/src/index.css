@@ -13838,6 +13838,27 @@ select,
   line-height: 1;
 }
 
+.status-chip.in-progress,
+.service-in-progress-card .status-chip.in-progress {
+  color: #6b3fe6 !important;
+  background: #f0eaff !important;
+  border: 1px solid #dfd0ff !important;
+}
+
+a.service-in-progress-card[aria-disabled="true"],
+.service-discovery-page a.service-in-progress-card[aria-disabled="true"],
+.service-categories-page a.service-in-progress-card[aria-disabled="true"] {
+  cursor: default;
+  pointer-events: none;
+}
+
+.public-home-service-card.service-in-progress-card,
+.services-directory-card.service-in-progress-card,
+.service-discovery-page .service-in-progress-card,
+.service-categories-page .service-in-progress-card {
+  border-color: #ded2ff !important;
+}
+
 
 /* Seller profile mobile catalog — final readability and spacing */
 .seller-profile-page .seller-products-title {

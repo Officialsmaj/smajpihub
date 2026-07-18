@@ -35,7 +35,7 @@ const RankedServices = ({ mode }: { mode: "trending" | "lifestyle" }) => {
       <Link to="/categories">All services<KeyboardArrowDownOutlinedIcon /></Link>
     </div>
     <section className="discovery-ranking" aria-label={`${mode} SMAJ services`}>
-      {services.map((service, index) => <Link to={routeFor(service)} key={service.slug}>
+      {services.map((service, index) => <Link to={routeFor(service)} key={service.slug} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
         <span className="discovery-rank">{index + 1}</span>
         <ServiceArt index={service.atlasIndex} />
         <span className="discovery-service-copy"><strong>{service.name}</strong><small>{service.experience} • {service.items.slice(0, 2).join(" • ")}</small><b>{ratings[service.slug]}★</b></span>
@@ -49,7 +49,7 @@ const ServiceCategories = () => {
   return <main className="service-categories-page">
     <header><button type="button" onClick={() => navigate(-1)} aria-label="Close categories"><CloseOutlinedIcon /></button><h1>Categories</h1></header>
     <section aria-label="All SMAJ PI HUB service categories">
-      {serviceCatalog.map((service) => <Link to={routeFor(service)} key={service.slug}><ServiceArt index={service.atlasIndex} /><span><strong>{service.name}</strong><small>{service.experience}</small></span></Link>)}
+      {serviceCatalog.map((service) => <Link to={routeFor(service)} key={service.slug} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}><ServiceArt index={service.atlasIndex} /><span><strong>{service.name}</strong><small>{service.inProgress ? "IN PROGRESS" : service.experience}</small></span></Link>)}
     </section>
   </main>;
 };

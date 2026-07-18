@@ -6,10 +6,13 @@ export type ServiceDefinition = {
   items: string[];
   atlasIndex: number;
   live?: boolean;
+  inProgress?: boolean;
 };
 
 export const serviceCatalog: ServiceDefinition[] = [
   { slug: "store", name: "SMAJ Store", experience: "Get anything", description: "Buy and sell products with Pi.", items: ["Products", "Stores", "Sellers", "Deals", "Delivery"], atlasIndex: 0, live: true },
+  { slug: "stream", name: "SMAJ Stream", experience: "Watch anytime", description: "Movies, series, creators, and live content.", items: ["Movies", "Series", "Videos", "Creators", "Live"], atlasIndex: 12, inProgress: true },
+  { slug: "sports", name: "SMAJ Sports", experience: "Play together", description: "Sports, scores, clubs, games, and fans.", items: ["Sports", "Scores", "Clubs", "Games", "Community"], atlasIndex: 13, inProgress: true },
   { slug: "food", name: "SMAJ Food", experience: "Eat anytime", description: "Restaurants, delivery, groceries, and offers.", items: ["Restaurants", "Food delivery", "Groceries", "Offers"], atlasIndex: 1 },
   { slug: "jobs", name: "SMAJ Jobs", experience: "Work anywhere", description: "Jobs, freelance work, hiring, and talent.", items: ["Jobs", "Freelance", "Hiring", "Talent", "Companies"], atlasIndex: 2 },
   { slug: "education", name: "SMAJ Education", experience: "Learn anything", description: "Learning, training, skills, and certifications.", items: ["Courses", "Skills", "Training", "Certifications", "Learning resources"], atlasIndex: 3 },
@@ -21,8 +24,6 @@ export const serviceCatalog: ServiceDefinition[] = [
   { slug: "housing", name: "SMAJ Housing", experience: "Find homes", description: "Property, rentals, agents, and land.", items: ["Properties", "Rentals", "Agents", "Land"], atlasIndex: 9 },
   { slug: "events", name: "SMAJ Events", experience: "Discover events", description: "Events, tickets, shows, and experiences.", items: ["Events", "Tickets", "Shows", "Experiences"], atlasIndex: 10 },
   { slug: "swap", name: "SMAJ Swap", experience: "Swap anything", description: "Peer-to-peer exchange and community deals.", items: ["Exchange", "Trade", "Deals", "Community"], atlasIndex: 11 },
-  { slug: "stream", name: "SMAJ Stream", experience: "Watch anytime", description: "Movies, series, creators, and live content.", items: ["Movies", "Series", "Videos", "Creators", "Live"], atlasIndex: 12 },
-  { slug: "sports", name: "SMAJ Sports", experience: "Play together", description: "Sports, scores, clubs, games, and fans.", items: ["Sports", "Scores", "Clubs", "Games", "Community"], atlasIndex: 13 },
   { slug: "token", name: "SMAJ Token", experience: "Earn more", description: "Rewards, loyalty, and ecosystem utility.", items: ["Rewards", "Loyalty", "Benefits", "Ecosystem utility"], atlasIndex: 14 },
 ];
 

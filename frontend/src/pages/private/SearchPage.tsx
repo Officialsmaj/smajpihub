@@ -21,8 +21,8 @@ import type { Product } from "../../types/marketplace";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 
 const explore = [
-  ["Shopping", ShoppingBagOutlinedIcon, "/store"], ["Food", RestaurantOutlinedIcon, "/app/services/food"], ["Jobs", WorkOutlineOutlinedIcon, "/app/services/jobs"], ["Education", SchoolOutlinedIcon, "/app/services/education"],
-  ["Health", HealthAndSafetyOutlinedIcon, "/app/services/health"], ["Transport", DirectionsCarOutlinedIcon, "/app/services/transport"], ["Stream", LiveTvOutlinedIcon, "/app/services/stream"], ["Sports", SportsSoccerOutlinedIcon, "/app/services/sports"],
+  ["Shopping", ShoppingBagOutlinedIcon, "/store"], ["Stream", LiveTvOutlinedIcon, "/app/services/stream"], ["Sports", SportsSoccerOutlinedIcon, "/app/services/sports"], ["Food", RestaurantOutlinedIcon, "/app/services/food"],
+  ["Jobs", WorkOutlineOutlinedIcon, "/app/services/jobs"], ["Education", SchoolOutlinedIcon, "/app/services/education"], ["Health", HealthAndSafetyOutlinedIcon, "/app/services/health"], ["Transport", DirectionsCarOutlinedIcon, "/app/services/transport"],
   ["Events", EventOutlinedIcon, "/app/services/events"], ["Wallet", AccountBalanceWalletOutlinedIcon, "/app/wallet"], ["Housing", HomeWorkOutlinedIcon, "/app/services/housing"], ["Charity", VolunteerActivismOutlinedIcon, "/app/services/charity"],
 ] as const;
 const suggestions = ["Mobile payments", "Sports tickets", "Food delivery", "Online shopping", "Find jobs", "Health services", "Movies", "Property rentals"];

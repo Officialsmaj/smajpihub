@@ -2,7 +2,7 @@ export type PlatformDefinition = {
   name: string;
   routeSegment: string;
   description: string;
-  status: "Live" | "Coming Soon";
+  status: "Live" | "Coming Soon" | "In Progress";
 };
 
 export const platformDefinitions: PlatformDefinition[] = [
@@ -77,13 +77,13 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ PI Stream",
     routeSegment: "stream",
     description: "Watch and monetize creator-first streaming content.",
-    status: "Coming Soon",
+    status: "In Progress",
   },
   {
     name: "SMAJ PI Sports",
     routeSegment: "sports",
     description: "Follow sports communities, activities, and fan utilities.",
-    status: "Coming Soon",
+    status: "In Progress",
   },
   {
     name: "SMAJ Token",
@@ -92,3 +92,13 @@ export const platformDefinitions: PlatformDefinition[] = [
     status: "Coming Soon",
   },
 ];
+
+const launchPriority = ["store", "stream", "sports"];
+
+export const orderedPlatformDefinitions = [...platformDefinitions].sort((left, right) => {
+  const leftIndex = launchPriority.indexOf(left.routeSegment);
+  const rightIndex = launchPriority.indexOf(right.routeSegment);
+  const leftPriority = leftIndex === -1 ? launchPriority.length : leftIndex;
+  const rightPriority = rightIndex === -1 ? launchPriority.length : rightIndex;
+  return leftPriority - rightPriority;
+});
