@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -247,12 +248,12 @@ const ProductDetailPage = () => {
         </aside>
       ) : null}
 
-      {imageViewerOpen && selectedImage ? (
+      {imageViewerOpen && selectedImage ? createPortal((
         <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product image">
           <button type="button" className="product-image-viewer-close" onClick={() => setImageViewerOpen(false)} aria-label="Close full screen image"><CloseOutlinedIcon /></button>
           <img src={selectedImage} alt={product.title} />
         </div>
-      ) : null}
+      ), document.body) : null}
 
       {related.length ? (
         <>
