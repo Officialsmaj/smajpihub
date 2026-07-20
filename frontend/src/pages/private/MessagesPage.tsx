@@ -84,6 +84,15 @@ const MessagesPage = () => {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [voicePreview, setVoicePreview] = useState<VoicePreview | null>(null);
   const [voiceError, setVoiceError] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("Spam or scam");
+  const [inboxFilter, setInboxFilter] = useState<"inbox" | "archived">("inbox");
+  const [archivedIds, setArchivedIds] = useState<string[]>(() => {
+    try { return JSON.parse(window.localStorage.getItem("smaj_archived_conversations") || "[]"); } catch { return []; }
+  });
   const [sendingVoice, setSendingVoice] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const nearBottomRef = useRef(true);
@@ -105,10 +114,31 @@ const MessagesPage = () => {
       item.lastMessage,
       item.buyerName,
       item.sellerName,
-    ].join(" ").toLowerCase().includes(query));
-  }, [conversationSearch, conversations, user?.uid]);
+    ].join(" ").toLowerCase().includes(query)).filter((item) => inboxFilter === "archived" ? archivedIds.includes(item._id) : !archivedIds.includes(item._id));
+  }, [archivedIds, conversationSearch, conversations, inboxFilter, user?.uid]);
   const activeId = selectedId || filteredConversations[0]?._id || (!conversationSearch.trim() ? conversations[0]?._id : undefined);
   const active = useMemo(() => conversations.find((item) => item._id === activeId), [activeId, conversations]);
+
+  const archiveConversation = (conversationId: string, archive: boolean) => {
+    setArchivedIds((current) => {
+      const next = archive ? Array.from(new Set([...current, conversationId])) : current.filter((id) => id !== conversationId);
+      window.localStorage.setItem("smaj_archived_conversations", JSON.stringify(next));
+      return next;
+    });
+    setMoreOpen(false);
+    if (archive) setParams({});
+  };
+
+  const submitConversationReport = async () => {
+    if (!active) return;
+    try {
+      await axiosClient.post("/support", { source: "conversation-report", topic: "Safety report", message: `${reportReason}\nConversation: ${active._id}\nProduct: ${active.productTitle || "Not specified"}` });
+      setReportOpen(false);
+      setVoiceError("Report sent for review.");
+    } catch {
+      setVoiceError("Could not send the report. Try again.");
+    }
+  };
 
   const loadConversations = useCallback(async () => {
     try {
@@ -358,6 +388,7 @@ const MessagesPage = () => {
             <SearchOutlinedIcon />
             <input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" />
           </label>
+          <div className="conversation-filters"><button type="button" className={inboxFilter === "inbox" ? "active" : ""} onClick={() => setInboxFilter("inbox")}>Inbox</button><button type="button" className={inboxFilter === "archived" ? "active" : ""} onClick={() => setInboxFilter("archived")}>Archived</button></div>
           {loadingConversations ? <PrivateSkeleton variant="messages" count={6} /> : filteredConversations.length ? (
             filteredConversations.map((item) => (
               <button className={item._id === activeId ? "active" : ""} key={item._id} onClick={() => setParams({ conversation: item._id })}>
@@ -399,12 +430,13 @@ const MessagesPage = () => {
                   </div>
                 </div>
                 <div className="chat-header-actions">
-                  <Link to="/report-abuse" aria-label="Report conversation" title="Report conversation">
+                  <button type="button" onClick={() => setReportOpen(true)} aria-label="Report conversation" title="Report conversation">
                     <FlagOutlinedIcon />
-                  </Link>
-                  <button aria-label="More options">
+                  </button>
+                  <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-label="More options">
                     <MoreVertOutlinedIcon />
                   </button>
+                  {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => archiveConversation(active._id, !archivedIds.includes(active._id))}>{archivedIds.includes(active._id) ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
                 </div>
                 <div className="chat-product-preview">
                   {active.productImage ? <img src={active.productImage} alt="" /> : null}
@@ -470,11 +502,11 @@ const MessagesPage = () => {
                 </div>
               ) : (
                 <form onSubmit={send}>
-                  <button type="button" aria-label="Emoji">
+                  <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
                     <SentimentSatisfiedAltOutlinedIcon />
                   </button>
                   <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
-                  <button type="button" aria-label="Attach file">
+                  <button type="button" onClick={() => setAttachOpen(true)} aria-label="Attach file">
                     <AttachFileOutlinedIcon />
                   </button>
                   <button
@@ -487,6 +519,9 @@ const MessagesPage = () => {
                   </button>
                 </form>
               )}
+              {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
+              {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" onClick={() => { setAttachOpen(false); startVoiceRecording(); }}><MicNoneOutlinedIcon />Voice note</button><button type="button" disabled>Photo sharing<br /><small>Coming soon</small></button><button type="button" disabled>Document sharing<br /><small>Coming soon</small></button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
+              {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
               {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
             </>
           ) : (

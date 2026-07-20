@@ -14052,6 +14052,23 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
   .product-form-mobile-actions button:last-child { color: #ffffff; background: var(--smaj-primary); border: 1px solid var(--smaj-primary); }
 }
 
+/* Marketplace chat controls. */
+.conversation-filters { display: flex; gap: 7px; padding: 8px 12px; border-bottom: 1px solid var(--smaj-border); }
+.conversation-filters button { min-height: 30px !important; width: auto !important; padding: 0 10px !important; color: var(--smaj-text-secondary) !important; background: var(--smaj-secondary-bg) !important; border: 1px solid var(--smaj-border) !important; border-radius: 999px !important; font-size: 11px !important; font-weight: 800 !important; }
+.conversation-filters button.active { color: #ffffff !important; background: var(--smaj-primary) !important; border-color: var(--smaj-primary) !important; }
+.chat-header-actions { position: relative; }
+.chat-more-menu { position: absolute; top: calc(100% + 7px); right: 0; z-index: 15; width: 184px; display: grid; padding: 6px; background: var(--smaj-card); border: 1px solid var(--smaj-border); border-radius: 12px; box-shadow: 0 14px 30px rgba(2,6,23,.22); }
+.chat-more-menu a,.chat-more-menu button { width: 100% !important; min-height: 35px !important; height: auto !important; padding: 0 9px !important; display: flex !important; align-items: center; color: var(--smaj-text) !important; background: transparent !important; border: 0 !important; border-radius: 8px !important; font-size: 12px !important; text-align: left; text-decoration: none; }
+.chat-more-menu a:hover,.chat-more-menu button:hover { background: var(--smaj-secondary-bg) !important; }
+.chat-emoji-picker { position: absolute; right: 14px; bottom: 65px; z-index: 14; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 8px; background: var(--smaj-card); border: 1px solid var(--smaj-border); border-radius: 14px; box-shadow: 0 14px 30px rgba(2,6,23,.2); }
+.chat-emoji-picker button { width: 34px; height: 34px; background: transparent; border: 0; border-radius: 8px; font-size: 19px; cursor: pointer; }
+.chat-emoji-picker button:hover { background: var(--smaj-secondary-bg); }
+.chat-action-sheet { position: absolute; right: 8px; bottom: 8px; left: 8px; z-index: 16; display: grid; gap: 8px; padding: 14px; color: var(--smaj-text); background: var(--smaj-card); border: 1px solid var(--smaj-border); border-radius: 16px; box-shadow: 0 18px 38px rgba(2,6,23,.28); }
+.chat-action-sheet > button,.chat-action-sheet select { min-height: 42px; padding: 0 12px; color: var(--smaj-text); background: var(--smaj-secondary-bg); border: 1px solid var(--smaj-border); border-radius: 10px; font-weight: 750; text-align: left; cursor: pointer; }
+.chat-action-sheet > button:disabled { opacity: .55; cursor: not-allowed; }
+.chat-action-sheet small { color: var(--smaj-text-secondary); font-weight: 500; }
+.chat-action-sheet .chat-report-submit { color: #ffffff; background: var(--smaj-primary); border-color: var(--smaj-primary); text-align: center; }
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;
