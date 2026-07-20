@@ -13915,6 +13915,62 @@ html[data-private-theme="dark"] .storefront-product-card .storefront-seller-name
 .help-article-footer button { min-height: 30px !important; width: auto !important; padding: 0 9px !important; color: var(--smaj-text-secondary) !important; background: var(--smaj-bg-secondary) !important; border: 1px solid var(--smaj-border) !important; border-radius: 999px !important; font-size: 11px !important; }
 .help-article-footer button.active { color: #ffffff !important; background: var(--smaj-primary) !important; border-color: var(--smaj-primary) !important; }
 
+/* Final dark-mode guard for the mobile Store and Product Details layouts. */
+html[data-private-theme="dark"] .storefront-page .storefront-shopping-tools {
+  background: var(--smaj-bg-secondary) !important;
+}
+
+html[data-private-theme="dark"] .storefront-page .storefront-tool-menu summary,
+html[data-private-theme="dark"] .storefront-page .storefront-tool-menu > div {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-detail {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-bg) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-detail-image,
+html[data-private-theme="dark"] .product-detail-page .product-info-disclosure,
+html[data-private-theme="dark"] .product-detail-page .product-info-disclosure > div {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-detail-content h1,
+html[data-private-theme="dark"] .product-detail-page .product-detail-price-row strong {
+  color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-detail-rating small,
+html[data-private-theme="dark"] .product-detail-page .product-detail-content > p,
+html[data-private-theme="dark"] .product-detail-page .product-info-disclosure p,
+html[data-private-theme="dark"] .product-detail-page .product-info-disclosure summary {
+  color: var(--smaj-text-secondary) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-delivery-line {
+  color: var(--smaj-text-secondary) !important;
+  background: var(--smaj-card) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .gallery-more {
+  color: var(--smaj-text) !important;
+  background: var(--smaj-secondary-bg) !important;
+  border-color: var(--smaj-border) !important;
+}
+
+html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
+  color: var(--smaj-text) !important;
+  background: rgba(17, 24, 39, .98) !important;
+  border-color: var(--smaj-border) !important;
+}
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;
