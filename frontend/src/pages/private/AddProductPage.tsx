@@ -137,6 +137,12 @@ const AddProductPage = () => {
   }, [form]);
 
   useEffect(() => {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    const sections = document.querySelectorAll<HTMLDetailsElement>(".smart-product-form .product-accordion");
+    sections.forEach((section, index) => { section.open = index === 0; });
+  }, []);
+
+  useEffect(() => {
     if (!user || !profileLocationLocked) return;
     setForm((current) => ({
       ...current,
@@ -334,8 +340,18 @@ const AddProductPage = () => {
     }
   };
 
+  const continueToNextSection = () => {
+    const sections = Array.from(document.querySelectorAll<HTMLDetailsElement>(".smart-product-form .product-accordion"));
+    const currentIndex = Math.max(0, sections.findIndex((section) => section.open));
+    const next = sections[Math.min(currentIndex + 1, sections.length - 1)];
+    if (!next) return;
+    sections.forEach((section) => { if (section !== next) section.open = false; });
+    next.open = true;
+    next.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <main className="private-page">
+    <main className="private-page add-product-page">
       <section className="private-page-head">
         <div><p className="private-kicker">SELLER TOOLS</p><h1>List Product</h1><p>Create a smart marketplace listing without filling one long form.</p></div>
       </section>
@@ -351,7 +367,7 @@ const AddProductPage = () => {
           <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setProductTitle(event.target.value)} placeholder="Example: Nike running shoes size 42" /></label>
           <div className={`product-name-guide ${titleInsight ? "good" : "weak"}`}>
             <div><strong>{titleInsight ? `${titleInsight.category} detected` : "Add a clear product name"}</strong><p>{titleInsight ? "Only relevant details are shown below." : "Use brand, model, size, storage, or type so buyers can find it quickly."}</p></div>
-            <div className="product-name-guide-chips">{activeFields.slice(0, 8).map((field) => <span key={field}>{field}</span>)}</div>
+            <div className="product-name-guide-chips">{activeFields.slice(0, 3).map((field) => <span key={field}>{field}</span>)}</div>
           </div>
           <label>Category<select required value={form.category} onChange={(event) => setCategory(event.target.value as CategoryName)}>{categoryNames.map((item) => <option key={item}>{item}</option>)}</select></label>
         </details>
@@ -430,6 +446,10 @@ const AddProductPage = () => {
         {error ? <div className="private-alert floating-alert error">{error}</div> : null}
         {success ? <div className="private-alert floating-alert success">{success}</div> : null}
         <button className="private-primary-button" disabled={publishDisabled}>{submitting ? "Publishing..." : form.sellerAgreementAccepted ? "Publish for Review" : "Accept Agreement to Publish"}</button>
+        <div className="product-form-mobile-actions" aria-label="Listing form actions">
+          <button type="button" onClick={() => setSuccess("Draft saved on this device.")}>Save draft</button>
+          <button type="button" onClick={continueToNextSection}>Continue</button>
+        </div>
       </form>
     </main>
   );

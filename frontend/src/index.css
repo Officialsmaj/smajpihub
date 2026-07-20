@@ -14019,6 +14019,35 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
   .product-image-viewer { animation: none; }
 }
 
+/* Cleaner mobile listing flow: one focused section and clear fixed actions. */
+.product-form-mobile-actions { display: none; }
+
+@media (max-width: 767px) {
+  .add-product-page { padding: 10px 12px 150px !important; }
+  .add-product-page > .private-page-head { display: none; }
+  .add-product-page .smart-product-form { gap: 10px; background: transparent; border: 0; }
+  .add-product-page .smart-product-form .product-accordion { padding: 14px; background: var(--smaj-card); border-color: var(--smaj-border); border-radius: 14px; }
+  .add-product-page .product-accordion > summary { min-height: 42px; }
+  .add-product-page .product-accordion > summary strong { font-size: 14px; }
+  .add-product-page .product-accordion > summary small { font-size: 11px; line-height: 1.3; }
+  .add-product-page .product-accordion[open] { gap: 12px; }
+  .add-product-page .product-name-guide { padding: 10px; }
+  .add-product-page .product-name-guide p { font-size: 11px; line-height: 1.35; }
+  .add-product-page .product-name-guide-chips { gap: 5px; }
+  .add-product-page .product-name-guide-chips span { padding: 3px 6px; font-size: 9px; }
+  .add-product-page .private-form-row { gap: 10px; }
+  .add-product-page .private-form label { gap: 5px; font-size: 12px; }
+  .add-product-page .private-form input,
+  .add-product-page .private-form select,
+  .add-product-page .private-form textarea { min-height: 46px; }
+  .add-product-page .private-form textarea { min-height: 104px; }
+  .add-product-page .smart-product-form > .private-primary-button { display: none; }
+  .product-form-mobile-actions { position: fixed; left: 0; right: 0; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); z-index: 46; display: grid; grid-template-columns: 1fr 1.35fr; gap: 8px; padding: 9px 12px; background: color-mix(in srgb, var(--smaj-bg) 94%, transparent); border-top: 1px solid var(--smaj-border); backdrop-filter: blur(12px); }
+  .product-form-mobile-actions button { min-height: 46px; border-radius: 11px; font-size: 13px; font-weight: 850; cursor: pointer; }
+  .product-form-mobile-actions button:first-child { color: var(--smaj-text); background: var(--smaj-card); border: 1px solid var(--smaj-border); }
+  .product-form-mobile-actions button:last-child { color: #ffffff; background: var(--smaj-primary); border: 1px solid var(--smaj-primary); }
+}
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;
