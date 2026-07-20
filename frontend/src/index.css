@@ -13971,6 +13971,54 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
   border-color: var(--smaj-border) !important;
 }
 
+/* Full-screen product image viewer: image and a single close control. */
+.product-detail-image[role="button"] { cursor: zoom-in; }
+.product-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  display: grid;
+  place-items: center;
+  padding: 64px 18px 24px;
+  background: rgba(2, 6, 23, .96);
+  animation: product-image-viewer-in .16s ease-out;
+}
+
+.product-image-viewer img {
+  width: 100%;
+  height: 100%;
+  max-width: 1280px;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.product-image-viewer-close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 0px));
+  right: 16px;
+  z-index: 1;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: rgba(15, 23, 42, .78);
+  border: 1px solid rgba(255,255,255,.26);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.product-image-viewer-close svg { font-size: 26px !important; }
+
+@keyframes product-image-viewer-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-image-viewer { animation: none; }
+}
+
 /* Gold is reserved for account shortcuts and completed order milestones. */
 .account-dashboard-page .account-quick-grid > a > svg {
   color: #d99a1a;

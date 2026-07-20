@@ -7,6 +7,7 @@ import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import StarHalfRoundedIcon from "@mui/icons-material/StarHalfRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { isAxiosError } from "axios";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
@@ -34,6 +35,7 @@ const ProductDetailPage = () => {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Misleading or inappropriate listing");
   const { addProductToCart, cartToast } = useAddToCartToast();
   const galleryTouchStart = useRef<number | null>(null);
@@ -143,6 +145,16 @@ const ProductDetailPage = () => {
         <div className="product-gallery">
           <div
             className="product-detail-image"
+            role={selectedImage ? "button" : undefined}
+            tabIndex={selectedImage ? 0 : undefined}
+            aria-label={selectedImage ? "Open full screen product image" : undefined}
+            onClick={() => { if (selectedImage) setImageViewerOpen(true); }}
+            onKeyDown={(event) => {
+              if (selectedImage && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                setImageViewerOpen(true);
+              }
+            }}
             onTouchStart={(event) => { galleryTouchStart.current = event.touches[0]?.clientX ?? null; }}
             onTouchEnd={(event) => {
               if (galleryTouchStart.current === null) return;
@@ -233,6 +245,13 @@ const ProductDetailPage = () => {
           <button type="button" className="mobile-add-cart" onClick={() => addProductToCart(product)}>Add to Cart</button>
           <button type="button" className="mobile-buy-now" disabled={submitting} onClick={() => void action("order")}>Buy Now</button>
         </aside>
+      ) : null}
+
+      {imageViewerOpen && selectedImage ? (
+        <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product image">
+          <button type="button" className="product-image-viewer-close" onClick={() => setImageViewerOpen(false)} aria-label="Close full screen image"><CloseOutlinedIcon /></button>
+          <img src={selectedImage} alt={product.title} />
+        </div>
       ) : null}
 
       {related.length ? (
