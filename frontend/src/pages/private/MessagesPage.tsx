@@ -96,9 +96,6 @@ const MessagesPage = () => {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Spam or scam");
   const [inboxFilter, setInboxFilter] = useState<"inbox" | "archived">("inbox");
-  const [archivedIds, setArchivedIds] = useState<string[]>(() => {
-    try { return JSON.parse(window.localStorage.getItem("smaj_archived_conversations") || "[]"); } catch { return []; }
-  });
   const [sendingVoice, setSendingVoice] = useState(false);
   const [sendingAttachment, setSendingAttachment] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -115,27 +112,30 @@ const MessagesPage = () => {
   const selectedId = params.get("conversation");
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
-    if (!query) return conversations;
-    return conversations.filter((item) => [
+    return conversations.filter((item) => inboxFilter === "archived" ? item.archived : !item.archived).filter((item) => !query || [
       getConversationName(item, user?.uid),
       getConversationRoleLabel(item, user?.uid),
       item.productTitle,
       item.lastMessage,
       item.buyerName,
       item.sellerName,
-    ].join(" ").toLowerCase().includes(query)).filter((item) => inboxFilter === "archived" ? archivedIds.includes(item._id) : !archivedIds.includes(item._id));
-  }, [archivedIds, conversationSearch, conversations, inboxFilter, user?.uid]);
-  const activeId = selectedId || filteredConversations[0]?._id || (!conversationSearch.trim() ? conversations[0]?._id : undefined);
+    ].join(" ").toLowerCase().includes(query));
+  }, [conversationSearch, conversations, inboxFilter, user?.uid]);
+  const activeId = selectedId || filteredConversations[0]?._id;
   const active = useMemo(() => conversations.find((item) => item._id === activeId), [activeId, conversations]);
 
-  const archiveConversation = (conversationId: string, archive: boolean) => {
-    setArchivedIds((current) => {
-      const next = archive ? Array.from(new Set([...current, conversationId])) : current.filter((id) => id !== conversationId);
-      window.localStorage.setItem("smaj_archived_conversations", JSON.stringify(next));
-      return next;
-    });
+  const archiveConversation = async (conversationId: string, archive: boolean) => {
     setMoreOpen(false);
-    if (archive) setParams({});
+    try {
+      const { data } = await axiosClient.patch<{ conversation?: RichConversation }>(`/messages/${conversationId}/archive`, { archive });
+      if (data.conversation) {
+        setConversations((current) => current.map((item) => item._id === conversationId ? { ...item, ...data.conversation } : item));
+      }
+      if (archive) setParams({});
+      await loadConversations();
+    } catch {
+      setVoiceError("Could not update archive. Try again.");
+    }
   };
 
   const submitConversationReport = async () => {
@@ -488,7 +488,7 @@ const MessagesPage = () => {
                   <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-label="More options">
                     <MoreVertOutlinedIcon />
                   </button>
-                  {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => archiveConversation(active._id, !archivedIds.includes(active._id))}>{archivedIds.includes(active._id) ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
+                  {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => void archiveConversation(active._id, !active.archived)}>{active.archived ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
                 </div>
                 <div className="chat-product-preview">
                   {active.productImage ? <img src={active.productImage} alt="" /> : null}

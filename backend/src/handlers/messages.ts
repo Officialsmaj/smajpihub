@@ -53,6 +53,7 @@ const enrichConversations = async (req: any, currentUser: Record<string, any>, c
       online,
       lastSeenAt,
       typing: typingMs > 0 && Date.now() - typingMs < TYPING_WINDOW_MS,
+      archived: Array.isArray(conversation.archivedBy) && conversation.archivedBy.includes(currentUser.uid),
     };
   });
 };
@@ -120,6 +121,22 @@ export default function mountMessageEndpoints(router: Router) {
     else delete typingBy[user.uid];
     await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { typingBy } });
     return res.status(200).json({ ok: true });
+  });
+
+  router.patch("/:id/archive", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid conversation id" });
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
+    if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    const archive = Boolean(req.body?.archive);
+    await req.app.locals.conversationCollection.updateOne(
+      { _id: conversation._id },
+      archive ? { $addToSet: { archivedBy: user.uid }, $set: { updatedAt: new Date() } } : { $pull: { archivedBy: user.uid }, $set: { updatedAt: new Date() } },
+    );
+    const updated = await req.app.locals.conversationCollection.findOne({ _id: conversation._id });
+    const [enrichedConversation] = await enrichConversations(req, user, updated ? [updated] : []);
+    return res.status(200).json({ conversation: enrichedConversation });
   });
 
   router.post("/:id", async (req, res) => {
