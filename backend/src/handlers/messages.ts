@@ -18,7 +18,13 @@ const normalizeVerificationLevel = (user: any) => {
 };
 const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const MAX_VOICE_NOTE_BYTES = 2_000_000;
+const MAX_MESSAGE_IMAGE_BYTES = 2_500_000;
+const MAX_MESSAGE_DOCUMENT_BYTES = 3_500_000;
 const voiceDataPattern = /^data:audio\/(webm|mp4|mpeg|ogg|wav)(;codecs=[a-z0-9-]+)?;base64,[a-z0-9+/=]+$/i;
+const imageDataPattern = /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i;
+const documentDataPattern = /^data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,[a-z0-9+/=]+$/i;
+const allowedMessageTypes = new Set(["text", "voice", "image", "document"]);
+const safeAttachmentName = (value: unknown) => String(value || "Attachment").trim().replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-").slice(0, 120) || "Attachment";
 
 const enrichConversations = async (req: any, currentUser: Record<string, any>, conversations: Array<Record<string, any>>) => {
   const otherUserIds = conversations
@@ -123,22 +129,39 @@ export default function mountMessageEndpoints(router: Router) {
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     const message = String(req.body?.message || "").trim();
-    const messageType = req.body?.messageType === "voice" ? "voice" : "text";
+    const requestedType = String(req.body?.messageType || "text");
+    const messageType = allowedMessageTypes.has(requestedType) ? requestedType : "text";
     const audioDataUrl = String(req.body?.audioDataUrl || "");
     const audioMimeType = String(req.body?.audioMimeType || "");
     const audioDurationSeconds = Math.max(1, Math.min(180, Math.round(Number(req.body?.audioDurationSeconds) || 0)));
+    const attachmentUrl = String(req.body?.attachmentUrl || "").trim().slice(0, 1200);
+    const attachmentDataUrl = String(req.body?.attachmentDataUrl || "");
+    const attachmentName = safeAttachmentName(req.body?.attachmentName);
+    const attachmentMimeType = String(req.body?.attachmentMimeType || "").trim().slice(0, 120);
+    const attachmentSize = Math.max(0, Math.round(Number(req.body?.attachmentSize) || 0));
     if (messageType === "text" && (!message || message.length > 1000)) return res.status(400).json({ error: "bad_request", message: "Message must be 1-1000 characters" });
     if (messageType === "voice" && (!voiceDataPattern.test(audioDataUrl) || audioDataUrl.length > MAX_VOICE_NOTE_BYTES)) {
       return res.status(400).json({ error: "bad_request", message: "Voice note must be a valid audio file under 2MB." });
     }
+    if (messageType === "image") {
+      const hasImageUrl = /^https?:\/\//i.test(attachmentUrl);
+      const hasImageData = imageDataPattern.test(attachmentDataUrl) && attachmentDataUrl.length <= MAX_MESSAGE_IMAGE_BYTES;
+      if (!hasImageUrl && !hasImageData) return res.status(400).json({ error: "bad_request", message: "Photo must be a valid uploaded image." });
+    }
+    if (messageType === "document" && (!documentDataPattern.test(attachmentDataUrl) || attachmentDataUrl.length > MAX_MESSAGE_DOCUMENT_BYTES)) {
+      return res.status(400).json({ error: "bad_request", message: "Document must be a valid file under 3.5MB." });
+    }
     const receiverId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
+    const displayMessage = messageType === "voice" ? "Voice note" : messageType === "image" ? "Photo" : messageType === "document" ? `Document: ${attachmentName}` : message;
     const document = {
       conversationId: req.params.id,
       senderId: user.uid,
       senderName: user.displayName || user.username,
-      message: messageType === "voice" ? "Voice note" : message,
+      message: displayMessage,
       messageType,
       ...(messageType === "voice" ? { audioDataUrl, audioMimeType, audioDurationSeconds } : {}),
+      ...(messageType === "image" ? { attachmentUrl, ...(attachmentDataUrl ? { attachmentDataUrl } : {}), attachmentName, attachmentMimeType, attachmentSize } : {}),
+      ...(messageType === "document" ? { attachmentDataUrl, attachmentName, attachmentMimeType, attachmentSize } : {}),
       createdAt: new Date(),
     };
     const result = await req.app.locals.messageCollection.insertOne(document);

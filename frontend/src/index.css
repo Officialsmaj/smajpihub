@@ -17238,6 +17238,74 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   color: #ffffff !important;
 }
 
+.chat-file-input {
+  display: none;
+}
+
+.chat-attachment {
+  margin: 0;
+}
+
+.chat-photo-message {
+  width: min(260px, 62vw);
+  display: grid;
+  gap: 7px;
+}
+
+.chat-photo-message img {
+  width: 100%;
+  max-height: 260px;
+  display: block;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.chat-photo-message figcaption {
+  overflow: hidden;
+  color: var(--smaj-text-secondary);
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-document-message {
+  width: min(280px, 68vw);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.chat-document-message svg {
+  flex: 0 0 auto;
+  font-size: 26px !important;
+}
+
+.chat-document-message span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.chat-document-message strong,
+.chat-document-message small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-document-message small {
+  color: var(--smaj-text-secondary);
+  font-size: 11px;
+}
+
+.chat-messages article.mine .chat-photo-message figcaption,
+.chat-messages article.mine .chat-document-message small {
+  color: rgba(255, 255, 255, .82) !important;
+}
+
 .voice-recorder-bar {
   display: flex;
   align-items: center;

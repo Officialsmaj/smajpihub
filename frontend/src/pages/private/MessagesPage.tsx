@@ -6,6 +6,8 @@ import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDown
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -15,6 +17,7 @@ import type { ChatMessage, Conversation } from "../../types/marketplace";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
+import { uploadImage } from "../../lib/uploadImage";
 
 type RichConversation = Conversation & {
   profileImage?: string;
@@ -71,6 +74,9 @@ const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
   reader.readAsDataURL(blob);
 });
 
+const MAX_CHAT_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_CHAT_DOCUMENT_BYTES = 3 * 1024 * 1024;
+
 const MessagesPage = () => {
   const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
@@ -94,7 +100,10 @@ const MessagesPage = () => {
     try { return JSON.parse(window.localStorage.getItem("smaj_archived_conversations") || "[]"); } catch { return []; }
   });
   const [sendingVoice, setSendingVoice] = useState(false);
+  const [sendingAttachment, setSendingAttachment] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const nearBottomRef = useRef(true);
   const typingTimeoutRef = useRef<number | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -369,6 +378,49 @@ const MessagesPage = () => {
     }
   };
 
+  const sendAttachment = async (file: File | undefined, messageType: "image" | "document") => {
+    if (!activeId || !file || sendingAttachment) return;
+    setAttachOpen(false);
+    setVoiceError("");
+    setSendingAttachment(true);
+    nearBottomRef.current = true;
+    try {
+      if (messageType === "image") {
+        if (!file.type.startsWith("image/") || file.size > MAX_CHAT_IMAGE_BYTES) {
+          setVoiceError("Choose a JPG, PNG, WebP, or GIF photo that is 2 MB or smaller.");
+          return;
+        }
+        const imageDataUrl = await blobToDataUrl(file);
+        const attachmentUrl = await uploadImage(imageDataUrl, "message-photos");
+        await axiosClient.post(`/messages/${activeId}`, {
+          messageType,
+          attachmentUrl,
+          attachmentName: file.name,
+          attachmentMimeType: file.type,
+          attachmentSize: file.size,
+        });
+      } else {
+        if (file.size > MAX_CHAT_DOCUMENT_BYTES) {
+          setVoiceError("Choose a document that is 3 MB or smaller.");
+          return;
+        }
+        const attachmentDataUrl = await blobToDataUrl(file);
+        await axiosClient.post(`/messages/${activeId}`, {
+          messageType,
+          attachmentDataUrl,
+          attachmentName: file.name,
+          attachmentMimeType: file.type || "application/octet-stream",
+          attachmentSize: file.size,
+        });
+      }
+      await Promise.all([loadMessages(), loadConversations()]);
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : "Attachment could not be sent. Try a smaller file.");
+    } finally {
+      setSendingAttachment(false);
+    }
+  };
+
   return (
     <main className={`private-page messages-page ${selectedId ? "conversation-selected" : ""}`}>
       <PullToRefresh onRefresh={() => Promise.all([loadConversations(), loadMessages()]).then(() => undefined)} />
@@ -464,6 +516,19 @@ const MessagesPage = () => {
                         </audio>
                         <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
                       </div>
+                    ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
+                      <figure className="chat-attachment chat-photo-message">
+                        <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || "Shared photo"} />
+                        <figcaption>{item.attachmentName || "Photo"}</figcaption>
+                      </figure>
+                    ) : item.messageType === "document" && item.attachmentDataUrl ? (
+                      <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
+                        <DescriptionOutlinedIcon />
+                        <span>
+                          <strong>{item.attachmentName || "Document"}</strong>
+                          <small>{item.attachmentMimeType || "File"}</small>
+                        </span>
+                      </a>
                     ) : (
                       <p>{item.message || "Message"}</p>
                     )}
@@ -502,6 +567,8 @@ const MessagesPage = () => {
                 </div>
               ) : (
                 <form onSubmit={send}>
+                  <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void sendAttachment(event.target.files?.[0], "image"); event.currentTarget.value = ""; }} />
+                  <input ref={documentInputRef} className="chat-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { void sendAttachment(event.target.files?.[0], "document"); event.currentTarget.value = ""; }} />
                   <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
                     <SentimentSatisfiedAltOutlinedIcon />
                   </button>
@@ -520,7 +587,7 @@ const MessagesPage = () => {
                 </form>
               )}
               {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
-              {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled>Photo sharing<br /><small>Coming soon</small></button><button type="button" disabled>Document sharing<br /><small>Coming soon</small></button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
+              {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
               {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
               {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
             </>
