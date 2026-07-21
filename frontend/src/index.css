@@ -19538,8 +19538,7 @@ svg {
   display: flex;
   flex-wrap: nowrap;
   gap: 8px;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
   visibility: visible;
 }
 
@@ -19598,6 +19597,18 @@ svg {
   height: 100vh;
 }
 
+.stream-private-shell .private-route-back {
+  display: none !important;
+}
+
+.stream-private-shell .private-content {
+  padding-top: 0;
+}
+
+.stream-private-shell .private-tab-page {
+  margin-top: 0;
+}
+
 @media (max-width: 767px) {
   .stream-private-shell > .private-body,
   .stream-private-shell > .private-body.private-body-collapsed {
@@ -19606,6 +19617,7 @@ svg {
   }
 
   .stream-private-shell .private-content {
+    padding-top: 0;
     padding-bottom: 82px;
   }
 }
