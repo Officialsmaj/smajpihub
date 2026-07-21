@@ -37,7 +37,14 @@ const streams: StreamItem[] = [
   { id: 8, title: "Designing products people love", creator: "Made Simple", category: "Technology", viewers: "76K views", duration: "20:15", tone: "coral", initials: "MS" },
 ];
 
-const categories = ["All", "Live", "Music", "Sports", "Technology", "Lifestyle", "Learning", "Film", "Wellness"];
+const categories = ["All", "Movies", "Series", "Live", "Music", "Sports", "Technology", "Lifestyle", "Learning"];
+const onDemand = streams.filter((item) => !item.live);
+
+const movieRows = [
+  { title: "Trending now", id: "movies", items: onDemand },
+  { title: "SMAJ Original movies", id: "originals", items: [...onDemand].reverse() },
+  { title: "Series worth watching", id: "series", items: [...onDemand.slice(2), ...onDemand.slice(0, 2)] },
+];
 
 const StreamCard = ({ item, saved, onSave, onPlay }: { item: StreamItem; saved: boolean; onSave: () => void; onPlay: () => void }) => (
   <article className="stream-card">
@@ -72,7 +79,11 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
   const [playing, setPlaying] = useState<StreamItem | null>(null);
 
   const visible = useMemo(() => streams.filter((item) => {
-    const categoryMatch = category === "All" || (category === "Live" ? item.live : item.category === category);
+    const categoryMatch = category === "All"
+      || (category === "Live" ? item.live : null)
+      || (category === "Movies" ? !item.live : null)
+      || (category === "Series" ? !item.live : null)
+      || item.category === category;
     const text = `${item.title} ${item.creator} ${item.category}`.toLowerCase();
     return categoryMatch && text.includes(query.trim().toLowerCase());
   }), [category, query]);
@@ -84,26 +95,46 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
       <main className="stream-page">
         <header className="stream-topbar">
           <a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a>
-          <nav aria-label="Stream navigation"><a href="#discover">Discover</a><a href="#live">Live</a><a href="#categories">Categories</a><a href="#studio">For creators</a></nav>
+          <nav aria-label="Stream navigation"><a href="#discover">Home</a><a href="#movies">Movies</a><a href="#series">Series</a><a href="#live">Live</a><a href="#categories">Browse</a><a href="#studio">Creators</a></nav>
           <label className="stream-search"><SearchRoundedIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search shows, creators, topics" /></label>
           <a href="#studio" className="stream-create"><VideoCallRoundedIcon /> Create</a>
         </header>
 
         <section className="stream-hero" id="discover">
           <div className="stream-hero-content">
-            <span className="stream-eyebrow"><i /> LIVE NOW · SMAJ ORIGINAL</span>
-            <h1>Stories worth<br /><em>staying for.</em></h1>
-            <p>Watch creators, culture and communities come alive. Stream freely, support directly, and belong to something bigger.</p>
+            <span className="stream-eyebrow">SMAJ ORIGINAL · FEATURE FILM</span>
+            <h1>The Last<br /><em>Horizon.</em></h1>
+            <p>One journey. One impossible choice. Discover the new cinematic original everyone will be talking about.</p>
             <div className="stream-hero-actions">
-              <button type="button" onClick={() => setPlaying(streams[0])}><PlayArrowRoundedIcon /> Watch live</button>
-              <a href="#studio"><AddRoundedIcon /> Start creating</a>
+              <button type="button" onClick={() => setPlaying(streams[5])}><PlayArrowRoundedIcon /> Play movie</button>
+              <a href="#movies"><AddRoundedIcon /> My list</a>
             </div>
-            <div className="stream-hero-meta"><span><b>12.8K</b> watching</span><span>Technology</span><span>Live in 1080p</span></div>
+            <div className="stream-hero-meta"><span><b>98% Match</b></span><span>2026</span><span>2h 08m</span><span>16+</span><span>4K</span></div>
           </div>
           <div className="stream-hero-art" aria-hidden="true"><div className="stream-orbit orbit-one" /><div className="stream-orbit orbit-two" /><div className="stream-hero-screen"><span>S</span><i><PlayArrowRoundedIcon /></i></div><div className="stream-chat-bubble one"><b>AMAZING!</b><span>🔥 2.4K</span></div><div className="stream-chat-bubble two"><b>Supporting with Pi</b><span>π 25</span></div></div>
         </section>
 
-        <section className="stream-content" id="live">
+        <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
+          {movieRows.map((row) => (
+            <section className="stream-movie-row" id={row.id} key={row.title}>
+              <div className="stream-row-heading"><h2>{row.title}</h2><a href="#categories">Explore all →</a></div>
+              <div className="stream-rail">
+                {row.items.map((item, index) => (
+                  <article className={`stream-movie-tile ${item.tone}`} key={`${row.id}-${item.id}`}>
+                    <button type="button" onClick={() => setPlaying(item)} aria-label={`Play ${item.title}`}>
+                      <span className="stream-movie-rank">{index + 1}</span>
+                      <span className="stream-movie-logo">{item.initials}</span>
+                      <span className="stream-movie-play"><PlayArrowRoundedIcon /></span>
+                    </button>
+                    <div><h3>{item.title}</h3><p>{index % 2 ? "Series · 8 episodes" : "Movie · SMAJ Original"}</p></div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </section>
+
+        <section className="stream-content stream-live-section" id="live">
           <div className="stream-section-head"><div><span className="stream-kicker"><LiveTvRoundedIcon /> ON AIR</span><h2>Live right now</h2></div><button type="button" onClick={() => setCategory("Live")}>View all live →</button></div>
           <div className="stream-featured-grid">
             {streams.slice(0, 3).map((item) => <StreamCard key={item.id} item={item} saved={saved.includes(item.id)} onSave={() => toggleSaved(item.id)} onPlay={() => setPlaying(item)} />)}
