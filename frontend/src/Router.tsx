@@ -53,6 +53,7 @@ import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
+import StreamPage from "./pages/StreamPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -117,7 +118,9 @@ export const router = createBrowserRouter(
     },
     ...platformDefinitions.map((platform) => ({
       path: `/services/${platform.routeSegment}`,
-      element: platform.routeSegment === "store" ? (
+      element: platform.routeSegment === "stream" ? (
+        <StreamPage />
+      ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
         <GenericPage
