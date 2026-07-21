@@ -23,6 +23,7 @@ import mountMessageEndpoints from "./handlers/messages";
 import mountOnboardingEndpoints from "./handlers/onboarding";
 import mountSupportEndpoints from "./handlers/support";
 import mountUploadEndpoints from "./handlers/uploads";
+import mountStreamEndpoints from "./handlers/stream";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -230,6 +231,10 @@ app.use("/support", supportRouter);
 const uploadRouter = express.Router();
 mountUploadEndpoints(uploadRouter);
 app.use("/uploads", uploadRouter);
+
+const streamRouter = express.Router();
+mountStreamEndpoints(streamRouter);
+app.use("/stream", streamRouter);
 
 app.get("/health", async (_, res) => {
   const ready = Boolean(

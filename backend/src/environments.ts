@@ -34,6 +34,7 @@ interface Environment {
   cloudinary_folder: string;
   marketplace_auto_approve_products: boolean;
   session_debug: boolean;
+  tmdb_access_token: string;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -70,6 +71,7 @@ const env: Environment = {
   cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
   marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
   session_debug: String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
+  tmdb_access_token: process.env.TMDB_ACCESS_TOKEN || "",
 };
 
 if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {

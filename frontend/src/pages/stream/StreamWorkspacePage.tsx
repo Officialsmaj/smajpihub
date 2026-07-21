@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
@@ -16,6 +16,7 @@ import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
+import { getStreamCatalog, searchStreamCatalog, type StreamCatalogTitle } from "../../lib/streamCatalog";
 
 export type StreamPageKind =
   | "movies" | "series" | "live" | "search" | "my-list" | "history" | "subscriptions"
@@ -24,7 +25,7 @@ export type StreamPageKind =
   | "channel" | "earnings" | "admin" | "moderation" | "reports" | "creators" | "catalog-admin"
   | "admin-analytics" | "stream-settings";
 
-type Title = { id: string; name: string; meta: string; tone: string; progress?: number };
+type Title = { id: string; name: string; meta: string; tone: string; progress?: number; posterUrl?: string | null; mediaType?: "movie" | "tv"; overview?: string };
 
 const titles: Title[] = [
   { id: "last-horizon", name: "The Last Horizon", meta: "Movie · 2h 08m", tone: "purple", progress: 64 },
@@ -51,8 +52,8 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
 };
 
 const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) => (
-  <Link className={`sw-title-card ${title.tone} ${compact ? "compact" : ""}`} to={`/app/services/stream/title/${title.id}`}>
-    <div><span className="sw-card-logo">{title.name.split(" ").map((word) => word[0]).join("").slice(0, 2)}</span><span className="sw-card-play"><PlayArrowRoundedIcon /></span>{title.progress ? <i style={{ width: `${title.progress}%` }} /> : null}</div>
+  <Link className={`sw-title-card ${title.tone} ${compact ? "compact" : ""}`} to={`/app/services/stream/${title.mediaType === "tv" ? "series" : "title"}/${title.id}`}>
+    <div style={title.posterUrl ? { backgroundImage: `linear-gradient(0deg,rgba(14,7,20,.45),transparent),url(${title.posterUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}><span className="sw-card-logo">{title.posterUrl ? "" : title.name.split(" ").map((word) => word[0]).join("").slice(0, 2)}</span><span className="sw-card-play"><PlayArrowRoundedIcon /></span>{title.progress ? <i style={{ width: `${title.progress}%` }} /> : null}</div>
     <h3>{title.name}</h3><p>{title.meta}</p>
   </Link>
 );
@@ -60,15 +61,33 @@ const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) =
 const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [genre, setGenre] = useState("All");
   const [sort, setSort] = useState("Popular");
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+  const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
+  const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() => ["movies", "series", "search"].includes(kind) ? "loading" : "fallback");
   const [heading, description] = pageMeta[kind] ?? ["Browse", "Entertainment selected for you."];
-  const list = kind === "history" ? titles.filter((item) => item.progress) : kind === "my-list" ? titles.slice(1, 7) : titles;
+  useEffect(() => {
+    if (!["movies", "series", "search"].includes(kind)) return;
+    const timer = window.setTimeout(() => {
+      const request = kind === "search" ? searchStreamCatalog(query) : getStreamCatalog(kind as "movies" | "series");
+      void request.then((data) => {
+        setRemoteTitles(data.results.map((item: StreamCatalogTitle, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8] || "purple", posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview })));
+        setCatalogState("ready");
+      }).catch(() => { setRemoteTitles(null); setCatalogState("fallback"); });
+    }, kind === "search" ? 350 : 0);
+    return () => window.clearTimeout(timer);
+  }, [kind, query]);
+  const localList = kind === "history" ? titles.filter((item) => item.progress) : kind === "my-list" ? titles.slice(1, 7) : titles;
+  const list = remoteTitles ?? localList;
   const filtered = list.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
   return <>
     <header className="sw-page-head"><span>EXPLORE SMAJ STREAM</span><h1>{heading}</h1><p>{description}</p></header>
     {kind === "search" ? <label className="sw-big-search"><SearchRoundedIcon /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search movies, series, live events and creators" /></label> : null}
     <div className="sw-toolbar"><div>{["All", "Action", "Drama", "Comedy", "Documentary", "Family"].map((item) => <button className={genre === item ? "active" : ""} onClick={() => setGenre(item)} type="button" key={item}>{item}</button>)}</div><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort titles"><option>Popular</option><option>Newest</option><option>A–Z</option></select></div>
-    <div className="sw-title-grid">{filtered.map((item) => <Tile title={item} key={item.id} />)}</div>
+    {catalogState === "loading" ? <div className="sw-catalog-status">Loading the entertainment catalogue…</div> : null}
+    {catalogState === "fallback" && ["movies","series","search"].includes(kind) ? <div className="sw-catalog-status warning">Demo catalogue shown. Add TMDB_ACCESS_TOKEN on the backend to load live TMDB data.</div> : null}
+    <div className="sw-title-grid">{filtered.map((item) => <Tile title={item} key={`${item.mediaType || "local"}-${item.id}`} />)}</div>
+    <p className="sw-attribution"><a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a> · This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </>;
 };
 
