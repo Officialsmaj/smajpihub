@@ -19456,3 +19456,10 @@ svg {
 .legal-company-page svg {
   color: #6b3fe6 !important;
 }
+.storefront-page,
+.storefront-shell,
+.storefront-footer,
+.storefront-footer-bottom {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
