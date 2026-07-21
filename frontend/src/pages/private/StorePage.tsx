@@ -36,7 +36,7 @@ const shoppingTools = [
   { label: "Sort", items: ["Newest", "Oldest", "Price: Low to High", "Price: High to Low", "Most Popular", "Best Rated"] },
   { label: "Filter", items: ["Category", "Condition", "Brand", "Verified Seller", "In Stock", "Delivery / Pickup"] },
   { label: "Price", items: ["Min Price", "Max Price", "Currency: USDT / Pi", "Price Range"] },
-  { label: "Nearby", items: ["Near Me", "Country", "State/Region", "City"], globe: true },
+  { label: "Nearby", items: ["Near Me", "Country", "State/Region", "City"] },
 ];
 const PRODUCT_BATCH_SIZE = 10;
 const STORE_PRODUCT_LIMIT_KEY = "smaj_store_product_limit";
@@ -51,6 +51,7 @@ const StorePage = () => {
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const [category, setCategory] = useState(params.get("category") || "All");
+  const [openShoppingTool, setOpenShoppingTool] = useState("");
   const [heroIndex, setHeroIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
@@ -283,10 +284,10 @@ const StorePage = () => {
 
         <section className="storefront-shopping-tools" aria-label="Shopping tools">
           {shoppingTools.map((tool) => (
-            <details className="storefront-tool-menu" key={tool.label}>
+            <details className="storefront-tool-menu" key={tool.label} open={openShoppingTool === tool.label} onToggle={(event) => setOpenShoppingTool((event.currentTarget as HTMLDetailsElement).open ? tool.label : "")}>
               <summary>
                 <span>{tool.label}</span>
-                {tool.globe ? <span aria-hidden="true">🌍</span> : <KeyboardArrowDownOutlinedIcon />}
+                <KeyboardArrowDownOutlinedIcon />
               </summary>
               <div>
                 {tool.items.map((item) => (
@@ -296,6 +297,7 @@ const StorePage = () => {
                     onClick={() => {
                       if (tool.label === "Nearby" && item === "Near Me") updateSearch("Abu Dhabi");
                       else updateSearch(item);
+                      setOpenShoppingTool("");
                     }}
                   >
                     {item}
