@@ -61,7 +61,11 @@ const StreamCard = ({ item, saved, onSave, onPlay }: { item: StreamItem; saved: 
   </article>
 );
 
-const StreamPage = () => {
+type StreamPageProps = {
+  embedded?: boolean;
+};
+
+const StreamPage = ({ embedded = false }: StreamPageProps) => {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<number[]>([]);
@@ -75,8 +79,8 @@ const StreamPage = () => {
 
   const toggleSaved = (id: number) => setSaved((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
 
-  return (
-    <AppLayout showFooter={false}>
+  const experience = (
+    <>
       <main className="stream-page">
         <header className="stream-topbar">
           <a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a>
@@ -121,8 +125,10 @@ const StreamPage = () => {
       </main>
 
       {playing ? <div className="stream-player-overlay" role="dialog" aria-modal="true" aria-label={`Playing ${playing.title}`} onClick={() => setPlaying(null)}><div className={`stream-player ${playing.tone}`} onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setPlaying(null)} aria-label="Close player"><CloseRoundedIcon /></button><div className="stream-player-mark"><PlayArrowRoundedIcon /></div><span>{playing.live ? "LIVE · " : "NOW PLAYING · "}{playing.viewers}</span><h2>{playing.title}</h2><p>{playing.creator}</p><aside><FavoriteBorderRoundedIcon /> This interactive preview is ready for video API integration.</aside></div></div> : null}
-    </AppLayout>
+    </>
   );
+
+  return embedded ? experience : <AppLayout showFooter={false}>{experience}</AppLayout>;
 };
 
 export default StreamPage;

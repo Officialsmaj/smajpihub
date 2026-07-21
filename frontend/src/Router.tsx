@@ -288,6 +288,7 @@ export const router = createBrowserRouter(
     { path: "/payment-method", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="payment-method" /></PrivateLayout></ProtectedRoute> },
     { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream", element: <ProtectedRoute><PrivateLayout><StreamPage embedded /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
     { path: "/trending", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="trending" /></PrivateLayout></ProtectedRoute> },
     { path: "/lifestyle", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="lifestyle" /></PrivateLayout></ProtectedRoute> },
