@@ -1,6 +1,7 @@
 import type { Request, Response, Router } from "express";
 import axios from "axios";
 import env from "../environments";
+import { resolveCurrentUser } from "../services/auth";
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -54,6 +55,82 @@ const tmdbGet = async <T>(path: string, params: Record<string, string | number |
 };
 
 const mountStreamEndpoints = (router: Router) => {
+  const requireCreator = async (req: Request, res: Response) => {
+    const user = await resolveCurrentUser(req);
+    if (!user) { res.status(401).json({ error: "authentication_required", message: "Sign in to use Creator Studio." }); return null; }
+    if (!req.app.locals.streamContentCollection) { res.status(503).json({ error: "service_unavailable", message: "Stream content storage is not ready." }); return null; }
+    return user;
+  };
+
+  router.post("/creator/uploads", async (req, res) => {
+    try {
+      const user = await requireCreator(req, res);
+      if (!user) return;
+      if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured", message: "Add Cloudflare Stream credentials to the backend environment." });
+      const title = String(req.body?.title || "").trim().slice(0, 140);
+      const description = String(req.body?.description || "").trim().slice(0, 3000);
+      const category = String(req.body?.category || "Entertainment").trim().slice(0, 60);
+      const visibility = ["public", "unlisted", "private"].includes(req.body?.visibility) ? req.body.visibility : "private";
+      const fileName = String(req.body?.fileName || "video.mp4").trim().slice(0, 180);
+      const fileSize = Number(req.body?.fileSize || 0);
+      const maxDurationSeconds = Math.max(1, Math.min(14_400, Number(req.body?.maxDurationSeconds) || 3600));
+      if (!title || description.length < 20) return res.status(400).json({ error: "bad_request", message: "Add a title and a description of at least 20 characters." });
+      if (fileSize <= 0 || fileSize > 200 * 1024 * 1024) return res.status(400).json({ error: "file_size", message: "This upload flow supports video files up to 200 MB." });
+      if (req.body?.rightsConfirmed !== true) return res.status(400).json({ error: "rights_required", message: "Confirm that you own or control the rights to distribute this video." });
+      const creatorId = String(user._id);
+      const expiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      const response = await axios.post<{ success: boolean; result?: { uid?: string; uploadURL?: string }; errors?: Array<{ message?: string }> }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/direct_upload`, {
+        maxDurationSeconds,
+        expiry,
+        creator: creatorId.slice(0, 64),
+        requireSignedURLs: false,
+        meta: { name: fileName, smajTitle: title },
+      }, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, "Content-Type": "application/json" }, timeout: 15_000 });
+      const uid = response.data.result?.uid;
+      const uploadURL = response.data.result?.uploadURL;
+      if (!response.data.success || !uid || !uploadURL) throw new Error(response.data.errors?.[0]?.message || "Cloudflare did not create an upload URL.");
+      const now = new Date();
+      const record = { cloudflareUid: uid, creatorId, creatorName: user.displayName || user.username || user.piUsername || "Creator", title, description, category, visibility, fileName, fileSize, rightsConfirmed: true, rightsConfirmedAt: now, processingStatus: "awaiting_upload", moderationStatus: "pending", playbackAllowed: false, createdAt: now, updatedAt: now };
+      const result = await req.app.locals.streamContentCollection.insertOne(record);
+      return res.status(201).json({ upload: { id: String(result.insertedId), uid, uploadURL, expiresAt: expiry, status: record.processingStatus } });
+    } catch (error) {
+      console.error("Failed to create Stream upload:", error);
+      const message = axios.isAxiosError(error) ? String(error.response?.data?.errors?.[0]?.message || error.message) : error instanceof Error ? error.message : "Unable to create upload";
+      return res.status(502).json({ error: "upload_session_failed", message });
+    }
+  });
+
+  router.post("/creator/videos/:uid/complete", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    const uid = String(req.params.uid || "");
+    const result = await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid, creatorId: String(user._id) }, { $set: { processingStatus: "processing", updatedAt: new Date() } });
+    if (!result.matchedCount) return res.status(404).json({ error: "not_found", message: "Video upload record not found." });
+    return res.json({ uid, status: "processing", moderationStatus: "pending" });
+  });
+
+  router.get("/creator/videos", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    const videos = await req.app.locals.streamContentCollection.find({ creatorId: String(user._id) }).sort({ createdAt: -1 }).limit(100).toArray();
+    return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id) })) });
+  });
+
+  router.get("/creator/videos/:uid/status", async (req, res) => {
+    try {
+      const user = await requireCreator(req, res); if (!user) return;
+      const uid = String(req.params.uid || "");
+      const video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid, creatorId: String(user._id) });
+      if (!video) return res.status(404).json({ error: "not_found", message: "Video not found." });
+      if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.json({ video });
+      const response = await axios.get<{ success: boolean; result?: { readyToStream?: boolean; status?: { state?: string; errorReasonText?: string }; playback?: { hls?: string; dash?: string }; thumbnail?: string; duration?: number } }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${uid}`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
+      const remote = response.data.result;
+      const processingStatus = remote?.readyToStream ? "ready" : remote?.status?.state || "processing";
+      await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: { processingStatus, playback: remote?.playback || null, thumbnailUrl: remote?.thumbnail || null, duration: remote?.duration || null, processingError: remote?.status?.errorReasonText || null, updatedAt: new Date() } });
+      return res.json({ video: { ...video, processingStatus, playback: remote?.playback || null, thumbnailUrl: remote?.thumbnail || null, duration: remote?.duration || null } });
+    } catch (error) {
+      return res.status(502).json({ error: "status_failed", message: error instanceof Error ? error.message : "Unable to refresh video status" });
+    }
+  });
+
   const list = (path: string, fallbackType: "movie" | "tv") => async (req: Request, res: Response) => {
     try {
       const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));

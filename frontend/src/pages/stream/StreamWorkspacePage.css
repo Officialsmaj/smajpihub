@@ -811,6 +811,7 @@
 .sw-drop input {
   display: none;
 }
+.sw-drop.selected{color:#2d7d5d;border-color:#81c9ad;background:#f0fbf6}.sw-rights-confirm{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:10px!important;padding:14px;margin:8px 0 18px;border:1px solid #ded5e4;border-radius:10px;background:#faf8fb}.sw-rights-confirm>input{width:18px;height:18px;margin:1px 0 0}.sw-rights-confirm span b,.sw-rights-confirm span small{display:block}.sw-rights-confirm span small{margin-top:5px;color:#716878;line-height:1.45}.sw-upload-progress{height:34px;margin:0 0 15px;position:relative;overflow:hidden;border-radius:8px;background:#ece5f1}.sw-upload-progress i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#7133c5,#a86be0);transition:width .2s}.sw-upload-progress span{position:relative;z-index:1;height:100%;display:grid;place-items:center;color:#24142d;font-size:11px;font-weight:900}.sw-upload-message{display:flex;align-items:center;gap:7px;padding:11px 13px;border-radius:9px;font-size:12px}.sw-upload-message.error{color:#9a2929;background:#fff0f0}.sw-upload-message.success{color:#176944;background:#eaf9f1}.sw-upload-message svg{font-size:18px}.sw-form>button:disabled{cursor:not-allowed;opacity:.55}
 .sw-live-setup {
   text-align: center;
   padding: 25px;
@@ -849,6 +850,7 @@
   border-radius: 5px;
   background: #6d30ad;
 }
+.sw-content-thumb{width:55px;height:34px;object-fit:cover;border-radius:5px}
 .sw-table em {
   color: #158c61;
   font-style: normal;

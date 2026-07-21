@@ -3,7 +3,6 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
-import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
@@ -16,6 +15,8 @@ import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
+import CreatorUploadForm from "./CreatorUploadForm";
+import CreatorContentList from "./CreatorContentList";
 import { getStreamCatalog, searchStreamCatalog, type StreamCatalogTitle } from "../../lib/streamCatalog";
 
 export type StreamPageKind =
@@ -121,13 +122,12 @@ const studioNav = [
 ];
 
 const Studio = ({ kind }: { kind: StreamPageKind }) => {
-  const [uploaded, setUploaded] = useState(false);
   const title = ({ studio:"Creator overview",upload:"Upload video","create-live":"Create live stream",content:"Content manager",analytics:"Video analytics",channel:"Your channel",earnings:"Creator earnings" } as Partial<Record<StreamPageKind,string>>)[kind] ?? "Creator Studio";
   return <div className="sw-management"><aside><b>CREATOR STUDIO</b>{studioNav.map(([label,path]) => <Link key={path} to={`/app/services/stream/${path}`}>{label}</Link>)}</aside><section><header className="sw-manage-head"><div><span>CREATOR FIRST</span><h1>{title}</h1></div>{kind === "studio" ? <Link to="/app/services/stream/studio/upload"><AddRoundedIcon /> New video</Link> : null}</header>
     {kind === "studio" ? <><div className="sw-metrics">{[["Total views","248K","+18%"],["Watch time","18.2K h","+12%"],["Followers","32,840","+824"],["Pi earnings","π 4,284","+21%"]].map(([label,value,change]) => <article key={label}><small>{label}</small><strong>{value}</strong><span>{change}</span></article>)}</div><div className="sw-panel"><h2>Channel performance</h2><div className="sw-chart">{[25,48,34,62,55,78,72,91,68,88,95,84].map((height,i) => <i key={i} style={{height:`${height}%`}} />)}</div></div></> : null}
-    {kind === "upload" ? <form className="sw-form" onSubmit={(event) => {event.preventDefault();setUploaded(true)}}><label className="sw-drop"><CloudUploadRoundedIcon /><b>{uploaded ? "Video ready to publish" : "Drop your video here"}</b><span>MP4, WebM or MOV · up to 20GB</span><input type="file" accept="video/*" onChange={() => setUploaded(true)}/></label><label>Title<input required placeholder="Give your video a clear title" /></label><label>Description<textarea rows={4} placeholder="Tell viewers about this video" /></label><div><label>Category<select><option>Entertainment</option><option>Music</option><option>Learning</option></select></label><label>Visibility<select><option>Public</option><option>Unlisted</option><option>Private</option></select></label></div><button type="submit">Publish video</button></form> : null}
+    {kind === "upload" ? <CreatorUploadForm /> : null}
     {kind === "create-live" ? <form className="sw-form"><div className="sw-live-setup"><VideoCallRoundedIcon /><h2>Set up your live stream</h2><p>Schedule an event or go live when you are ready.</p></div><label>Stream title<input placeholder="What are you streaming?" /></label><div><label>Start<select><option>Go live now</option><option>Schedule for later</option></select></label><label>Chat<select><option>Enabled</option><option>Followers only</option><option>Disabled</option></select></label></div><button type="button">Create stream</button></form> : null}
-    {kind === "content" ? <div className="sw-table"><header><b>Video</b><b>Status</b><b>Views</b><b>Published</b></header>{titles.slice(0,6).map((item,i) => <div key={item.id}><span><i className={item.tone}/><b>{item.name}</b></span><em>{i === 0 ? "Processing" : "Published"}</em><span>{(84-i*9)}K</span><span>{i+1} days ago</span></div>)}</div> : null}
+    {kind === "content" ? <CreatorContentList /> : null}
     {kind === "analytics" ? <><div className="sw-metrics">{[["Views","248,392","+18%"],["Watch time","18,204 h","+12%"],["Average view","8m 42s","+4%"],["Retention","64%","+7%"]].map(([a,b,c])=><article key={a}><small>{a}</small><strong>{b}</strong><span>{c}</span></article>)}</div><div className="sw-panel"><h2>Audience retention</h2><div className="sw-line-chart"><i /></div></div></> : null}
     {kind === "channel" ? <div className="sw-channel"><div className="sw-channel-banner"><span>SS</span></div><h2>SMAJ Studio</h2><p>Original movies, series and stories created for the SMAJ community.</p><button type="button">Edit channel</button></div> : null}
     {kind === "earnings" ? <><div className="sw-balance"><span><PaymentsRoundedIcon /></span><div><small>Available balance</small><strong>π 4,284.50</strong><p>Tips, memberships and watch rewards</p></div><button type="button">Transfer to wallet</button></div><div className="sw-table"><header><b>Source</b><b>Type</b><b>Amount</b><b>Date</b></header>{["Maya P.","Creator Plus","Joel K.","Watch rewards"].map((name,i)=><div key={name}><b>{name}</b><span>{i%2?"Membership":"Support"}</span><strong>π {i%2?"8.00":"25.00"}</strong><span>Jul {18-i}, 2026</span></div>)}</div></> : null}

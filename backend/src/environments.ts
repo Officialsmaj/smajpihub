@@ -35,6 +35,8 @@ interface Environment {
   marketplace_auto_approve_products: boolean;
   session_debug: boolean;
   tmdb_access_token: string;
+  cloudflare_stream_account_id: string;
+  cloudflare_stream_api_token: string;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -72,6 +74,8 @@ const env: Environment = {
   marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
   session_debug: String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
   tmdb_access_token: process.env.TMDB_ACCESS_TOKEN || "",
+  cloudflare_stream_account_id: process.env.CLOUDFLARE_STREAM_ACCOUNT_ID || "",
+  cloudflare_stream_api_token: process.env.CLOUDFLARE_STREAM_API_TOKEN || "",
 };
 
 if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {

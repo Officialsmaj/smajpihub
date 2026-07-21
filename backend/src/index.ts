@@ -280,6 +280,7 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
       app.locals.onboardingCollection = db.collection("onboarding_applications");
       app.locals.supportCollection = db.collection("support_requests");
+      app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.sessionCollection = db.collection("user_sessions");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
@@ -292,6 +293,9 @@ const start = async () => {
         app.locals.conversationCollection.createIndex({ participants: 1, updatedAt: -1 }),
         app.locals.messageCollection.createIndex({ conversationId: 1, createdAt: 1 }),
         app.locals.notificationCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.streamContentCollection.createIndex({ creatorId: 1, createdAt: -1 }),
+        app.locals.streamContentCollection.createIndex({ cloudflareUid: 1 }, { unique: true }),
+        app.locals.streamContentCollection.createIndex({ moderationStatus: 1, processingStatus: 1, createdAt: -1 }),
         app.locals.sessionCollection.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
       ]);
     }
