@@ -19599,6 +19599,9 @@ svg {
 
 .stream-private-shell .private-route-back {
   display: none !important;
+  height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .stream-private-shell .private-content {
