@@ -100,6 +100,39 @@ const backFallbackForPath = (pathname: string) => {
   return "";
 };
 
+const readLastPrivateRoute = () => {
+  try {
+    return window.sessionStorage.getItem(LAST_PRIVATE_ROUTE_KEY)
+      || window.localStorage.getItem(LAST_PRIVATE_ROUTE_KEY)
+      || "";
+  } catch {
+    return "";
+  }
+};
+
+const isRestorablePrivateRoute = (route: string) => {
+  if (!route.startsWith("/") || route.startsWith("//")) return false;
+
+  try {
+    const { pathname } = new URL(route, window.location.origin);
+    return [
+      "/dashboard", "/store", "/add-product", "/orders", "/seller", "/profile", "/settings",
+      "/search", "/messages", "/notifications", "/saved", "/cart", "/checkout", "/payment-method",
+      "/trending", "/lifestyle", "/categories", "/help", "/seller-agreement", "/app/services",
+      "/app/help-center", "/app/wallet",
+    ].some((allowed) => pathname === allowed || pathname.startsWith(`${allowed}/`))
+      || pathname.startsWith("/product/")
+      || pathname.startsWith("/edit-product/");
+  } catch {
+    return false;
+  }
+};
+
+const wasBrowserReload = () => {
+  const navigation = window.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  return navigation?.type === "reload";
+};
+
 const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
@@ -119,6 +152,12 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const notificationBadgeLabel = unreadCount > 99 ? "99+" : unreadCount;
   const navigate = useNavigate();
   const location = useLocation();
+  const [restoreDestination, setRestoreDestination] = useState(() => {
+    const savedRoute = readLastPrivateRoute();
+    return location.pathname === "/dashboard" && wasBrowserReload() && isRestorablePrivateRoute(savedRoute) && savedRoute !== "/dashboard"
+      ? savedRoute
+      : "";
+  });
   const isStoreShell = location.pathname === "/store";
   const backFallback = backFallbackForPath(location.pathname);
   const profileReminderStorageKey = user?.uid ? `${PROFILE_VERIFY_REMINDER_KEY}:${user.uid}` : PROFILE_VERIFY_REMINDER_KEY;
@@ -132,6 +171,14 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
 
   useEffect(() => {
     const route = `${location.pathname}${location.search}${location.hash}`;
+    if (restoreDestination) {
+      if (route !== restoreDestination) {
+        navigate(restoreDestination, { replace: true });
+        return;
+      }
+      setRestoreDestination("");
+      return;
+    }
     try {
       window.sessionStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
       window.localStorage.setItem(LAST_PRIVATE_ROUTE_KEY, route);
@@ -147,7 +194,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     } catch {
       window.localStorage.removeItem("smaj_recent_pages");
     }
-  }, [location.hash, location.pathname, location.search, pageTitle]);
+  }, [location.hash, location.pathname, location.search, navigate, pageTitle, restoreDestination]);
 
   useEffect(() => {
     document.documentElement.dataset.privateTheme = themeMode;
