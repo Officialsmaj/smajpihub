@@ -19536,8 +19536,10 @@ svg {
   position: relative;
   z-index: 200;
   display: flex;
-  flex-wrap: wrap;
-  overflow: visible;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: visible;
   visibility: visible;
 }
 
@@ -19580,4 +19582,30 @@ svg {
   font-size: 10px;
   font-weight: 900;
   line-height: 1;
+}
+
+/* SMAJ Stream owns its navigation chrome inside the ecosystem shell. */
+.stream-private-shell > .private-header {
+  display: none !important;
+}
+
+.stream-private-shell > .private-body {
+  min-height: 100vh;
+}
+
+.stream-private-shell .private-sidebar {
+  top: 0;
+  height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .stream-private-shell > .private-body,
+  .stream-private-shell > .private-body.private-body-collapsed {
+    min-height: 100dvh;
+    padding-top: 0;
+  }
+
+  .stream-private-shell .private-content {
+    padding-bottom: 82px;
+  }
 }

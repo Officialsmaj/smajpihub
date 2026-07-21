@@ -64,6 +64,7 @@ const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) =
 
 const StreamNav = () => (
   <nav className="sw-nav" aria-label="SMAJ Stream pages">
+    <Link className="sw-hub-back" to="/app/services" aria-label="Back to SMAJ PI HUB">← Hub</Link>
     <Link className="sw-logo" to="/app/services/stream"><PlayArrowRoundedIcon /><b>SMAJ</b> Stream</Link>
     <div>{nav.map(([label, to]) => <Link key={to} to={to}>{label}</Link>)}</div>
     <Link className="sw-search-link" to="/app/services/stream/search"><SearchRoundedIcon /> Search</Link>

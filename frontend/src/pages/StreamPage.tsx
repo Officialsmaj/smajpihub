@@ -94,7 +94,8 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
     <>
       <main className="stream-page">
         <header className="stream-topbar">
-          <a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a>
+          <a className="stream-hub-back" href="/app/services" aria-label="Back to SMAJ PI HUB">← Hub</a>
+          <a className="stream-brand" href="/app/services/stream"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a>
           <nav aria-label="Stream navigation"><a href="/app/services/stream">Home</a><a href="/app/services/stream/movies">Movies</a><a href="/app/services/stream/series">Series</a><a href="/app/services/stream/live">Live</a><a href="/app/services/stream/search">Search</a><a href="/app/services/stream/studio">Studio</a></nav>
           <label className="stream-search"><SearchRoundedIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search shows, creators, topics" /></label>
           <a href="/app/services/stream/studio" className="stream-create"><VideoCallRoundedIcon /> Create</a>
