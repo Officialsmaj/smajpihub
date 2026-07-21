@@ -19605,11 +19605,12 @@ svg {
 }
 
 .stream-private-shell .private-content {
-  padding-top: 0;
+  padding: 0 0 82px;
 }
 
 .stream-private-shell .private-tab-page {
   margin-top: 0;
+  padding: 0;
 }
 
 @media (max-width: 767px) {
@@ -19620,7 +19621,6 @@ svg {
   }
 
   .stream-private-shell .private-content {
-    padding-top: 0;
-    padding-bottom: 82px;
+    padding: 0 0 82px;
   }
 }

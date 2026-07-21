@@ -15,6 +15,7 @@ import ClosedCaptionRoundedIcon from "@mui/icons-material/ClosedCaptionRounded";
 import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import "./StreamWorkspacePage.css";
+import StreamHeader from "./StreamHeader";
 
 export type StreamPageKind =
   | "movies" | "series" | "live" | "search" | "my-list" | "history" | "subscriptions"
@@ -49,26 +50,11 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   parental: ["Parental controls", "Create a safe entertainment experience for every profile."],
 };
 
-const nav = [
-  ["Home", "/app/services/stream"], ["Movies", "/app/services/stream/movies"],
-  ["Series", "/app/services/stream/series"], ["Live", "/app/services/stream/live"],
-  ["My List", "/app/services/stream/my-list"], ["Studio", "/app/services/stream/studio"],
-];
-
 const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) => (
   <Link className={`sw-title-card ${title.tone} ${compact ? "compact" : ""}`} to={`/app/services/stream/title/${title.id}`}>
     <div><span className="sw-card-logo">{title.name.split(" ").map((word) => word[0]).join("").slice(0, 2)}</span><span className="sw-card-play"><PlayArrowRoundedIcon /></span>{title.progress ? <i style={{ width: `${title.progress}%` }} /> : null}</div>
     <h3>{title.name}</h3><p>{title.meta}</p>
   </Link>
-);
-
-const StreamNav = () => (
-  <nav className="sw-nav" aria-label="SMAJ Stream pages">
-    <Link className="sw-hub-back" to="/app/services" aria-label="Back to SMAJ PI HUB">← Hub</Link>
-    <Link className="sw-logo" to="/app/services/stream"><PlayArrowRoundedIcon /><b>SMAJ</b> Stream</Link>
-    <div>{nav.map(([label, to]) => <Link key={to} to={to}>{label}</Link>)}</div>
-    <Link className="sw-search-link" to="/app/services/stream/search"><SearchRoundedIcon /> Search</Link>
-  </nav>
 );
 
 const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
@@ -153,7 +139,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (["profile","notifications","plans","parental"].includes(kind)) return <AccountPage kind={kind}/>;
     return <Catalogue kind={kind}/>;
   })();
-  return <main className="sw-page">{!managementKinds.includes(kind) && !adminKinds.includes(kind) ? <StreamNav/> : null}<div className="sw-page-content">{content}</div></main>;
+  return <main className="sw-page">{!managementKinds.includes(kind) && !adminKinds.includes(kind) ? <StreamHeader/> : null}<div className="sw-page-content">{content}</div></main>;
 };
 
 export default StreamWorkspacePage;
