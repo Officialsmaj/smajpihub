@@ -95,9 +95,9 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
       <main className="stream-page">
         <header className="stream-topbar">
           <a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a>
-          <nav aria-label="Stream navigation"><a href="#discover">Home</a><a href="#movies">Movies</a><a href="#series">Series</a><a href="#live">Live</a><a href="#categories">Browse</a><a href="#studio">Creators</a></nav>
+          <nav aria-label="Stream navigation"><a href="/app/services/stream">Home</a><a href="/app/services/stream/movies">Movies</a><a href="/app/services/stream/series">Series</a><a href="/app/services/stream/live">Live</a><a href="/app/services/stream/search">Search</a><a href="/app/services/stream/studio">Studio</a></nav>
           <label className="stream-search"><SearchRoundedIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search shows, creators, topics" /></label>
-          <a href="#studio" className="stream-create"><VideoCallRoundedIcon /> Create</a>
+          <a href="/app/services/stream/studio" className="stream-create"><VideoCallRoundedIcon /> Create</a>
         </header>
 
         <section className="stream-hero" id="discover">
@@ -107,7 +107,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
             <p>One journey. One impossible choice. Discover the new cinematic original everyone will be talking about.</p>
             <div className="stream-hero-actions">
               <button type="button" onClick={() => setPlaying(streams[5])}><PlayArrowRoundedIcon /> Play movie</button>
-              <a href="#movies"><AddRoundedIcon /> My list</a>
+              <a href="/app/services/stream/my-list"><AddRoundedIcon /> My list</a>
             </div>
             <div className="stream-hero-meta"><span><b>98% Match</b></span><span>2026</span><span>2h 08m</span><span>16+</span><span>4K</span></div>
           </div>
@@ -117,7 +117,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
           {movieRows.map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
-              <div className="stream-row-heading"><h2>{row.title}</h2><a href="#categories">Explore all →</a></div>
+              <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">
                 {row.items.map((item, index) => (
                   <article className={`stream-movie-tile ${item.tone}`} key={`${row.id}-${item.id}`}>
@@ -148,7 +148,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
         </section>
 
         <section className="stream-creator" id="studio">
-          <div><span className="stream-kicker">CREATOR FIRST</span><h2>Your audience.<br />Your rules. <em>Your value.</em></h2><p>Go live, publish your work and build a community that moves with you. Keep more of what you earn with direct Pi support.</p><a href="/onboarding">Open Creator Studio <span>→</span></a></div>
+          <div><span className="stream-kicker">CREATOR FIRST</span><h2>Your audience.<br />Your rules. <em>Your value.</em></h2><p>Go live, publish your work and build a community that moves with you. Keep more of what you earn with direct Pi support.</p><a href="/app/services/stream/studio">Open Creator Studio <span>→</span></a></div>
           <div className="stream-dashboard-card"><header><span><i /> Live</span><small>Creator Studio</small></header><div className="stream-dashboard-preview"><PlayArrowRoundedIcon /><b>3,842</b><span>watching now</span></div><footer><div><small>Today’s support</small><strong>π 1,284.50</strong></div><div className="stream-bars"><i /><i /><i /><i /><i /><i /></div></footer></div>
         </section>
 

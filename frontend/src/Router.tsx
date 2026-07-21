@@ -54,6 +54,7 @@ import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 import StreamPage from "./pages/StreamPage";
+import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -69,6 +70,20 @@ const buildPrivatePageElement = (title: string, description: string, roles?: str
     </ProtectedRoute>
   );
 };
+
+const streamRoutes: Array<[string, StreamPageKind]> = [
+  ["movies", "movies"], ["series", "series"], ["live", "live"], ["search", "search"],
+  ["my-list", "my-list"], ["history", "history"], ["subscriptions", "subscriptions"],
+  ["profile", "profile"], ["notifications", "notifications"], ["plans", "plans"], ["parental", "parental"],
+  ["studio", "studio"], ["studio/upload", "upload"], ["studio/live", "create-live"],
+  ["studio/content", "content"], ["studio/analytics", "analytics"], ["studio/channel", "channel"],
+  ["studio/earnings", "earnings"],
+];
+
+const streamAdminRoutes: Array<[string, StreamPageKind]> = [
+  ["", "admin"], ["moderation", "moderation"], ["reports", "reports"], ["creators", "creators"],
+  ["catalog", "catalog-admin"], ["analytics", "admin-analytics"], ["settings", "stream-settings"],
+];
 
 export const router = createBrowserRouter(
   [
@@ -289,6 +304,11 @@ export const router = createBrowserRouter(
     { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/stream", element: <ProtectedRoute><PrivateLayout><StreamPage embedded /></PrivateLayout></ProtectedRoute> },
+    ...streamRoutes.map(([path, kind]) => ({ path: `/app/services/stream/${path}`, element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind={kind} /></PrivateLayout></ProtectedRoute> })),
+    { path: "/app/services/stream/title/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="movie-detail" /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream/series/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="series-detail" /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream/watch/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="player" /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream/live/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="live-player" /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
     { path: "/trending", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="trending" /></PrivateLayout></ProtectedRoute> },
     { path: "/lifestyle", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="lifestyle" /></PrivateLayout></ProtectedRoute> },
@@ -317,6 +337,7 @@ export const router = createBrowserRouter(
     { path: "/admin/orders", element: <ProtectedRoute><AdminLayout><AdminOrdersPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/reports", element: <ProtectedRoute><AdminLayout><AdminReportsPage /></AdminLayout></ProtectedRoute> },
     { path: "/admin/settings", element: <ProtectedRoute><AdminLayout><AdminSettingsPage /></AdminLayout></ProtectedRoute> },
+    ...streamAdminRoutes.map(([path, kind]) => ({ path: `/admin/stream${path ? `/${path}` : ""}`, element: <ProtectedRoute><AdminLayout><StreamWorkspacePage kind={kind} /></AdminLayout></ProtectedRoute> })),
     {
       path: "/search",
       element: (
