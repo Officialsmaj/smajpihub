@@ -19534,9 +19534,29 @@ svg {
 
 .storefront-shopping-tools {
   position: relative;
-  z-index: 35;
+  z-index: 200;
   display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
   visibility: visible;
+}
+
+.storefront-tool-menu {
+  z-index: 210;
+}
+
+.storefront-tool-menu[open] {
+  z-index: 220;
+}
+
+.storefront-tool-menu > div {
+  z-index: 230;
+}
+
+.storefront-promo-strip,
+.storefront-hero {
+  position: relative;
+  z-index: 1;
 }
 
 .storefront-cart-link {
