@@ -19463,3 +19463,10 @@ svg {
   margin-bottom: 0;
   padding-bottom: 0;
 }
+
+.storefront-shopping-tools {
+  position: relative;
+  z-index: 35;
+  display: flex;
+  visibility: visible;
+}

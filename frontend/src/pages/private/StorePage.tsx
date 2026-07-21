@@ -16,7 +16,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import { setBuyNowItem } from "../../lib/storeCart";
 import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product } from "../../types/marketplace";
-import { heroSlides, promoStripItems, storeTopNav } from "../../content/storefront";
+import { heroSlides, promoStripItems } from "../../content/storefront";
 import logoImage from "/logo.png";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
@@ -222,14 +222,6 @@ const StorePage = () => {
             <SearchOutlinedIcon />
             <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
           </label>
-
-          <nav className="storefront-category-nav">
-            {storeTopNav.map((item) => (
-              <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => updateCategory(item === "More" ? "All" : item)}>
-                {item}
-              </button>
-            ))}
-          </nav>
 
           {mobileMenuOpen ? (
             <div className="storefront-mobile-drawer-wrap">
