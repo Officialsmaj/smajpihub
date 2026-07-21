@@ -19470,3 +19470,26 @@ svg {
   display: flex;
   visibility: visible;
 }
+
+.storefront-cart-link {
+  position: relative;
+}
+
+.storefront-cart-count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}

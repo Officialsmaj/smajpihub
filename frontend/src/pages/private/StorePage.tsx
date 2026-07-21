@@ -13,7 +13,7 @@ import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { setBuyNowItem } from "../../lib/storeCart";
+import { CART_UPDATED_EVENT, getCartQuantity, setBuyNowItem } from "../../lib/storeCart";
 import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product } from "../../types/marketplace";
 import { heroSlides, promoStripItems } from "../../content/storefront";
@@ -56,6 +56,7 @@ const StorePage = () => {
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
   const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
   const [productLimit, setProductLimit] = useState(() => Math.max(PRODUCT_BATCH_SIZE, Number(window.sessionStorage.getItem(STORE_PRODUCT_LIMIT_KEY) || PRODUCT_BATCH_SIZE)));
+  const [cartQuantity, setCartQuantity] = useState(() => getCartQuantity());
   const { addProductToCart, cartToast } = useAddToCartToast();
   const profileName = user?.displayName || user?.username || "Pi User";
 
@@ -88,6 +89,16 @@ const StorePage = () => {
   useEffect(() => {
     const timer = window.setInterval(() => setHeroIndex((value) => (value + 1) % heroSlides.length), 4800);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const syncCartQuantity = () => setCartQuantity(getCartQuantity());
+    window.addEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+    window.addEventListener("storage", syncCartQuantity);
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+      window.removeEventListener("storage", syncCartQuantity);
+    };
   }, []);
 
   const visibleProducts = useMemo(() => {
@@ -197,7 +208,10 @@ const StorePage = () => {
             <nav className="storefront-quick-links">
               <Link to="/orders"><span>Orders</span></Link>
               <Link to="/saved"><span>Wishlist</span></Link>
-              <Link to="/cart"><span>Cart</span></Link>
+              <Link to="/cart" className="storefront-cart-link">
+                <span>Cart</span>
+                {cartQuantity ? <b className="storefront-cart-count">{cartQuantity > 99 ? "99+" : cartQuantity}</b> : null}
+              </Link>
               <Link to="/profile"><span>Profile</span></Link>
             </nav>
           </div>
@@ -211,7 +225,10 @@ const StorePage = () => {
             </Link>
             <span className="environment-badge storefront-mobile-environment-badge" aria-label="Testnet beta environment">Beta</span>
             <div className="storefront-mobile-actions">
-              <Link to="/cart" aria-label="Cart"><ShoppingCartOutlinedIcon /></Link>
+              <Link to="/cart" className="storefront-cart-link" aria-label={`Cart${cartQuantity ? `, ${cartQuantity} item${cartQuantity === 1 ? "" : "s"}` : ""}`}>
+                <ShoppingCartOutlinedIcon />
+                {cartQuantity ? <b className="storefront-cart-count">{cartQuantity > 99 ? "99+" : cartQuantity}</b> : null}
+              </Link>
               <Link to="/profile" className="storefront-avatar-link" aria-label="Profile">
                 {user?.avatar ? <img src={user.avatar} alt="" /> : <span>{profileName.slice(0, 1).toUpperCase()}</span>}
               </Link>

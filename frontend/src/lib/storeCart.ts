@@ -18,6 +18,7 @@ const PI_USDT_RATE = 314159;
 
 const CART_KEY = "smaj_store_cart";
 const BUY_NOW_KEY = "smaj_store_buy_now";
+export const CART_UPDATED_EVENT = "smaj-store-cart-updated";
 
 const parse = <T,>(value: string | null, fallback: T): T => {
   if (!value) return fallback;
@@ -42,9 +43,18 @@ const toItem = (product: Product): CartItem => ({
   quantity: 1,
 });
 
+const notifyCartUpdated = () => window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+
 export const getCartItems = () => parse<CartItem[]>(window.localStorage.getItem(CART_KEY), []);
-export const saveCartItems = (items: CartItem[]) => window.localStorage.setItem(CART_KEY, JSON.stringify(items));
-export const clearCartItems = () => window.localStorage.removeItem(CART_KEY);
+export const getCartQuantity = () => getCartItems().reduce((sum, item) => sum + item.quantity, 0);
+export const saveCartItems = (items: CartItem[]) => {
+  window.localStorage.setItem(CART_KEY, JSON.stringify(items));
+  notifyCartUpdated();
+};
+export const clearCartItems = () => {
+  window.localStorage.removeItem(CART_KEY);
+  notifyCartUpdated();
+};
 
 export const addToCart = (product: Product) => {
   const items = getCartItems();
