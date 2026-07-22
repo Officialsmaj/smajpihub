@@ -7,6 +7,18 @@ const TMDB_API_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map<string, { expiresAt: number; value: unknown }>();
 
+const youtubeVideoId = (input: string) => {
+  try {
+    const value = input.trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(value)) return value;
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    const candidate = host === "youtu.be" ? url.pathname.split("/").filter(Boolean)[0]
+      : host.endsWith("youtube.com") ? (url.searchParams.get("v") || (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/embed/") ? url.pathname.split("/")[2] : "")) : "";
+    return candidate && /^[A-Za-z0-9_-]{11}$/.test(candidate) ? candidate : null;
+  } catch { return null; }
+};
+
 type TmdbMedia = {
   id: number;
   title?: string;
@@ -135,6 +147,29 @@ const mountStreamEndpoints = (router: Router) => {
       console.error("Failed to create Stream upload:", error);
       const message = axios.isAxiosError(error) ? String(error.response?.data?.errors?.[0]?.message || error.message) : error instanceof Error ? error.message : "Unable to create upload";
       return res.status(502).json({ error: "upload_session_failed", message });
+    }
+  });
+
+  router.post("/creator/youtube", async (req, res) => {
+    try {
+      const user = await requireCreator(req, res); if (!user) return;
+      const videoId = youtubeVideoId(String(req.body?.youtubeUrl || ""));
+      const title = String(req.body?.title || "").trim().slice(0, 140);
+      const description = String(req.body?.description || "").trim().slice(0, 3000);
+      const category = String(req.body?.category || "Entertainment").trim().slice(0, 60);
+      const visibility = ["public", "unlisted", "private"].includes(req.body?.visibility) ? req.body.visibility : "private";
+      if (!videoId) return res.status(400).json({ error: "invalid_youtube_url", message: "Enter a valid YouTube video, Short or embed URL." });
+      if (!title || description.length < 20) return res.status(400).json({ error: "bad_request", message: "Add a title and a description of at least 20 characters." });
+      if (req.body?.rightsConfirmed !== true) return res.status(400).json({ error: "rights_required", message: "Confirm that you own the video or have permission to publish it here." });
+      const creatorId = String(user._id);
+      const existing = await req.app.locals.streamContentCollection.findOne({ creatorId, youtubeVideoId: videoId });
+      if (existing) return res.status(409).json({ error: "already_submitted", message: "This YouTube video is already in your content manager." });
+      const now = new Date();
+      const record = { cloudflareUid: `youtube-${creatorId}-${videoId}`, contentSource: "youtube", youtubeVideoId: videoId, creatorId, creatorName: user.displayName || user.username || user.piUsername || "Creator", title, description, category, visibility, rightsConfirmed: true, rightsConfirmedAt: now, processingStatus: "ready", moderationStatus: "pending", playbackAllowed: false, thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, createdAt: now, updatedAt: now };
+      const result = await req.app.locals.streamContentCollection.insertOne(record);
+      return res.status(201).json({ video: { ...record, _id: String(result.insertedId) } });
+    } catch (error) {
+      return res.status(500).json({ error: "youtube_publish_failed", message: error instanceof Error ? error.message : "Unable to publish YouTube video" });
     }
   });
 

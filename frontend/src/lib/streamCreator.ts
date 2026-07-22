@@ -11,6 +11,13 @@ export type CreatorVideo = {
   moderationStatus: string;
   thumbnailUrl?: string | null;
   createdAt: string;
+  contentSource?: "youtube" | "cloudflare";
+  youtubeVideoId?: string;
+};
+
+export const publishCreatorYoutubeVideo = async (metadata: { youtubeUrl: string; title: string; description: string; category: string; visibility: string; rightsConfirmed: boolean }) => {
+  const response = await axiosClient.post<{ video: CreatorVideo }>("/stream/creator/youtube", metadata);
+  return response.data.video;
 };
 
 export const uploadCreatorVideo = async (file: File, metadata: { title: string; description: string; category: string; visibility: string; rightsConfirmed: boolean }, onProgress?: (progress: number) => void) => {
