@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -54,7 +54,7 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
 
 const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) => (
   <Link className={`sw-title-card ${title.tone} ${compact ? "compact" : ""}`} to={`/app/services/stream/${title.mediaType === "tv" ? "series" : "title"}/${title.id}`}>
-    <div style={title.posterUrl ? { backgroundImage: `linear-gradient(0deg,rgba(14,7,20,.45),transparent),url(${title.posterUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}><span className="sw-card-logo">{title.posterUrl ? "" : title.name.split(" ").map((word) => word[0]).join("").slice(0, 2)}</span><span className="sw-card-play"><PlayArrowRoundedIcon /></span>{title.progress ? <i style={{ width: `${title.progress}%` }} /> : null}</div>
+    <div className={title.posterUrl ? "" : "poster-missing"} style={title.posterUrl ? { backgroundImage: `linear-gradient(0deg,rgba(14,7,20,.45),transparent),url(${title.posterUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}><span className="sw-card-logo">{title.posterUrl ? "" : title.name.split(" ").map((word) => word[0]).join("").slice(0, 2)}</span><span className="sw-card-play"><PlayArrowRoundedIcon /></span>{title.progress ? <i style={{ width: `${title.progress}%` }} /> : null}</div>
     <h3>{title.name}</h3><p>{title.meta}</p>
   </Link>
 );
@@ -70,6 +70,8 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() => ["movies", "series", "search", "category", "my-list"].includes(kind) ? "loading" : "fallback");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const categoryName = slug.split("-").map((part) => part ? part[0].toUpperCase() + part.slice(1) : part).join(" ");
   const categoryFilterLabels: Record<string, string[]> = {
     anime: ["All", "Action", "Drama", "Comedy", "Family"],
@@ -83,9 +85,18 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const filterLabels = kind === "category" ? categoryFilterLabels[slug] || ["All", "Action", "Drama", "Comedy"] : ["All", "Action", "Drama", "Comedy", "Documentary", "Family"];
   const [heading, description] = kind === "category" ? [categoryName, `Popular, new and top-rated ${categoryName} entertainment.`] : pageMeta[kind] ?? ["Browse", "Entertainment selected for you."];
   useEffect(() => {
-    if (kind === "search") setQuery(searchParams.get("q") || "");
+    if (kind === "search") { setQuery(searchParams.get("q") || ""); setPage(1); }
   }, [kind, searchParams]);
   useEffect(() => { setGenre("All"); setPage(1); }, [slug]);
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || kind === "my-list") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting && catalogState === "ready" && !loadingMore && page < totalPages) setPage((value) => value + 1);
+    }, { rootMargin: "300px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [catalogState, kind, loadingMore, page, totalPages]);
   useEffect(() => {
     if (!["movies", "series", "search", "category", "my-list"].includes(kind)) return;
     const timer = window.setTimeout(() => {
@@ -93,14 +104,20 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         void getStreamMyList().then((items) => { setRemoteTitles(items.map((item, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0,4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8], posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview }))); setCatalogState("ready"); }).catch(() => { setRemoteTitles([]); setCatalogState("fallback"); });
         return;
       }
+      if (page > 1) setLoadingMore(true);
       const sortParam = sort === "Newest" ? "primary_release_date.desc" : sort === "A–Z" ? "original_title.asc" : "popularity.desc";
       const request = kind === "search" ? searchStreamCatalog(query, page) : kind === "category" ? getStreamCategory(slug, page, sortParam) : getStreamCatalog(kind as "movies" | "series", page, sortParam);
       void request.then((data) => {
-        setRemoteTitles(data.results.map((item: StreamCatalogTitle, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8] || "purple", posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview })));
+        if (page === 1) setRemoteTitles(data.results.map((item: StreamCatalogTitle, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8] || "purple", posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview })));
         setCatalogState("ready");
-        setRemoteCatalog(data.results);
+        if (page === 1) setRemoteCatalog(data.results);
         setTotalPages(Math.min(data.total_pages || 1, 100));
-      }).catch(() => { setRemoteTitles(null); setCatalogState("fallback"); });
+        if (page > 1) {
+          const next = data.results.map((item: StreamCatalogTitle, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"} · ${item.releaseDate?.slice(0, 4) || "New"}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8] || "purple", posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview }));
+          setRemoteTitles((current) => [...new Map([...(current || []), ...next].map((item) => [`${item.mediaType}-${item.id}`, item])).values()]);
+          setRemoteCatalog((current) => [...new Map([...current, ...data.results].map((item) => [`${item.mediaType}-${item.id}`, item])).values()]);
+        }
+      }).catch(() => { if (page === 1) { setRemoteTitles(null); setCatalogState("fallback"); } }).finally(() => setLoadingMore(false));
     }, kind === "search" ? 350 : 0);
     return () => window.clearTimeout(timer);
   }, [kind, page, query, slug, sort]);
@@ -110,14 +127,14 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const filtered = list.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (genre === "All" || remoteCatalog.find((entry) => entry.id === item.id)?.genreIds.some((id) => genreIds[genre]?.includes(id))));
   return <>
     <header className="sw-page-head"><h1>{heading}</h1><p>{description}</p></header>
-    {kind === "search" ? <label className="sw-big-search"><SearchRoundedIcon /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search movies, series, live events and creators" /></label> : null}
-    <div className="sw-toolbar"><div>{filterLabels.map((item) => <button className={genre === item ? "active" : ""} onClick={() => setGenre(item)} type="button" key={item}>{item}</button>)}</div><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort titles"><option>Popular</option><option>Newest</option><option>A–Z</option></select></div>
+    {kind === "search" ? <label className="sw-big-search"><SearchRoundedIcon /><input autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search movies, series, live events and creators" /></label> : null}
+    <div className="sw-toolbar"><div>{filterLabels.map((item) => <button className={genre === item ? "active" : ""} onClick={() => { setGenre(item); setPage(1); }} type="button" key={item}>{item}</button>)}</div><select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }} aria-label="Sort titles"><option>Popular</option><option>Newest</option><option>A–Z</option></select></div>
     {catalogState === "loading" ? <div className="sw-catalog-status">Loading the entertainment catalogue…</div> : null}
     {catalogState === "fallback" && ["movies","series","search","category"].includes(kind) ? <div className="sw-catalog-status warning">This catalogue is unavailable. Check the TMDB backend configuration and retry.</div> : null}
     {catalogState === "fallback" && kind === "my-list" ? <div className="sw-catalog-status warning">My List could not synchronize. Please sign in again or retry shortly.</div> : null}
     {catalogState === "ready" && kind === "my-list" && !filtered.length ? <div className="sw-list-empty"><BookmarkRoundedIcon/><h2>Your list is empty</h2><p>Save a movie or series from its details page and it will appear here on every device.</p><Link to="/app/services/stream/movies">Explore movies</Link></div> : null}
     <div className="sw-title-grid">{filtered.map((item) => <Tile title={item} key={`${item.mediaType || "local"}-${item.id}`} />)}</div>
-    {catalogState === "ready" && kind !== "my-list" ? <nav className="sw-pagination" aria-label="Catalogue pages"><button type="button" disabled={page <= 1} onClick={() => { setPage((value) => Math.max(1, value - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Previous</button><span>Page {page} of {totalPages}</span><button type="button" disabled={page >= totalPages} onClick={() => { setPage((value) => value + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Next</button></nav> : null}
+    {catalogState === "ready" && kind !== "my-list" ? <div className="sw-load-more" ref={loadMoreRef}>{page < totalPages ? <button type="button" disabled={loadingMore} onClick={() => setPage((value) => value + 1)}>{loadingMore ? "Loading more…" : "Load more movies"}</button> : <span>You reached the end of this catalogue.</span>}<small>{remoteTitles?.length || 0} titles loaded</small></div> : null}
     <p className="sw-attribution"><a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a> · This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </>;
 };

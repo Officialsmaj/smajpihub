@@ -149,7 +149,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
             <section className="stream-movie-row" id={row.id} key={row.title}>
               <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">
-                {row.items.slice(0, 14).map((item, index) => {
+                {row.items.slice(0, 20).map((item, index) => {
                   const tmdbItem = "mediaType" in item;
                   const detailUrl = tmdbItem ? `/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}` : null;
                   const posterUrl = tmdbItem ? item.posterUrl : null;
