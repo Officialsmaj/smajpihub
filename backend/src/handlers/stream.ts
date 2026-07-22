@@ -224,6 +224,35 @@ const mountStreamEndpoints = (router: Router) => {
   router.get("/trending", list("/trending/all/week", "movie"));
   router.get("/movies", list("/discover/movie", "movie"));
   router.get("/series", list("/discover/tv", "tv"));
+  const categoryDefinitions: Record<string, { title: string; type: "movie" | "tv"; params: Record<string, string | number | boolean> }> = {
+    hollywood: { title: "Hollywood", type: "movie", params: { with_origin_country: "US", with_original_language: "en" } },
+    bollywood: { title: "Bollywood", type: "movie", params: { with_origin_country: "IN", with_original_language: "hi" } },
+    nollywood: { title: "Nollywood", type: "movie", params: { with_origin_country: "NG" } },
+    kannywood: { title: "Kannywood", type: "movie", params: { with_origin_country: "NG", with_original_language: "ha" } },
+    anime: { title: "Anime", type: "tv", params: { with_origin_country: "JP", with_original_language: "ja", with_genres: 16 } },
+    "k-drama": { title: "K-Drama", type: "tv", params: { with_origin_country: "KR", with_original_language: "ko" } },
+    "chinese-drama": { title: "Chinese Drama", type: "tv", params: { with_origin_country: "CN", with_original_language: "zh" } },
+    "african-movies": { title: "African Movies", type: "movie", params: { with_origin_country: "NG|ZA|GH|KE" } },
+    documentaries: { title: "Documentaries", type: "movie", params: { with_genres: 99 } },
+    kids: { title: "Kids & Family", type: "movie", params: { with_genres: 10751 } },
+    action: { title: "Action", type: "movie", params: { with_genres: 28 } },
+    comedy: { title: "Comedy", type: "movie", params: { with_genres: 35 } },
+    romance: { title: "Romance", type: "movie", params: { with_genres: 10749 } },
+    horror: { title: "Horror", type: "movie", params: { with_genres: 27 } },
+    sports: { title: "Sports", type: "tv", params: { with_genres: 10767 } },
+  };
+  router.get("/category/:slug", async (req, res) => {
+    const definition = categoryDefinitions[String(req.params.slug || "").toLowerCase()];
+    if (!definition) return res.status(404).json({ error: "category_not_found", message: "This Stream category is not available." });
+    try {
+      const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
+      const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>(`/discover/${definition.type}`, { ...definition.params, page, language: String(req.query.language || "en-US"), include_adult: false, sort_by: String(req.query.sort || "popularity.desc") });
+      return res.json({ ...data, category: { slug: req.params.slug, title: definition.title, mediaType: definition.type }, results: data.results.map((item) => normalizeMedia(item, definition.type)), source: "TMDB" });
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      return res.status(status).json({ error: error instanceof Error ? error.message : "Unable to load category" });
+    }
+  });
   router.get("/search", async (req, res) => {
     const query = String(req.query.q || "").trim().slice(0, 120);
     if (!query) return res.json({ page: 1, total_pages: 0, total_results: 0, results: [], source: "TMDB" });

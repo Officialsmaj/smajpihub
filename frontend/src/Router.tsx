@@ -304,6 +304,7 @@ export const router = createBrowserRouter(
     { path: "/my-products", element: <Navigate to="/seller" replace /> },
     { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/stream", element: <ProtectedRoute><PrivateLayout><StreamPage embedded /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream/category/:slug", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="category" /></PrivateLayout></ProtectedRoute> },
     ...streamRoutes.map(([path, kind]) => ({ path: `/app/services/stream/${path}`, element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind={kind} /></PrivateLayout></ProtectedRoute> })),
     { path: "/app/services/stream/title/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="movie-detail" /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/stream/series/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="series-detail" /></PrivateLayout></ProtectedRoute> },

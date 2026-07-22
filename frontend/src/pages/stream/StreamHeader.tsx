@@ -14,22 +14,22 @@ const links = [
   ["Trending", "/app/services/stream"],
   ["Movies", "/app/services/stream/movies"],
   ["Series", "/app/services/stream/series"],
-  ["TV Channels", "/app/services/stream/search?q=TV%20Channels"],
-  ["Hollywood", "/app/services/stream/search?q=Hollywood"],
-  ["Bollywood", "/app/services/stream/search?q=Bollywood"],
-  ["Nollywood", "/app/services/stream/search?q=Nollywood"],
-  ["Kannywood", "/app/services/stream/search?q=Kannywood"],
-  ["Anime", "/app/services/stream/search?q=Anime"],
-  ["K-Drama", "/app/services/stream/search?q=Korean%20Drama"],
-  ["Chinese Drama", "/app/services/stream/search?q=Chinese%20Drama"],
-  ["African Movies", "/app/services/stream/search?q=African%20Movies"],
-  ["Documentaries", "/app/services/stream/search?q=Documentary"],
-  ["Kids", "/app/services/stream/search?q=Kids"],
-  ["Action", "/app/services/stream/search?q=Action"],
-  ["Comedy", "/app/services/stream/search?q=Comedy"],
-  ["Romance", "/app/services/stream/search?q=Romance"],
-  ["Horror", "/app/services/stream/search?q=Horror"],
-  ["Sports", "/app/services/stream/search?q=Sports"],
+  ["TV Channels", "/app/services/stream/live?mode=channels"],
+  ["Hollywood", "/app/services/stream/category/hollywood"],
+  ["Bollywood", "/app/services/stream/category/bollywood"],
+  ["Nollywood", "/app/services/stream/category/nollywood"],
+  ["Kannywood", "/app/services/stream/category/kannywood"],
+  ["Anime", "/app/services/stream/category/anime"],
+  ["K-Drama", "/app/services/stream/category/k-drama"],
+  ["Chinese Drama", "/app/services/stream/category/chinese-drama"],
+  ["African Movies", "/app/services/stream/category/african-movies"],
+  ["Documentaries", "/app/services/stream/category/documentaries"],
+  ["Kids", "/app/services/stream/category/kids"],
+  ["Action", "/app/services/stream/category/action"],
+  ["Comedy", "/app/services/stream/category/comedy"],
+  ["Romance", "/app/services/stream/category/romance"],
+  ["Horror", "/app/services/stream/category/horror"],
+  ["Sports", "/app/services/stream/category/sports"],
   ["WWE / WWV", "/app/services/stream/search?q=WWE%20WWV"],
   ["Live", "/app/services/stream/live"],
   ["My List", "/app/services/stream/my-list"],
@@ -59,7 +59,7 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
     </div>
     <nav aria-label="SMAJ Stream categories">{links.map(([label, to]) => {
       const current = `${location.pathname}${location.search}`;
-      const active = to === "/app/services/stream" ? location.pathname === to : current === to || (!to.includes("?") && location.pathname === to);
+      const active = to === "/app/services/stream" ? location.pathname === to : current === to;
       return <Link key={`${label}-${to}`} className={active ? "active" : ""} aria-current={active ? "page" : undefined} to={to}>{label}</Link>;
     })}</nav>
   </header>;

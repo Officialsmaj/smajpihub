@@ -32,6 +32,11 @@ export const searchStreamCatalog = async (query: string, page = 1) => {
   return response.data;
 };
 
+export const getStreamCategory = async (slug: string, page = 1, sort = "popularity.desc") => {
+  const response = await axiosClient.get<CatalogResponse & { category: { slug: string; title: string; mediaType: "movie" | "tv" } }>(`/stream/category/${encodeURIComponent(slug)}`, { params: { page, sort } });
+  return response.data;
+};
+
 export const getStreamTitle = async (type: "movie" | "tv", id: string) => {
   const response = await axiosClient.get<StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: unknown }>(`/stream/${type}/${id}`);
   return response.data;
