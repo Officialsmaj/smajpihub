@@ -41,6 +41,6 @@ export const getCreatorVideos = async () => {
 };
 
 export const getPublishedCreatorVideos = async () => {
-  const response = await axiosClient.get<{ videos: Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "contentSource"> & { creatorName?: string; category?: string }> }>("/stream/creator-content");
+  const response = await axiosClient.get<{ videos: Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }> }>("/stream/creator-content");
   return response.data.videos;
 };

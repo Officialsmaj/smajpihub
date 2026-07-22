@@ -18,6 +18,8 @@ import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
 import CreatorContentList from "./CreatorContentList";
 import StreamProfilePanel from "./StreamProfilePanel";
+import StreamVideoPlayer from "./StreamVideoPlayer";
+import StreamWatchHistory from "./StreamWatchHistory";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -665,6 +667,7 @@ const uniqueProviders = (items: StreamWatchProvider[]) => [
 
 const Player = ({ live = false }: { live?: boolean }) => {
   const { id } = useParams();
+  if (!live) return <StreamVideoPlayer id={id || ""} />;
   const title = titles.find(item => item.id === id) ?? titles[0];
   const youtubeId = id?.startsWith("yt-") ? id.slice(3) : "";
   if (youtubeId && /^[A-Za-z0-9_-]{11}$/.test(youtubeId))
@@ -1131,6 +1134,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "series-detail") return <Detail series />;
     if (kind === "player") return <Player />;
     if (kind === "live-player") return <Player live />;
+    if (kind === "history") return <StreamWatchHistory />;
     if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
   })();

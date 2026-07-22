@@ -243,6 +243,57 @@ const mountStreamEndpoints = (router: Router) => {
     }
   });
 
+  router.get("/playback/:uid", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    if (!req.app.locals.streamContentCollection) return res.status(503).json({ error: "service_unavailable", message: "Stream playback is not ready." });
+    const uid = String(req.params.uid || "").replace(/^yt-/, "").slice(0, 180);
+    let video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
+    if (!video) video = await req.app.locals.streamContentCollection.findOne({ youtubeVideoId: uid });
+    if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true) return res.status(404).json({ error: "not_available", message: "This video is not published or licensed for playback." });
+    if (video.contentSource === "youtube" && video.youtubeVideoId) return res.json({ video: { id: String(video.cloudflareUid), sourceType: "youtube", youtubeVideoId: video.youtubeVideoId, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl, duration: video.duration || null } });
+    let playback = video.playback as { hls?: string; dash?: string } | undefined;
+    if ((!playback?.hls || video.processingStatus !== "ready") && env.cloudflare_stream_account_id && env.cloudflare_stream_api_token) {
+      try {
+        const remoteResponse = await axios.get<{ success: boolean; result?: { readyToStream?: boolean; playback?: { hls?: string; dash?: string }; thumbnail?: string; duration?: number } }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${encodeURIComponent(String(video.cloudflareUid))}`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
+        const remote = remoteResponse.data.result;
+        if (remote?.readyToStream && remote.playback?.hls) {
+          playback = remote.playback;
+          await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: video.cloudflareUid }, { $set: { processingStatus: "ready", playback, thumbnailUrl: remote.thumbnail || video.thumbnailUrl || null, duration: remote.duration || video.duration || null, updatedAt: new Date() } });
+          video = { ...video, playback, thumbnailUrl: remote.thumbnail || video.thumbnailUrl, duration: remote.duration || video.duration };
+        }
+      } catch { /* Return the safe unavailable state below. */ }
+    }
+    if (!playback?.hls || !/^https:\/\//i.test(playback.hls)) return res.status(409).json({ error: "processing", message: "This licensed video is still processing. Try again shortly." });
+    return res.json({ video: { id: String(video.cloudflareUid), sourceType: "hls", playbackUrl: playback.hls, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
+  });
+
+  router.get("/progress/:uid", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const uid = String(req.params.uid || "").slice(0, 180);
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const progress = (Array.isArray(stored?.streamWatchProgress) ? stored.streamWatchProgress : []).find((item: { videoId?: string }) => item.videoId === uid) || null;
+    return res.json({ progress });
+  });
+
+  router.put("/progress/:uid", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const videoId = String(req.params.uid || "").slice(0, 180);
+    const position = Math.max(0, Math.min(86_400, Number(req.body?.position) || 0));
+    const duration = Math.max(0, Math.min(86_400, Number(req.body?.duration) || 0));
+    const completed = duration > 0 && (position / duration >= 0.92 || req.body?.completed === true);
+    const progress = { videoId, title: String(req.body?.title || "Video").slice(0, 140), thumbnailUrl: req.body?.thumbnailUrl ? String(req.body.thumbnailUrl).slice(0, 500) : null, position: completed ? 0 : position, duration, completed, updatedAt: new Date() };
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamWatchProgress: { videoId } } });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $addToSet: { streamWatchProgress: progress } });
+    return res.json({ progress });
+  });
+
+  router.get("/watch-history", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const items = (Array.isArray(stored?.streamWatchProgress) ? stored.streamWatchProgress : []).sort((a: { updatedAt?: Date }, b: { updatedAt?: Date }) => Number(new Date(b.updatedAt || 0)) - Number(new Date(a.updatedAt || 0))).slice(0, 50);
+    return res.json({ items });
+  });
+
   const list = (path: string, fallbackType: "movie" | "tv") => async (req: Request, res: Response) => {
     try {
       const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));

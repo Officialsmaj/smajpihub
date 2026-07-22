@@ -82,7 +82,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
   const [featureIndex, setFeatureIndex] = useState(0);
   const [rankingTab, setRankingTab] = useState("Popular");
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [creatorVideos, setCreatorVideos] = useState<Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "contentSource"> & { creatorName?: string; category?: string }>>([]);
+  const [creatorVideos, setCreatorVideos] = useState<Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }>>([]);
   const [anime, setAnime] = useState<StreamCatalogTitle[]>([]);
 
   useEffect(() => {
@@ -170,7 +170,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
           ))}
         </section>
 
-        {creatorVideos.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/studio">Creator Studio →</Link></div><div>{creatorVideos.map((video) => <Link to={video.youtubeVideoId ? `/app/services/stream/watch/yt-${video.youtubeVideoId}` : "/app/services/stream"} key={video._id}><img loading="lazy" src={video.thumbnailUrl || ""} alt=""/><b>{video.title}</b><small>{video.creatorName || "SMAJ Creator"} · {video.category || "Video"}</small></Link>)}</div></section> : null}
+        {creatorVideos.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/studio">Creator Studio →</Link></div><div>{creatorVideos.map((video) => <Link to={`/app/services/stream/watch/${video.youtubeVideoId ? `yt-${video.youtubeVideoId}` : video.cloudflareUid}`} key={video._id}><img loading="lazy" src={video.thumbnailUrl || ""} alt=""/><b>{video.title}</b><small>{video.creatorName || "SMAJ Creator"} · {video.category || "Video"}</small></Link>)}</div></section> : null}
 
         <section className="stream-content stream-live-section" id="live">
           <div className="stream-section-head"><div><span className="stream-kicker"><LiveTvRoundedIcon /> ON AIR</span><h2>Live right now</h2></div><Link to="/app/services/stream/live">View all live →</Link></div>
