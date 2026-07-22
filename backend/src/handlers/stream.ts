@@ -187,6 +187,12 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id) })) });
   });
 
+  router.get("/creator-content", async (req, res) => {
+    if (!req.app.locals.streamContentCollection) return res.json({ videos: [] });
+    const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(20).toArray();
+    return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, creatorName: video.creatorName, category: video.category, thumbnailUrl: video.thumbnailUrl, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })) });
+  });
+
   router.get("/creator/videos/:uid/status", async (req, res) => {
     try {
       const user = await requireCreator(req, res); if (!user) return;

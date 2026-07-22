@@ -39,3 +39,8 @@ export const getCreatorVideos = async () => {
   const response = await axiosClient.get<{ videos: CreatorVideo[] }>("/stream/creator/videos");
   return response.data.videos;
 };
+
+export const getPublishedCreatorVideos = async () => {
+  const response = await axiosClient.get<{ videos: Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "contentSource"> & { creatorName?: string; category?: string }> }>("/stream/creator-content");
+  return response.data.videos;
+};
