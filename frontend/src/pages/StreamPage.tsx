@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -13,6 +14,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
+import { getStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
 
 type StreamItem = {
   id: number;
@@ -40,7 +42,7 @@ const streams: StreamItem[] = [
 const categories = ["All", "Movies", "Series", "Live", "Music", "Sports", "Technology", "Lifestyle", "Learning"];
 const onDemand = streams.filter((item) => !item.live);
 
-const movieRows = [
+const fallbackMovieRows = [
   { title: "Trending now", id: "movies", items: onDemand },
   { title: "SMAJ Original movies", id: "originals", items: [...onDemand].reverse() },
   { title: "Series worth watching", id: "series", items: [...onDemand.slice(2), ...onDemand.slice(0, 2)] },
@@ -77,6 +79,24 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<number[]>([]);
   const [playing, setPlaying] = useState<StreamItem | null>(null);
+  const [catalog, setCatalog] = useState<Record<"trending" | "movies" | "series", StreamCatalogTitle[]>>({ trending: [], movies: [], series: [] });
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([getStreamCatalog("trending"), getStreamCatalog("movies"), getStreamCatalog("series")])
+      .then(([trending, movies, series]) => {
+        if (!active) return;
+        setCatalog({ trending: trending.results, movies: movies.results, series: series.results });
+        setCatalogError(false);
+      })
+      .catch(() => active && setCatalogError(true))
+      .finally(() => active && setCatalogLoading(false));
+    return () => { active = false; };
+  }, []);
+
+  const featured = catalog.trending.find((item) => item.backdropUrl) ?? catalog.movies.find((item) => item.backdropUrl);
 
   const visible = useMemo(() => streams.filter((item) => {
     const categoryMatch = category === "All"
@@ -95,35 +115,46 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
       <main className="stream-page">
         <StreamHeader query={query} onQueryChange={setQuery} />
 
-        <section className="stream-hero" id="discover">
+        <section className="stream-hero" id="discover" style={featured?.backdropUrl ? { backgroundImage: `linear-gradient(90deg, #fff 0%, #fffef5 38%, rgba(255,255,255,.72) 62%, rgba(255,255,255,.18) 100%), url(${featured.backdropUrl})` } : undefined}>
           <div className="stream-hero-content">
-            <span className="stream-eyebrow">SMAJ ORIGINAL · FEATURE FILM</span>
-            <h1>The Last<br /><em>Horizon.</em></h1>
-            <p>One journey. One impossible choice. Discover the new cinematic original everyone will be talking about.</p>
+            <span className="stream-eyebrow">FEATURED TODAY · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
+            <h1>{featured?.title ?? "The Last Horizon."}</h1>
+            <p>{featured?.overview || "Discover movies, series, creator stories and live entertainment in one place."}</p>
             <div className="stream-hero-actions">
-              <button type="button" onClick={() => setPlaying(streams[5])}><PlayArrowRoundedIcon /> Play movie</button>
+              {featured ? <Link className="stream-primary-action" to={`/app/services/stream/${featured.mediaType === "tv" ? "series" : "title"}/${featured.id}`}><PlayArrowRoundedIcon /> View details</Link> : <button type="button" onClick={() => setPlaying(streams[5])}><PlayArrowRoundedIcon /> Play preview</button>}
               <a href="/app/services/stream/my-list"><AddRoundedIcon /> My list</a>
             </div>
-            <div className="stream-hero-meta"><span><b>98% Match</b></span><span>2026</span><span>2h 08m</span><span>16+</span><span>4K</span></div>
+            <div className="stream-hero-meta"><span><b>{featured?.rating ? `${Math.round(featured.rating * 10)}% rating` : "Featured"}</b></span><span>{featured?.releaseDate?.slice(0, 4) || "New"}</span><span>{featured?.mediaType === "tv" ? "Series" : "Movie"}</span><span>TMDB</span></div>
           </div>
           <div className="stream-hero-art" aria-hidden="true"><div className="stream-orbit orbit-one" /><div className="stream-orbit orbit-two" /><div className="stream-hero-screen"><span>S</span><i><PlayArrowRoundedIcon /></i></div><div className="stream-chat-bubble one"><b>AMAZING!</b><span>🔥 2.4K</span></div><div className="stream-chat-bubble two"><b>Supporting with Pi</b><span>π 25</span></div></div>
         </section>
 
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
-          {movieRows.map((row) => (
+          {catalogLoading ? <div className="stream-catalog-loading" aria-label="Loading entertainment"><i/><i/><i/><i/></div> : null}
+          {!catalogLoading && catalogError ? <p className="stream-catalog-notice">Live catalogue is unavailable. Showing SMAJ previews.</p> : null}
+          {(catalog.trending.length ? [
+            { title: "Trending now", id: "trending", items: catalog.trending },
+            { title: "Popular movies", id: "movies", items: catalog.movies },
+            { title: "Popular series", id: "series", items: catalog.series },
+          ] : fallbackMovieRows).map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
               <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">
-                {row.items.map((item, index) => (
-                  <article className={`stream-movie-tile ${item.tone}`} key={`${row.id}-${item.id}`}>
-                    <button type="button" onClick={() => setPlaying(item)} aria-label={`Play ${item.title}`}>
+                {row.items.slice(0, 14).map((item, index) => {
+                  const tmdbItem = "mediaType" in item;
+                  const detailUrl = tmdbItem ? `/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}` : null;
+                  const posterUrl = tmdbItem ? item.posterUrl : null;
+                  return <article className={`stream-movie-tile ${tmdbItem ? "has-poster" : item.tone}`} key={`${row.id}-${item.id}`}>
+                    {detailUrl ? <Link to={detailUrl} aria-label={`View ${item.title}`} style={posterUrl ? { backgroundImage: `url(${posterUrl})` } : undefined}>
+                      <span className="stream-movie-rank">{index + 1}</span><span className="stream-movie-play"><PlayArrowRoundedIcon /></span>
+                    </Link> : <button type="button" onClick={() => setPlaying(item as StreamItem)} aria-label={`Play ${item.title}`}>
                       <span className="stream-movie-rank">{index + 1}</span>
-                      <span className="stream-movie-logo">{item.initials}</span>
+                      <span className="stream-movie-logo">{(item as StreamItem).initials}</span>
                       <span className="stream-movie-play"><PlayArrowRoundedIcon /></span>
-                    </button>
-                    <div><h3>{item.title}</h3><p>{index % 2 ? "Series · 8 episodes" : "Movie · SMAJ Original"}</p></div>
-                  </article>
-                ))}
+                    </button>}
+                    <div><h3>{item.title}</h3><p>{tmdbItem ? `${item.mediaType === "tv" ? "Series" : "Movie"} · ${item.rating ? `★ ${item.rating}` : item.releaseDate?.slice(0, 4) || "New"}` : index % 2 ? "Series · 8 episodes" : "Movie · SMAJ Original"}</p></div>
+                  </article>;
+                })}
               </div>
             </section>
           ))}

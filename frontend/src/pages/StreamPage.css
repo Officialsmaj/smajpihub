@@ -142,6 +142,15 @@
     radial-gradient(circle at 75% 45%, #5c238d88 0, transparent 32%),
     radial-gradient(circle at 4% 15%, #38185c55, transparent 30%), #09070d;
 }
+.stream-hero[style] {
+  background-position: center right;
+  background-size: cover;
+}
+.stream-primary-action {
+  color: white !important;
+  background: #20132d !important;
+  border-color: #20132d !important;
+}
 .stream-hero:after {
   content: "";
   position: absolute;
@@ -826,7 +835,8 @@
   min-width: 0;
   scroll-snap-align: start;
 }
-.stream-movie-tile > button {
+.stream-movie-tile > button,
+.stream-movie-tile > a {
   width: 100%;
   aspect-ratio: 16/9;
   border: 0;
@@ -842,13 +852,22 @@
     transform 0.2s,
     box-shadow 0.2s;
 }
-.stream-movie-tile > button:before {
+.stream-movie-tile.has-poster > a {
+  aspect-ratio: 2/3;
+  background-color: #e8e0ee;
+  background-position: center;
+  background-size: cover;
+  text-decoration: none;
+}
+.stream-movie-tile > button:before,
+.stream-movie-tile > a:before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(0deg, #0b0716b5, transparent 65%);
 }
-.stream-movie-tile > button:hover {
+.stream-movie-tile > button:hover,
+.stream-movie-tile > a:hover {
   transform: translateY(-4px) scale(1.015);
   box-shadow: 0 16px 34px #28123838;
 }
@@ -903,10 +922,26 @@
   transform: scale(0.8);
   transition: 0.2s;
 }
-.stream-movie-tile > button:hover .stream-movie-play {
+.stream-movie-tile > button:hover .stream-movie-play,
+.stream-movie-tile > a:hover .stream-movie-play {
   opacity: 1;
   transform: scale(1);
 }
+.stream-catalog-loading {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 30px 0;
+}
+.stream-catalog-loading i {
+  aspect-ratio: 2/3;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #ece7f1 30%, #f8f5fb 50%, #ece7f1 70%);
+  background-size: 220% 100%;
+  animation: stream-shimmer 1.2s infinite linear;
+}
+.stream-catalog-notice { color: #756b80; font-size: 13px; }
+@keyframes stream-shimmer { to { background-position-x: -220%; } }
 .stream-movie-tile h3 {
   margin: 10px 0 3px;
   color: #24182f;
@@ -1181,7 +1216,7 @@
     font-size: 20px;
   }
   .stream-rail {
-    grid-auto-columns: 78vw;
+    grid-auto-columns: 43vw;
   }
   .stream-movie-play {
     opacity: 1;
