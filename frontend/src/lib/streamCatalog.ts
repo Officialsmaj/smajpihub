@@ -22,8 +22,8 @@ type CatalogResponse = {
   source: "TMDB";
 };
 
-export const getStreamCatalog = async (kind: "trending" | "movies" | "series", page = 1) => {
-  const response = await axiosClient.get<CatalogResponse>(`/stream/${kind}`, { params: { page } });
+export const getStreamCatalog = async (kind: "trending" | "movies" | "series", page = 1, sort?: string, genre?: number) => {
+  const response = await axiosClient.get<CatalogResponse>(`/stream/${kind}`, { params: { page, sort, genre } });
   return response.data;
 };
 
@@ -32,8 +32,8 @@ export const searchStreamCatalog = async (query: string, page = 1) => {
   return response.data;
 };
 
-export const getStreamCategory = async (slug: string, page = 1, sort = "popularity.desc") => {
-  const response = await axiosClient.get<CatalogResponse & { category: { slug: string; title: string; mediaType: "movie" | "tv" } }>(`/stream/category/${encodeURIComponent(slug)}`, { params: { page, sort } });
+export const getStreamCategory = async (slug: string, page = 1, sort = "popularity.desc", genre?: number) => {
+  const response = await axiosClient.get<CatalogResponse & { category: { slug: string; title: string; mediaType: "movie" | "tv" } }>(`/stream/category/${encodeURIComponent(slug)}`, { params: { page, sort, genre } });
   return response.data;
 };
 

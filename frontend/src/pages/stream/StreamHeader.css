@@ -2,6 +2,7 @@
 @media(max-width:640px){.stream-global-row{height:58px;padding:0 10px;gap:8px}.stream-global-back{padding:7px 8px}.stream-global-brand b,.stream-global-brand em{display:none}.stream-global-search{height:38px;width:auto;flex:1;margin-left:0;padding:0 9px}.stream-global-search input{font-size:11px}.stream-global-create{width:38px;height:38px;padding:0;justify-content:center}.stream-global-create span{display:none}.stream-global-header nav{height:40px;padding:0 12px;gap:23px}.stream-global-header nav a{font-size:11px}}
 
 /* The category rail is intentionally one line: touch, wheel and trackpad can reveal all categories. */
+.stream-global-search button{width:30px;height:30px;flex:0 0 auto;display:grid;place-items:center;padding:0;border:0;border-radius:8px;color:#fff;background:#7133c5;cursor:pointer}.stream-global-search button svg{font-size:17px}.stream-global-search input::-webkit-search-cancel-button{display:none}
 .stream-global-header nav{height:46px;overscroll-behavior-x:contain;scroll-snap-type:x proximity}
 .stream-global-header nav a{flex:0 0 auto;scroll-snap-align:start}
 @media(max-width:640px){.stream-global-header nav{height:44px;gap:24px}.stream-global-header nav a{font-size:13px}}

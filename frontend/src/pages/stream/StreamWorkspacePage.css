@@ -150,7 +150,7 @@
   min-width: 0;
 }
 .sw-title-card > div {
-  aspect-ratio: 16/9;
+  aspect-ratio: 2/3;
   position: relative;
   overflow: hidden;
   border-radius: 14px;
@@ -1033,7 +1033,7 @@
     font-size: 0;
   }
   .sw-page-head {
-    padding: 40px 0 24px;
+    padding: 25px 0 18px;
   }
   .sw-page-head h1 {
     font-size: 34px;

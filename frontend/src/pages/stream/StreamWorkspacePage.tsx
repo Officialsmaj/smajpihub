@@ -66,14 +66,26 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
+  const [remoteCatalog, setRemoteCatalog] = useState<StreamCatalogTitle[]>([]);
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() => ["movies", "series", "search", "category", "my-list"].includes(kind) ? "loading" : "fallback");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const categoryName = slug.split("-").map((part) => part ? part[0].toUpperCase() + part.slice(1) : part).join(" ");
+  const categoryFilterLabels: Record<string, string[]> = {
+    anime: ["All", "Action", "Drama", "Comedy", "Family"],
+    documentaries: ["All", "Documentary"],
+    kids: ["All", "Comedy", "Family"],
+    action: ["All", "Drama", "Comedy"],
+    comedy: ["All", "Action", "Drama", "Family"],
+    romance: ["All", "Drama", "Comedy"],
+    horror: ["All", "Drama", "Comedy"],
+  };
+  const filterLabels = kind === "category" ? categoryFilterLabels[slug] || ["All", "Action", "Drama", "Comedy"] : ["All", "Action", "Drama", "Comedy", "Documentary", "Family"];
   const [heading, description] = kind === "category" ? [categoryName, `Popular, new and top-rated ${categoryName} entertainment.`] : pageMeta[kind] ?? ["Browse", "Entertainment selected for you."];
   useEffect(() => {
     if (kind === "search") setQuery(searchParams.get("q") || "");
   }, [kind, searchParams]);
+  useEffect(() => { setGenre("All"); setPage(1); }, [slug]);
   useEffect(() => {
     if (!["movies", "series", "search", "category", "my-list"].includes(kind)) return;
     const timer = window.setTimeout(() => {
@@ -81,10 +93,12 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         void getStreamMyList().then((items) => { setRemoteTitles(items.map((item, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0,4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8], posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview }))); setCatalogState("ready"); }).catch(() => { setRemoteTitles([]); setCatalogState("fallback"); });
         return;
       }
-      const request = kind === "search" ? searchStreamCatalog(query, page) : kind === "category" ? getStreamCategory(slug, page, sort === "Newest" ? "primary_release_date.desc" : sort === "A–Z" ? "original_title.asc" : "popularity.desc") : getStreamCatalog(kind as "movies" | "series", page);
+      const sortParam = sort === "Newest" ? "primary_release_date.desc" : sort === "A–Z" ? "original_title.asc" : "popularity.desc";
+      const request = kind === "search" ? searchStreamCatalog(query, page) : kind === "category" ? getStreamCategory(slug, page, sortParam) : getStreamCatalog(kind as "movies" | "series", page, sortParam);
       void request.then((data) => {
         setRemoteTitles(data.results.map((item: StreamCatalogTitle, index) => ({ id: item.id, name: item.title, meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo","rose","teal"][index % 8] || "purple", posterUrl: item.posterUrl, mediaType: item.mediaType, overview: item.overview })));
         setCatalogState("ready");
+        setRemoteCatalog(data.results);
         setTotalPages(Math.min(data.total_pages || 1, 100));
       }).catch(() => { setRemoteTitles(null); setCatalogState("fallback"); });
     }, kind === "search" ? 350 : 0);
@@ -92,11 +106,12 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   }, [kind, page, query, slug, sort]);
   const localList = kind === "history" ? titles.filter((item) => item.progress) : kind === "my-list" ? [] : titles;
   const list = remoteTitles ?? localList;
-  const filtered = list.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
+  const genreIds: Record<string, number[]> = { Action: [28, 10759], Drama: [18], Comedy: [35], Documentary: [99], Family: [10751] };
+  const filtered = list.filter((item) => item.name.toLowerCase().includes(query.toLowerCase()) && (genre === "All" || remoteCatalog.find((entry) => entry.id === item.id)?.genreIds.some((id) => genreIds[genre]?.includes(id))));
   return <>
-    <header className="sw-page-head"><span>EXPLORE SMAJ STREAM</span><h1>{heading}</h1><p>{description}</p></header>
+    <header className="sw-page-head"><h1>{heading}</h1><p>{description}</p></header>
     {kind === "search" ? <label className="sw-big-search"><SearchRoundedIcon /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search movies, series, live events and creators" /></label> : null}
-    <div className="sw-toolbar"><div>{["All", "Action", "Drama", "Comedy", "Documentary", "Family"].map((item) => <button className={genre === item ? "active" : ""} onClick={() => setGenre(item)} type="button" key={item}>{item}</button>)}</div><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort titles"><option>Popular</option><option>Newest</option><option>A–Z</option></select></div>
+    <div className="sw-toolbar"><div>{filterLabels.map((item) => <button className={genre === item ? "active" : ""} onClick={() => setGenre(item)} type="button" key={item}>{item}</button>)}</div><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort titles"><option>Popular</option><option>Newest</option><option>A–Z</option></select></div>
     {catalogState === "loading" ? <div className="sw-catalog-status">Loading the entertainment catalogue…</div> : null}
     {catalogState === "fallback" && ["movies","series","search","category"].includes(kind) ? <div className="sw-catalog-status warning">This catalogue is unavailable. Check the TMDB backend configuration and retry.</div> : null}
     {catalogState === "fallback" && kind === "my-list" ? <div className="sw-catalog-status warning">My List could not synchronize. Please sign in again or retry shortly.</div> : null}
