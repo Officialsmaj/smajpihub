@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -25,7 +25,7 @@ const links = [
   ["Trending", "/app/services/stream"],
   ["Movies", "/app/services/stream/movies"],
   ["Series", "/app/services/stream/series"],
-  ["TV Channels", "/app/services/stream/live?mode=channels"],
+  ["TV Channels", "/app/services/stream/category/tv-channels"],
   ["Hollywood", "/app/services/stream/category/hollywood"],
   ["Bollywood", "/app/services/stream/category/bollywood"],
   ["Nollywood", "/app/services/stream/category/nollywood"],
@@ -41,7 +41,7 @@ const links = [
   ["Romance", "/app/services/stream/category/romance"],
   ["Horror", "/app/services/stream/category/horror"],
   ["Sports", "/app/services/stream/category/sports"],
-  ["WWE / WWV", "/app/services/stream/search?q=WWE%20WWV"],
+  ["WWE / WWV", "/app/services/stream/category/wwe"],
   ["Live", "/app/services/stream/live"],
   ["My List", "/app/services/stream/my-list"],
 ] as const;
@@ -49,10 +49,12 @@ const links = [
 const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
   const [localQuery, setLocalQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const value = query ?? localQuery;
   useEffect(() => { setMenuOpen(false); }, [location.pathname, location.search]);
+  useEffect(() => { const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]'); active?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }, [location.pathname, location.search]);
   useEffect(() => {
     if (!menuOpen) return;
     const previous = document.body.style.overflow;
@@ -78,7 +80,7 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
       <form className="stream-global-search" role="search" onSubmit={submit}><SearchRoundedIcon /><input type="search" enterKeyHint="search" value={value} onChange={(event) => changeQuery(event.target.value)} placeholder="Search movies, series and creators" aria-label="Search SMAJ Stream" /><button type="submit" aria-label="Submit Stream search"><SearchRoundedIcon /></button></form>
       <button className="stream-global-menu-button" type="button" aria-label="Open Stream menu" aria-expanded={menuOpen} aria-controls="stream-side-menu" onClick={() => setMenuOpen(true)}><MenuRoundedIcon /></button>
     </div>
-    <nav aria-label="SMAJ Stream categories">{links.map(([label, to]) => {
+    <nav ref={navRef} aria-label="SMAJ Stream categories">{links.map(([label, to]) => {
       const current = `${location.pathname}${location.search}`;
       const active = to === "/app/services/stream" ? location.pathname === to : current === to;
       return <Link key={`${label}-${to}`} className={active ? "active" : ""} aria-current={active ? "page" : undefined} to={to}>{label}</Link>;

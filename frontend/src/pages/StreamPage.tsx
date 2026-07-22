@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import LiveTvRoundedIcon from "@mui/icons-material/LiveTvRounded";
@@ -12,7 +12,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
-import { getStreamCatalog, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
+import { getStreamCatalog, getStreamCategory, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
 import { getPublishedCreatorVideos, type CreatorVideo } from "../lib/streamCreator";
 
 type StreamItem = {
@@ -70,9 +70,16 @@ const StreamCard = ({ item, saved, onSave, onPlay }: { item: StreamItem; saved: 
 
 type StreamPageProps = {
   embedded?: boolean;
+  categorySlug?: string;
 };
 
-const StreamPage = ({ embedded = false }: StreamPageProps) => {
+const categoryLabels: Record<string, string> = { trending: "Trending", movies: "Movies", series: "Series", "tv-channels": "TV Channels", hollywood: "Hollywood", bollywood: "Bollywood", nollywood: "Nollywood", kannywood: "Kannywood", anime: "Anime", "k-drama": "K-Drama", "chinese-drama": "Chinese Drama", "african-movies": "African Movies", documentaries: "Documentaries", kids: "Kids & Family", action: "Action", comedy: "Comedy", romance: "Romance", horror: "Horror", sports: "Sports", wwe: "WWE / Wrestling" };
+
+const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
+  const params = useParams();
+  const activeSlug = categorySlug || params.slug || "trending";
+  const categoryLabel = categoryLabels[activeSlug] || activeSlug.split("-").map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ");
+  const categoryMode = activeSlug !== "trending";
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<number[]>([]);
   const [playing, setPlaying] = useState<StreamItem | null>(null);
@@ -85,9 +92,17 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
   const [creatorVideos, setCreatorVideos] = useState<Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }>>([]);
   const [anime, setAnime] = useState<StreamCatalogTitle[]>([]);
 
+  useEffect(() => { setFeatureIndex(0); setRankingTab("Popular"); }, [activeSlug]);
+
   useEffect(() => {
     let active = true;
-    Promise.all([getStreamCatalog("trending"), getStreamCatalog("movies"), getStreamCatalog("series")])
+    const requests = activeSlug === "trending"
+      ? [getStreamCatalog("trending"), getStreamCatalog("movies"), getStreamCatalog("series")]
+      : activeSlug === "movies" || activeSlug === "series"
+        ? [getStreamCatalog(activeSlug), getStreamCatalog(activeSlug, 1, "primary_release_date.desc"), getStreamCatalog(activeSlug, 1, "vote_average.desc")]
+        : [getStreamCategory(activeSlug), getStreamCategory(activeSlug, 1, "primary_release_date.desc"), getStreamCategory(activeSlug, 1, "vote_average.desc")];
+    setCatalogLoading(true);
+    Promise.all(requests)
       .then(([trending, movies, series]) => {
         if (!active) return;
         setCatalog({ trending: trending.results, movies: movies.results, series: series.results });
@@ -96,7 +111,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
       .catch(() => active && setCatalogError(true))
       .finally(() => active && setCatalogLoading(false));
     return () => { active = false; };
-  }, []);
+  }, [activeSlug]);
 
   useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getPublishedCreatorVideos().then(setCreatorVideos).catch(() => setCreatorVideos([])); }, []);
 
@@ -105,12 +120,12 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
 
   const featured = featuredTitles[featureIndex] ?? catalog.movies.find((item) => item.backdropUrl);
   const rankedSeries = useMemo(() => {
-    const base = rankingTab === "Anime" && anime.length ? anime : [...catalog.series];
+    const base = rankingTab === "Anime" && anime.length ? anime : [...(categoryMode ? catalog.trending : catalog.series)];
     if (rankingTab === "Top 100") return base.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (rankingTab === "New") return base.sort((a, b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || "")));
     if (rankingTab === "Returning") return base.reverse();
     return base;
-  }, [anime, catalog.series, rankingTab]);
+  }, [anime, catalog.series, catalog.trending, categoryMode, rankingTab]);
 
   const toggleSaved = (id: number) => setSaved((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
 
@@ -121,7 +136,7 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
 
         <section className="stream-hero compact" id="discover" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart === null || featuredTitles.length < 2) return; const delta = (event.changedTouches[0]?.clientX || 0) - touchStart; if (Math.abs(delta) > 45) setFeatureIndex((index) => (index + (delta < 0 ? 1 : featuredTitles.length - 1)) % featuredTitles.length); setTouchStart(null); }} style={featured?.backdropUrl ? { backgroundImage: `linear-gradient(90deg, rgba(8,5,12,.94) 0%, rgba(8,5,12,.68) 50%, rgba(8,5,12,.18) 100%), url(${featured.backdropUrl})` } : undefined}>
           <div className="stream-hero-content">
-            <span className="stream-eyebrow">TRENDING TODAY · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
+            <span className="stream-eyebrow">{categoryLabel.toUpperCase()} FEATURED · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
             <h1>{featured?.title ?? "The Last Horizon."}</h1>
             <p>{featured?.overview || "Discover movies, series, creator stories and live entertainment in one place."}</p>
             <div className="stream-hero-actions">
@@ -133,19 +148,23 @@ const StreamPage = ({ embedded = false }: StreamPageProps) => {
           <div className="stream-hero-dots" aria-label="Featured titles">{featuredTitles.map((item, index) => <button key={item.id} type="button" className={index === featureIndex ? "active" : ""} onClick={() => setFeatureIndex(index)} aria-label={`Show ${item.title}`} />)}</div>
         </section>
 
-        <section className="stream-rankings"><div className="stream-row-heading"><h2>Series Rankings</h2><Link to="/app/services/stream/series">See all →</Link></div><div className="stream-ranking-tabs">{["Popular","Top 100","New","Returning","Anime"].map((tab) => <button type="button" className={rankingTab === tab ? "active" : ""} onClick={() => setRankingTab(tab)} key={tab}>{tab}</button>)}</div><div className="stream-ranking-rail">{rankedSeries.slice(0, 10).map((item, index) => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} key={`${item.mediaType}-${item.id}`}><b>{index + 1}</b><img loading="lazy" src={item.posterUrl || ""} alt=""/><span>{item.title}</span><small>{item.rating ? `★ ${item.rating}` : item.releaseDate?.slice(0,4) || "New"}</small></Link>)}</div></section>
+        <section className="stream-rankings"><div className="stream-row-heading"><h2>{categoryMode ? `${categoryLabel} Rankings` : "Series Rankings"}</h2><Link to={categoryMode ? `/app/services/stream/category/${activeSlug}` : "/app/services/stream/series"}>See all →</Link></div><div className="stream-ranking-tabs">{(categoryMode ? ["Popular","New","Top 100","Returning"] : ["Popular","Top 100","New","Returning","Anime"]).map((tab) => <button type="button" className={rankingTab === tab ? "active" : ""} onClick={() => setRankingTab(tab)} key={tab}>{tab}</button>)}</div><div className="stream-ranking-rail">{rankedSeries.slice(0, 10).map((item, index) => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} key={`${item.mediaType}-${item.id}`}><b>{index + 1}</b><img loading="lazy" src={item.posterUrl || ""} alt=""/><span>{item.title}</span><small>{item.rating ? `★ ${item.rating}` : item.releaseDate?.slice(0,4) || "New"}</small></Link>)}</div></section>
 
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
           {catalogLoading ? <div className="stream-catalog-loading" aria-label="Loading entertainment"><i/><i/><i/><i/></div> : null}
           {!catalogLoading && catalogError ? <p className="stream-catalog-notice">Live catalogue is unavailable. Showing SMAJ previews.</p> : null}
-          {(catalog.trending.length ? [
+          {(catalog.trending.length ? (categoryMode ? [
+            { title: `Popular ${categoryLabel}`, id: "popular", items: catalog.trending },
+            { title: `New ${categoryLabel} Releases`, id: "new", items: catalog.movies },
+            { title: `Top Rated ${categoryLabel}`, id: "top-rated", items: catalog.series },
+          ] : [
             { title: "Trending Movies", id: "trending", items: catalog.trending.filter((item) => item.mediaType === "movie") },
             { title: "Popular movies", id: "movies", items: catalog.movies },
             { title: "Popular series", id: "series", items: catalog.series },
             { title: "New Releases", id: "new", items: [...catalog.movies].sort((a,b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || ""))) },
             { title: "Top Rated", id: "top-rated", items: [...catalog.movies, ...catalog.series].sort((a,b) => (b.rating || 0) - (a.rating || 0)) },
             { title: "Anime", id: "anime", items: anime },
-          ] : fallbackMovieRows).map((row) => (
+          ]) : fallbackMovieRows).map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
               <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">

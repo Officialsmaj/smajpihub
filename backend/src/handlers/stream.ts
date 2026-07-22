@@ -355,7 +355,9 @@ const mountStreamEndpoints = (router: Router) => {
   const list = (path: string, fallbackType: "movie" | "tv") => async (req: Request, res: Response) => {
     try {
       const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
-      const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>(path, { page, language: String(req.query.language || "en-US"), include_adult: false, sort_by: req.query.sort ? String(req.query.sort) : undefined, with_genres: req.query.genre ? String(req.query.genre) : undefined });
+      const requestedSort = req.query.sort ? String(req.query.sort) : undefined;
+      const sort = fallbackType === "tv" && requestedSort === "primary_release_date.desc" ? "first_air_date.desc" : requestedSort;
+      const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>(path, { page, language: String(req.query.language || "en-US"), include_adult: false, sort_by: sort, with_genres: req.query.genre ? String(req.query.genre) : undefined });
       res.json({ ...data, results: data.results.filter((item) => item.media_type !== "person").map((item) => normalizeMedia(item, fallbackType)), source: "TMDB" });
     } catch (error) {
       const status = Number((error as { status?: number; response?: { status?: number } }).status || (error as { response?: { status?: number } }).response?.status || 502);
@@ -367,6 +369,7 @@ const mountStreamEndpoints = (router: Router) => {
   router.get("/movies", list("/discover/movie", "movie"));
   router.get("/series", list("/discover/tv", "tv"));
   const categoryDefinitions: Record<string, { title: string; type: "movie" | "tv"; params: Record<string, string | number | boolean> }> = {
+    "tv-channels": { title: "TV Channels", type: "tv", params: { sort_by: "popularity.desc" } },
     hollywood: { title: "Hollywood", type: "movie", params: { with_origin_country: "US", with_original_language: "en" } },
     bollywood: { title: "Bollywood", type: "movie", params: { with_origin_country: "IN", with_original_language: "hi" } },
     nollywood: { title: "Nollywood", type: "movie", params: { with_origin_country: "NG" } },
@@ -382,13 +385,16 @@ const mountStreamEndpoints = (router: Router) => {
     romance: { title: "Romance", type: "movie", params: { with_genres: 10749 } },
     horror: { title: "Horror", type: "movie", params: { with_genres: 27 } },
     sports: { title: "Sports", type: "tv", params: { with_genres: 10767 } },
+    wwe: { title: "WWE / Wrestling", type: "tv", params: { with_genres: 10767, with_original_language: "en" } },
   };
   router.get("/category/:slug", async (req, res) => {
     const definition = categoryDefinitions[String(req.params.slug || "").toLowerCase()];
     if (!definition) return res.status(404).json({ error: "category_not_found", message: "This Stream category is not available." });
     try {
       const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
-      const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>(`/discover/${definition.type}`, { ...definition.params, page, language: String(req.query.language || "en-US"), include_adult: false, sort_by: String(req.query.sort || "popularity.desc"), with_genres: req.query.genre ? String(req.query.genre) : definition.params.with_genres });
+      const requestedSort = String(req.query.sort || "popularity.desc");
+      const sort = definition.type === "tv" && requestedSort === "primary_release_date.desc" ? "first_air_date.desc" : requestedSort;
+      const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>(`/discover/${definition.type}`, { ...definition.params, page, language: String(req.query.language || "en-US"), include_adult: false, sort_by: sort, with_genres: req.query.genre ? String(req.query.genre) : definition.params.with_genres });
       return res.json({ ...data, category: { slug: req.params.slug, title: definition.title, mediaType: definition.type }, results: data.results.map((item) => normalizeMedia(item, definition.type)), source: "TMDB" });
     } catch (error) {
       const status = Number((error as { response?: { status?: number } }).response?.status || 502);
