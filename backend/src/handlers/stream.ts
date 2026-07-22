@@ -41,7 +41,7 @@ const normalizeMedia = (item: TmdbMedia, fallbackType: "movie" | "tv" = "movie")
   title: item.title || item.name || "Untitled",
   overview: item.overview || "",
   posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
-  backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
+  backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : null,
   releaseDate: item.release_date || item.first_air_date || null,
   rating: typeof item.vote_average === "number" ? Number(item.vote_average.toFixed(1)) : null,
   voteCount: item.vote_count || 0,

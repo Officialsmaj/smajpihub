@@ -612,8 +612,8 @@
 }
 .sw-detail-hero.tmdb:after {
   background:
-    linear-gradient(90deg, #100716f2 5%, #100716c7 43%, #10071630 78%),
-    linear-gradient(0deg, #100716a8, transparent 45%);
+    linear-gradient(90deg, #100716bd 5%, #10071672 43%, #1007160f 78%),
+    linear-gradient(0deg, #10071670, transparent 38%);
 }
 .sw-detail-hero:after {
   content: "";
@@ -1820,7 +1820,7 @@
     background-position: center top;
   }
   .sw-detail-hero.tmdb:after {
-    background: linear-gradient(0deg, #100716fa 10%, #1007169e 62%, transparent 100%);
+    background: linear-gradient(0deg, #100716dc 8%, #10071668 52%, transparent 82%);
   }
   .sw-detail-hero > div {
     max-width: 100%;

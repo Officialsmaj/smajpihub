@@ -134,7 +134,7 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
       <main className="stream-page">
         <StreamHeader query={query} onQueryChange={setQuery} />
 
-        <section className="stream-hero compact" id="discover" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart === null || featuredTitles.length < 2) return; const delta = (event.changedTouches[0]?.clientX || 0) - touchStart; if (Math.abs(delta) > 45) setFeatureIndex((index) => (index + (delta < 0 ? 1 : featuredTitles.length - 1)) % featuredTitles.length); setTouchStart(null); }} style={featured?.backdropUrl ? { backgroundImage: `linear-gradient(90deg, rgba(8,5,12,.94) 0%, rgba(8,5,12,.68) 50%, rgba(8,5,12,.18) 100%), url(${featured.backdropUrl})` } : undefined}>
+        <section className="stream-hero compact" id="discover" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart === null || featuredTitles.length < 2) return; const delta = (event.changedTouches[0]?.clientX || 0) - touchStart; if (Math.abs(delta) > 45) setFeatureIndex((index) => (index + (delta < 0 ? 1 : featuredTitles.length - 1)) % featuredTitles.length); setTouchStart(null); }} style={featured?.backdropUrl ? { backgroundImage: `url(${featured.backdropUrl})` } : undefined}>
           <div className="stream-hero-content">
             <span className="stream-eyebrow">{categoryLabel.toUpperCase()} FEATURED · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
             <h1>{featured?.title ?? "The Last Horizon."}</h1>
