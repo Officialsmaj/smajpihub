@@ -68,6 +68,9 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() => ["movies", "series", "search", "my-list"].includes(kind) ? "loading" : "fallback");
   const [heading, description] = pageMeta[kind] ?? ["Browse", "Entertainment selected for you."];
   useEffect(() => {
+    if (kind === "search") setQuery(searchParams.get("q") || "");
+  }, [kind, searchParams]);
+  useEffect(() => {
     if (!["movies", "series", "search", "my-list"].includes(kind)) return;
     const timer = window.setTimeout(() => {
       if (kind === "my-list") {
