@@ -112,6 +112,39 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ saved: false });
   });
 
+  const streamProfileCompletion = (profile: Record<string, unknown>) => {
+    let value = 0;
+    if (profile.avatarUrl) value += 15;
+    if (profile.displayName) value += 10;
+    if (profile.country) value += 10;
+    if (profile.language) value += 10;
+    if (Array.isArray(profile.favoriteGenres) && profile.favoriteGenres.length >= 3) value += 15;
+    if (profile.maturityLevel) value += 10;
+    if (profile.videoQuality) value += 10;
+    if (typeof profile.showActivity === "boolean") value += 10;
+    if (typeof profile.emailNotifications === "boolean") value += 10;
+    return value;
+  };
+
+  router.get("/profile", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const profile = { displayName: stored?.streamProfile?.displayName || stored?.displayName || stored?.username || stored?.piUsername || "", avatarUrl: stored?.streamProfile?.avatarUrl || stored?.avatarUrl || "", country: stored?.streamProfile?.country || stored?.country || "", language: stored?.streamProfile?.language || "en", subtitleLanguage: stored?.streamProfile?.subtitleLanguage || "en", favoriteGenres: stored?.streamProfile?.favoriteGenres || [], preferredRegions: stored?.streamProfile?.preferredRegions || [], maturityLevel: stored?.streamProfile?.maturityLevel || "16", videoQuality: stored?.streamProfile?.videoQuality || "auto", autoplay: stored?.streamProfile?.autoplay ?? true, dataSaver: stored?.streamProfile?.dataSaver ?? false, showActivity: stored?.streamProfile?.showActivity ?? false, emailNotifications: stored?.streamProfile?.emailNotifications ?? false };
+    return res.json({ profile, completion: streamProfileCompletion(profile), username: stored?.piUsername || stored?.username || "" });
+  });
+
+  router.put("/profile", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const genres = ["action", "anime", "comedy", "documentary", "drama", "family", "horror", "music", "romance", "sports", "thriller"];
+    const regions = ["african", "bollywood", "chinese", "hollywood", "k-drama", "kannywood", "nollywood"];
+    const avatarUrl = String(req.body?.avatarUrl || "").trim().slice(0, 500);
+    if (avatarUrl && !/^https:\/\//i.test(avatarUrl)) return res.status(400).json({ error: "invalid_avatar", message: "Avatar must use a secure HTTPS URL." });
+    const profile = { displayName: String(req.body?.displayName || "").trim().slice(0, 80), avatarUrl, country: String(req.body?.country || "").trim().toUpperCase().slice(0, 2), language: String(req.body?.language || "en").trim().slice(0, 10), subtitleLanguage: String(req.body?.subtitleLanguage || "en").trim().slice(0, 10), favoriteGenres: Array.isArray(req.body?.favoriteGenres) ? [...new Set(req.body.favoriteGenres.map(String).filter((item: string) => genres.includes(item)))].slice(0, 8) : [], preferredRegions: Array.isArray(req.body?.preferredRegions) ? [...new Set(req.body.preferredRegions.map(String).filter((item: string) => regions.includes(item)))].slice(0, 7) : [], maturityLevel: ["kids", "13", "16", "18"].includes(req.body?.maturityLevel) ? req.body.maturityLevel : "16", videoQuality: ["auto", "data-saver", "hd", "full-hd"].includes(req.body?.videoQuality) ? req.body.videoQuality : "auto", autoplay: req.body?.autoplay === true, dataSaver: req.body?.dataSaver === true, showActivity: req.body?.showActivity === true, emailNotifications: req.body?.emailNotifications === true, updatedAt: new Date() };
+    if (profile.displayName.length < 2) return res.status(400).json({ error: "invalid_name", message: "Display name must contain at least two characters." });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamProfile: profile } });
+    return res.json({ profile, completion: streamProfileCompletion(profile) });
+  });
+
   router.post("/creator/uploads", async (req, res) => {
     try {
       const user = await requireCreator(req, res);

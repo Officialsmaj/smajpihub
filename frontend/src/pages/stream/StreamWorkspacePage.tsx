@@ -17,6 +17,7 @@ import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
 import CreatorContentList from "./CreatorContentList";
+import StreamProfilePanel from "./StreamProfilePanel";
 import { getStreamCatalog, getStreamCategory, getStreamMyList, getStreamMyListStatus, getStreamTitle, getStreamWatchProviders, removeStreamTitle, saveStreamTitle, searchStreamCatalog, type StreamCatalogTitle, type StreamWatchProvider, type StreamWatchRegion } from "../../lib/streamCatalog";
 
 export type StreamPageKind =
@@ -192,6 +193,7 @@ const Player = ({ live = false }: { live?: boolean }) => {
 };
 
 const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
+  if (kind === "profile") return <StreamProfilePanel />;
   const [heading, description] = pageMeta[kind] ?? ["Account", "Manage your Stream experience."];
   return <><header className="sw-page-head"><span>YOUR ACCOUNT</span><h1>{heading}</h1><p>{description}</p></header><section className="sw-settings-card">
     {kind === "plans" ? <div className="sw-plans">{[["Free","π 0","Standard video and creator channels"],["Plus","π 8","HD, downloads and no advertising"],["Family","π 14","4K and up to five profiles"]].map(([name,price,text], index) => <article className={index === 1 ? "featured" : ""} key={name}><span>{index === 1 ? "POPULAR" : "PLAN"}</span><h2>{name}</h2><strong>{price}<small>/month</small></strong><p>{text}</p><button type="button">Choose {name}</button></article>)}</div> :
