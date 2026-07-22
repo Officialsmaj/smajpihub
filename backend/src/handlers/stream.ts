@@ -62,6 +62,44 @@ const mountStreamEndpoints = (router: Router) => {
     return user;
   };
 
+  const requireViewer = async (req: Request, res: Response) => {
+    const user = await resolveCurrentUser(req);
+    if (!user) { res.status(401).json({ error: "authentication_required", message: "Sign in to manage My List." }); return null; }
+    if (!req.app.locals.userCollection) { res.status(503).json({ error: "service_unavailable", message: "User storage is not ready." }); return null; }
+    return user;
+  };
+
+  router.get("/my-list", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    return res.json({ items: Array.isArray(stored?.streamMyList) ? stored.streamMyList : [] });
+  });
+
+  router.get("/my-list/:type(movie|tv)/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const tmdbId = Number(req.params.id);
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id, streamMyList: { $elemMatch: { tmdbId, mediaType: req.params.type } } });
+    return res.json({ saved: Boolean(stored) });
+  });
+
+  router.post("/my-list", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const tmdbId = Number(req.body?.tmdbId);
+    const mediaType = req.body?.mediaType === "tv" ? "tv" : req.body?.mediaType === "movie" ? "movie" : null;
+    const title = String(req.body?.title || "").trim().slice(0, 180);
+    if (!Number.isInteger(tmdbId) || tmdbId <= 0 || !mediaType || !title) return res.status(400).json({ error: "bad_request", message: "A valid TMDB title is required." });
+    const item = { tmdbId, id: String(tmdbId), mediaType, title, overview: String(req.body?.overview || "").slice(0, 1200), posterUrl: req.body?.posterUrl ? String(req.body.posterUrl).slice(0, 500) : null, backdropUrl: req.body?.backdropUrl ? String(req.body.backdropUrl).slice(0, 500) : null, releaseDate: req.body?.releaseDate ? String(req.body.releaseDate).slice(0, 20) : null, rating: Number.isFinite(Number(req.body?.rating)) ? Number(req.body.rating) : null, savedAt: new Date() };
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamMyList: { tmdbId, mediaType } } });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $addToSet: { streamMyList: item } });
+    return res.status(201).json({ saved: true, item });
+  });
+
+  router.delete("/my-list/:type(movie|tv)/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamMyList: { tmdbId: Number(req.params.id), mediaType: req.params.type } } });
+    return res.json({ saved: false });
+  });
+
   router.post("/creator/uploads", async (req, res) => {
     try {
       const user = await requireCreator(req, res);

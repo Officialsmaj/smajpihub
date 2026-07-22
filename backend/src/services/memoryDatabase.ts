@@ -9,8 +9,14 @@ const sameValue = (left: any, right: any) => {
   if (left instanceof ObjectId || right instanceof ObjectId) {
     return String(left) === String(right);
   }
+  if (left && right && typeof left === "object" && typeof right === "object") {
+    return JSON.stringify(left) === JSON.stringify(right);
+  }
   return left === right;
 };
+
+const matchesObject = (value: any, condition: any) => value && typeof value === "object"
+  && Object.entries(condition).every(([key, expected]) => sameValue(value[key], expected));
 
 const matchesValue = (value: any, condition: any): boolean => {
   if (condition instanceof RegExp) return condition.test(String(value || ""));
@@ -19,6 +25,7 @@ const matchesValue = (value: any, condition: any): boolean => {
   }
   if ("$ne" in condition && sameValue(value, condition.$ne)) return false;
   if ("$in" in condition && !condition.$in.some((item: any) => sameValue(value, item))) return false;
+  if ("$elemMatch" in condition && (!Array.isArray(value) || !value.some((item: any) => matchesObject(item, condition.$elemMatch)))) return false;
   if ("$regex" in condition) {
     const flags = String(condition.$options || "");
     const regex = new RegExp(String(condition.$regex), flags);
@@ -50,7 +57,7 @@ const applyUpdate = (document: Document, update: Document, inserting = false) =>
   }
   if (update.$pull) {
     Object.entries(update.$pull).forEach(([key, value]) => {
-      document[key] = Array.isArray(document[key]) ? document[key].filter((item: any) => !sameValue(item, value)) : [];
+      document[key] = Array.isArray(document[key]) ? document[key].filter((item: any) => !(value && typeof value === "object" ? matchesObject(item, value) : sameValue(item, value))) : [];
     });
   }
 };

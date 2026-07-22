@@ -44,3 +44,23 @@ export const getStreamWatchProviders = async (type: "movie" | "tv", id: string) 
   const response = await axiosClient.get<{ results: Record<string, StreamWatchRegion> }>(`/stream/${type}/${id}/providers`);
   return response.data.results;
 };
+
+export const getStreamMyList = async () => {
+  const response = await axiosClient.get<{ items: StreamCatalogTitle[] }>("/stream/my-list");
+  return response.data.items;
+};
+
+export const getStreamMyListStatus = async (type: "movie" | "tv", id: string) => {
+  const response = await axiosClient.get<{ saved: boolean }>(`/stream/my-list/${type}/${id}`);
+  return response.data.saved;
+};
+
+export const saveStreamTitle = async (title: StreamCatalogTitle) => {
+  const response = await axiosClient.post<{ saved: true }>("/stream/my-list", title);
+  return response.data;
+};
+
+export const removeStreamTitle = async (type: "movie" | "tv", id: string) => {
+  const response = await axiosClient.delete<{ saved: false }>(`/stream/my-list/${type}/${id}`);
+  return response.data;
+};
