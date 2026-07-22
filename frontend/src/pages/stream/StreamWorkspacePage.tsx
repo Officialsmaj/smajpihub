@@ -17,7 +17,7 @@ import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
 import CreatorContentList from "./CreatorContentList";
-import { getStreamCatalog, searchStreamCatalog, type StreamCatalogTitle } from "../../lib/streamCatalog";
+import { getStreamCatalog, getStreamTitle, getStreamWatchProviders, searchStreamCatalog, type StreamCatalogTitle, type StreamWatchProvider, type StreamWatchRegion } from "../../lib/streamCatalog";
 
 export type StreamPageKind =
   | "movies" | "series" | "live" | "search" | "my-list" | "history" | "subscriptions"
@@ -94,13 +94,46 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
 
 const Detail = ({ series = false }: { series?: boolean }) => {
   const { id } = useParams();
-  const title = titles.find((item) => item.id === id) ?? titles[0];
+  const type = series ? "tv" : "movie";
+  const [detail, setDetail] = useState<(StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: TmdbDetailRaw }) | null>(null);
+  const [providers, setProviders] = useState<Record<string, StreamWatchRegion>>({});
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [saved, setSaved] = useState(() => Boolean(id && window.localStorage.getItem("smaj_stream_my_list")?.split(",").includes(id)));
+  useEffect(() => {
+    if (!id) return;
+    setState("loading");
+    void Promise.all([getStreamTitle(type, id), getStreamWatchProviders(type, id).catch(() => ({}))])
+      .then(([titleData, providerData]) => { setDetail(titleData as typeof detail); setProviders(providerData); setState("ready"); })
+      .catch(() => setState("error"));
+  }, [id, type]);
+  if (state === "loading") return <div className="sw-detail-loading"><i/><i/><i/></div>;
+  if (state === "error" || !detail) return <section className="sw-detail-error"><h1>We could not load this title</h1><p>Check the TMDB backend configuration and try again.</p><Link to={series ? "/app/services/stream/series" : "/app/services/stream/movies"}>Back to catalogue</Link></section>;
+  const raw = detail.raw;
+  const trailer = raw.videos?.results?.find((video) => video.site === "YouTube" && video.type === "Trailer" && video.official) ?? raw.videos?.results?.find((video) => video.site === "YouTube" && video.type === "Trailer");
+  const recommendations: Title[] = (raw.recommendations?.results || []).slice(0, 6).map((item, index) => ({ id: String(item.id), name: item.title || item.name || "Untitled", meta: `${item.media_type === "tv" || series ? "Series" : "Movie"}${item.vote_average ? ` · ★ ${item.vote_average.toFixed(1)}` : ""}`, tone: ["purple","amber","green","blue","coral","indigo"][index], posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null, mediaType: item.media_type || (series ? "tv" : "movie") }));
+  const regionCode = providers.US ? "US" : Object.keys(providers)[0];
+  const region = regionCode ? providers[regionCode] : undefined;
+  const providerList = uniqueProviders([...(region?.flatrate || []), ...(region?.free || []), ...(region?.ads || []), ...(region?.rent || []), ...(region?.buy || [])]);
+  const toggleSaved = () => {
+    if (!id) return;
+    const current = new Set((window.localStorage.getItem("smaj_stream_my_list") || "").split(",").filter(Boolean));
+    saved ? current.delete(id) : current.add(id);
+    window.localStorage.setItem("smaj_stream_my_list", [...current].join(","));
+    setSaved(!saved);
+  };
   return <>
-    <section className={`sw-detail-hero ${title.tone}`}><div><span>SMAJ ORIGINAL · {series ? "SERIES" : "FEATURE FILM"}</span><h1>{title.name}</h1><p className="sw-match">98% Match · 2026 · 16+ · 4K</p><p>A powerful story about courage, community and the choices that shape our future.</p><div><Link to={`/app/services/stream/watch/${title.id}`}><PlayArrowRoundedIcon /> Play</Link><button type="button"><BookmarkRoundedIcon /> My List</button></div></div></section>
-    {series ? <section className="sw-episodes"><header><h2>Episodes</h2><select aria-label="Season"><option>Season 1</option><option>Season 2</option></select></header>{[1,2,3,4].map((episode) => <Link to={`/app/services/stream/watch/${title.id}?episode=${episode}`} key={episode}><b>{episode}</b><span className={`sw-episode-art ${title.tone}`}><PlayArrowRoundedIcon /></span><div><h3>Episode {episode}: {episode === 1 ? "The beginning" : "A new direction"}</h3><p>The story continues as new choices change everything.</p></div><small>48m</small></Link>)}</section> : null}
-    <section className="sw-related"><h2>More like this</h2><div>{titles.slice(1, 5).map((item) => <Tile compact title={item} key={item.id} />)}</div></section>
+    <section className="sw-detail-hero tmdb" style={detail.backdropUrl ? { backgroundImage: `url(${detail.backdropUrl})` } : undefined}><div><span>TMDB · {series ? "SERIES" : "FEATURE FILM"}</span><h1>{detail.title}</h1><p className="sw-match">{detail.rating ? `★ ${detail.rating}` : "New"} · {detail.releaseDate?.slice(0,4) || "Coming soon"}{detail.runtime ? ` · ${Math.floor(detail.runtime / 60)}h ${detail.runtime % 60}m` : ""}</p><div className="sw-detail-genres">{detail.genres.map((genre) => <b key={genre.id}>{genre.name}</b>)}</div><p>{detail.overview || "No overview is available for this title yet."}</p><div>{trailer ? <button type="button" className="primary" onClick={() => setShowTrailer(true)}><PlayArrowRoundedIcon /> Watch trailer</button> : null}<button type="button" onClick={toggleSaved}><BookmarkRoundedIcon /> {saved ? "Saved" : "My List"}</button></div></div></section>
+    {showTrailer && trailer ? <div className="sw-trailer" role="dialog" aria-modal="true" aria-label={`${detail.title} trailer`}><button type="button" onClick={() => setShowTrailer(false)}>Close ×</button><iframe src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1`} title={`${detail.title} trailer`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /></div> : null}
+    <section className="sw-detail-info"><div><h2>Cast</h2><div className="sw-cast">{(raw.credits?.cast || []).slice(0, 8).map((person) => <article key={person.id}>{person.profile_path ? <img src={`https://image.tmdb.org/t/p/w185${person.profile_path}`} alt="" /> : <span>{person.name.slice(0,1)}</span>}<b>{person.name}</b><small>{person.character}</small></article>)}</div></div><aside><h2>Where to watch</h2>{providerList.length ? <><div className="sw-providers">{providerList.slice(0, 8).map((provider) => <span key={provider.provider_id}>{provider.logo_path ? <img src={`https://image.tmdb.org/t/p/w92${provider.logo_path}`} alt="" /> : null}<b>{provider.provider_name}</b></span>)}</div>{region?.link ? <a href={region.link} target="_blank" rel="noreferrer">View legal options</a> : null}<small>Availability for {regionCode}. Provider data by JustWatch via TMDB.</small></> : <p>No provider information is currently available in your selected region.</p>}</aside></section>
+    {series && raw.seasons?.length ? <section className="sw-seasons"><h2>Seasons</h2><div>{raw.seasons.filter((season) => season.season_number > 0).map((season) => <article key={season.id}>{season.poster_path ? <img src={`https://image.tmdb.org/t/p/w185${season.poster_path}`} alt="" /> : null}<div><h3>{season.name}</h3><p>{season.episode_count} episodes</p><small>{season.air_date?.slice(0,4) || "Release date unavailable"}</small></div></article>)}</div></section> : null}
+    <section className="sw-related"><h2>More like this</h2><div>{(recommendations.length ? recommendations : titles.slice(1,5)).map((item) => <Tile compact title={item} key={`${item.mediaType}-${item.id}`} />)}</div></section>
+    <p className="sw-attribution"><a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a> · This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
   </>;
 };
+
+type TmdbDetailRaw = { videos?: { results?: Array<{ key: string; site: string; type: string; official?: boolean }> }; credits?: { cast?: Array<{ id: number; name: string; character: string; profile_path: string | null }> }; recommendations?: { results?: Array<{ id: number; title?: string; name?: string; media_type?: "movie" | "tv"; poster_path?: string | null; vote_average?: number }> }; seasons?: Array<{ id: number; name: string; season_number: number; episode_count: number; poster_path: string | null; air_date?: string }> };
+const uniqueProviders = (items: StreamWatchProvider[]) => [...new Map(items.map((item) => [item.provider_id, item])).values()];
 
 const Player = ({ live = false }: { live?: boolean }) => {
   const { id } = useParams(); const title = titles.find((item) => item.id === id) ?? titles[0];

@@ -36,3 +36,11 @@ export const getStreamTitle = async (type: "movie" | "tv", id: string) => {
   const response = await axiosClient.get<StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: unknown }>(`/stream/${type}/${id}`);
   return response.data;
 };
+
+export type StreamWatchProvider = { provider_id: number; provider_name: string; logo_path: string | null };
+export type StreamWatchRegion = { link?: string; flatrate?: StreamWatchProvider[]; rent?: StreamWatchProvider[]; buy?: StreamWatchProvider[]; free?: StreamWatchProvider[]; ads?: StreamWatchProvider[] };
+
+export const getStreamWatchProviders = async (type: "movie" | "tv", id: string) => {
+  const response = await axiosClient.get<{ results: Record<string, StreamWatchRegion> }>(`/stream/${type}/${id}/providers`);
+  return response.data.results;
+};
