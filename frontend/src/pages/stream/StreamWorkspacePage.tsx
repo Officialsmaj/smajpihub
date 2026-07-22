@@ -20,6 +20,8 @@ import CreatorContentList from "./CreatorContentList";
 import StreamProfilePanel from "./StreamProfilePanel";
 import StreamVideoPlayer from "./StreamVideoPlayer";
 import StreamWatchHistory from "./StreamWatchHistory";
+import StreamModerationPanel from "./StreamModerationPanel";
+import { getTitleAvailability } from "../../lib/streamAdmin";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -403,6 +405,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [showTrailer, setShowTrailer] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [playbackId, setPlaybackId] = useState("");
   useEffect(() => {
     if (!id) return;
     setState("loading");
@@ -410,11 +413,13 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       getStreamTitle(type, id),
       getStreamWatchProviders(type, id).catch(() => ({})),
       getStreamMyListStatus(type, id).catch(() => false),
+      getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string } => ({ available: false })),
     ])
-      .then(([titleData, providerData, savedStatus]) => {
+      .then(([titleData, providerData, savedStatus, availability]) => {
         setDetail(titleData as typeof detail);
         setProviders(providerData);
         setSaved(savedStatus);
+        setPlaybackId(availability.available ? availability.playbackId || "" : "");
         setState("ready");
       })
       .catch(() => setState("error"));
@@ -498,8 +503,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 <b>{series ? "Created by" : "Directed by"}</b> {creators.map(person => person.name).join(", ")}
               </p>
             ) : null}
-            <div className="sw-detail-actions">
-              {trailer ? (
+          <div className="sw-detail-actions">
+            {playbackId ? <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}><PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}</Link> : null}
+            {trailer ? (
                 <button type="button" className="primary" onClick={() => setShowTrailer(true)}>
                   <PlayArrowRoundedIcon /> Watch trailer
                 </button>
@@ -1057,7 +1063,8 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
             </div>
           </>
         ) : null}
-        {kind !== "admin" && kind !== "admin-analytics" && kind !== "stream-settings" ? (
+        {kind === "moderation" ? <StreamModerationPanel /> : null}
+        {kind !== "admin" && kind !== "admin-analytics" && kind !== "stream-settings" && kind !== "moderation" ? (
           <div className="sw-admin-list">
             {rows.map((row, i) => (
               <article key={row}>

@@ -81,6 +81,15 @@ const mountStreamEndpoints = (router: Router) => {
     return user;
   };
 
+  const requireStreamAdmin = async (req: Request, res: Response) => {
+    const user = await resolveCurrentUser(req);
+    const usernames = [user?.piUsername, user?.username].map(value => String(value || "").trim().replace(/^@+/, "").toLowerCase());
+    if (!user) { res.status(401).json({ error: "unauthorized", message: "Sign in to manage Stream." }); return null; }
+    if (user.role !== "admin" && !usernames.some(username => env.admin_pi_usernames.includes(username))) { res.status(403).json({ error: "forbidden", message: "Stream administrator access is required." }); return null; }
+    if (!req.app.locals.streamContentCollection) { res.status(503).json({ error: "service_unavailable", message: "Stream content storage is not ready." }); return null; }
+    return user;
+  };
+
   router.get("/my-list", async (req, res) => {
     const user = await requireViewer(req, res); if (!user) return;
     const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
@@ -241,6 +250,55 @@ const mountStreamEndpoints = (router: Router) => {
     } catch (error) {
       return res.status(502).json({ error: "status_failed", message: error instanceof Error ? error.message : "Unable to refresh video status" });
     }
+  });
+
+  router.get("/admin/videos", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const status = String(req.query.status || "all");
+    const query = status === "all" ? {} : { moderationStatus: status };
+    const videos = await req.app.locals.streamContentCollection.find(query).sort({ createdAt: -1 }).limit(200).toArray();
+    return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id), playback: undefined })) });
+  });
+
+  router.patch("/admin/videos/:uid", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const uid = String(req.params.uid || "").slice(0, 180);
+    const video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
+    if (!video) return res.status(404).json({ error: "not_found", message: "Stream video was not found." });
+    const action = String(req.body?.action || "");
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (action === "approve") {
+      if (video.rightsConfirmed !== true) return res.status(409).json({ error: "rights_missing", message: "The creator has not confirmed distribution rights." });
+      updates.moderationStatus = "approved"; updates.moderationReason = "";
+    } else if (action === "reject") {
+      const reason = String(req.body?.reason || "").trim().slice(0, 500);
+      if (reason.length < 5) return res.status(400).json({ error: "reason_required", message: "Add a clear rejection reason." });
+      updates.moderationStatus = "rejected"; updates.moderationReason = reason; updates.playbackAllowed = false;
+    } else if (action === "playback") {
+      if (req.body?.enabled === true && video.moderationStatus !== "approved") return res.status(409).json({ error: "approval_required", message: "Approve this video before enabling playback." });
+      updates.playbackAllowed = req.body?.enabled === true;
+    } else if (action === "visibility") {
+      if (!["public", "unlisted", "private"].includes(req.body?.visibility)) return res.status(400).json({ error: "invalid_visibility" });
+      updates.visibility = req.body.visibility;
+    } else if (action === "attach") {
+      const tmdbId = Number(req.body?.tmdbId);
+      const mediaType = req.body?.mediaType === "tv" ? "tv" : req.body?.mediaType === "movie" ? "movie" : null;
+      if (!Number.isInteger(tmdbId) || tmdbId <= 0 || !mediaType) return res.status(400).json({ error: "invalid_title", message: "Choose a valid TMDB movie or series." });
+      updates.catalogAttachment = { tmdbId, mediaType, title: String(req.body?.title || "").slice(0, 140), attachedAt: new Date(), attachedBy: String(admin._id) };
+    } else if (action === "detach") updates.catalogAttachment = null;
+    else return res.status(400).json({ error: "invalid_action", message: "Choose a valid moderation action." });
+    const auditEntry = { action, reason: updates.moderationReason || null, adminId: String(admin._id), adminName: admin.piUsername || admin.username || "Admin", createdAt: new Date() };
+    const moderationHistory = [...(Array.isArray(video.moderationHistory) ? video.moderationHistory : []), auditEntry].slice(-100);
+    await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: { ...updates, moderationHistory } });
+    const updated = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
+    return res.json({ video: { ...updated, _id: String(updated?._id), playback: undefined } });
+  });
+
+  router.get("/availability/:type(movie|tv)/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    if (!req.app.locals.streamContentCollection) return res.json({ available: false });
+    const video = await req.app.locals.streamContentCollection.findOne({ "catalogAttachment.tmdbId": Number(req.params.id), "catalogAttachment.mediaType": req.params.type, visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready" });
+    return res.json(video ? { available: true, playbackId: video.cloudflareUid, title: video.title } : { available: false });
   });
 
   router.get("/playback/:uid", async (req, res) => {
