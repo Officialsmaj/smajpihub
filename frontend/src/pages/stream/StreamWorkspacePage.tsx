@@ -28,13 +28,10 @@ import {
   getStreamMyList,
   getStreamMyListStatus,
   getStreamTitle,
-  getStreamWatchProviders,
   removeStreamTitle,
   saveStreamTitle,
   searchStreamCatalog,
   type StreamCatalogTitle,
-  type StreamWatchProvider,
-  type StreamWatchRegion,
 } from "../../lib/streamCatalog";
 
 export type StreamPageKind =
@@ -400,9 +397,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: TmdbDetailRaw })
     | null
   >(null);
-  const [providers, setProviders] = useState<Record<string, StreamWatchRegion>>({});
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const [showTrailer, setShowTrailer] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
@@ -411,13 +406,11 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     setState("loading");
     void Promise.all([
       getStreamTitle(type, id),
-      getStreamWatchProviders(type, id).catch(() => ({})),
       getStreamMyListStatus(type, id).catch(() => false),
       getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string } => ({ available: false })),
     ])
-      .then(([titleData, providerData, savedStatus, availability]) => {
+      .then(([titleData, savedStatus, availability]) => {
         setDetail(titleData as typeof detail);
-        setProviders(providerData);
         setSaved(savedStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
         setState("ready");
@@ -441,9 +434,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       </section>
     );
   const raw = detail.raw;
-  const trailer =
-    raw.videos?.results?.find(video => video.site === "YouTube" && video.type === "Trailer" && video.official) ??
-    raw.videos?.results?.find(video => video.site === "YouTube" && video.type === "Trailer");
   const recommendations: Title[] = (raw.recommendations?.results || []).slice(0, 8).map((item, index) => ({
     id: String(item.id),
     name: item.title || item.name || "Untitled",
@@ -454,15 +444,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   }));
   const directors = (raw.credits?.crew || []).filter(person => person.job === "Director").slice(0, 3);
   const creators = series ? (raw.created_by || []).slice(0, 3) : directors;
-  const regionCode = providers.US ? "US" : Object.keys(providers)[0];
-  const region = regionCode ? providers[regionCode] : undefined;
-  const providerList = uniqueProviders([
-    ...(region?.flatrate || []),
-    ...(region?.free || []),
-    ...(region?.ads || []),
-    ...(region?.rent || []),
-    ...(region?.buy || []),
-  ]);
   const toggleSaved = async () => {
     if (!id) return;
     setSaving(true);
@@ -505,34 +486,14 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             ) : null}
           <div className="sw-detail-actions">
             {playbackId ? <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}><PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}</Link> : null}
-            {trailer ? (
-                <button type="button" className="primary" onClick={() => setShowTrailer(true)}>
-                  <PlayArrowRoundedIcon /> Watch trailer
-                </button>
-              ) : null}
               <button type="button" disabled={saving} onClick={() => void toggleSaved()}>
                 <BookmarkRoundedIcon /> {saving ? "Saving…" : saved ? "Saved" : "My List"}
               </button>
             </div>
-            <small className="sw-detail-watch-note">
-              Trailers play on YouTube. Full-title links show legal availability in your region.
-            </small>
+            {!playbackId ? <small className="sw-detail-watch-note unavailable">Not available yet on SMAJ Stream.</small> : null}
           </div>
         </div>
       </section>
-      {showTrailer && trailer ? (
-        <div className="sw-trailer" role="dialog" aria-modal="true" aria-label={`${detail.title} trailer`}>
-          <button type="button" onClick={() => setShowTrailer(false)}>
-            Close ×
-          </button>
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1`}
-            title={`${detail.title} trailer`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      ) : null}
       <section className="sw-detail-info">
         <div>
           <h2>Top cast</h2>
@@ -551,29 +512,8 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           </div>
         </div>
         <aside>
-          <h2>Where to watch</h2>
-          {providerList.length ? (
-            <>
-              <div className="sw-providers">
-                {providerList.slice(0, 8).map(provider => (
-                  <span key={provider.provider_id}>
-                    {provider.logo_path ? (
-                      <img src={`https://image.tmdb.org/t/p/w92${provider.logo_path}`} alt="" />
-                    ) : null}
-                    <b>{provider.provider_name}</b>
-                  </span>
-                ))}
-              </div>
-              {region?.link ? (
-                <a className="sw-watch-options" href={region.link} target="_blank" rel="noreferrer">
-                  See legal watch options
-                </a>
-              ) : null}
-              <small>Availability for {regionCode}. Provider data by JustWatch via TMDB.</small>
-            </>
-          ) : (
-            <p>No provider information is currently available in your selected region.</p>
-          )}
+          <h2>{playbackId ? "Available on SMAJ" : "SMAJ availability"}</h2>
+          {playbackId ? <p>This title is published and ready to play on SMAJ Stream.</p> : <p>This title is not available yet. Save it to My List and check again later.</p>}
           <dl className="sw-title-facts">
             <div>
               <dt>Original language</dt>
@@ -643,7 +583,6 @@ type TmdbDetailRaw = {
   original_language?: string;
   number_of_seasons?: number;
   created_by?: Array<{ id: number; name: string }>;
-  videos?: { results?: Array<{ key: string; site: string; type: string; official?: boolean }> };
   credits?: {
     cast?: Array<{ id: number; name: string; character: string; profile_path: string | null }>;
     crew?: Array<{ id: number; name: string; job: string }>;
@@ -667,10 +606,6 @@ type TmdbDetailRaw = {
     air_date?: string;
   }>;
 };
-const uniqueProviders = (items: StreamWatchProvider[]) => [
-  ...new Map(items.map(item => [item.provider_id, item])).values(),
-];
-
 const Player = ({ live = false }: { live?: boolean }) => {
   const { id } = useParams();
   if (!live) return <StreamVideoPlayer id={id || ""} />;

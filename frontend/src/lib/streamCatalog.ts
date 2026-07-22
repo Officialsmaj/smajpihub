@@ -42,14 +42,6 @@ export const getStreamTitle = async (type: "movie" | "tv", id: string) => {
   return response.data;
 };
 
-export type StreamWatchProvider = { provider_id: number; provider_name: string; logo_path: string | null };
-export type StreamWatchRegion = { link?: string; flatrate?: StreamWatchProvider[]; rent?: StreamWatchProvider[]; buy?: StreamWatchProvider[]; free?: StreamWatchProvider[]; ads?: StreamWatchProvider[] };
-
-export const getStreamWatchProviders = async (type: "movie" | "tv", id: string) => {
-  const response = await axiosClient.get<{ results: Record<string, StreamWatchRegion> }>(`/stream/${type}/${id}/providers`);
-  return response.data.results;
-};
-
 export const getStreamMyList = async () => {
   const response = await axiosClient.get<{ items: StreamCatalogTitle[] }>("/stream/my-list");
   return response.data.items;

@@ -665,6 +665,7 @@
   font-size: 10px;
   line-height: 1.45;
 }
+.sw-detail-watch-note.unavailable{width:max-content;max-width:100%;padding:8px 11px;border:1px solid #ffffff35;border-radius:8px;color:#eee6f2;background:#100817a8;font-size:11px;font-weight:800}
 .sw-detail-hero span {
   font-size: 10px;
   font-weight: 900;
