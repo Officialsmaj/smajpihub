@@ -96,12 +96,14 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
 
   useEffect(() => {
     let active = true;
+    setCatalog({ trending: [], movies: [], series: [] });
+    setCatalogError(false);
+    setCatalogLoading(true);
     const requests = activeSlug === "trending"
       ? [getStreamCatalog("trending"), getStreamCatalog("movies"), getStreamCatalog("series")]
       : activeSlug === "movies" || activeSlug === "series"
         ? [getStreamCatalog(activeSlug), getStreamCatalog(activeSlug, 1, "primary_release_date.desc"), getStreamCatalog(activeSlug, 1, "vote_average.desc")]
         : [getStreamCategory(activeSlug), getStreamCategory(activeSlug, 1, "primary_release_date.desc"), getStreamCategory(activeSlug, 1, "vote_average.desc")];
-    setCatalogLoading(true);
     Promise.all(requests)
       .then(([trending, movies, series]) => {
         if (!active) return;
@@ -137,11 +139,11 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
         <section className="stream-hero compact" id="discover" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart === null || featuredTitles.length < 2) return; const delta = (event.changedTouches[0]?.clientX || 0) - touchStart; if (Math.abs(delta) > 45) setFeatureIndex((index) => (index + (delta < 0 ? 1 : featuredTitles.length - 1)) % featuredTitles.length); setTouchStart(null); }} style={featured?.backdropUrl ? { backgroundImage: `url(${featured.backdropUrl})` } : undefined}>
           <div className="stream-hero-content">
             <span className="stream-eyebrow">{categoryLabel.toUpperCase()} FEATURED · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
-            <h1>{featured?.title ?? "The Last Horizon."}</h1>
-            <p>{featured?.overview || "Discover movies, series, creator stories and live entertainment in one place."}</p>
+            <h1>{featured?.title ?? (catalogLoading ? `Loading ${categoryLabel}…` : `${categoryLabel} is unavailable`)}</h1>
+            <p>{featured?.overview || (catalogLoading ? "Finding the best titles for this category." : "We could not load this category right now. Please try again shortly.")}</p>
             <div className="stream-hero-actions">
-              {featured ? <Link className="stream-primary-action" to={`/app/services/stream/${featured.mediaType === "tv" ? "series" : "title"}/${featured.id}`}><PlayArrowRoundedIcon /> View details</Link> : <button type="button" onClick={() => setPlaying(streams[5])}><PlayArrowRoundedIcon /> Play preview</button>}
-              <a href="/app/services/stream/my-list"><AddRoundedIcon /> My list</a>
+              {featured ? <Link className="stream-primary-action" to={`/app/services/stream/${featured.mediaType === "tv" ? "series" : "title"}/${featured.id}`}><PlayArrowRoundedIcon /> View details</Link> : null}
+              {featured ? <a href="/app/services/stream/my-list"><AddRoundedIcon /> My list</a> : null}
             </div>
             <div className="stream-hero-meta"><span><b>{featured?.rating ? `${Math.round(featured.rating * 10)}% rating` : "Featured"}</b></span><span>{featured?.releaseDate?.slice(0, 4) || "New"}</span><span>{featured?.mediaType === "tv" ? "Series" : "Movie"}</span><span>TMDB</span></div>
           </div>
@@ -164,7 +166,7 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
             { title: "New Releases", id: "new", items: [...catalog.movies].sort((a,b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || ""))) },
             { title: "Top Rated", id: "top-rated", items: [...catalog.movies, ...catalog.series].sort((a,b) => (b.rating || 0) - (a.rating || 0)) },
             { title: "Anime", id: "anime", items: anime },
-          ]) : fallbackMovieRows).map((row) => (
+          ]) : categoryMode ? [] : fallbackMovieRows).map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
               <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">

@@ -41,9 +41,6 @@ const links = [
   ["Romance", "/app/services/stream/category/romance"],
   ["Horror", "/app/services/stream/category/horror"],
   ["Sports", "/app/services/stream/category/sports"],
-  ["WWE / WWV", "/app/services/stream/category/wwe"],
-  ["Live", "/app/services/stream/live"],
-  ["My List", "/app/services/stream/my-list"],
 ] as const;
 
 const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
