@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
 
 const StreamChannelPanel = () => {
@@ -36,7 +37,7 @@ const StreamChannelPanel = () => {
       <label className="wide">Banner HTTPS URL<input type="url" placeholder="https://…" value={profile.channelBannerUrl} onChange={event => change("channelBannerUrl", event.target.value)} /></label>
     </div>
     {message ? <p className={`sw-profile-message ${status === "error" ? "error" : "success"}`}>{message}</p> : null}
-    <button className="sw-profile-save" type="submit" disabled={status === "saving"}>{status === "saving" ? "Saving…" : "Save channel"}</button>
+    <div className="sw-channel-editor-actions"><button className="sw-profile-save" type="submit" disabled={status === "saving"}>{status === "saving" ? "Saving…" : "Save channel"}</button>{profile.channelHandle ? <Link to={`/app/services/stream/channel/${profile.channelHandle}`}>View public channel</Link> : null}</div>
   </form>;
 };
 
