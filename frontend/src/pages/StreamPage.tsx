@@ -48,6 +48,19 @@ type StreamPageProps = {
 
 const categoryLabels: Record<string, string> = { trending: "Trending", movies: "Movies", series: "Series", "tv-channels": "TV Channels", hollywood: "Hollywood", bollywood: "Bollywood", nollywood: "Nollywood", kannywood: "Kannywood", anime: "Anime", "k-drama": "K-Drama", "chinese-drama": "Chinese Drama", "african-movies": "African Movies", documentaries: "Documentaries", kids: "Kids & Family", action: "Action", comedy: "Comedy", romance: "Romance", horror: "Horror", sports: "Sports", wwe: "WWE / Wrestling" };
 
+const catalogKey = (item: StreamCatalogTitle) => `${item.mediaType}-${item.id}`;
+const uniqueCatalogTitles = (items: StreamCatalogTitle[], excluded = new Set<string>()) => {
+  const identities = new Set(excluded);
+  const posters = new Set<string>();
+  return items.filter((item) => {
+    const identity = catalogKey(item);
+    if (!item.posterUrl || identities.has(identity) || posters.has(item.posterUrl)) return false;
+    identities.add(identity);
+    posters.add(item.posterUrl);
+    return true;
+  });
+};
+
 const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
   const params = useParams();
   const activeSlug = categorySlug || params.slug || "trending";
@@ -89,7 +102,17 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
 
   useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getPublishedCreatorVideos().then(setCreatorVideos).catch(() => setCreatorVideos([])); }, []);
 
-  const featuredTitles = catalog.trending.filter((item) => item.backdropUrl).slice(0, 6);
+  const featuredTitles = useMemo(() => {
+    const identities = new Set<string>();
+    const backdrops = new Set<string>();
+    return catalog.trending.filter((item) => {
+      const identity = catalogKey(item);
+      if (!item.backdropUrl || identities.has(identity) || backdrops.has(item.backdropUrl)) return false;
+      identities.add(identity);
+      backdrops.add(item.backdropUrl);
+      return true;
+    }).slice(0, 6);
+  }, [catalog.trending]);
   useEffect(() => { if (featuredTitles.length < 2) return; const timer = window.setInterval(() => setFeatureIndex((index) => (index + 1) % featuredTitles.length), 7000); return () => window.clearInterval(timer); }, [featuredTitles.length]);
 
   const featured = featuredTitles[featureIndex] ?? catalog.movies.find((item) => item.backdropUrl);
@@ -100,6 +123,29 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
     if (rankingTab === "Returning") return base.reverse();
     return base;
   }, [anime, catalog.series, catalog.trending, categoryMode, rankingTab]);
+
+  const catalogRows = useMemo(() => {
+    if (!catalog.trending.length) return categoryMode ? [] : fallbackMovieRows;
+    const definitions = categoryMode ? [
+      { title: `Popular ${categoryLabel}`, id: "popular", items: catalog.trending },
+      { title: `New ${categoryLabel} Releases`, id: "new", items: catalog.movies },
+      { title: `Top Rated ${categoryLabel}`, id: "top-rated", items: catalog.series },
+    ] : [
+      { title: "Trending Movies", id: "trending", items: catalog.trending.filter((item) => item.mediaType === "movie") },
+      { title: "Popular movies", id: "movies", items: catalog.movies },
+      { title: "Popular series", id: "series", items: catalog.series },
+      { title: "New Releases", id: "new", items: [...catalog.movies].sort((a,b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || ""))) },
+      { title: "Top Rated", id: "top-rated", items: [...catalog.movies, ...catalog.series].sort((a,b) => (b.rating || 0) - (a.rating || 0)) },
+      { title: "Anime", id: "anime", items: anime },
+    ];
+    const heroIds = new Set(featuredTitles.map(catalogKey));
+    let previousRowIds = new Set<string>();
+    return definitions.map((row) => {
+      const items = uniqueCatalogTitles(row.items, new Set([...heroIds, ...previousRowIds])).slice(0, 20);
+      previousRowIds = new Set(items.map(catalogKey));
+      return { ...row, items };
+    }).filter((row) => row.items.length);
+  }, [anime, catalog.movies, catalog.series, catalog.trending, categoryLabel, categoryMode, featuredTitles]);
 
   const experience = (
     <>
@@ -125,18 +171,7 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
           {catalogLoading ? <div className="stream-catalog-loading" aria-label="Loading entertainment"><i/><i/><i/><i/></div> : null}
           {!catalogLoading && catalogError ? <p className="stream-catalog-notice">Live catalogue is unavailable. Showing SMAJ previews.</p> : null}
-          {(catalog.trending.length ? (categoryMode ? [
-            { title: `Popular ${categoryLabel}`, id: "popular", items: catalog.trending },
-            { title: `New ${categoryLabel} Releases`, id: "new", items: catalog.movies },
-            { title: `Top Rated ${categoryLabel}`, id: "top-rated", items: catalog.series },
-          ] : [
-            { title: "Trending Movies", id: "trending", items: catalog.trending.filter((item) => item.mediaType === "movie") },
-            { title: "Popular movies", id: "movies", items: catalog.movies },
-            { title: "Popular series", id: "series", items: catalog.series },
-            { title: "New Releases", id: "new", items: [...catalog.movies].sort((a,b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || ""))) },
-            { title: "Top Rated", id: "top-rated", items: [...catalog.movies, ...catalog.series].sort((a,b) => (b.rating || 0) - (a.rating || 0)) },
-            { title: "Anime", id: "anime", items: anime },
-          ]) : categoryMode ? [] : fallbackMovieRows).map((row) => (
+          {catalogRows.map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
               <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
               <div className="stream-rail">
