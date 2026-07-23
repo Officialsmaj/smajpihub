@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, NavLink, useParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -9,7 +9,8 @@ import NewspaperRoundedIcon from "@mui/icons-material/NewspaperRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import AppLayout from "../../layouts/AppLayout";
-import { sportsMatches, sportsStories, sportsTeams, standings } from "../../content/sportsData";
+import useSportsCatalog from "../../hooks/useSportsCatalog";
+import type { SportsCatalog } from "../../types/sports";
 import { FavoriteTeam, MatchCard, TeamMark } from "./SportsComponents";
 import SportsHeader from "./SportsHeader";
 import "./SportsPage.css";
@@ -27,7 +28,13 @@ export type SportsPageKind =
 
 const filterItems = ["All sports", "Football", "Basketball", "Athletics", "Tennis"];
 
-const StandingsTable = () => (
+type SportsViewProps = {
+  catalog: SportsCatalog;
+  favorites: Set<string>;
+  onToggleFavorite: (teamId: string) => void;
+};
+
+const StandingsTable = ({ standings }: { standings: SportsCatalog["standings"] }) => (
   <div className="sports-table-wrap">
     <table className="sports-table">
       <thead>
@@ -63,13 +70,13 @@ const StandingsTable = () => (
   </div>
 );
 
-const NewsGrid = ({ query = "" }: { query?: string }) => {
-  const stories = sportsStories.filter(story =>
+const NewsGrid = ({ stories, query = "" }: { stories: SportsCatalog["stories"]; query?: string }) => {
+  const visibleStories = stories.filter(story =>
     `${story.title} ${story.category}`.toLowerCase().includes(query.toLowerCase())
   );
   return (
     <div className="sports-news-grid">
-      {stories.map((story, index) => (
+      {visibleStories.map((story, index) => (
         <Link
           to={`/services/sports/news/${story.id}`}
           className={`sports-story ${story.tone}${index === 0 ? " featured" : ""}`}
@@ -90,8 +97,9 @@ const NewsGrid = ({ query = "" }: { query?: string }) => {
   );
 };
 
-const HomeContent = ({ query }: { query: string }) => {
-  const live = sportsMatches.filter(match => match.status === "live");
+const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsViewProps & { query: string }) => {
+  const live = catalog.matches.filter(match => match.status === "live");
+  const featured = live[0] || catalog.matches[0];
   return (
     <>
       <section className="sports-hero">
@@ -116,28 +124,30 @@ const HomeContent = ({ query }: { query: string }) => {
             </Link>
           </div>
         </div>
-        <Link to="/services/sports/match/m1" className="sports-feature-score">
-          <span>67' · LIVE</span>
-          <p>Unity Arena · Group A</p>
-          <div>
-            <article>
-              <TeamMark team={live[0].home} />
-              <b>{live[0].home.name}</b>
-            </article>
-            <strong>
-              {live[0].homeScore}
-              <i>:</i>
-              {live[0].awayScore}
-            </strong>
-            <article>
-              <TeamMark team={live[0].away} />
-              <b>{live[0].away.name}</b>
-            </article>
-          </div>
-          <small>
-            Match centre <ArrowForwardRoundedIcon />
-          </small>
-        </Link>
+        {featured ? (
+          <Link to={`/services/sports/match/${featured.id}`} className="sports-feature-score">
+            <span>67' · LIVE</span>
+            <p>Unity Arena · Group A</p>
+            <div>
+              <article>
+                <TeamMark team={featured.home} />
+                <b>{featured.home.name}</b>
+              </article>
+              <strong>
+                {featured.homeScore ?? "–"}
+                <i>:</i>
+                {featured.awayScore ?? "–"}
+              </strong>
+              <article>
+                <TeamMark team={featured.away} />
+                <b>{featured.away.name}</b>
+              </article>
+            </div>
+            <small>
+              Match centre <ArrowForwardRoundedIcon />
+            </small>
+          </Link>
+        ) : null}
       </section>
       <section className="sports-section">
         <div className="sports-section-head">
@@ -166,8 +176,8 @@ const HomeContent = ({ query }: { query: string }) => {
           </Link>
         </div>
         <div className="sports-teams-grid">
-          {sportsTeams.slice(0, 4).map(team => (
-            <FavoriteTeam team={team} key={team.id} />
+          {catalog.teams.slice(0, 4).map(team => (
+            <FavoriteTeam team={team} favorite={favorites.has(team.id)} onToggle={onToggleFavorite} key={team.id} />
           ))}
         </div>
       </section>
@@ -179,7 +189,7 @@ const HomeContent = ({ query }: { query: string }) => {
               <h2>Sports stories</h2>
             </div>
           </div>
-          <NewsGrid query={query} />
+          <NewsGrid stories={catalog.stories} query={query} />
         </div>
         <aside>
           <div className="sports-section-head">
@@ -188,7 +198,7 @@ const HomeContent = ({ query }: { query: string }) => {
               <h2>Top standings</h2>
             </div>
           </div>
-          <StandingsTable />
+          <StandingsTable standings={catalog.standings} />
           <Link className="sports-block-link" to="/services/sports/competitions">
             Full standings <ArrowForwardRoundedIcon />
           </Link>
@@ -198,9 +208,15 @@ const HomeContent = ({ query }: { query: string }) => {
   );
 };
 
-const ListingContent = ({ kind, query }: { kind: SportsPageKind; query: string }) => {
+const ListingContent = ({
+  kind,
+  query,
+  catalog,
+  favorites,
+  onToggleFavorite,
+}: SportsViewProps & { kind: SportsPageKind; query: string }) => {
   if (kind === "live" || kind === "matches") {
-    const matches = sportsMatches
+    const matches = catalog.matches
       .filter(match => (kind === "live" ? match.status === "live" : true))
       .filter(match =>
         `${match.home.name} ${match.away.name} ${match.competition}`.toLowerCase().includes(query.toLowerCase())
@@ -243,7 +259,7 @@ const ListingContent = ({ kind, query }: { kind: SportsPageKind; query: string }
           </div>
           <SportsSoccerRoundedIcon />
         </div>
-        <StandingsTable />
+        <StandingsTable standings={catalog.standings} />
       </section>
     );
   if (kind === "teams")
@@ -255,10 +271,10 @@ const ListingContent = ({ kind, query }: { kind: SportsPageKind; query: string }
           <p>Follow clubs to personalize scores, stories and notifications.</p>
         </div>
         <div className="sports-teams-grid large">
-          {sportsTeams
+          {catalog.teams
             .filter(team => team.name.toLowerCase().includes(query.toLowerCase()))
             .map(team => (
-              <FavoriteTeam team={team} key={team.id} />
+              <FavoriteTeam team={team} favorite={favorites.has(team.id)} onToggle={onToggleFavorite} key={team.id} />
             ))}
         </div>
       </section>
@@ -271,7 +287,7 @@ const ListingContent = ({ kind, query }: { kind: SportsPageKind; query: string }
           <h1>The stories behind the score</h1>
           <p>Match reports, interviews and community stories.</p>
         </div>
-        <NewsGrid query={query} />
+        <NewsGrid stories={catalog.stories} query={query} />
       </section>
     );
   return (
@@ -308,10 +324,11 @@ const ListingContent = ({ kind, query }: { kind: SportsPageKind; query: string }
   );
 };
 
-const DetailContent = ({ kind }: { kind: SportsPageKind }) => {
+const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsViewProps & { kind: SportsPageKind }) => {
   const { id } = useParams();
   if (kind === "team") {
-    const team = sportsTeams.find(item => item.id === id) || sportsTeams[0];
+    const team = catalog.teams.find(item => item.id === id) || catalog.teams[0];
+    if (!team) return <div className="sports-empty-state">Team not found.</div>;
     return (
       <section className="sports-workspace">
         <div className="sports-team-hero">
@@ -321,7 +338,9 @@ const DetailContent = ({ kind }: { kind: SportsPageKind }) => {
             <h1>{team.name}</h1>
             <p>Official SMAJ Sports club profile</p>
           </div>
-          <button type="button">☆ Follow team</button>
+          <button type="button" onClick={() => onToggleFavorite(team.id)}>
+            {favorites.has(team.id) ? "★ Following" : "☆ Follow team"}
+          </button>
         </div>
         <div className="sports-detail-grid">
           <div>
@@ -334,7 +353,7 @@ const DetailContent = ({ kind }: { kind: SportsPageKind }) => {
               ))}
             </div>
             <h2>Recent matches</h2>
-            {sportsMatches
+            {catalog.matches
               .filter(match => match.home.id === team.id || match.away.id === team.id)
               .map(match => (
                 <MatchCard compact match={match} key={match.id} />
@@ -356,7 +375,8 @@ const DetailContent = ({ kind }: { kind: SportsPageKind }) => {
       </section>
     );
   }
-  const match = sportsMatches.find(item => item.id === id) || sportsMatches[0];
+  const match = catalog.matches.find(item => item.id === id) || catalog.matches[0];
+  if (!match) return <div className="sports-empty-state">Match not found.</div>;
   return (
     <section className="sports-workspace">
       <div className="sports-match-detail">
@@ -418,18 +438,38 @@ const DetailContent = ({ kind }: { kind: SportsPageKind }) => {
 
 const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
   const [query, setQuery] = useState("");
-  const page = useMemo(() => kind, [kind]);
+  const { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite } = useSportsCatalog();
   return (
     <AppLayout showFooter={false}>
       <main className="sports-page">
         <SportsHeader query={query} onQueryChange={setQuery} />
+        <div className={`sports-data-status${usingFallback ? " fallback" : ""}`} role="status">
+          <span>
+            {loading
+              ? "Loading latest sports data…"
+              : usingFallback
+                ? "Live service unavailable — showing saved demo data."
+                : `Scores updated ${lastUpdated?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "now"}`}
+          </span>
+          {!loading ? (
+            <button type="button" onClick={() => void refresh()}>
+              Refresh
+            </button>
+          ) : null}
+        </div>
         <div className="sports-content">
-          {page === "home" ? (
-            <HomeContent query={query} />
-          ) : page === "match" || page === "team" ? (
-            <DetailContent kind={page} />
+          {kind === "home" ? (
+            <HomeContent query={query} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
+          ) : kind === "match" || kind === "team" ? (
+            <DetailContent kind={kind} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
           ) : (
-            <ListingContent kind={page} query={query} />
+            <ListingContent
+              kind={kind}
+              query={query}
+              catalog={catalog}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+            />
           )}
         </div>
         <nav className="sports-mobile-nav">

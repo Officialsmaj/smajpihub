@@ -24,6 +24,7 @@ import mountOnboardingEndpoints from "./handlers/onboarding";
 import mountSupportEndpoints from "./handlers/support";
 import mountUploadEndpoints from "./handlers/uploads";
 import mountStreamEndpoints from "./handlers/stream";
+import mountSportsEndpoints from "./handlers/sports";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -39,7 +40,8 @@ const buildLegacyMongoUri = () => {
 const mongoUri = env.mongodb_uri || buildLegacyMongoUri();
 const baseMongoClientOptions = { serverSelectionTimeoutMS: 5000 };
 const mongoClientOptions = baseMongoClientOptions;
-const maskMongoUri = (uri: string) => uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, "//$1:****@");
+const maskMongoUri = (uri: string) =>
+  uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, "//$1:****@");
 
 //
 // I. Initialize and set up the express app and various middlewares and packages:
@@ -52,7 +54,7 @@ const crossSiteSession = isProduction;
 const sessionTtlSeconds = 60 * 60 * 24 * 7;
 const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: crossSiteSession ? "none" as const : "lax" as const,
+  sameSite: crossSiteSession ? ("none" as const) : ("lax" as const),
   secure: crossSiteSession,
   maxAge: 1000 * sessionTtlSeconds,
 };
@@ -80,7 +82,10 @@ app.use(logger("dev"));
 // Full log of all requests to /log/access.log:
 app.use(
   logger("common", {
-    stream: fs.createWriteStream(path.join(__dirname, "..", "log", "access.log"), { flags: "a" }),
+    stream: fs.createWriteStream(
+      path.join(__dirname, "..", "log", "access.log"),
+      { flags: "a" },
+    ),
   }),
 );
 
@@ -88,11 +93,10 @@ app.use(
 app.use(express.json({ limit: "8mb" }));
 
 // Handle CORS:
-const configuredFrontendOrigins =
-  (env.frontend_url || "")
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/+$/, ""))
-    .filter(Boolean);
+const configuredFrontendOrigins = (env.frontend_url || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
 const corsAllowlist = [
   "https://smaj.org",
@@ -172,7 +176,11 @@ if (env.session_debug) {
   app.use((req, _, next) => {
     const cookieHeader = req.get("cookie") || "";
     const sessionFingerprint = req.sessionID
-      ? crypto.createHash("sha256").update(req.sessionID).digest("hex").slice(0, 12)
+      ? crypto
+          .createHash("sha256")
+          .update(req.sessionID)
+          .digest("hex")
+          .slice(0, 12)
       : "none";
     console.info("[session-debug]", {
       method: req.method,
@@ -180,7 +188,9 @@ if (env.session_debug) {
       sessionFingerprint,
       hasSessionCookie: cookieHeader.includes("connect.sid="),
       hasSessionUser: Boolean(req.session.user?.userId),
-      hasBearerAuth: Boolean(req.get("authorization") || req.get("x-smaj-access-token")),
+      hasBearerAuth: Boolean(
+        req.get("authorization") || req.get("x-smaj-access-token"),
+      ),
     });
     next();
   });
@@ -236,12 +246,16 @@ const streamRouter = express.Router();
 mountStreamEndpoints(streamRouter);
 app.use("/stream", streamRouter);
 
+const sportsRouter = express.Router();
+mountSportsEndpoints(sportsRouter);
+app.use("/sports", sportsRouter);
+
 app.get("/health", async (_, res) => {
   const ready = Boolean(
     app.locals.userCollection &&
-      app.locals.productCollection &&
-      app.locals.marketplaceOrderCollection &&
-      app.locals.notificationCollection,
+    app.locals.productCollection &&
+    app.locals.marketplaceOrderCollection &&
+    app.locals.notificationCollection,
   );
 
   res.status(ready ? 200 : 503).json({
@@ -264,7 +278,9 @@ const start = async () => {
   try {
     if (env.use_memory_db) {
       Object.assign(app.locals, createMemoryCollections());
-      console.warn("Using in-memory development database. Data resets when the backend stops.");
+      console.warn(
+        "Using in-memory development database. Data resets when the backend stops.",
+      );
     } else {
       const client = await MongoClient.connect(mongoUri, mongoClientOptions);
       const db = client.db(dbName);
@@ -278,7 +294,9 @@ const start = async () => {
       app.locals.conversationCollection = db.collection("conversations");
       app.locals.messageCollection = db.collection("messages");
       app.locals.notificationCollection = db.collection("notifications");
-      app.locals.onboardingCollection = db.collection("onboarding_applications");
+      app.locals.onboardingCollection = db.collection(
+        "onboarding_applications",
+      );
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
@@ -286,26 +304,74 @@ const start = async () => {
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
-        app.locals.productCollection.createIndex({ sellerId: 1, createdAt: -1 }),
-        app.locals.productCollection.createIndex({ active: 1, approved: 1, reviewStatus: 1, hidden: 1, createdAt: -1 }),
-        app.locals.productCollection.createIndex({ category: 1, active: 1, approved: 1, reviewStatus: 1 }),
-        app.locals.marketplaceOrderCollection.createIndex({ buyerId: 1, createdAt: -1 }),
-        app.locals.marketplaceOrderCollection.createIndex({ sellerId: 1, createdAt: -1 }),
-        app.locals.conversationCollection.createIndex({ participants: 1, updatedAt: -1 }),
-        app.locals.messageCollection.createIndex({ conversationId: 1, createdAt: 1 }),
-        app.locals.notificationCollection.createIndex({ userId: 1, createdAt: -1 }),
-        app.locals.streamContentCollection.createIndex({ creatorId: 1, createdAt: -1 }),
-        app.locals.streamContentCollection.createIndex({ cloudflareUid: 1 }, { unique: true }),
-        app.locals.streamContentCollection.createIndex({ moderationStatus: 1, processingStatus: 1, createdAt: -1 }),
-        app.locals.sessionCollection.createIndex({ expires: 1 }, { expireAfterSeconds: 0 }),
+        app.locals.productCollection.createIndex({
+          sellerId: 1,
+          createdAt: -1,
+        }),
+        app.locals.productCollection.createIndex({
+          active: 1,
+          approved: 1,
+          reviewStatus: 1,
+          hidden: 1,
+          createdAt: -1,
+        }),
+        app.locals.productCollection.createIndex({
+          category: 1,
+          active: 1,
+          approved: 1,
+          reviewStatus: 1,
+        }),
+        app.locals.marketplaceOrderCollection.createIndex({
+          buyerId: 1,
+          createdAt: -1,
+        }),
+        app.locals.marketplaceOrderCollection.createIndex({
+          sellerId: 1,
+          createdAt: -1,
+        }),
+        app.locals.conversationCollection.createIndex({
+          participants: 1,
+          updatedAt: -1,
+        }),
+        app.locals.messageCollection.createIndex({
+          conversationId: 1,
+          createdAt: 1,
+        }),
+        app.locals.notificationCollection.createIndex({
+          userId: 1,
+          createdAt: -1,
+        }),
+        app.locals.streamContentCollection.createIndex({
+          creatorId: 1,
+          createdAt: -1,
+        }),
+        app.locals.streamContentCollection.createIndex(
+          { cloudflareUid: 1 },
+          { unique: true },
+        ),
+        app.locals.streamContentCollection.createIndex({
+          moderationStatus: 1,
+          processingStatus: 1,
+          createdAt: -1,
+        }),
+        app.locals.sessionCollection.createIndex(
+          { expires: 1 },
+          { expireAfterSeconds: 0 },
+        ),
       ]);
     }
 
-    console.log(env.use_memory_db ? "Connected to in-memory development database" : `Connected to MongoDB on: ${maskMongoUri(mongoUri)}`);
+    console.log(
+      env.use_memory_db
+        ? "Connected to in-memory development database"
+        : `Connected to MongoDB on: ${maskMongoUri(mongoUri)}`,
+    );
 
     app.listen(env.port, () => {
       console.log(`SMAJ PI HUB backend listening on port ${env.port}!`);
-      console.log(`CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`);
+      console.log(
+        `CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`,
+      );
     });
   } catch (err) {
     console.error("Connection to MongoDB failed: ", err);

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import type { SportsMatch, SportsTeam } from "../../types/sports";
 
 export const TeamMark = ({ team, small = false }: { team: SportsTeam; small?: boolean }) => (
@@ -31,10 +32,27 @@ export const MatchCard = ({ match, compact = false }: { match: SportsMatch; comp
   </Link>
 );
 
-export const FavoriteTeam = ({ team }: { team: SportsTeam }) => (
+export const FavoriteTeam = ({
+  team,
+  favorite = false,
+  onToggle,
+}: {
+  team: SportsTeam;
+  favorite?: boolean;
+  onToggle?: (teamId: string) => void;
+}) => (
   <Link to={`/services/sports/team/${team.id}`} className="sports-team-card">
-    <button type="button" aria-label={`Follow ${team.name}`} onClick={event => event.preventDefault()}>
-      <StarBorderRoundedIcon />
+    <button
+      className={favorite ? "favorite" : ""}
+      type="button"
+      aria-label={`${favorite ? "Unfollow" : "Follow"} ${team.name}`}
+      aria-pressed={favorite}
+      onClick={event => {
+        event.preventDefault();
+        onToggle?.(team.id);
+      }}
+    >
+      {favorite ? <StarRoundedIcon /> : <StarBorderRoundedIcon />}
     </button>
     <TeamMark team={team} />
     <strong>{team.name}</strong>

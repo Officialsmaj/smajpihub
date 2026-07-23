@@ -1,6 +1,6 @@
-import type { SportsCatalog, SportsMatch, SportsStory, SportsTeam } from "../types/sports";
+import type { Router } from "express";
 
-export const sportsTeams: SportsTeam[] = [
+const teams = [
   {
     id: "lions",
     name: "Lagos Lions",
@@ -51,9 +51,9 @@ export const sportsTeams: SportsTeam[] = [
   },
 ];
 
-const [lions, stars, atlas, eagles, royals, waves] = sportsTeams;
+const [lions, stars, atlas, eagles, royals, waves] = teams;
 
-export const sportsMatches: SportsMatch[] = [
+const matches = [
   {
     id: "m1",
     competition: "SMAJ Champions League",
@@ -127,12 +127,13 @@ export const sportsMatches: SportsMatch[] = [
   },
 ];
 
-export const sportsStories: SportsStory[] = [
+const stories = [
   {
     id: "n1",
     category: "Football",
     title: "The final four are set after a dramatic night",
-    summary: "Late goals, a packed stadium and one unforgettable comeback shaped the quarter-finals.",
+    summary:
+      "Late goals, a packed stadium and one unforgettable comeback shaped the quarter-finals.",
     time: "18 min ago",
     tone: "blue",
   },
@@ -148,7 +149,8 @@ export const sportsStories: SportsStory[] = [
     id: "n3",
     category: "Community",
     title: "Fans choose the goal of the week",
-    summary: "Watch the shortlist and cast your vote with the SMAJ Sports community.",
+    summary:
+      "Watch the shortlist and cast your vote with the SMAJ Sports community.",
     time: "3 hrs ago",
     tone: "green",
   },
@@ -156,13 +158,14 @@ export const sportsStories: SportsStory[] = [
     id: "n4",
     category: "Athletics",
     title: "Rising stars to watch this season",
-    summary: "Six young athletes are already rewriting personal and national records.",
+    summary:
+      "Six young athletes are already rewriting personal and national records.",
     time: "Yesterday",
     tone: "orange",
   },
 ];
 
-export const standings = [
+const standings = [
   { team: atlas, played: 12, won: 9, draw: 2, lost: 1, points: 29 },
   { team: lions, played: 12, won: 8, draw: 2, lost: 2, points: 26 },
   { team: royals, played: 12, won: 7, draw: 2, lost: 3, points: 23 },
@@ -171,14 +174,69 @@ export const standings = [
   { team: waves, played: 12, won: 4, draw: 2, lost: 6, points: 14 },
 ];
 
-export const fallbackSportsCatalog: SportsCatalog = {
-  matches: sportsMatches,
-  teams: sportsTeams,
-  stories: sportsStories,
-  standings,
-  meta: {
-    source: "local-fallback",
-    updatedAt: new Date(0).toISOString(),
-    refreshAfterSeconds: 45,
-  },
+const responseMeta = () => ({
+  source: "smaj-demo",
+  updatedAt: new Date().toISOString(),
+  refreshAfterSeconds: 45,
+});
+
+const mountSportsEndpoints = (router: Router) => {
+  router.get("/bootstrap", (_, res) =>
+    res.json({ matches, teams, stories, standings, meta: responseMeta() }),
+  );
+  router.get("/matches", (req, res) => {
+    const status = String(req.query.status || "");
+    const items = status
+      ? matches.filter((match) => match.status === status)
+      : matches;
+    res.json({ items, meta: responseMeta() });
+  });
+  router.get("/matches/:id", (req, res) => {
+    const match = matches.find((item) => item.id === req.params.id);
+    if (!match)
+      return res
+        .status(404)
+        .json({ error: "not_found", message: "Match not found." });
+    return res.json({ item: match, meta: responseMeta() });
+  });
+  router.get("/teams", (_, res) =>
+    res.json({ items: teams, meta: responseMeta() }),
+  );
+  router.get("/teams/:id", (req, res) => {
+    const team = teams.find((item) => item.id === req.params.id);
+    if (!team)
+      return res
+        .status(404)
+        .json({ error: "not_found", message: "Team not found." });
+    return res.json({ item: team, meta: responseMeta() });
+  });
+  router.get("/competitions", (_, res) =>
+    res.json({
+      items: [
+        {
+          id: "smaj-champions-league",
+          name: "SMAJ Champions League",
+          sport: "Football",
+          teamCount: 16,
+        },
+      ],
+      meta: responseMeta(),
+    }),
+  );
+  router.get("/competitions/:id/standings", (_, res) =>
+    res.json({ items: standings, meta: responseMeta() }),
+  );
+  router.get("/news", (_, res) =>
+    res.json({ items: stories, meta: responseMeta() }),
+  );
+  router.get("/news/:id", (req, res) => {
+    const story = stories.find((item) => item.id === req.params.id);
+    if (!story)
+      return res
+        .status(404)
+        .json({ error: "not_found", message: "Story not found." });
+    return res.json({ item: story, meta: responseMeta() });
+  });
 };
+
+export default mountSportsEndpoints;

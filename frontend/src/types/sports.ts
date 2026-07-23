@@ -29,3 +29,24 @@ export type SportsStory = {
   time: string;
   tone: string;
 };
+
+export type SportsStanding = {
+  team: SportsTeam;
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+};
+
+export type SportsCatalog = {
+  matches: SportsMatch[];
+  teams: SportsTeam[];
+  stories: SportsStory[];
+  standings: SportsStanding[];
+  meta?: {
+    source: string;
+    updatedAt: string;
+    refreshAfterSeconds: number;
+  };
+};
