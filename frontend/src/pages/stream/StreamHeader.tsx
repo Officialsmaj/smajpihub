@@ -25,7 +25,7 @@ const links = [
   ["Trending", "/app/services/stream"],
   ["Movies", "/app/services/stream/movies"],
   ["Series", "/app/services/stream/series"],
-  ["TV Channels", "/app/services/stream/category/tv-channels"],
+  ["TV Shows", "/app/services/stream/category/tv-channels"],
   ["Hollywood", "/app/services/stream/category/hollywood"],
   ["Bollywood", "/app/services/stream/category/bollywood"],
   ["Nollywood", "/app/services/stream/category/nollywood"],

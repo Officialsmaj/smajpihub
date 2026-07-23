@@ -46,7 +46,7 @@ type StreamPageProps = {
   categorySlug?: string;
 };
 
-const categoryLabels: Record<string, string> = { trending: "Trending", movies: "Movies", series: "Series", "tv-channels": "TV Channels", hollywood: "Hollywood", bollywood: "Bollywood", nollywood: "Nollywood", kannywood: "Kannywood", anime: "Anime", "k-drama": "K-Drama", "chinese-drama": "Chinese Drama", "african-movies": "African Movies", documentaries: "Documentaries", kids: "Kids & Family", action: "Action", comedy: "Comedy", romance: "Romance", horror: "Horror", sports: "Sports", wwe: "WWE / Wrestling" };
+const categoryLabels: Record<string, string> = { trending: "Trending", movies: "Movies", series: "Series", "tv-channels": "TV Shows", hollywood: "Hollywood", bollywood: "Bollywood", nollywood: "Nollywood", kannywood: "Kannywood", anime: "Anime", "k-drama": "K-Drama", "chinese-drama": "Chinese Drama", "african-movies": "African Movies", documentaries: "Documentaries", kids: "Kids & Family", action: "Action", comedy: "Comedy", romance: "Romance", horror: "Horror", sports: "Sports", wwe: "WWE / Wrestling" };
 
 const catalogKey = (item: StreamCatalogTitle) => `${item.mediaType}-${item.id}`;
 const uniqueCatalogTitles = (items: StreamCatalogTitle[], excluded = new Set<string>()) => {
