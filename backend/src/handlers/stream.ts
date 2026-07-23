@@ -283,6 +283,15 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id) })) });
   });
 
+  router.get("/creator/overview", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    const videos = await req.app.locals.streamContentCollection.find({ creatorId: String(user._id) }).sort({ createdAt: -1 }).limit(1000).toArray();
+    const count = (predicate: (video: Record<string, any>) => boolean) => videos.filter(predicate).length;
+    const totalViews = videos.reduce((total: number, video: Record<string, any>) => total + Math.max(0, Number(video.views) || 0), 0);
+    const watchSeconds = videos.reduce((total: number, video: Record<string, any>) => total + Math.max(0, Number(video.watchSeconds) || 0), 0);
+    return res.json({ stats: { totalVideos: videos.length, publishedVideos: count(video => video.visibility === "public" && video.moderationStatus === "approved" && video.playbackAllowed === true), pendingVideos: count(video => !video.moderationStatus || video.moderationStatus === "pending"), rejectedVideos: count(video => video.moderationStatus === "rejected"), liveStreams: count(video => video.contentType === "live"), totalViews, watchSeconds, averageViewSeconds: totalViews > 0 ? Math.round(watchSeconds / totalViews) : 0, latestUploadAt: videos[0]?.createdAt || null }, monetization: { enabled: false, reason: "Creator monetization and Pi payouts are not enabled yet." } });
+  });
+
   router.get("/creator-content", async (req, res) => {
     if (!req.app.locals.streamContentCollection) return res.json({ videos: [] });
     const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(20).toArray();

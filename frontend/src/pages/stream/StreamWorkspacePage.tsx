@@ -4,7 +4,6 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
-import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
@@ -24,6 +23,7 @@ import StreamLivePlayer from "./StreamLivePlayer";
 import StreamLiveDirectory from "./StreamLiveDirectory";
 import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
+import StreamCreatorOverview from "./StreamCreatorOverview";
 import { getStreamAdminOverview, getStreamAdminSettings, getTitleAvailability, saveStreamAdminSettings, type StreamAdminOverview, type StreamAdminSettings } from "../../lib/streamAdmin";
 import {
   getStreamCatalog,
@@ -800,91 +800,13 @@ const Studio = ({ kind }: { kind: StreamPageKind }) => {
             </Link>
           ) : null}
         </header>
-        {kind === "studio" ? (
-          <>
-            <div className="sw-metrics">
-              {[
-                ["Total views", "248K", "+18%"],
-                ["Watch time", "18.2K h", "+12%"],
-                ["Followers", "32,840", "+824"],
-                ["Pi earnings", "π 4,284", "+21%"],
-              ].map(([label, value, change]) => (
-                <article key={label}>
-                  <small>{label}</small>
-                  <strong>{value}</strong>
-                  <span>{change}</span>
-                </article>
-              ))}
-            </div>
-            <div className="sw-panel">
-              <h2>Channel performance</h2>
-              <div className="sw-chart">
-                {[25, 48, 34, 62, 55, 78, 72, 91, 68, 88, 95, 84].map((height, i) => (
-                  <i key={i} style={{ height: `${height}%` }} />
-                ))}
-              </div>
-            </div>
-          </>
-        ) : null}
+        {kind === "studio" ? <StreamCreatorOverview mode="overview" /> : null}
         {kind === "upload" ? <CreatorUploadForm /> : null}
         {kind === "create-live" ? <StreamLiveSetup /> : null}
         {kind === "content" ? <CreatorContentList /> : null}
-        {kind === "analytics" ? (
-          <>
-            <div className="sw-metrics">
-              {[
-                ["Views", "248,392", "+18%"],
-                ["Watch time", "18,204 h", "+12%"],
-                ["Average view", "8m 42s", "+4%"],
-                ["Retention", "64%", "+7%"],
-              ].map(([a, b, c]) => (
-                <article key={a}>
-                  <small>{a}</small>
-                  <strong>{b}</strong>
-                  <span>{c}</span>
-                </article>
-              ))}
-            </div>
-            <div className="sw-panel">
-              <h2>Audience retention</h2>
-              <div className="sw-line-chart">
-                <i />
-              </div>
-            </div>
-          </>
-        ) : null}
+        {kind === "analytics" ? <StreamCreatorOverview mode="analytics" /> : null}
         {kind === "channel" ? <StreamChannelPanel /> : null}
-        {kind === "earnings" ? (
-          <>
-            <div className="sw-balance">
-              <span>
-                <PaymentsRoundedIcon />
-              </span>
-              <div>
-                <small>Available balance</small>
-                <strong>π 4,284.50</strong>
-                <p>Tips, memberships and watch rewards</p>
-              </div>
-              <button type="button">Transfer to wallet</button>
-            </div>
-            <div className="sw-table">
-              <header>
-                <b>Source</b>
-                <b>Type</b>
-                <b>Amount</b>
-                <b>Date</b>
-              </header>
-              {["Maya P.", "Creator Plus", "Joel K.", "Watch rewards"].map((name, i) => (
-                <div key={name}>
-                  <b>{name}</b>
-                  <span>{i % 2 ? "Membership" : "Support"}</span>
-                  <strong>π {i % 2 ? "8.00" : "25.00"}</strong>
-                  <span>Jul {18 - i}, 2026</span>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : null}
+        {kind === "earnings" ? <StreamCreatorOverview mode="earnings" /> : null}
       </section>
     </div>
   );

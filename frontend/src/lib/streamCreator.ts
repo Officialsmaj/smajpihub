@@ -40,6 +40,9 @@ export const getCreatorVideos = async () => {
   return response.data.videos;
 };
 
+export type CreatorOverview = { stats: { totalVideos: number; publishedVideos: number; pendingVideos: number; rejectedVideos: number; liveStreams: number; totalViews: number; watchSeconds: number; averageViewSeconds: number; latestUploadAt: string | null }; monetization: { enabled: boolean; reason: string } };
+export const getCreatorOverview = async () => (await axiosClient.get<CreatorOverview>("/stream/creator/overview")).data;
+
 export const getPublishedCreatorVideos = async () => {
   const response = await axiosClient.get<{ videos: Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }> }>("/stream/creator-content");
   return response.data.videos;
