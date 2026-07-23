@@ -88,6 +88,15 @@ const StorePage = () => {
   }, [loadCatalog]);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => setHeroIndex((value) => (value + 1) % heroSlides.length), 4800);
     return () => window.clearInterval(timer);
   }, []);
