@@ -2035,3 +2035,25 @@
   .sw-channel-fields{grid-template-columns:1fr}
   .sw-channel-fields label.wide{grid-column:auto}
 }
+
+/* Unified Stream administration inside the main admin shell. */
+.sw-admin-unified{min-height:calc(100vh - 120px)}
+.sw-admin-unified>section{min-width:0}
+.sw-admin-unified .sw-manage-head>div>small{color:var(--stream-muted)}
+.sw-admin-health{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.sw-admin-health a{padding:14px;color:var(--stream-text);background:var(--stream-elevated);border:1px solid var(--stream-border);border-radius:10px;text-decoration:none}
+.sw-admin-health span,.sw-admin-health strong{display:block}
+.sw-admin-health span{font-size:10px}
+.sw-admin-health strong{margin-top:5px;color:var(--stream-accent);font-size:20px}
+.sw-admin-list article>a{padding:8px 12px;color:#fff;background:var(--stream-accent);border-radius:7px;text-decoration:none;font-size:11px;font-weight:800}
+.sw-admin-save{margin-top:16px;padding:11px 18px;color:#fff;background:var(--stream-accent);border:0;border-radius:9px;font-weight:800}
+.sw-admin-save:disabled{opacity:.6}
+@media(max-width:900px){.sw-admin-health{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+  .sw-admin-unified .sw-manage-head{align-items:flex-start;gap:14px}
+  .sw-admin-unified .sw-manage-head h1{font-size:27px}
+  .sw-admin-unified .sw-manage-head>a{padding:10px;font-size:0}
+  .sw-admin-unified .sw-manage-head>a svg{font-size:20px}
+  .sw-admin-list article{display:grid;grid-template-columns:auto minmax(0,1fr)}
+  .sw-admin-list article em,.sw-admin-list article>a{margin:0;text-align:center}
+}

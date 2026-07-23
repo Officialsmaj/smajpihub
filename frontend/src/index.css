@@ -19650,3 +19650,28 @@ svg {
     padding: 0 0 82px;
   }
 }
+
+/* Unified admin operations dashboard and mobile navigation. */
+.admin-live-status{display:flex;align-items:center;gap:8px}
+.admin-live-status i{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px rgba(22,163,74,.13)}
+.admin-summary-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+.admin-attention-panel{margin:18px 0;padding:18px;color:var(--smaj-text);background:var(--smaj-card);border:1px solid var(--smaj-border);border-radius:14px}
+.admin-attention-panel>div:last-child{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.admin-attention-panel a{min-width:0;padding:13px;color:var(--smaj-text);background:var(--smaj-secondary-bg);border:1px solid var(--smaj-border);border-radius:10px;text-decoration:none}
+.admin-attention-panel span,.admin-attention-panel strong,.admin-attention-panel small{display:block}
+.admin-attention-panel span{min-height:31px;font-size:11px;font-weight:800}
+.admin-attention-panel strong{margin:5px 0;color:var(--smaj-primary);font-size:1.45rem}
+.admin-attention-panel small{color:var(--smaj-text-secondary)}
+.admin-mobile-bottom-nav{display:none}
+@media(max-width:767px){
+  .admin-shell .private-content{padding-bottom:82px}
+  .admin-summary-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-attention-panel>div:last-child{grid-template-columns:1fr}
+  .admin-attention-panel a{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 12px}
+  .admin-attention-panel span{min-height:0}
+  .admin-attention-panel strong{grid-row:1/3;grid-column:2}
+  .admin-mobile-bottom-nav{position:fixed;z-index:1200;left:0;right:0;bottom:0;height:calc(66px + env(safe-area-inset-bottom));padding:6px 6px env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);color:var(--smaj-text-secondary);background:var(--smaj-card);border-top:1px solid var(--smaj-border);box-shadow:0 -8px 24px rgba(15,23,42,.1)}
+  .admin-mobile-bottom-nav a{min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:inherit;border-radius:10px;text-decoration:none;font-size:9px;font-weight:800}
+  .admin-mobile-bottom-nav a.active{color:var(--smaj-primary);background:var(--smaj-secondary-bg)}
+  .admin-mobile-bottom-nav svg{font-size:21px}
+}

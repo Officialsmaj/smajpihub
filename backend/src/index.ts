@@ -281,6 +281,7 @@ const start = async () => {
       app.locals.onboardingCollection = db.collection("onboarding_applications");
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.streamContentCollection = db.collection("stream_content");
+      app.locals.streamSettingsCollection = db.collection("stream_settings");
       app.locals.sessionCollection = db.collection("user_sessions");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),

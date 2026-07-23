@@ -13,6 +13,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
+import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -27,6 +31,12 @@ const links = [
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],
   ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
   ["/admin/reports", "Reports", <ReportProblemOutlinedIcon />],
+  ["/admin/stream", "Stream", <LiveTvOutlinedIcon />],
+  ["/admin/stream/moderation", "Stream Review", <ShieldOutlinedIcon />],
+  ["/admin/stream/creators", "Creators", <PeopleOutlineIcon />],
+  ["/admin/stream/catalog", "Stream Catalogue", <Inventory2OutlinedIcon />],
+  ["/admin/stream/analytics", "Stream Analytics", <AnalyticsOutlinedIcon />],
+  ["/admin/stream/settings", "Stream Settings", <SettingsOutlinedIcon />],
   ["/admin/settings", "Settings", <SettingsOutlinedIcon />],
 ] as const;
 
@@ -164,6 +174,15 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">{children}</div>
       </div>
+      <nav className="admin-mobile-bottom-nav" aria-label="Mobile admin navigation">
+        {[
+          ["/admin", "Home", <DashboardOutlinedIcon />],
+          ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
+          ["/admin/products", "Review", <ShieldOutlinedIcon />],
+          ["/admin/stream", "Stream", <LiveTvOutlinedIcon />],
+          ["/admin/reports", "More", <MoreHorizOutlinedIcon />],
+        ].map(([to, label, icon]) => <NavLink key={String(to)} to={String(to)} end={to === "/admin"}>{icon}<span>{label}</span></NavLink>)}
+      </nav>
       <ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );

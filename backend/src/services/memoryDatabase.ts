@@ -184,4 +184,5 @@ export const createMemoryCollections = () => ({
   onboardingCollection: new MemoryCollection(),
   supportCollection: new MemoryCollection(),
   streamContentCollection: new MemoryCollection(),
+  streamSettingsCollection: new MemoryCollection(),
 });

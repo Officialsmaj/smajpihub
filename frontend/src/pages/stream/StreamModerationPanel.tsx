@@ -12,7 +12,11 @@ const StreamModerationPanel = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<StreamCatalogTitle[]>([]);
   const load = () => void getModerationVideos(filter).then(setVideos).catch(error => { setVideos([]); setMessageType("error"); setMessage(error?.response?.data?.message || "The moderation queue could not be loaded."); });
-  useEffect(load, [filter]);
+  useEffect(() => {
+    load();
+    const interval = window.setInterval(load, 15_000);
+    return () => window.clearInterval(interval);
+  }, [filter]);
   const act = async (video: ModerationVideo, body: Record<string, unknown>) => { try { setBusy(video.cloudflareUid); setMessage(""); const updated = await updateModerationVideo(video.cloudflareUid, body); setVideos(current => current?.map(item => item.cloudflareUid === updated.cloudflareUid ? updated : item) || []); const action = String(body.action || "update"); setMessageType("success"); setMessage(action === "approve" ? `“${video.title}” is approved.` : action === "reject" ? `“${video.title}” was rejected.` : action === "playback" ? `Playback ${body.enabled ? "enabled" : "disabled"} for “${video.title}”.` : action === "visibility" ? `Visibility changed to ${body.visibility}.` : action === "attach" ? `“${video.title}” is attached to the selected TMDB title.` : "Video updated."); } catch (error) { setMessageType("error"); setMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || "The video could not be updated."); } finally { setBusy(""); } };
   const reject = (video: ModerationVideo) => { const reason = window.prompt("Why is this video rejected?"); if (reason) void act(video, { action: "reject", reason }); };
   const search = async () => { if (query.trim().length < 2) return; try { setResults((await searchStreamCatalog(query.trim())).results.slice(0, 8)); } catch { setMessageType("error"); setMessage("TMDB search is unavailable."); } };

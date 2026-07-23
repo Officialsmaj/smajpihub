@@ -6,6 +6,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount } from "../../lib/formatters";
 import type { Order, Product } from "../../types/marketplace";
 import type { User } from "../../types/pi";
+import { getStreamAdminOverview, type StreamAdminOverview } from "../../lib/streamAdmin";
 
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 
@@ -54,18 +55,21 @@ const Notice = ({ text }: { text: string }) => text ? <div className="private-al
 export const AdminDashboardPage = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [activity, setActivity] = useState<AdminActivity[]>([]);
+  const [streamOverview, setStreamOverview] = useState<StreamAdminOverview | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const load = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
-      const [statsResponse, activityResponse] = await Promise.all([
+      const [statsResponse, activityResponse, streamResponse] = await Promise.all([
         adminFetch<{ stats: AdminStats; updatedAt: string }>("/admin/stats"),
         adminFetch<{ activity: AdminActivity[]; updatedAt: string }>("/admin/activity"),
+        getStreamAdminOverview().catch(() => null),
       ]);
       setStats(statsResponse.stats);
       setActivity(activityResponse.activity);
+      setStreamOverview(streamResponse);
       setLastUpdated(new Date(statsResponse.updatedAt || activityResponse.updatedAt || Date.now()));
       setError("");
     } catch {
@@ -89,25 +93,16 @@ export const AdminDashboardPage = () => {
   }, [load]);
   const cards = [
     ["totalUsers", "Total Users", "/admin/users"],
-    ["activeUsers", "Active Users", "/admin/users"],
-    ["piVerifiedUsers", "Pi Verified Users", "/admin/users"],
-    ["sellers", "Sellers", "/admin/users"],
-    ["sellerVerifiedUsers", "Seller Verified", "/admin/users"],
-    ["trustedSellers", "Trusted Sellers", "/admin/users"],
     ["totalProducts", "Total Products", "/admin/products"],
-    ["activeProducts", "Active Products", "/admin/products"],
-    ["pendingProducts", "Pending Products", "/admin/products"],
-    ["rejectedProducts", "Rejected Products", "/admin/products"],
     ["totalOrders", "Total Orders", "/admin/orders"],
-    ["pendingOrders", "Pending Orders", "/admin/orders"],
     ["completedOrders", "Completed Orders", "/admin/orders"],
-    ["failedCancelledPayments", "Failed/Cancelled Payments", "/admin/orders"],
-    ["reports", "Reports", "/admin/reports"],
-    ["unreadReports", "Unread Reports", "/admin/reports"],
-    ["onboardingApplications", "Seller Applications", "/admin/onboarding"],
-    ["pendingOnboarding", "Pending Applications", "/admin/onboarding"],
-    ["notifications", "Notifications", "/admin/reports"],
-    ["unreadNotifications", "Unread Notifications", "/admin/reports"],
+  ] as const;
+  const attention = [
+    ["Pending products", stats?.pendingProducts || 0, "/admin/products"],
+    ["Seller applications", stats?.pendingOnboarding || 0, "/admin/onboarding"],
+    ["Open reports", stats?.unreadReports || 0, "/admin/reports"],
+    ["Failed or cancelled payments", stats?.failedCancelledPayments || 0, "/admin/orders"],
+    ["Stream moderation", streamOverview?.stats.pendingVideos || 0, "/admin/stream/moderation"],
   ] as const;
   const updatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not loaded";
 
@@ -122,9 +117,14 @@ export const AdminDashboardPage = () => {
       {error ? <div className="private-alert error">{error}</div> : null}
       {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
         <>
-          <div className="private-alert">Last updated: {updatedLabel}</div>
-          <section className="stats-grid admin-stats">
+          <div className="private-alert admin-live-status"><i /> Live operations · updated {updatedLabel}</div>
+          <section className="stats-grid admin-stats admin-summary-stats">
             {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
+            <Link to="/admin/stream"><span>Published Stream titles</span><strong>{streamOverview?.stats.publishedVideos || 0}</strong></Link>
+          </section>
+          <section className="admin-attention-panel">
+            <div className="section-title compact"><div><p className="private-kicker">ACTION CENTER</p><h2>Needs attention</h2><p>One queue for marketplace and Stream operations.</p></div></div>
+            <div>{attention.map(([label, count, to]) => <Link to={to} key={label}><span>{label}</span><strong>{count}</strong><small>{count ? "Review now" : "All clear"}</small></Link>)}</div>
           </section>
           <section className="management-list">
             {activity.length ? activity.map((item) => (

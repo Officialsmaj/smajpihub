@@ -160,6 +160,8 @@ const mountStreamEndpoints = (router: Router) => {
     try {
       const user = await requireCreator(req, res);
       if (!user) return;
+      const platformSettings = await req.app.locals.streamSettingsCollection?.findOne({ key: "platform" });
+      if (platformSettings?.uploadsEnabled === false) return res.status(503).json({ error: "uploads_disabled", message: "Stream uploads are temporarily disabled by an administrator." });
       if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured", message: "Add Cloudflare Stream credentials to the backend environment." });
       const title = String(req.body?.title || "").trim().slice(0, 140);
       const description = String(req.body?.description || "").trim().slice(0, 3000);
@@ -197,6 +199,8 @@ const mountStreamEndpoints = (router: Router) => {
   router.post("/creator/youtube", async (req, res) => {
     try {
       const user = await requireCreator(req, res); if (!user) return;
+      const platformSettings = await req.app.locals.streamSettingsCollection?.findOne({ key: "platform" });
+      if (platformSettings?.uploadsEnabled === false) return res.status(503).json({ error: "uploads_disabled", message: "Stream uploads are temporarily disabled by an administrator." });
       const videoId = youtubeVideoId(String(req.body?.youtubeUrl || ""));
       const title = String(req.body?.title || "").trim().slice(0, 140);
       const description = String(req.body?.description || "").trim().slice(0, 3000);
@@ -220,6 +224,8 @@ const mountStreamEndpoints = (router: Router) => {
   router.post("/creator/live-inputs", async (req, res) => {
     try {
       const user = await requireCreator(req, res); if (!user) return;
+      const platformSettings = await req.app.locals.streamSettingsCollection?.findOne({ key: "platform" });
+      if (platformSettings?.liveStreamingEnabled === false) return res.status(503).json({ error: "live_disabled", message: "Live streaming is temporarily disabled by an administrator." });
       if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured", message: "Add Cloudflare Stream credentials to the backend environment." });
       const title = String(req.body?.title || "").trim().slice(0, 140);
       const chatMode = ["enabled", "followers", "disabled"].includes(req.body?.chatMode) ? req.body.chatMode : "enabled";
@@ -283,6 +289,27 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, creatorName: video.creatorName, category: video.category, thumbnailUrl: video.thumbnailUrl, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })) });
   });
 
+  router.get("/channels/:handle", async (req, res) => {
+    const handle = String(req.params.handle || "").trim().replace(/^@/, "").slice(0, 40);
+    if (!handle) return res.status(400).json({ error: "invalid_handle", message: "A channel handle is required." });
+    const creator = await req.app.locals.userCollection.findOne({ "streamProfile.channelHandle": handle });
+    if (!creator) return res.status(404).json({ error: "channel_not_found", message: "This creator channel does not exist." });
+    const creatorId = String(creator._id);
+    const videos = await req.app.locals.streamContentCollection.find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(60).toArray();
+    const profile = creator.streamProfile || {};
+    return res.json({
+      channel: {
+        name: profile.channelName || creator.displayName || creator.username || "SMAJ Creator",
+        handle,
+        description: profile.channelDescription || "",
+        avatarUrl: profile.avatarUrl || creator.avatarUrl || "",
+        bannerUrl: profile.channelBannerUrl || "",
+      },
+      videos: videos.filter((video: Record<string, unknown>) => video.contentType !== "live").map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, description: video.description, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })),
+      live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").map((video: Record<string, unknown>) => ({ liveInputUid: video.liveInputUid, title: video.title, thumbnailUrl: video.thumbnailUrl || null, processingStatus: video.processingStatus })),
+    });
+  });
+
   router.get("/live-content", async (_req, res) => {
     if (!_req.app.locals.streamContentCollection) return res.json({ live: [] });
     const items = await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray();
@@ -312,6 +339,63 @@ const mountStreamEndpoints = (router: Router) => {
     const query = status === "all" ? {} : { moderationStatus: status };
     const videos = await req.app.locals.streamContentCollection.find(query).sort({ createdAt: -1 }).limit(200).toArray();
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id), playback: undefined })) });
+  });
+
+  router.get("/admin/overview", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const videos = await req.app.locals.streamContentCollection.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(1000).toArray();
+    const creators = new Map<string, { id: string; name: string; videos: number; approved: number; live: number; latestAt: unknown }>();
+    videos.forEach((video: Record<string, any>) => {
+      const id = String(video.creatorId || video.creatorName || "unknown");
+      const current = creators.get(id) || { id, name: String(video.creatorName || "Unknown creator"), videos: 0, approved: 0, live: 0, latestAt: video.updatedAt || video.createdAt || null };
+      current.videos += 1;
+      if (video.moderationStatus === "approved") current.approved += 1;
+      if (video.contentType === "live") current.live += 1;
+      creators.set(id, current);
+    });
+    const count = (predicate: (video: Record<string, any>) => boolean) => videos.filter(predicate).length;
+    return res.json({
+      stats: {
+        totalVideos: videos.length,
+        pendingVideos: count(video => !video.moderationStatus || video.moderationStatus === "pending"),
+        approvedVideos: count(video => video.moderationStatus === "approved"),
+        rejectedVideos: count(video => video.moderationStatus === "rejected"),
+        publishedVideos: count(video => video.visibility === "public" && video.moderationStatus === "approved" && video.playbackAllowed === true),
+        liveStreams: count(video => video.contentType === "live"),
+        readyVideos: count(video => video.processingStatus === "ready"),
+        attachedTitles: count(video => Boolean(video.catalogAttachment)),
+        creators: creators.size,
+      },
+      creators: [...creators.values()].sort((a, b) => b.videos - a.videos),
+      recent: videos.slice(0, 12).map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id), playback: undefined })),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  const defaultStreamSettings = {
+    uploadsEnabled: true,
+    liveStreamingEnabled: true,
+    piSupportEnabled: true,
+    automaticModerationEnabled: true,
+  };
+
+  router.get("/admin/settings", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const stored = await req.app.locals.streamSettingsCollection?.findOne({ key: "platform" });
+    return res.json({ settings: { ...defaultStreamSettings, ...(stored || {}), _id: undefined, key: undefined } });
+  });
+
+  router.put("/admin/settings", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const settings = Object.fromEntries(
+      Object.keys(defaultStreamSettings).map(key => [key, req.body?.[key] === true]),
+    );
+    await req.app.locals.streamSettingsCollection.updateOne(
+      { key: "platform" },
+      { $set: { ...settings, key: "platform", updatedAt: new Date(), updatedBy: String(admin._id) } },
+      { upsert: true },
+    );
+    return res.json({ settings });
   });
 
   router.patch("/admin/videos/:uid", async (req, res) => {

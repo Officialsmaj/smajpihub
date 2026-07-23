@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -6,7 +6,6 @@ import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import ClosedCaptionRoundedIcon from "@mui/icons-material/ClosedCaptionRounded";
@@ -24,7 +23,8 @@ import StreamLiveSetup from "./StreamLiveSetup";
 import StreamLivePlayer from "./StreamLivePlayer";
 import StreamLiveDirectory from "./StreamLiveDirectory";
 import StreamChannelPanel from "./StreamChannelPanel";
-import { getTitleAvailability } from "../../lib/streamAdmin";
+import StreamPublicChannel from "./StreamPublicChannel";
+import { getStreamAdminOverview, getStreamAdminSettings, getTitleAvailability, saveStreamAdminSettings, type StreamAdminOverview, type StreamAdminSettings } from "../../lib/streamAdmin";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -60,6 +60,7 @@ export type StreamPageKind =
   | "content"
   | "analytics"
   | "channel"
+  | "public-channel"
   | "earnings"
   | "admin"
   | "moderation"
@@ -889,16 +890,30 @@ const Studio = ({ kind }: { kind: StreamPageKind }) => {
   );
 };
 
-const adminNav = [
-  ["Dashboard", ""],
-  ["Moderation", "moderation"],
-  ["Reports", "reports"],
-  ["Creators", "creators"],
-  ["Catalogue", "catalog"],
-  ["Analytics", "analytics"],
-  ["Settings", "settings"],
-];
 const Admin = ({ kind }: { kind: StreamPageKind }) => {
+  const [overview, setOverview] = useState<StreamAdminOverview | null>(null);
+  const [settings, setSettings] = useState<StreamAdminSettings | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    try {
+      const data = await getStreamAdminOverview();
+      setOverview(data);
+      if (kind === "stream-settings") {
+        const remoteSettings = await getStreamAdminSettings();
+        setSettings(current => current || remoteSettings);
+      }
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+    }
+  }, [kind]);
+  useEffect(() => {
+    void load();
+    const interval = window.setInterval(() => void load(), 15_000);
+    return () => window.clearInterval(interval);
+  }, [load]);
   const title =
     (
       {
@@ -911,40 +926,43 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
         "stream-settings": "Stream configuration",
       } as Partial<Record<StreamPageKind, string>>
     )[kind] ?? "Stream Admin";
-  const rows =
-    kind === "creators"
-      ? ["SMAJ Studio", "Maya Live", "Sport Central", "Nia Wellness"]
-      : kind === "catalog-admin"
-        ? titles.slice(0, 5).map(i => i.name)
-        : ["After the Rain · Episode 4", "Championship watch party", "User comment #1842", "Frequency trailer"];
+  const saveSettings = async () => {
+    if (!settings) return;
+    try {
+      setSaving(true);
+      setSettings(await saveStreamAdminSettings(settings));
+      setMessage("Stream settings saved.");
+    } catch {
+      setMessage("Stream settings could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const videos = overview?.recent || [];
+  const rows = kind === "reports"
+    ? videos.filter(video => video.moderationStatus === "rejected" || video.moderationReason)
+    : kind === "catalog-admin" ? videos : [];
   return (
-    <div className="sw-management admin">
-      <aside>
-        <b>STREAM ADMIN</b>
-        {adminNav.map(([label, path]) => (
-          <Link key={label} to={`/admin/stream${path ? `/${path}` : ""}`}>
-            {label}
-          </Link>
-        ))}
-      </aside>
+    <div className="sw-admin-unified">
       <section>
         <header className="sw-manage-head">
           <div>
             <span>PLATFORM CONTROL</span>
             <h1>{title}</h1>
+            <small>{overview ? `Live data updated ${new Date(overview.updatedAt).toLocaleTimeString()}` : "Loading live Stream data"}</small>
           </div>
-          <button type="button">
-            <SettingsRoundedIcon /> Actions
-          </button>
+          <Link to="/admin/stream/moderation"><ShieldRoundedIcon /> Moderation queue</Link>
         </header>
+        {status === "error" ? <div className="sw-catalog-status warning">Stream admin data could not load. Check the backend connection and retry.</div> : null}
+        {status === "loading" ? <div className="sw-catalog-status">Loading Stream operations…</div> : null}
         {kind === "admin" || kind === "admin-analytics" ? (
           <>
             <div className="sw-metrics">
               {[
-                ["Active viewers", "18,492", "+24%"],
-                ["Streaming now", "38", "+8"],
-                ["Creators", "1,284", "+42"],
-                ["Revenue", "π 28.4K", "+16%"],
+                ["Published", overview?.stats.publishedVideos || 0, "Available to viewers"],
+                ["Pending review", overview?.stats.pendingVideos || 0, "Needs admin action"],
+                ["Creators", overview?.stats.creators || 0, "With uploaded content"],
+                ["Live streams", overview?.stats.liveStreams || 0, "Created broadcasts"],
               ].map(([a, b, c]) => (
                 <article key={a}>
                   <small>{a}</small>
@@ -954,60 +972,67 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
               ))}
             </div>
             <div className="sw-panel">
-              <h2>Platform activity</h2>
-              <div className="sw-chart">
-                {[38, 45, 42, 61, 54, 70, 88, 74, 93, 82, 96, 90].map((h, i) => (
-                  <i key={i} style={{ height: `${h}%` }} />
-                ))}
+              <h2>Content health</h2>
+              <div className="sw-admin-health">
+                {[
+                  ["Total content", overview?.stats.totalVideos || 0],
+                  ["Ready", overview?.stats.readyVideos || 0],
+                  ["Approved", overview?.stats.approvedVideos || 0],
+                  ["Rejected", overview?.stats.rejectedVideos || 0],
+                  ["Catalogue attached", overview?.stats.attachedTitles || 0],
+                ].map(([label, value]) => <Link to="/admin/stream/moderation" key={label}><span>{label}</span><strong>{value}</strong></Link>)}
               </div>
             </div>
           </>
         ) : null}
         {kind === "moderation" ? <StreamModerationPanel /> : null}
-        {kind !== "admin" && kind !== "admin-analytics" && kind !== "stream-settings" && kind !== "moderation" ? (
+        {kind === "creators" ? (
           <div className="sw-admin-list">
-            {rows.map((row, i) => (
-              <article key={row}>
+            {(overview?.creators || []).map(creator => <article key={creator.id}><span><PeopleAltRoundedIcon /></span><div><b>{creator.name}</b><p>{creator.videos} uploads · {creator.approved} approved · {creator.live} live</p></div><Link to="/admin/stream/moderation">View content</Link></article>)}
+            {overview && !overview.creators.length ? <div className="sw-catalog-status">No creators have uploaded content yet.</div> : null}
+          </div>
+        ) : null}
+        {(kind === "reports" || kind === "catalog-admin") ? (
+          <div className="sw-admin-list">
+            {rows.map(video => (
+              <article key={video.cloudflareUid}>
                 <span>
-                  {kind === "creators" ? (
-                    <PeopleAltRoundedIcon />
-                  ) : kind === "catalog-admin" ? (
+                  {kind === "catalog-admin" ? (
                     <PlayArrowRoundedIcon />
                   ) : (
                     <ShieldRoundedIcon />
                   )}
                 </span>
                 <div>
-                  <b>{row}</b>
-                  <p>
-                    {kind === "creators"
-                      ? `${12 + i * 4}K followers · Verified`
-                      : "Submitted for review · Community report"}
-                  </p>
+                  <b>{video.title}</b>
+                  <p>{kind === "catalog-admin" ? (video.catalogAttachment ? `Attached to ${video.catalogAttachment.title || `TMDB #${video.catalogAttachment.tmdbId}`}` : "Not attached to the catalogue") : video.moderationReason || "Moderation record"}</p>
                 </div>
-                <em>{i === 0 ? "Priority" : "Pending"}</em>
-                <button type="button">Review</button>
+                <em>{video.moderationStatus || "pending"}</em>
+                <Link to="/admin/stream/moderation">Review</Link>
               </article>
             ))}
+            {overview && !rows.length ? <div className="sw-catalog-status">{kind === "reports" ? "No rejected or reported Stream content." : "No Stream content is available."}</div> : null}
           </div>
         ) : null}
-        {kind === "stream-settings" ? (
+        {kind === "stream-settings" && settings ? (
           <div className="sw-settings-card">
             {[
-              ["Uploads enabled", "Allow verified creators to publish"],
-              ["Live streaming", "Enable creator live events"],
-              ["Pi support", "Accept direct creator support"],
-              ["Automatic moderation", "Scan new uploads before publishing"],
-            ].map(([a, b]) => (
-              <label className="sw-setting" key={a}>
+              ["uploadsEnabled", "Uploads enabled", "Allow verified creators to publish"],
+              ["liveStreamingEnabled", "Live streaming", "Enable creator live events"],
+              ["piSupportEnabled", "Pi support", "Accept direct creator support"],
+              ["automaticModerationEnabled", "Automatic moderation", "Scan new uploads before publishing"],
+            ].map(([key, label, description]) => (
+              <label className="sw-setting" key={key}>
                 <span>
-                  <b>{a}</b>
-                  <small>{b}</small>
+                  <b>{label}</b>
+                  <small>{description}</small>
                 </span>
-                <input type="checkbox" defaultChecked />
+                <input type="checkbox" checked={settings[key as keyof StreamAdminSettings]} onChange={event => setSettings(current => current ? { ...current, [key]: event.target.checked } : current)} />
                 <i />
               </label>
             ))}
+            <button className="sw-admin-save" type="button" disabled={saving} onClick={() => void saveSettings()}>{saving ? "Saving…" : "Save settings"}</button>
+            {message ? <p className="sw-profile-message">{message}</p> : null}
           </div>
         ) : null}
       </section>
@@ -1042,6 +1067,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "player") return <Player />;
     if (kind === "live-player") return <Player live />;
     if (kind === "history") return <StreamWatchHistory />;
+    if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
     if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
