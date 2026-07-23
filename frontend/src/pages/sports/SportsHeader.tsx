@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 
 const links = [
   ["", "Home"],
@@ -15,6 +16,10 @@ const links = [
 
 const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => (
   <header className="sports-header">
+    <NavLink to="/services" className="sports-back-to-hub" aria-label="Back to SMAJ PI HUB services">
+      <ArrowBackRoundedIcon />
+      <span>Back to Hub</span>
+    </NavLink>
     <NavLink to="/services/sports" className="sports-brand">
       <span>
         <SportsSoccerRoundedIcon />

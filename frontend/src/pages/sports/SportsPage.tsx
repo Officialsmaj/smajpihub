@@ -440,7 +440,7 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
   const [query, setQuery] = useState("");
   const { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite } = useSportsCatalog();
   return (
-    <AppLayout showFooter={false}>
+    <AppLayout showFooter={false} showHeader={false}>
       <main className="sports-page">
         <SportsHeader query={query} onQueryChange={setQuery} />
         <div className={`sports-data-status${usingFallback ? " fallback" : ""}`} role="status">

@@ -33,6 +33,27 @@
   text-decoration: none;
   white-space: nowrap;
 }
+.sports-back-to-hub {
+  min-height: 36px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #ffffff16;
+  border-radius: 10px;
+  color: #a8b6c9;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sports-back-to-hub:hover {
+  border-color: #3b82f680;
+  color: #fff;
+}
+.sports-back-to-hub svg {
+  font-size: 17px;
+}
 .sports-brand span {
   width: 36px;
   height: 36px;
@@ -834,6 +855,16 @@
   .sports-header {
     height: 62px;
     padding: 0 15px;
+  }
+  .sports-back-to-hub {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  .sports-back-to-hub span {
+    display: none;
   }
   .sports-data-status {
     padding-inline: 15px;

@@ -9,9 +9,10 @@ import useRouteScrollTop from "../hooks/useRouteScrollTop";
 type AppLayoutProps = {
   children: ReactNode;
   showFooter?: boolean;
+  showHeader?: boolean;
 };
 
-const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
+const AppLayout = ({ children, showFooter = true, showHeader = true }: AppLayoutProps) => {
   useRouteScrollTop();
   const { showSignIn, closeSignIn, isLoading, signIn } = useAuthContext();
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const AppLayout = ({ children, showFooter = true }: AppLayoutProps) => {
 
   return (
     <>
-      <Header />
+      {showHeader ? <Header /> : null}
       {children}
       {showFooter ? <Footer /> : null}
       {showSignIn && (
