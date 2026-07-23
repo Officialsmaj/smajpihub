@@ -55,6 +55,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
 import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
+import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -83,6 +84,11 @@ const streamRoutes: Array<[string, StreamPageKind]> = [
 const streamAdminRoutes: Array<[string, StreamPageKind]> = [
   ["", "admin"], ["moderation", "moderation"], ["reports", "reports"], ["creators", "creators"],
   ["catalog", "catalog-admin"], ["analytics", "admin-analytics"], ["settings", "stream-settings"],
+];
+
+const sportsRoutes: Array<[string, SportsPageKind]> = [
+  ["live", "live"], ["matches", "matches"], ["competitions", "competitions"],
+  ["teams", "teams"], ["news", "news"], ["community", "community"],
 ];
 
 export const router = createBrowserRouter(
@@ -135,6 +141,8 @@ export const router = createBrowserRouter(
       path: `/services/${platform.routeSegment}`,
       element: platform.routeSegment === "stream" ? (
         <StreamPage />
+      ) : platform.routeSegment === "sports" ? (
+        <SportsPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -205,6 +213,22 @@ export const router = createBrowserRouter(
     {
       path: "/smaj-pi-sports",
       element: <Navigate to="/services/sports" replace />,
+    },
+    ...sportsRoutes.map(([path, kind]) => ({
+      path: `/services/sports/${path}`,
+      element: <SportsPage kind={kind} />,
+    })),
+    {
+      path: "/services/sports/match/:id",
+      element: <SportsPage kind="match" />,
+    },
+    {
+      path: "/services/sports/team/:id",
+      element: <SportsPage kind="team" />,
+    },
+    {
+      path: "/services/sports/news/:id",
+      element: <SportsPage kind="news" />,
     },
     {
       path: "/smaj-token",
@@ -312,6 +336,8 @@ export const router = createBrowserRouter(
     { path: "/app/services/stream/series/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="series-detail" /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/stream/watch/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="player" /></PrivateLayout></ProtectedRoute> },
     { path: "/app/services/stream/live/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="live-player" /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/stream/channel/:handle", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="public-channel" /></PrivateLayout></ProtectedRoute> },
+    { path: "/app/services/sports", element: <Navigate to="/services/sports" replace /> },
     { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
     { path: "/trending", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="trending" /></PrivateLayout></ProtectedRoute> },
     { path: "/lifestyle", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="lifestyle" /></PrivateLayout></ProtectedRoute> },

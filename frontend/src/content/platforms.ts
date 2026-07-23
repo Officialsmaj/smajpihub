@@ -83,7 +83,7 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ PI Sports",
     routeSegment: "sports",
     description: "Follow sports communities, activities, and fan utilities.",
-    status: "In Progress",
+    status: "Live",
   },
   {
     name: "SMAJ Token",
