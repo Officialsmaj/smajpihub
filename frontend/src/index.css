@@ -10339,6 +10339,27 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     display: block;
   }
 
+  .mobile-bottom-nav a {
+    position: relative;
+  }
+
+  .mobile-bottom-nav-badge {
+    position: absolute;
+    top: 3px;
+    left: calc(50% + 7px);
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border: 2px solid var(--surface, #fff);
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 13px;
+    text-align: center;
+  }
+
   .storefront-mobile-drawer-backdrop {
     position: fixed;
     inset: 0;

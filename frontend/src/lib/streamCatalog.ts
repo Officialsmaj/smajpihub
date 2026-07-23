@@ -1,5 +1,11 @@
 import { axiosClient } from "./axiosClient";
 
+export const STREAM_DOWNLOADS_CHANGED_EVENT = "smaj:stream-downloads-changed";
+
+const notifyDownloadsChanged = () => {
+  window.dispatchEvent(new Event(STREAM_DOWNLOADS_CHANGED_EVENT));
+};
+
 export type StreamCatalogTitle = {
   id: string;
   tmdbId: number;
@@ -54,10 +60,12 @@ export const getStreamMyListStatus = async (type: "movie" | "tv", id: string) =>
 
 export const saveStreamTitle = async (title: StreamCatalogTitle) => {
   const response = await axiosClient.post<{ saved: true }>("/stream/my-list", title);
+  notifyDownloadsChanged();
   return response.data;
 };
 
 export const removeStreamTitle = async (type: "movie" | "tv", id: string) => {
   const response = await axiosClient.delete<{ saved: false }>(`/stream/my-list/${type}/${id}`);
+  notifyDownloadsChanged();
   return response.data;
 };

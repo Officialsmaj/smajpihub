@@ -25,7 +25,7 @@ import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutl
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
-import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { useAuthContext } from "../contexts/AuthContext";
 import { axiosClient } from "../lib/axiosClient";
@@ -34,6 +34,7 @@ import WelcomeTour from "../components/WelcomeTour";
 import logoImage from "/logo.png";
 import { serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
+import { getStreamMyList, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
 
 type PrivateLayoutProps = { children: ReactNode };
 type LiveConversation = {
@@ -139,6 +140,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [streamDownloadCount, setStreamDownloadCount] = useState(0);
   const [liveFeedOpen, setLiveFeedOpen] = useState(false);
   const [liveConversations, setLiveConversations] = useState<LiveConversation[]>([]);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -318,6 +320,26 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
   const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(conversation.unreadBy?.length));
   const isStreamShell = location.pathname.startsWith("/app/services/stream");
+  const streamDownloadBadgeLabel = streamDownloadCount > 99 ? "99+" : streamDownloadCount;
+  useEffect(() => {
+    if (!isStreamShell) return;
+    let active = true;
+    const loadDownloadCount = () => {
+      void getStreamMyList()
+        .then((items) => {
+          if (active) setStreamDownloadCount(items.length);
+        })
+        .catch(() => {
+          if (active) setStreamDownloadCount(0);
+        });
+    };
+    loadDownloadCount();
+    window.addEventListener(STREAM_DOWNLOADS_CHANGED_EVENT, loadDownloadCount);
+    return () => {
+      active = false;
+      window.removeEventListener(STREAM_DOWNLOADS_CHANGED_EVENT, loadDownloadCount);
+    };
+  }, [isStreamShell]);
   const liveMessageCount = unreadLiveConversations.reduce((total, conversation) => total + (conversation.unreadBy?.length || 0), 0);
   const liveBadgeLabel = liveMessageCount > 99 ? "99+" : liveMessageCount;
   const liveActivityItems = (unreadLiveConversations.length ? unreadLiveConversations : liveConversations).slice(0, 3);
@@ -407,7 +429,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
           { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
           { to: "/app/services/stream/live", label: "Live", icon: <LiveTvOutlinedIcon /> },
-          { to: "/app/services/stream/my-list", label: "My List", icon: <BookmarkBorderOutlinedIcon /> },
+          { to: "/app/services/stream/my-list", label: "Download", icon: <DownloadOutlinedIcon /> },
           { to: "/app/services/stream/profile", label: "Profile", icon: <PersonOutlineIcon /> },
         ] : mainTabs).map((tab) => (
           <NavLink
@@ -416,6 +438,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           >
             {tab.icon}
             <span>{tab.label}</span>
+            {tab.to === "/app/services/stream/my-list" && streamDownloadCount ? <b className="mobile-bottom-nav-badge">{streamDownloadBadgeLabel}</b> : null}
           </NavLink>
         ))}
       </nav>

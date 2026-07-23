@@ -94,7 +94,7 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   movies: ["Movies", "Blockbusters, originals and stories from around the world."],
   series: ["Series", "Binge-worthy stories and new episodes every week."],
   live: ["Live", "Events, creators, music and sport happening right now."],
-  "my-list": ["My List", "Everything you saved, ready when you are."],
+  "my-list": ["Downloads", "Everything you downloaded, ready when you are."],
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
   profile: ["Stream profile", "Your viewing identity and playback preferences."],
@@ -354,14 +354,14 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
       ) : null}
       {catalogState === "fallback" && kind === "my-list" ? (
         <div className="sw-catalog-status warning">
-          My List could not synchronize. Please sign in again or retry shortly.
+          Downloads could not synchronize. Please sign in again or retry shortly.
         </div>
       ) : null}
       {catalogState === "ready" && kind === "my-list" && !filtered.length ? (
         <div className="sw-list-empty">
           <BookmarkRoundedIcon />
-          <h2>Your list is empty</h2>
-          <p>Save a movie or series from its details page and it will appear here on every device.</p>
+          <h2>No downloads yet</h2>
+          <p>Download a movie or series and it will appear here on every device.</p>
           <Link to="/app/services/stream/movies">Explore movies</Link>
         </div>
       ) : null}

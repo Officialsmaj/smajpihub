@@ -204,6 +204,13 @@
   gap: 12px;
   margin-top: 32px;
 }
+
+.stream-download-error {
+  display: block;
+  margin-top: 8px;
+  color: #fecaca;
+  font-weight: 700;
+}
 .stream-hero-actions button,
 .stream-hero-actions a {
   height: 50px;
