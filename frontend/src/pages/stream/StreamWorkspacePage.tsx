@@ -23,6 +23,7 @@ import StreamModerationPanel from "./StreamModerationPanel";
 import StreamLiveSetup from "./StreamLiveSetup";
 import StreamLivePlayer from "./StreamLivePlayer";
 import StreamLiveDirectory from "./StreamLiveDirectory";
+import StreamChannelPanel from "./StreamChannelPanel";
 import { getTitleAvailability } from "../../lib/streamAdmin";
 import {
   getStreamCatalog,
@@ -851,16 +852,7 @@ const Studio = ({ kind }: { kind: StreamPageKind }) => {
             </div>
           </>
         ) : null}
-        {kind === "channel" ? (
-          <div className="sw-channel">
-            <div className="sw-channel-banner">
-              <span>SS</span>
-            </div>
-            <h2>SMAJ Studio</h2>
-            <p>Original movies, series and stories created for the SMAJ community.</p>
-            <button type="button">Edit channel</button>
-          </div>
-        ) : null}
+        {kind === "channel" ? <StreamChannelPanel /> : null}
         {kind === "earnings" ? (
           <>
             <div className="sw-balance">
