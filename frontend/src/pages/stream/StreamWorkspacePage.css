@@ -1964,3 +1964,32 @@
   color: #7133c5;
   text-decoration: underline;
 }
+
+/* Unified dark cinema theme across catalogue, watch, profile and studio */
+.sw-page{color:#f7f4fa;background:#0b0b0f}
+.sw-page-content{background:#0b0b0f}
+.sw-page h1,.sw-page h2,.sw-page h3,.sw-title-card h3,.sw-watch-info h1{color:#f7f4fa}
+.sw-page p,.sw-page small,.sw-title-card p,.sw-watch-info p{color:#aaa1b2}
+.sw-page-head>span,.sw-manage-head span{color:#b98aff}
+.sw-toolbar button,.sw-toolbar select,.sw-big-search,.sw-profile-card,.sw-settings-card,.sw-detail-info aside,.sw-panel,.sw-list-empty{color:#f7f4fa;background:#17171d;border-color:rgba(255,255,255,.09)}
+.sw-big-search input,.sw-profile-fields input,.sw-profile-fields select,.sw-profile-quality select,.sw-setting select,.sw-setting input{color:#f7f4fa;background:#22222a;border-color:rgba(255,255,255,.1)}
+.sw-big-search input::placeholder,.sw-profile-fields input::placeholder{color:#817989}
+.sw-title-card p,.sw-cast small,.sw-history-grid p{color:#aaa1b2}
+.sw-title-card h3,.sw-history-grid>a{color:#f7f4fa}
+.sw-catalog-status{color:#d8cfdd;background:#17171d}
+.sw-detail-info{border-color:rgba(255,255,255,.09)}
+.sw-detail-hero.tmdb:after{background:linear-gradient(90deg,rgba(11,11,15,.65) 0%,rgba(11,11,15,.12) 65%),linear-gradient(0deg,#0b0b0f 0%,transparent 45%)}
+.sw-watch,.sw-watch.youtube,.sw-watch.real{min-height:calc(100vh - 110px);color:#fff;background:#0b0b0f}
+.sw-watch-info{padding:20px 28px;border-color:rgba(255,255,255,.08);background:#0b0b0f}
+.sw-watch-info h1{margin:0 0 6px;font-size:clamp(22px,3vw,34px)}
+.sw-profile-summary{border:1px solid rgba(255,255,255,.09);background:linear-gradient(135deg,#251536,#7535bd)}
+.sw-profile-card{box-shadow:0 18px 45px rgba(0,0,0,.18)}
+.sw-profile-card header p{color:#aaa1b2}
+.sw-profile-quality,.sw-profile-toggle{border-color:rgba(255,255,255,.08)}
+.sw-detail-loading i{background:linear-gradient(100deg,#17171d 30%,#25252d 50%,#17171d 70%);background-size:220% 100%}
+@media(max-width:700px){
+  .sw-page-content{padding-left:14px;padding-right:14px}
+  .sw-watch,.sw-watch.youtube,.sw-watch.real{margin-left:-14px;margin-right:-14px}
+  .sw-watch-info{padding:16px 15px 22px}
+  .sw-detail-hero{background-position:center top}
+}
