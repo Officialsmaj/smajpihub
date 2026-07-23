@@ -7,6 +7,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
+import ActionDialog from "../../components/ActionDialog";
 import type { Order, Product } from "../../types/marketplace";
 
 type SellerData = {
@@ -50,6 +51,8 @@ const SellerPage = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [activatingSeller, setActivatingSeller] = useState(false);
+  const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const load = useCallback(async () => {
     const response = await axiosClient.get<SellerData>("/marketplace/seller");
@@ -81,14 +84,17 @@ const SellerPage = () => {
   };
 
   const remove = async (product: Product) => {
-    if (!window.confirm(`Delete ${product.title}? This cannot be undone.`)) return;
     setError("");
     try {
+      setDeleteBusy(true);
       await axiosClient.delete(`/marketplace/seller/products/${product._id}`);
       setMessage("Product deleted.");
+      setDeleteProduct(null);
       await load();
     } catch (err: unknown) {
       setError(isAxiosError<BackendErrorBody>(err) ? err.response?.data?.message || "Could not delete product." : "Could not delete product.");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -353,7 +359,7 @@ const SellerPage = () => {
                     <div className="row-actions">
                       <Link to={`/edit-product/${product._id}`}>Edit</Link>
                       <button onClick={() => void availability(product)}>{product.active ? "Sold out" : "Available"}</button>
-                      <button className="danger" onClick={() => void remove(product)}>Delete</button>
+                      <button className="danger" onClick={() => setDeleteProduct(product)}>Delete</button>
                     </div>
                   </article>
                 ))}
@@ -382,6 +388,7 @@ const SellerPage = () => {
           </section>
         </>
       )}
+      <ActionDialog open={Boolean(deleteProduct)} title={`Delete “${deleteProduct?.title || "product"}”?`} description="This permanently removes the listing and cannot be undone." confirmLabel="Delete product" danger busy={deleteBusy} onCancel={() => setDeleteProduct(null)} onConfirm={() => deleteProduct && void remove(deleteProduct)} />
     </main>
   );
 };

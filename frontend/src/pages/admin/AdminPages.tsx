@@ -7,6 +7,8 @@ import { formatPiAmount } from "../../lib/formatters";
 import type { Order, Product } from "../../types/marketplace";
 import type { User } from "../../types/pi";
 import { getStreamAdminOverview, type StreamAdminOverview } from "../../lib/streamAdmin";
+import ActionDialog from "../../components/ActionDialog";
+import { showFeedback } from "../../lib/feedback";
 
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 
@@ -232,15 +234,34 @@ export const AdminProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("all");
+  const [dialog, setDialog] = useState<{ type: "reject" | "delete"; product: Product } | null>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
   const load = useCallback(async () => setProducts((await axiosClient.get("/admin/products")).data.products), []);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  const update = async (id: string, body: object) => { await axiosClient.patch(`/admin/products/${id}`, body); setMessage("Product updated."); await load(); };
-  const reject = async (product: Product) => {
-    const reason = window.prompt(`Why is "${product.title}" rejected?`, product.rejectionReason || "Product photos, price, description, or seller details need review.");
-    if (!reason?.trim()) return;
-    await update(product._id, { approved: false, hidden: false, rejectionReason: reason.trim() });
+  const update = async (id: string, body: object) => {
+    try {
+      await axiosClient.patch(`/admin/products/${id}`, body);
+      setMessage("Product updated.");
+      await load();
+    } catch (error) {
+      showFeedback((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Product could not be updated.", "error");
+    }
   };
-  const remove = async (id: string) => { if (!window.confirm("Delete this product permanently?")) return; await axiosClient.delete(`/admin/products/${id}`); setMessage("Product deleted."); await load(); };
+  const completeDialog = async (value: string) => {
+    if (!dialog) return;
+    try {
+      setDialogBusy(true);
+      if (dialog.type === "reject") await axiosClient.patch(`/admin/products/${dialog.product._id}`, { approved: false, hidden: false, rejectionReason: value });
+      else await axiosClient.delete(`/admin/products/${dialog.product._id}`);
+      setMessage(dialog.type === "reject" ? "Product rejected." : "Product deleted.");
+      setDialog(null);
+      await load();
+    } catch (error) {
+      showFeedback((error as { response?: { data?: { message?: string } } }).response?.data?.message || `Product could not be ${dialog.type === "reject" ? "rejected" : "deleted"}.`, "error");
+    } finally {
+      setDialogBusy(false);
+    }
+  };
   const visible = useMemo(() => products.filter((product) => filter === "all" || (filter === "pending" && (product.reviewStatus || (product.approved === false ? "pending" : "approved")) === "pending" && !product.hidden) || (filter === "visible" && product.approved === true && product.reviewStatus === "approved" && !product.hidden) || (filter === "rejected" && product.reviewStatus === "rejected") || (filter === "hidden" && product.hidden)), [products, filter]);
 
   return (
@@ -257,9 +278,10 @@ export const AdminProductsPage = () => {
           <div className="management-main"><h3>{product.title}</h3><p>{product.sellerName} - {formatPiAmount(product.pricePi)}</p></div>
           <span className={`availability ${product.hidden || product.reviewStatus !== "approved" ? "sold" : "available"}`}>{product.hidden ? "Hidden" : product.reviewStatus === "rejected" ? "Rejected" : product.reviewStatus === "approved" ? "Visible" : "Pending"}</span>
           {product.rejectionReason ? <small>{product.rejectionReason}</small> : null}
-          <div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => void reject(product)}>Reject</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => void remove(product._id)}>Delete</button></div>
+          <div className="row-actions"><button onClick={() => void update(product._id, { approved: true, hidden: false })}>Approve</button><button onClick={() => setDialog({ type: "reject", product })}>Reject</button><button onClick={() => void update(product._id, { hidden: !product.hidden })}>{product.hidden ? "Show" : "Hide"}</button><button className="danger" onClick={() => setDialog({ type: "delete", product })}>Delete</button></div>
         </article>
       ))}</div>
+      <ActionDialog open={Boolean(dialog)} title={dialog?.type === "reject" ? `Reject “${dialog.product.title}”?` : `Delete “${dialog?.product.title || "product"}”?`} description={dialog?.type === "reject" ? "The seller will see this reason and can update the listing." : "This permanently removes the listing and cannot be undone."} confirmLabel={dialog?.type === "reject" ? "Reject product" : "Delete product"} danger busy={dialogBusy} inputLabel={dialog?.type === "reject" ? "Rejection reason" : undefined} initialValue={dialog?.product.rejectionReason || "Product photos, price, description, or seller details need review."} minLength={5} onCancel={() => setDialog(null)} onConfirm={value => void completeDialog(value)} />
     </main>
   );
 };

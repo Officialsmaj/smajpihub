@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig } from "axios";
+import { showFeedback } from "./feedback";
 
 const PRODUCTION_API_BASE_URL = "https://smajpihub.onrender.com";
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
@@ -54,6 +55,29 @@ axiosClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+axiosClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (typeof window !== "undefined") {
+      const status = Number(error?.response?.status || 0);
+      const backendMessage = error?.response?.data?.message;
+      const message = typeof backendMessage === "string" && backendMessage.trim()
+        ? backendMessage
+        : status === 401
+          ? "Your session has expired. Please sign in again."
+          : status === 403
+            ? "You do not have permission to complete this action."
+            : error?.code === "ECONNABORTED"
+              ? "The request took too long. Please try again."
+              : !error?.response
+                ? "The service could not be reached. Check your connection and try again."
+                : "Something went wrong. Please try again.";
+      showFeedback(message, "error");
+    }
+    return Promise.reject(error);
+  },
+);
 
 const resolveFetchInput = (input: RequestInfo | URL) => {
   if (typeof input !== "string") return input;
