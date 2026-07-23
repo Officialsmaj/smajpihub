@@ -2,14 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import LiveTvRoundedIcon from "@mui/icons-material/LiveTvRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
-import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
 import { getStreamCatalog, getStreamCategory, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
@@ -46,28 +41,6 @@ const fallbackMovieRows = [
   { title: "Series worth watching", id: "series", items: [...onDemand.slice(2), ...onDemand.slice(0, 2)] },
 ];
 
-const StreamCard = ({ item, saved, onSave, onPlay }: { item: StreamItem; saved: boolean; onSave: () => void; onPlay: () => void }) => (
-  <article className="stream-card">
-    <button className={`stream-thumb ${item.tone}`} type="button" onClick={onPlay} aria-label={`Play ${item.title}`}>
-      <span className="stream-thumb-shape" />
-      <span className="stream-play"><PlayArrowRoundedIcon /></span>
-      {item.live ? <span className="stream-live-badge">LIVE</span> : <span className="stream-duration">{item.duration}</span>}
-      <span className="stream-viewers"><VisibilityOutlinedIcon /> {item.viewers}</span>
-    </button>
-    <div className="stream-card-body">
-      <span className="stream-avatar">{item.initials}</span>
-      <div>
-        <h3>{item.title}</h3>
-        <p>{item.creator} <VerifiedRoundedIcon /></p>
-        <small>{item.category}</small>
-      </div>
-      <button className="stream-save" type="button" onClick={onSave} aria-label={saved ? "Remove from saved" : "Save video"}>
-        {saved ? <BookmarkRoundedIcon /> : <BookmarkBorderRoundedIcon />}
-      </button>
-    </div>
-  </article>
-);
-
 type StreamPageProps = {
   embedded?: boolean;
   categorySlug?: string;
@@ -81,7 +54,6 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
   const categoryLabel = categoryLabels[activeSlug] || activeSlug.split("-").map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ");
   const categoryMode = activeSlug !== "trending";
   const [query, setQuery] = useState("");
-  const [saved, setSaved] = useState<number[]>([]);
   const [playing, setPlaying] = useState<StreamItem | null>(null);
   const [catalog, setCatalog] = useState<Record<"trending" | "movies" | "series", StreamCatalogTitle[]>>({ trending: [], movies: [], series: [] });
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -128,8 +100,6 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
     if (rankingTab === "Returning") return base.reverse();
     return base;
   }, [anime, catalog.series, catalog.trending, categoryMode, rankingTab]);
-
-  const toggleSaved = (id: number) => setSaved((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
 
   const experience = (
     <>
@@ -192,14 +162,6 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
         </section>
 
         {creatorVideos.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/studio">Creator Studio →</Link></div><div>{creatorVideos.map((video) => <Link to={`/app/services/stream/watch/${video.youtubeVideoId ? `yt-${video.youtubeVideoId}` : video.cloudflareUid}`} key={video._id}><img loading="lazy" src={video.thumbnailUrl || ""} alt=""/><b>{video.title}</b><small>{video.creatorName || "SMAJ Creator"} · {video.category || "Video"}</small></Link>)}</div></section> : null}
-
-        <section className="stream-content stream-live-section" id="live">
-          <div className="stream-section-head"><div><span className="stream-kicker"><LiveTvRoundedIcon /> ON AIR</span><h2>Live right now</h2></div><Link to="/app/services/stream/live">View all live →</Link></div>
-          <div className="stream-featured-grid">
-            {streams.slice(0, 3).map((item) => <StreamCard key={item.id} item={item} saved={saved.includes(item.id)} onSave={() => toggleSaved(item.id)} onPlay={() => setPlaying(item)} />)}
-          </div>
-        </section>
-
 
         <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a><p>Watch different. Create freely.</p><div><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Help</a></div></footer>
       </main>
