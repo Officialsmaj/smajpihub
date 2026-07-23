@@ -215,6 +215,52 @@ const mountStreamEndpoints = (router: Router) => {
     }
   });
 
+  router.post("/creator/live-inputs", async (req, res) => {
+    try {
+      const user = await requireCreator(req, res); if (!user) return;
+      if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured", message: "Add Cloudflare Stream credentials to the backend environment." });
+      const title = String(req.body?.title || "").trim().slice(0, 140);
+      const chatMode = ["enabled", "followers", "disabled"].includes(req.body?.chatMode) ? req.body.chatMode : "enabled";
+      if (title.length < 3) return res.status(400).json({ error: "invalid_title", message: "Live stream title must contain at least three characters." });
+      const creatorId = String(user._id);
+      const response = await axios.post<{ success: boolean; result?: { uid?: string; rtmps?: { url?: string; streamKey?: string }; srt?: { url?: string; streamId?: string }; created?: string }; errors?: Array<{ message?: string }> }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/live_inputs`, {
+        defaultCreator: creatorId.slice(0, 64), enabled: true, preferLowLatency: true,
+        meta: { name: title, smajCreatorId: creatorId },
+        recording: { mode: "automatic", requireSignedURLs: false, hideLiveViewerCount: false, timeoutSeconds: 0 },
+      }, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, "Content-Type": "application/json" }, timeout: 15_000 });
+      const remote = response.data.result;
+      if (!response.data.success || !remote?.uid || !remote.rtmps?.url || !remote.rtmps.streamKey) throw new Error(response.data.errors?.[0]?.message || "Cloudflare did not create live credentials.");
+      const now = new Date();
+      const record = { cloudflareUid: remote.uid, liveInputUid: remote.uid, contentSource: "cloudflare-live", contentType: "live", creatorId, creatorName: user.displayName || user.username || user.piUsername || "Creator", title, description: "Live broadcast", category: "Live", chatMode, visibility: "private", rightsConfirmed: true, rightsConfirmedAt: now, processingStatus: "idle", moderationStatus: "pending", playbackAllowed: false, createdAt: now, updatedAt: now };
+      await req.app.locals.streamContentCollection.insertOne(record);
+      return res.status(201).json({ live: { ...record, credentials: { rtmpsUrl: remote.rtmps.url, streamKey: remote.rtmps.streamKey, srtUrl: remote.srt?.url || null, srtStreamId: remote.srt?.streamId || null } } });
+    } catch (error) {
+      const message = axios.isAxiosError(error) ? String(error.response?.data?.errors?.[0]?.message || error.message) : error instanceof Error ? error.message : "Unable to create live input";
+      return res.status(502).json({ error: "live_input_failed", message });
+    }
+  });
+
+  router.get("/creator/live-inputs", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    const live = await req.app.locals.streamContentCollection.find({ creatorId: String(user._id), contentType: "live" }).sort({ createdAt: -1 }).limit(50).toArray();
+    return res.json({ live: live.map((item: Record<string, unknown>) => ({ ...item, _id: String(item._id) })) });
+  });
+
+  router.get("/creator/live-inputs/:uid/status", async (req, res) => {
+    try {
+      const user = await requireCreator(req, res); if (!user) return;
+      const uid = String(req.params.uid || "");
+      const live = await req.app.locals.streamContentCollection.findOne({ liveInputUid: uid, creatorId: String(user._id) });
+      if (!live) return res.status(404).json({ error: "not_found", message: "Live input not found." });
+      if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured" });
+      const response = await axios.get<{ success: boolean; result?: Array<{ uid?: string; status?: { state?: string }; playback?: { hls?: string; dash?: string }; preview?: string; thumbnail?: string }> }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/live_inputs/${encodeURIComponent(uid)}/videos`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
+      const active = (response.data.result || []).find(video => video.status?.state === "live-inprogress") || null;
+      const processingStatus = active ? "live" : "idle";
+      await req.app.locals.streamContentCollection.updateOne({ liveInputUid: uid }, { $set: { processingStatus, activeVideoUid: active?.uid || null, playback: active?.playback || null, thumbnailUrl: active?.thumbnail || live.thumbnailUrl || null, updatedAt: new Date() } });
+      return res.json({ status: processingStatus, activeVideoUid: active?.uid || null, playback: active?.playback || null, preview: active?.preview || null });
+    } catch (error) { return res.status(502).json({ error: "live_status_failed", message: error instanceof Error ? error.message : "Unable to refresh live status" }); }
+  });
+
   router.post("/creator/videos/:uid/complete", async (req, res) => {
     const user = await requireCreator(req, res); if (!user) return;
     const uid = String(req.params.uid || "");
@@ -233,6 +279,12 @@ const mountStreamEndpoints = (router: Router) => {
     if (!req.app.locals.streamContentCollection) return res.json({ videos: [] });
     const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(20).toArray();
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, creatorName: video.creatorName, category: video.category, thumbnailUrl: video.thumbnailUrl, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })) });
+  });
+
+  router.get("/live-content", async (_req, res) => {
+    if (!_req.app.locals.streamContentCollection) return res.json({ live: [] });
+    const items = await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray();
+    return res.json({ live: items.map((item: Record<string, unknown>) => ({ liveInputUid: item.liveInputUid, title: item.title, creatorName: item.creatorName, processingStatus: item.processingStatus, thumbnailUrl: item.thumbnailUrl || null, chatMode: item.chatMode })) });
   });
 
   router.get("/creator/videos/:uid/status", async (req, res) => {
@@ -299,6 +351,21 @@ const mountStreamEndpoints = (router: Router) => {
     if (!req.app.locals.streamContentCollection) return res.json({ available: false });
     const video = await req.app.locals.streamContentCollection.findOne({ "catalogAttachment.tmdbId": Number(req.params.id), "catalogAttachment.mediaType": req.params.type, visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready" });
     return res.json(video ? { available: true, playbackId: video.cloudflareUid, title: video.title } : { available: false });
+  });
+
+  router.get("/live/:uid/playback", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    if (!req.app.locals.streamContentCollection) return res.status(503).json({ error: "service_unavailable" });
+    const uid = String(req.params.uid || "");
+    const live = await req.app.locals.streamContentCollection.findOne({ liveInputUid: uid, contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true });
+    if (!live) return res.status(404).json({ error: "not_available", message: "This live stream is not published." });
+    if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: "cloudflare_stream_not_configured" });
+    try {
+      const response = await axios.get<{ result?: Array<{ uid?: string; status?: { state?: string }; playback?: { hls?: string; dash?: string }; thumbnail?: string }> }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/live_inputs/${encodeURIComponent(uid)}/videos`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
+      const active = (response.data.result || []).find(video => video.status?.state === "live-inprogress");
+      if (!active?.playback?.hls) return res.status(409).json({ error: "not_live", message: "This broadcast has not started yet." });
+      return res.json({ live: { id: uid, title: live.title, creatorName: live.creatorName, chatMode: live.chatMode, playbackUrl: active.playback.hls, thumbnailUrl: active.thumbnail || live.thumbnailUrl || null } });
+    } catch (error) { return res.status(502).json({ error: "live_playback_failed", message: error instanceof Error ? error.message : "Unable to load live playback" }); }
   });
 
   router.get("/playback/:uid", async (req, res) => {

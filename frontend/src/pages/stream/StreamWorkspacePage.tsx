@@ -3,7 +3,6 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
-import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
@@ -21,6 +20,9 @@ import StreamProfilePanel from "./StreamProfilePanel";
 import StreamVideoPlayer from "./StreamVideoPlayer";
 import StreamWatchHistory from "./StreamWatchHistory";
 import StreamModerationPanel from "./StreamModerationPanel";
+import StreamLiveSetup from "./StreamLiveSetup";
+import StreamLivePlayer from "./StreamLivePlayer";
+import StreamLiveDirectory from "./StreamLiveDirectory";
 import { getTitleAvailability } from "../../lib/streamAdmin";
 import {
   getStreamCatalog,
@@ -608,6 +610,7 @@ type TmdbDetailRaw = {
 };
 const Player = ({ live = false }: { live?: boolean }) => {
   const { id } = useParams();
+  if (live) return <StreamLivePlayer id={id || ""} />;
   if (!live) return <StreamVideoPlayer id={id || ""} />;
   const title = titles.find(item => item.id === id) ?? titles[0];
   const youtubeId = id?.startsWith("yt-") ? id.slice(3) : "";
@@ -822,37 +825,7 @@ const Studio = ({ kind }: { kind: StreamPageKind }) => {
           </>
         ) : null}
         {kind === "upload" ? <CreatorUploadForm /> : null}
-        {kind === "create-live" ? (
-          <form className="sw-form">
-            <div className="sw-live-setup">
-              <VideoCallRoundedIcon />
-              <h2>Set up your live stream</h2>
-              <p>Schedule an event or go live when you are ready.</p>
-            </div>
-            <label>
-              Stream title
-              <input placeholder="What are you streaming?" />
-            </label>
-            <div>
-              <label>
-                Start
-                <select>
-                  <option>Go live now</option>
-                  <option>Schedule for later</option>
-                </select>
-              </label>
-              <label>
-                Chat
-                <select>
-                  <option>Enabled</option>
-                  <option>Followers only</option>
-                  <option>Disabled</option>
-                </select>
-              </label>
-            </div>
-            <button type="button">Create stream</button>
-          </form>
-        ) : null}
+        {kind === "create-live" ? <StreamLiveSetup /> : null}
         {kind === "content" ? <CreatorContentList /> : null}
         {kind === "analytics" ? (
           <>
@@ -1077,6 +1050,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "player") return <Player />;
     if (kind === "live-player") return <Player live />;
     if (kind === "history") return <StreamWatchHistory />;
+    if (kind === "live") return <StreamLiveDirectory />;
     if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
   })();
