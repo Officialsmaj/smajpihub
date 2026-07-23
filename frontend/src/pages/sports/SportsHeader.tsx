@@ -16,7 +16,7 @@ const links = [
 
 const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => (
   <header className="sports-header">
-    <NavLink to="/services" className="sports-back-to-hub" aria-label="Back to SMAJ PI HUB services">
+    <NavLink to="/app/services" className="sports-back-to-hub" aria-label="Back to SMAJ PI HUB services">
       <ArrowBackRoundedIcon />
       <span>Back to Hub</span>
     </NavLink>
