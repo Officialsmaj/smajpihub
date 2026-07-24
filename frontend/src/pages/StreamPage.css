@@ -1325,3 +1325,13 @@
   .stream-page .stream-movie-tile h3,.stream-page .stream-ranking-rail span{font-size:13px}
   .stream-page .stream-movie-tile p,.stream-page .stream-ranking-rail small{font-size:11px}
 }
+
+/* Final typography contract: legacy light-theme rules must never darken Stream text. */
+.stream-page :is(.stream-hero-content,.stream-row-heading,.stream-section-head,.stream-rankings,.stream-movie-row,.stream-movie-tile,.stream-creators-row) :is(h1,h2,h3,h4,strong,b){color:#fff !important}
+.stream-page :is(.stream-hero-content,.stream-rankings,.stream-movie-row,.stream-movie-tile,.stream-creators-row) :is(p,small){color:#b8afc0 !important}
+.stream-page .stream-hero-content h1{color:#fff !important;text-shadow:0 2px 15px #000,0 1px 3px #000}
+.stream-page .stream-hero-meta,.stream-page .stream-hero-meta span{color:#ddd5e2 !important}
+.stream-page .stream-hero-meta b{color:#c7ff4a !important}
+.stream-page .stream-row-heading>a,.stream-page .stream-section-head>a{color:#c99cff !important}
+.stream-page .stream-ranking-tabs button{color:#d2cad8 !important}
+.stream-page .stream-ranking-tabs button.active{color:#fff !important}

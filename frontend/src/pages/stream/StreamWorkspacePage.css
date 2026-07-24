@@ -2062,3 +2062,9 @@
   .sw-admin-list article{display:grid;grid-template-columns:auto minmax(0,1fr)}
   .sw-admin-list article em,.sw-admin-list article>a{margin:0;text-align:center}
 }
+
+/* Final workspace contrast contract */
+.sw-page :is(.sw-page-content,.sw-management,.sw-profile,.sw-watch,.sw-detail-info,.sw-related,.sw-seasons,.sw-public-channel) :is(h1,h2,h3,h4,strong,b){color:#fff !important}
+.sw-page :is(.sw-page-content,.sw-management,.sw-profile,.sw-watch,.sw-detail-info,.sw-related,.sw-seasons,.sw-public-channel) :is(p,small){color:#b8afc0 !important}
+.sw-page :is(input,textarea,select){color:#fff}
+.sw-page :is(input,textarea)::placeholder{color:#8f8795}
