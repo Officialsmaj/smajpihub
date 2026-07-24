@@ -27,7 +27,7 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
     <header className="jobs-header">
       <Link to="/app/services" className="jobs-hub-link">← Hub</Link>
       <NavLink end to="/services/jobs" className="jobs-brand">
-        <span>SMAJ PI</span> Jobs
+        Jobs
       </NavLink>
       <nav className={menuOpen ? "open" : ""} aria-label="Jobs navigation">
         {links.map(([path, label]) => (
