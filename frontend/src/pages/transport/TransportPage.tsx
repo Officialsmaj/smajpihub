@@ -14,7 +14,6 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import RouteRoundedIcon from "@mui/icons-material/RouteRounded";
 import SafetyCheckRoundedIcon from "@mui/icons-material/SafetyCheckRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -78,9 +77,11 @@ const getStoredTrips = (): Trip[] => {
 
 const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (open: boolean) => void }) => (
   <header className="transport-header">
+    <Link className="transport-back-to-hub" to="/app/services" aria-label="Back to SMAJ PI HUB services">
+      ← Hub
+    </Link>
     <Link className="transport-brand" to="/services/transport">
-      <span><RouteRoundedIcon /></span>
-      <div><b>SMAJ</b><small>TRANSPORT</small></div>
+      <b>Transport</b>
     </Link>
     <nav aria-label="Transport navigation">
       <NavLink end to="/services/transport">Ride</NavLink>
@@ -90,7 +91,6 @@ const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenu
       <NavLink to="/services/transport/driver">Drive with us</NavLink>
     </nav>
     <div className="transport-header-actions">
-      <Link to="/app/services"><ArrowBackRoundedIcon /> Hub</Link>
       <Link className="transport-profile" to="/profile"><PersonRoundedIcon /></Link>
       <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation"><MenuRoundedIcon /></button>
     </div>
