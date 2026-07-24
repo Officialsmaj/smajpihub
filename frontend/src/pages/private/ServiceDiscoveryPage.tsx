@@ -14,7 +14,12 @@ const ratings: Record<string, string> = {
 
 const lifestyleSlugs = ["food", "health", "housing", "transport", "education", "charity", "events", "agro"];
 const trendingSlugs = ["store", "stream", "sports", "events", "food", "jobs", "education", "health", "housing", "transport"];
-const routeFor = (service: ServiceDefinition) => service.live ? "/store" : `/app/services/${service.slug}`;
+const routeFor = (service: ServiceDefinition) => {
+  if (service.slug === "store") return "/store";
+  if (service.slug === "stream") return "/app/services/stream";
+  if (service.slug === "sports") return "/services/sports";
+  return `/app/services/${service.slug}`;
+};
 
 const DiscoveryTabs = ({ active }: { active: Exclude<DiscoveryMode, "categories"> }) => (
   <nav className="discovery-tabs" aria-label="Discover SMAJ PI HUB">

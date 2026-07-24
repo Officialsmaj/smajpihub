@@ -77,7 +77,7 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ PI Stream",
     routeSegment: "stream",
     description: "Watch and monetize creator-first streaming content.",
-    status: "In Progress",
+    status: "Live",
   },
   {
     name: "SMAJ PI Sports",

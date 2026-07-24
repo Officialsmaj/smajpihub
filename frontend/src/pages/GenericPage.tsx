@@ -19,7 +19,7 @@ const normalizeRoute = (routeSegment?: string) => routeSegment === "food-deliver
 
 const GenericPage = ({ title, description, routeSegment, status = "Coming Soon" }: GenericPageProps) => {
   const service = serviceCatalog.find((item) => item.slug === normalizeRoute(routeSegment));
-  const isLive = status === "Live" || service?.slug === "store";
+  const isLive = status === "Live" || service?.live || service?.slug === "store";
   const inProgress = status === "In Progress" || service?.inProgress;
   const serviceItems = service?.items ?? ["Verified access", "Pi wallet flow", "Provider onboarding", "Support"];
 

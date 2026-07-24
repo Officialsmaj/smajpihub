@@ -34,11 +34,11 @@ const platformRows = [
 });
 
 const roadmapRows = [
-  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, payment confirmation, reviews, ratings, dispute support, and initial AI assistant deployment. SMAJ PI STREAM and SMAJ PI SPORTS are in progress."],
+  ["Phase 1", "Q1-Q2 2026", "Core Launch (MVP)", "SMAJ STORE launch with Pi login integration, user and seller profiles, product listings, buyer/seller chat, Pi payment flow, payment confirmation, reviews, ratings, dispute support, and initial AI assistant deployment. SMAJ PI STREAM and SMAJ PI SPORTS are live."],
   ["Phase 2", "Q3 2026", "Marketplace & Employment", "Expansion of SMAJ STORE features and vendor onboarding. Launch of SMAJ PI JOBS for freelancers and employers within the Pi ecosystem."],
   ["Phase 3", "Q4 2026", "Essential Services", "Launch of SMAJ FOOD DELIVERY and SMAJ PI HEALTH, providing critical daily services to the community."],
   ["Phase 4", "Q1 2027", "Mobility & Social Impact", "Introduction of SMAJ PI TRANSPORT and SMAJ PI CHARITY, expanding the hub's utility into mobility and social good."],
-  ["Phase 5", "Q2 2027", "Entertainment & Circular Economy", "SMAJ PI SWAP expansion, enriching the ecosystem with sustainable exchange options. SMAJ PI STREAM and SMAJ PI SPORTS remain marked In Progress until their launch readiness is confirmed."],
+  ["Phase 5", "Q2 2027", "Entertainment & Circular Economy", "SMAJ PI SWAP expansion, enriching the ecosystem with sustainable exchange options alongside the live SMAJ PI STREAM and SMAJ PI SPORTS services."],
   ["Phase 6", "Q3-Q4 2027", "Token Utility & Global Scaling", "Full SMAJ TOKEN utility integration, global scaling, localization, developer ecosystem expansion, and launch of SMAJ PI EDU, SMAJ PI AGRO, SMAJ PI ENERGY, SMAJ PI HOUSING, and SMAJ PI EVENTS."],
 ];
 

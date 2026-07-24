@@ -25,6 +25,7 @@ const serviceHints: Record<string, string> = {
 
 const servicePath = (slug: string, live?: boolean) => {
   if (slug === "store") return "/store";
+  if (slug === "stream") return "/app/services/stream";
   if (slug === "sports") return "/services/sports";
   return live ? `/services/${slug}` : `/app/services/${slug}`;
 };
@@ -36,7 +37,7 @@ const orderedServices = [...serviceCatalog].sort((left, right) => {
   const rightPriority = rightIndex === -1 ? prioritySlugs.length : rightIndex;
   return leftPriority - rightPriority;
 });
-const isInProgress = (slug: string) => slug === "stream";
+const isInProgress = (slug: string) => serviceCatalog.some((service) => service.slug === slug && service.inProgress);
 
 const ServicesHubPage = () => {
   const [search, setSearch] = useState("");

@@ -69,7 +69,12 @@ const mediaSections = [
   { title: "Events happening now", slug: "events", image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=85", items: ["Concerts", "Conferences", "Shows", "Experiences"], badges: ["Live now", "Starts today", "This weekend", "Ends on 7/8/26"] },
 ];
 
-const servicePath = (service: ServiceDefinition) => service.live ? "/store" : `/app/services/${service.slug}`;
+const servicePath = (service: ServiceDefinition) => {
+  if (service.slug === "store") return "/store";
+  if (service.slug === "stream") return "/app/services/stream";
+  if (service.slug === "sports") return "/services/sports";
+  return `/app/services/${service.slug}`;
+};
 const tabServices = (tab: DiscoveryTab) => {
   if (tab === "trending") return trendingSlugs.map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[];
   if (tab === "lifestyle") return lifestyleSlugs.map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[];
