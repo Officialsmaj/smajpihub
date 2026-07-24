@@ -25,6 +25,8 @@ import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
 import { getStreamAdminOverview, getStreamAdminSettings, getTitleAvailability, saveStreamAdminSettings, type StreamAdminOverview, type StreamAdminSettings } from "../../lib/streamAdmin";
+import { formatPiAmount } from "../../lib/formatters";
+import { formatPiRate } from "../../lib/piPricing";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -702,18 +704,19 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
         {kind === "plans" ? (
           <div className="sw-plans">
             {[
-              ["Free", "π 0", "Standard video and creator channels"],
-              ["Plus", "π 8", "HD, downloads and no advertising"],
-              ["Family", "π 14", "4K and up to five profiles"],
+              ["Free", 0, "Standard video and creator channels"],
+              ["Plus", 8, "HD, downloads and no advertising"],
+              ["Family", 14, "4K and up to five profiles"],
             ].map(([name, price, text], index) => (
               <article className={index === 1 ? "featured" : ""} key={name}>
                 <span>{index === 1 ? "POPULAR" : "PLAN"}</span>
                 <h2>{name}</h2>
                 <strong>
-                  {price}
+                  {formatPiAmount(Number(price))}
                   <small>/month</small>
                 </strong>
                 <p>{text}</p>
+                <small>{formatPiRate()}</small>
                 <button type="button">Choose {name}</button>
               </article>
             ))}

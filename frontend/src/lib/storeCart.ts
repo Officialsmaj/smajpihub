@@ -1,4 +1,5 @@
 import type { Product } from "../types/marketplace";
+import { piFromUsdt } from "./piPricing";
 
 export type CartItem = {
   productId: string;
@@ -13,8 +14,6 @@ export type CartItem = {
   priceUsdt?: number;
   quantity: number;
 };
-
-const PI_USDT_RATE = 314159;
 
 const CART_KEY = "smaj_store_cart";
 const BUY_NOW_KEY = "smaj_store_buy_now";
@@ -38,7 +37,7 @@ const toItem = (product: Product): CartItem => ({
   piUsername: product.piUsername,
   category: product.category,
   location: product.location,
-  pricePi: product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE,
+  pricePi: product.pricePi > 0 ? product.pricePi : piFromUsdt(product.priceUsdt || 0),
   priceUsdt: product.priceUsdt,
   quantity: 1,
 });

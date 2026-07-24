@@ -5,9 +5,9 @@ import type { Product } from "../../types/marketplace";
 import { isAxiosError } from "axios";
 import { uploadImage, uploadImages } from "../../lib/uploadImage";
 import { formatPiAmount, formatPiInputValue } from "../../lib/formatters";
+import { PI_USDT_RATE, piFromUsdt, usdtFromPi } from "../../lib/piPricing";
 import { LocationFields } from "../../components/LocationFields";
 
-const PI_USDT_RATE = 314159;
 const MAX_PRODUCT_IMAGES = 5;
 const variantFields = ["color", "size", "material", "storage", "ram", "weight", "model", "edition", "style"] as const;
 type VariantRow = Record<(typeof variantFields)[number], string> & { stock: string; pricePi: string; priceUsdt: string; image: string };
@@ -189,7 +189,7 @@ const EditProductPage = () => {
       <div className="product-form-section-title"><h2>Images</h2><p>Main image, gallery, and variant images.</p></div>
       <label>Product gallery ({form.images.length}/5 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>{form.images.length ? <div className="product-gallery-preview">{form.images.map((image, index) => <figure key={`${image.slice(-30)}-${index}`}><img src={image} alt={`Product preview ${index + 1}`} />{index === 0 ? <span>Main</span> : null}<button type="button" onClick={() => removeImage(index)}>Remove</button></figure>)}</div> : null}
       <div className="product-form-section-title"><h2>Price & Inventory</h2><p>Base price and overall stock.</p></div>
-      <div className="private-form-row"><label>$ price (USDT)<input required type="number" min="0.01" step="0.01" value={form.priceUsdt} onChange={(event) => setForm({ ...form, priceUsdt: event.target.value, pricePi: formatPiInputValue(Number(event.target.value) / PI_USDT_RATE) })} /></label><label>π price<input required type="number" min="0.0000000001" step="any" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value, priceUsdt: String(Number(event.target.value) * PI_USDT_RATE) })} /></label></div>
+      <div className="private-form-row"><label>$ price (USDT)<input required type="number" min="0.01" step="0.01" value={form.priceUsdt} onChange={(event) => setForm({ ...form, priceUsdt: event.target.value, pricePi: formatPiInputValue(piFromUsdt(Number(event.target.value))) })} /></label><label>π price<input required type="number" min="0.0000000001" step="any" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value, priceUsdt: String(usdtFromPi(Number(event.target.value))) })} /></label></div>
       <div className="private-form-row"><label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label><label>Condition<input required value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })} /></label></div>
       <div className="private-form-row"><label>Quantity<input required type="number" min="1" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /></label><label>Delivery option<input required value={form.deliveryOption} onChange={(event) => setForm({ ...form, deliveryOption: event.target.value })} /></label></div>
       <label>Description<textarea required rows={5} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>

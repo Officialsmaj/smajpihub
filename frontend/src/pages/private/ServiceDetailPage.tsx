@@ -4,6 +4,7 @@ import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import { serviceCatalog } from "../../content/serviceCatalog";
+import { formatPiRate } from "../../lib/piPricing";
 
 const ServiceDetailPage = () => {
   const { slug } = useParams();
@@ -43,6 +44,7 @@ const ServiceDetailPage = () => {
         <p className="private-kicker">COMING SOON</p>
         <h1>{service.experience}</h1>
         <p>{service.description}</p>
+        <p className="service-payment-rate">{formatPiRate()} across SMAJ services.</p>
         <button className="private-primary-button" onClick={() => setNotified(true)}>{notified ? "Notification requested" : "Notify Me"}</button>
       </section>
       <section className="service-preview-tabs"><strong>Explore what is coming</strong><div>{matches.map((item) => <span key={item}>{item}</span>)}</div></section>

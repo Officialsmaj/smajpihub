@@ -5,6 +5,7 @@ import AppLayout from "../layouts/AppLayout";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import { axiosClient } from "../lib/axiosClient";
+import { formatPiRate } from "../lib/piPricing";
 
 const legalEmail = "info@smajpihub.com";
 
@@ -638,7 +639,7 @@ export const SellerAgreementPage = () => (
         {
           heading: "Pi Utility and Price Conversion Policy",
           items: [
-            "SMAJ PI HUB uses an internal marketplace reference value of 1 Pi = $314159 for platform price calculations.",
+            `SMAJ PI HUB uses an internal platform reference value of ${formatPiRate()} for product and service price calculations.`,
             "Sellers voluntarily agree to this pricing model when publishing listings.",
             "Buyers voluntarily choose whether to purchase under this pricing model.",
             "SMAJ PI HUB does not guarantee external exchange values for Pi.",
