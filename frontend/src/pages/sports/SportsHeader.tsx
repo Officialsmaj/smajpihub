@@ -17,10 +17,10 @@ const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: 
   <header className="sports-header">
     <NavLink to="/app/services" className="sports-back-to-hub" aria-label="Back to SMAJ PI HUB services">
       <ArrowBackRoundedIcon />
-      <span>Back to Hub</span>
+      <span>Hub</span>
     </NavLink>
     <NavLink to="/services/sports" className="sports-brand">
-      <b>SMAJ</b> Sports
+      <b>Sports</b>
     </NavLink>
     <nav aria-label="Sports navigation">
       {links.map(([path, label]) => (
@@ -34,7 +34,7 @@ const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: 
       <input
         value={query}
         onChange={event => onQueryChange(event.target.value)}
-        placeholder="Search teams, matches..."
+        placeholder="Search teams, matches and competitions"
       />
     </label>
     <button
