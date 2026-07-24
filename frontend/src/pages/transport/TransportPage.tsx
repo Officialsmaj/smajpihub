@@ -20,7 +20,9 @@ import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
+import FlightRoundedIcon from "@mui/icons-material/FlightRounded";
 import AppLayout from "../../layouts/AppLayout";
+import FlightsPage from "./FlightsPage";
 import "./TransportPage.css";
 
 type RideType = {
@@ -82,6 +84,7 @@ const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenu
     </Link>
     <nav aria-label="Transport navigation">
       <NavLink end to="/services/transport">Ride</NavLink>
+      <NavLink to="/services/transport/flights">Flights</NavLink>
       <NavLink to="/services/transport/trips">My trips</NavLink>
       <NavLink to="/services/transport/wallet">Wallet</NavLink>
       <NavLink to="/services/transport/driver">Drive with us</NavLink>
@@ -93,6 +96,7 @@ const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenu
     </div>
     {menuOpen ? <div className="transport-mobile-menu">
       <NavLink end to="/services/transport" onClick={() => setMenuOpen(false)}>Book a ride</NavLink>
+      <NavLink to="/services/transport/flights" onClick={() => setMenuOpen(false)}>Book a flight</NavLink>
       <NavLink to="/services/transport/trips" onClick={() => setMenuOpen(false)}>My trips</NavLink>
       <NavLink to="/services/transport/wallet" onClick={() => setMenuOpen(false)}>Wallet</NavLink>
       <NavLink to="/services/transport/driver" onClick={() => setMenuOpen(false)}>Drive with us</NavLink>
@@ -250,6 +254,7 @@ const TransportPage = () => {
   if (section === "trips") content = tripsPage;
   if (section === "wallet") content = walletPage;
   if (section === "driver") content = driverPage;
+  if (section === "flights" || section.startsWith("flights/")) content = <FlightsPage />;
   if (section === "track" || bookingStep === "confirmed") content = trackingPage;
 
   return <AppLayout showHeader={false} showFooter={false}>
@@ -258,7 +263,7 @@ const TransportPage = () => {
       {content}
       {bookingStep === "review" ? <div className="transport-modal-layer"><button className="transport-modal-overlay" aria-label="Close" onClick={() => setBookingStep("choose")} /><section className="transport-review-modal"><button className="modal-close" onClick={() => setBookingStep("choose")}><CloseRoundedIcon /></button><span className="ride-icon"><RideIcon type={activeRide.icon} /></span><span className="transport-eyebrow">CONFIRM YOUR RIDE</span><h2>{activeRide.name} is {activeRide.eta} away</h2><div><p><small>PICKUP</small><b>{pickup}</b></p><p><small>DESTINATION</small><b>{destination}</b></p><p><small>PAY WITH</small><b>Pi Wallet</b></p><p><small>TOTAL FARE</small><b>π {quote.toFixed(2)}</b></p></div><button className="transport-main-button" onClick={confirmBooking}>Confirm and request ride</button><small>By confirming, you agree to the estimated fare and safety terms.</small></section></div> : null}
       {bookingStep === "matching" ? <div className="transport-modal-layer"><div className="transport-matching"><span><DirectionsCarRoundedIcon /></span><h2>Finding your driver…</h2><p>Matching you with a nearby verified driver.</p><i /></div></div> : null}
-      <nav className="transport-bottom-nav"><NavLink end to="/services/transport"><HomeRoundedIcon /><span>Ride</span></NavLink><NavLink to="/services/transport/trips"><HistoryRoundedIcon /><span>Trips</span></NavLink><NavLink to="/services/transport/wallet"><PaymentsRoundedIcon /><span>Wallet</span></NavLink><NavLink to="/services/transport/driver"><PersonRoundedIcon /><span>Drive</span></NavLink></nav>
+      <nav className="transport-bottom-nav"><NavLink end to="/services/transport"><HomeRoundedIcon /><span>Ride</span></NavLink><NavLink to="/services/transport/flights"><FlightRoundedIcon /><span>Flights</span></NavLink><NavLink to="/services/transport/trips"><HistoryRoundedIcon /><span>Trips</span></NavLink><NavLink to="/services/transport/wallet"><PaymentsRoundedIcon /><span>Wallet</span></NavLink><NavLink to="/services/transport/driver"><PersonRoundedIcon /><span>Drive</span></NavLink></nav>
     </main>
   </AppLayout>;
 };
