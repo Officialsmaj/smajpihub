@@ -8,7 +8,18 @@ export const TeamMark = ({ team, small = false }: { team: SportsTeam; small?: bo
     className={`sports-team-mark${small ? " small" : ""}`}
     style={{ "--team-color": team.color } as React.CSSProperties}
   >
-    {team.shortName.slice(0, 1)}
+    <i aria-hidden="true">{team.shortName.slice(0, 1)}</i>
+    {team.logoUrl ? (
+      <img
+        src={team.logoUrl}
+        alt=""
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={event => {
+          event.currentTarget.style.display = "none";
+        }}
+      />
+    ) : null}
   </span>
 );
 

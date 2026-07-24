@@ -5,6 +5,7 @@ export type SportsTeam = {
   city: string;
   color: string;
   form: string[];
+  logoUrl?: string;
 };
 
 export type SportsMatch = {

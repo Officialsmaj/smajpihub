@@ -322,6 +322,20 @@
   box-shadow: 0 10px 28px color-mix(in srgb, var(--team-color) 30%, transparent);
   font-size: 22px;
   font-weight: 900;
+  overflow: hidden;
+  position: relative;
+}
+.sports-team-mark > i {
+  font-style: normal;
+}
+.sports-team-mark > img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  position: absolute;
+  inset: 0;
+  object-fit: contain;
+  background: #f8fafc;
 }
 .sports-team-mark.small {
   width: 34px;

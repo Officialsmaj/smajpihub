@@ -183,6 +183,7 @@ type Team = {
   city: string;
   color: string;
   form: string[];
+  logoUrl?: string;
 };
 type Match = {
   id: string;
@@ -228,6 +229,8 @@ type SportsDbEvent = {
   strSport?: string;
   strHomeTeam?: string;
   strAwayTeam?: string;
+  strHomeTeamBadge?: string | null;
+  strAwayTeamBadge?: string | null;
   intHomeScore?: string | null;
   intAwayScore?: string | null;
   dateEvent?: string;
@@ -267,6 +270,7 @@ const score = (value?: string | null) => {
 const teamFromEvent = (
   id: string | undefined,
   name: string | undefined,
+  badgeUrl?: string | null,
 ): Team => {
   const safeName = String(name || "Unknown team").trim();
   return {
@@ -276,6 +280,7 @@ const teamFromEvent = (
     city: "",
     color: colorFor(safeName),
     form: [],
+    ...(badgeUrl && /^https:\/\//i.test(badgeUrl) ? { logoUrl: badgeUrl } : {}),
   };
 };
 const eventDateLabel = (event: SportsDbEvent, finished: boolean) => {
@@ -310,8 +315,16 @@ const normalizeEvent = (event: SportsDbEvent): Match => {
     status: finished ? "finished" : "upcoming",
     dateLabel: eventDateLabel(event, finished),
     venue: String(event.strVenue || ""),
-    home: teamFromEvent(event.idHomeTeam, event.strHomeTeam),
-    away: teamFromEvent(event.idAwayTeam, event.strAwayTeam),
+    home: teamFromEvent(
+      event.idHomeTeam,
+      event.strHomeTeam,
+      event.strHomeTeamBadge,
+    ),
+    away: teamFromEvent(
+      event.idAwayTeam,
+      event.strAwayTeam,
+      event.strAwayTeamBadge,
+    ),
     ...(homeScore !== undefined ? { homeScore } : {}),
     ...(awayScore !== undefined ? { awayScore } : {}),
   };
