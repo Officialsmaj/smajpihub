@@ -11,6 +11,7 @@
 /* Unified cinema shell */
 .stream-global-header{color:#f7f4fa;background:rgba(11,11,15,.94);border-color:rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.28)}
 .stream-global-back,.stream-global-menu-button{color:#d2cad8;background:#17171d;border-color:rgba(255,255,255,.1)}
+.stream-global-title{color:#fff;text-decoration:none;font-size:15px;font-weight:900;letter-spacing:-.02em;white-space:nowrap}
 .stream-global-brand{color:#b8afc0}.stream-global-brand b{color:#fff}
 .stream-global-search{color:#aaa1b2;background:rgba(255,255,255,.055);border-color:transparent;box-shadow:none}
 .stream-global-search input{color:#fff}.stream-global-search input::placeholder{color:#827a89}
@@ -23,6 +24,7 @@
 .stream-side-menu section>b{color:#8f8598}.stream-side-menu section>a{color:#d5cdd9}
 .stream-side-menu section>a:hover{color:#fff;background:#21172b}
 @media(max-width:640px){.stream-global-search{padding:0 11px}.stream-global-search>svg{flex:0 0 auto}.stream-global-search input{font-size:12px}}
+@media(max-width:640px){.stream-global-title{font-size:13px}.stream-global-row{gap:7px}}
 
 /* Prevent browser and global form styles from painting the search input white. */
 .stream-global-header .stream-global-search input{
