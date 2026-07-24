@@ -19575,6 +19575,10 @@ svg {
   visibility: visible;
 }
 
+.storefront-header.storefront-header-menu-open {
+  z-index: 500 !important;
+}
+
 .storefront-tool-menu {
   z-index: 210;
 }

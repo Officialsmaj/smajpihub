@@ -196,7 +196,7 @@ const StorePage = () => {
       <PullToRefresh onRefresh={() => loadCatalog(false)} />
       {cartToast}
       <section className="storefront-shell">
-        <header className="storefront-header">
+        <header className={`storefront-header ${mobileMenuOpen ? "storefront-header-menu-open" : ""}`}>
           <div className="storefront-header-main">
             <Link to="/app/services" className="storefront-back-link">
               <ArrowBackIosNewOutlinedIcon />
