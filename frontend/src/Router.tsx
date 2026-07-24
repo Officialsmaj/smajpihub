@@ -487,6 +487,18 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/app/services/jobs",
+    element: (
+      <ProtectedRoute>
+        <JobsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/jobs/*",
+    element: <Navigate to="/services/jobs" replace />,
+  },
+  {
     path: "/app/services/stream/movies",
     element: (
       <ProtectedRoute>
