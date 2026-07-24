@@ -4,9 +4,9 @@ import { createNotification } from "../services/notifications";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
 import { assertNoBase64Images, resolveImageValue } from "../services/imageStorage";
+import { piFromUsdt } from "../services/piPricing";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
-const PI_USDT_RATE = 314159;
 
 const timelineEntry = (status: string, label: string, note?: string) => ({
   status,
@@ -29,11 +29,6 @@ const normalizeVerificationLevel = (user: any) => {
 };
 const publicVerificationLevel = (user: any) => verificationStatus(user) === "approved" && canShowPublicVerification(user) ? normalizeVerificationLevel(user) : "basic";
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const piFromUsdt = (priceUsdt: unknown) => {
-  const amount = Number(priceUsdt);
-  return Number.isFinite(amount) && amount > 0 ? amount / PI_USDT_RATE : 0;
-};
 
 const withResolvedPiPrice = (document: Record<string, any>) => {
   const pricePi = Number(document.pricePi);

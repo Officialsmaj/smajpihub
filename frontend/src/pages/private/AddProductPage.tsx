@@ -4,11 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
+import { formatPiRate, piFromUsdt, usdtFromPi } from "../../lib/piPricing";
 import { uploadImage, uploadImages } from "../../lib/uploadImage";
 import type { Product } from "../../types/marketplace";
 import { LocationFields } from "../../components/LocationFields";
 
-const PI_USDT_RATE = 314159;
 const MAX_PRODUCT_IMAGES = 5;
 const PRODUCT_DRAFT_KEY = "smaj_add_product_draft";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
@@ -174,12 +174,12 @@ const AddProductPage = () => {
 
   const setUsdtPrice = (value: string) => {
     const amount = Number(value);
-    setForm((current) => ({ ...current, priceUsdt: value, pricePi: Number.isFinite(amount) && amount > 0 ? trimAmount(amount / PI_USDT_RATE, 8) : "" }));
+    setForm((current) => ({ ...current, priceUsdt: value, pricePi: Number.isFinite(amount) && amount > 0 ? trimAmount(piFromUsdt(amount), 8) : "" }));
   };
 
   const setPiPrice = (value: string) => {
     const amount = Number(value);
-    setForm((current) => ({ ...current, pricePi: value, priceUsdt: Number.isFinite(amount) && amount > 0 ? trimAmount(amount * PI_USDT_RATE, 2) : "" }));
+    setForm((current) => ({ ...current, pricePi: value, priceUsdt: Number.isFinite(amount) && amount > 0 ? trimAmount(usdtFromPi(amount), 2) : "" }));
   };
 
   const selectImages = (files?: FileList | null) => {
@@ -285,7 +285,7 @@ const AddProductPage = () => {
           ...Object.fromEntries(variantFields.map((field) => [field, variant[field].trim()])),
           stock: Number(variant.stock || 0),
           priceUsdt: Number.isFinite(variantUsdt) && variantUsdt > 0 ? variantUsdt : undefined,
-          pricePi: Number.isFinite(variantUsdt) && variantUsdt > 0 ? variantUsdt / PI_USDT_RATE : undefined,
+          pricePi: Number.isFinite(variantUsdt) && variantUsdt > 0 ? piFromUsdt(variantUsdt) : undefined,
           image: variant.image ? await uploadImage(variant.image, "products") : "",
         };
       }));
@@ -388,7 +388,7 @@ const AddProductPage = () => {
         </details>
 
         <details className="product-accordion" open>
-          <summary><span><strong>4. Price in USDT + PI</strong><small>1 PI = 314159 USDT. Edit either field.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
+          <summary><span><strong>4. Price in USDT + PI</strong><small>{formatPiRate()}. Edit either field.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
           <div className="private-form-row">
             <label>$ price (USDT)<input required type="number" min="0.01" step="any" value={form.priceUsdt} onChange={(event) => setUsdtPrice(event.target.value)} /></label>
             <label>π price<input required type="number" min="0.00000001" step="any" value={form.pricePi} onChange={(event) => setPiPrice(event.target.value)} /></label>

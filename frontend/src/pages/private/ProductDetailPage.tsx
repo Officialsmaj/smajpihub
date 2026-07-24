@@ -16,12 +16,12 @@ import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName, countryFlag, formatPiAmount, formatUsdAmount } from "../../lib/formatters";
+import { PI_USDT_RATE, piFromUsdt } from "../../lib/piPricing";
 import { setBuyNowItem } from "../../lib/storeCart";
 import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product, SellerSummary } from "../../types/marketplace";
 
 const supportEmail = "info@smajpihub.com";
-const PI_USDT_RATE = 314159;
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -127,7 +127,7 @@ const ProductDetailPage = () => {
   const sellerCountry = countryDisplayName(seller?.country || product.country || product.location.split(" - ")[0]);
   const sellerFlag = countryFlag(seller?.country || product.country || product.location.split(" - ")[0]);
   const sellerLocation = [sellerCountry, product.stateRegion, product.city, product.areaAddress].filter(Boolean).join(" - ") || product.location;
-  const piPrice = product.pricePi > 0 ? product.pricePi : (product.priceUsdt || 0) / PI_USDT_RATE;
+  const piPrice = product.pricePi > 0 ? product.pricePi : piFromUsdt(product.priceUsdt || 0);
   const selectedImageIndex = Math.max(0, images.indexOf(selectedImage));
   const visibleThumbnails = images.slice(0, 4);
   const productReviewCount = product.reviewCount || 0;

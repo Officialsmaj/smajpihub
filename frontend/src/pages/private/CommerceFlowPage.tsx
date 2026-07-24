@@ -9,6 +9,7 @@ import { isAxiosError } from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
+import { formatPiRate, usdtFromPi } from "../../lib/piPricing";
 import {
   clearBuyNowItem,
   getBuyNowItem,
@@ -17,8 +18,6 @@ import {
   updateCartQuantity,
 } from "../../lib/storeCart";
 import type { Order } from "../../types/marketplace";
-
-const PI_USD = 314159;
 
 const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-method" }) => {
   const { isAuthenticated, requireAuth } = useAuthContext();
@@ -123,7 +122,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
             <AccountBalanceWalletOutlinedIcon />
             <div>
               <strong>Pi Wallet</strong>
-              <p>Secure Pi Browser payment for SMAJ Store orders.</p>
+              <p>Secure Pi Browser payment for SMAJ Store orders. {formatPiRate()}.</p>
             </div>
           </div>
           <div className="commerce-method-card">
@@ -221,7 +220,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                 <span>Total</span>
                 <strong>{formatPiAmount(cartTotalPi)}</strong>
               </div>
-              <small>approx {formatUsdAmount(cartTotalPi * PI_USD)}</small>
+              <small>approx {formatUsdAmount(usdtFromPi(cartTotalPi))}</small>
               <button
                 type="button"
                 className="private-primary-button"
@@ -292,7 +291,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <span>Total</span>
                     <strong>{formatPiAmount(checkoutTotalPi)}</strong>
                   </div>
-                  <small className="commerce-usd">approx {formatUsdAmount(checkoutTotalPi * PI_USD)}</small>
+                  <small className="commerce-usd">approx {formatUsdAmount(usdtFromPi(checkoutTotalPi))}</small>
                 </div>
                 <div className="form-actions commerce-checkout-actions">
                   <button
@@ -338,7 +337,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                     <div className="commerce-payment-copy">
                       <strong>{order.productTitle}</strong>
                       <span>{formatPiAmount(order.pricePi)}</span>
-                      <small>approx {formatUsdAmount(order.pricePi * PI_USD)}</small>
+                      <small>approx {formatUsdAmount(usdtFromPi(order.pricePi))}</small>
                     </div>
                     <div className="commerce-payment-actions">
                       <button

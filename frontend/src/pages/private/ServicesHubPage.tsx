@@ -4,6 +4,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import { serviceCatalog } from "../../content/serviceCatalog";
+import { formatPiRate } from "../../lib/piPricing";
 
 const serviceHints: Record<string, string> = {
   store: "Shopping • Deals",
@@ -45,14 +46,14 @@ const ServicesHubPage = () => {
 
   return <main className="private-page services-launcher">
     <div className="services-desktop-view">
-      <section className="private-page-head"><div><p className="private-kicker">SMAJ ECOSYSTEM</p><h1>All SMAJ PI HUB Services</h1><p>Explore one connected ecosystem for everyday life.</p></div></section>
+      <section className="private-page-head"><div><p className="private-kicker">SMAJ ECOSYSTEM</p><h1>All SMAJ PI HUB Services</h1><p>Explore one connected ecosystem for everyday life. {formatPiRate()} across services.</p></div></section>
       <label className="services-search"><SearchOutlinedIcon /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Discover anything..." /></label>
       <section className="services-hub-grid">{visible.map((service) => isInProgress(service.slug) ? <article className="service-in-progress-card" key={service.slug}><ServiceArt index={service.atlasIndex} /><span className="service-status in-progress">IN PROGRESS</span><strong>{service.name}</strong><p>{service.description}</p></article> : <Link key={service.slug} to={servicePath(service.slug, service.live)}><ServiceArt index={service.atlasIndex} /><span className={`service-status ${service.live ? "live" : "soon"}`}>{service.live ? "LIVE" : "Coming Soon"}</span><strong>{service.name}</strong><p>{service.description}</p><i><ArrowForwardOutlinedIcon /></i></Link>)}</section>
       {!visible.length ? <div className="private-state">No service matches your search.</div> : null}
     </div>
 
     <section className="services-mobile-view">
-      <header><h1>Services</h1><p>Access multiple digital services from anywhere you are.</p></header>
+      <header><h1>Services</h1><p>Access multiple digital services from anywhere you are. {formatPiRate()}.</p></header>
       <div className="mobile-services-grid">{orderedServices.map((service) => isInProgress(service.slug) ? <article className="service-in-progress-card" key={service.slug}><ServiceArt index={service.atlasIndex} /><em className="service-in-progress-badge">IN PROGRESS</em><strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></article> : <Link key={service.slug} to={servicePath(service.slug, service.live)}><ServiceArt index={service.atlasIndex} />{service.live ? <em className="live-card-badge">LIVE</em> : null}<strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></Link>)}</div>
     </section>
   </main>;

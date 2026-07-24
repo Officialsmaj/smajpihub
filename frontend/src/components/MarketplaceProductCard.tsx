@@ -16,8 +16,7 @@ import {
   formatPiAmount,
   formatUsdAmount,
 } from "../lib/formatters";
-
-const PI_USDT_RATE = 314159;
+import { PI_USDT_RATE, piFromUsdt } from "../lib/piPricing";
 
 const usdt = (product: Product) =>
   formatUsdAmount(product.priceUsdt ?? product.pricePi * PI_USDT_RATE);
@@ -25,7 +24,7 @@ const usdt = (product: Product) =>
 const pi = (product: Product) =>
   product.pricePi > 0
     ? product.pricePi
-    : (product.priceUsdt || 0) / PI_USDT_RATE;
+    : piFromUsdt(product.priceUsdt || 0);
 
 const countryTokens = [
   "United Arab Emirates",
