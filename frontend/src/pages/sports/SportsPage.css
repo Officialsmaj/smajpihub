@@ -950,7 +950,12 @@
     justify-content: space-between;
   }
   .sports-brand {
-    display: none;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+  .sports-brand b {
+    font-size: 12px;
   }
   .sports-search {
     height: 36px;
