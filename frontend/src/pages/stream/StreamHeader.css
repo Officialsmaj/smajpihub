@@ -23,3 +23,21 @@
 .stream-side-menu section>b{color:#8f8598}.stream-side-menu section>a{color:#d5cdd9}
 .stream-side-menu section>a:hover{color:#fff;background:#21172b}
 @media(max-width:640px){.stream-global-search{padding:0 11px}.stream-global-search>svg{flex:0 0 auto}.stream-global-search input{font-size:12px}}
+
+/* Prevent browser and global form styles from painting the search input white. */
+.stream-global-header .stream-global-search input{
+  appearance:none;
+  -webkit-appearance:none;
+  color:#fff !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0;
+  box-shadow:none !important;
+}
+.stream-global-header .stream-global-search input:-webkit-autofill,
+.stream-global-header .stream-global-search input:-webkit-autofill:hover,
+.stream-global-header .stream-global-search input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#fff;
+  -webkit-box-shadow:0 0 0 1000px #17171d inset !important;
+  caret-color:#fff;
+}
