@@ -1,4 +1,6 @@
 import type { Router } from "express";
+import axios from "axios";
+import env from "../environments";
 
 const teams = [
   {
@@ -174,68 +176,361 @@ const standings = [
   { team: waves, played: 12, won: 4, draw: 2, lost: 6, points: 14 },
 ];
 
-const responseMeta = () => ({
-  source: "smaj-demo",
-  updatedAt: new Date().toISOString(),
-  refreshAfterSeconds: 45,
+type Team = {
+  id: string;
+  name: string;
+  shortName: string;
+  city: string;
+  color: string;
+  form: string[];
+};
+type Match = {
+  id: string;
+  competition: string;
+  sport: string;
+  status: string;
+  minute?: string;
+  dateLabel: string;
+  venue: string;
+  home: Team;
+  away: Team;
+  homeScore?: number;
+  awayScore?: number;
+};
+type Standing = {
+  team: Team;
+  played: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+};
+type SportsCatalog = {
+  matches: Match[];
+  teams: Team[];
+  stories: typeof stories;
+  standings: Standing[];
+  competitions: Array<{
+    id: string;
+    name: string;
+    sport: string;
+    teamCount: number;
+  }>;
+  meta: { source: string; updatedAt: string; refreshAfterSeconds: number };
+};
+
+type SportsDbEvent = {
+  idEvent?: string;
+  idLeague?: string;
+  idHomeTeam?: string;
+  idAwayTeam?: string;
+  strLeague?: string;
+  strSport?: string;
+  strHomeTeam?: string;
+  strAwayTeam?: string;
+  intHomeScore?: string | null;
+  intAwayScore?: string | null;
+  dateEvent?: string;
+  strTime?: string;
+  strTimestamp?: string;
+  strVenue?: string;
+  strStatus?: string;
+};
+
+const palette = [
+  "#2563eb",
+  "#f59e0b",
+  "#7c3aed",
+  "#10b981",
+  "#ef4444",
+  "#06b6d4",
+];
+const colorFor = (value: string) =>
+  palette[
+    [...value].reduce(
+      (total, character) => total + character.charCodeAt(0),
+      0,
+    ) % palette.length
+  ];
+const shortName = (name: string) => {
+  const words = name.split(/\s+/).filter(Boolean);
+  const initials = words.map((word) => word[0]).join("");
+  return (initials.length >= 2 ? initials : name.slice(0, 3))
+    .toUpperCase()
+    .slice(0, 3);
+};
+const score = (value?: string | null) => {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+const teamFromEvent = (
+  id: string | undefined,
+  name: string | undefined,
+): Team => {
+  const safeName = String(name || "Unknown team").trim();
+  return {
+    id: String(id || safeName.toLowerCase().replace(/[^a-z0-9]+/g, "-")),
+    name: safeName,
+    shortName: shortName(safeName),
+    city: "",
+    color: colorFor(safeName),
+    form: [],
+  };
+};
+const eventDateLabel = (event: SportsDbEvent, finished: boolean) => {
+  if (finished) return "Full time";
+  const timestamp =
+    event.strTimestamp ||
+    `${event.dateEvent || ""}T${event.strTime || "00:00:00"}Z`;
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime()))
+    return [event.dateEvent, event.strTime?.slice(0, 5)]
+      .filter(Boolean)
+      .join(" · ");
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
+};
+const normalizeEvent = (event: SportsDbEvent): Match => {
+  const homeScore = score(event.intHomeScore);
+  const awayScore = score(event.intAwayScore);
+  const finished = homeScore !== undefined && awayScore !== undefined;
+  return {
+    id: String(
+      event.idEvent ||
+        `${event.idHomeTeam}-${event.idAwayTeam}-${event.dateEvent}`,
+    ),
+    competition: String(event.strLeague || "Sports"),
+    sport: String(event.strSport || "Football"),
+    status: finished ? "finished" : "upcoming",
+    dateLabel: eventDateLabel(event, finished),
+    venue: String(event.strVenue || ""),
+    home: teamFromEvent(event.idHomeTeam, event.strHomeTeam),
+    away: teamFromEvent(event.idAwayTeam, event.strAwayTeam),
+    ...(homeScore !== undefined ? { homeScore } : {}),
+    ...(awayScore !== undefined ? { awayScore } : {}),
+  };
+};
+
+const demoCatalog = (): SportsCatalog => ({
+  matches,
+  teams,
+  stories,
+  standings,
+  competitions: [
+    {
+      id: "smaj-champions-league",
+      name: "SMAJ Champions League",
+      sport: "Football",
+      teamCount: 16,
+    },
+  ],
+  meta: {
+    source: "smaj-demo",
+    updatedAt: new Date().toISOString(),
+    refreshAfterSeconds: 45,
+  },
 });
 
-const mountSportsEndpoints = (router: Router) => {
-  router.get("/bootstrap", (_, res) =>
-    res.json({ matches, teams, stories, standings, meta: responseMeta() }),
+const buildStandings = (
+  providerMatches: Match[],
+  providerTeams: Team[],
+): Standing[] => {
+  const table = new Map<string, Standing>(
+    providerTeams.map((team) => [
+      team.id,
+      { team, played: 0, won: 0, draw: 0, lost: 0, points: 0 },
+    ]),
   );
-  router.get("/matches", (req, res) => {
+  providerMatches
+    .filter((match) => match.status === "finished")
+    .forEach((match) => {
+      const home = table.get(match.home.id);
+      const away = table.get(match.away.id);
+      if (
+        !home ||
+        !away ||
+        match.homeScore === undefined ||
+        match.awayScore === undefined
+      )
+        return;
+      home.played += 1;
+      away.played += 1;
+      if (match.homeScore === match.awayScore) {
+        home.draw += 1;
+        away.draw += 1;
+        home.points += 1;
+        away.points += 1;
+      } else if (match.homeScore > match.awayScore) {
+        home.won += 1;
+        away.lost += 1;
+        home.points += 3;
+      } else {
+        away.won += 1;
+        home.lost += 1;
+        away.points += 3;
+      }
+    });
+  return [...table.values()]
+    .filter((row) => row.played > 0)
+    .sort((left, right) => right.points - left.points);
+};
+
+let cachedCatalog: { expiresAt: number; value: SportsCatalog } | null = null;
+let pendingCatalog: Promise<SportsCatalog> | null = null;
+
+const fetchSportsDbEvents = async (
+  leagueId: string,
+  endpoint: "eventsnextleague" | "eventspastleague",
+) => {
+  const response = await axios.get<{ events?: SportsDbEvent[] | null }>(
+    `https://www.thesportsdb.com/api/v1/json/${encodeURIComponent(env.sports_api_key)}/${endpoint}.php`,
+    { params: { id: leagueId }, timeout: 12_000 },
+  );
+  return Array.isArray(response.data.events) ? response.data.events : [];
+};
+
+const fetchProviderCatalog = async (): Promise<SportsCatalog> => {
+  const eventGroups = await Promise.all(
+    env.sports_league_ids.flatMap((leagueId) => [
+      fetchSportsDbEvents(leagueId, "eventsnextleague"),
+      fetchSportsDbEvents(leagueId, "eventspastleague"),
+    ]),
+  );
+  const providerMatches = eventGroups.flat().map(normalizeEvent);
+  if (!providerMatches.length)
+    throw new Error(
+      "TheSportsDB returned no events for the configured leagues.",
+    );
+  const teamMap = new Map<string, Team>();
+  providerMatches.forEach((match) => {
+    teamMap.set(match.home.id, match.home);
+    teamMap.set(match.away.id, match.away);
+  });
+  const providerTeams = [...teamMap.values()];
+  const competitions = [
+    ...new Map(
+      providerMatches.map((match) => [
+        match.competition,
+        {
+          id: match.competition.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          name: match.competition,
+          sport: match.sport,
+          teamCount: new Set(
+            providerMatches
+              .filter((item) => item.competition === match.competition)
+              .flatMap((item) => [item.home.id, item.away.id]),
+          ).size,
+        },
+      ]),
+    ).values(),
+  ];
+  return {
+    matches: providerMatches,
+    teams: providerTeams,
+    stories,
+    standings: buildStandings(providerMatches, providerTeams),
+    competitions,
+    meta: {
+      source: "thesportsdb",
+      updatedAt: new Date().toISOString(),
+      refreshAfterSeconds: Math.min(env.sports_cache_seconds, 300),
+    },
+  };
+};
+
+const getCatalog = async () => {
+  if (
+    env.sports_provider !== "thesportsdb" ||
+    !env.sports_api_key ||
+    !env.sports_league_ids.length
+  )
+    return demoCatalog();
+  if (cachedCatalog && cachedCatalog.expiresAt > Date.now())
+    return cachedCatalog.value;
+  if (pendingCatalog) return pendingCatalog;
+  pendingCatalog = fetchProviderCatalog()
+    .then((value) => {
+      cachedCatalog = {
+        value,
+        expiresAt: Date.now() + env.sports_cache_seconds * 1000,
+      };
+      return value;
+    })
+    .catch((error) => {
+      console.error(
+        "[sports-provider]",
+        error instanceof Error ? error.message : error,
+      );
+      if (cachedCatalog) return cachedCatalog.value;
+      return demoCatalog();
+    })
+    .finally(() => {
+      pendingCatalog = null;
+    });
+  return pendingCatalog;
+};
+
+const mountSportsEndpoints = (router: Router) => {
+  router.get("/bootstrap", async (_, res) => {
+    const catalog = await getCatalog();
+    res.json(catalog);
+  });
+  router.get("/matches", async (req, res) => {
+    const catalog = await getCatalog();
     const status = String(req.query.status || "");
     const items = status
-      ? matches.filter((match) => match.status === status)
-      : matches;
-    res.json({ items, meta: responseMeta() });
+      ? catalog.matches.filter((match) => match.status === status)
+      : catalog.matches;
+    res.json({ items, meta: catalog.meta });
   });
-  router.get("/matches/:id", (req, res) => {
-    const match = matches.find((item) => item.id === req.params.id);
+  router.get("/matches/:id", async (req, res) => {
+    const catalog = await getCatalog();
+    const match = catalog.matches.find((item) => item.id === req.params.id);
     if (!match)
       return res
         .status(404)
         .json({ error: "not_found", message: "Match not found." });
-    return res.json({ item: match, meta: responseMeta() });
+    return res.json({ item: match, meta: catalog.meta });
   });
-  router.get("/teams", (_, res) =>
-    res.json({ items: teams, meta: responseMeta() }),
-  );
-  router.get("/teams/:id", (req, res) => {
-    const team = teams.find((item) => item.id === req.params.id);
+  router.get("/teams", async (_, res) => {
+    const catalog = await getCatalog();
+    res.json({ items: catalog.teams, meta: catalog.meta });
+  });
+  router.get("/teams/:id", async (req, res) => {
+    const catalog = await getCatalog();
+    const team = catalog.teams.find((item) => item.id === req.params.id);
     if (!team)
       return res
         .status(404)
         .json({ error: "not_found", message: "Team not found." });
-    return res.json({ item: team, meta: responseMeta() });
+    return res.json({ item: team, meta: catalog.meta });
   });
-  router.get("/competitions", (_, res) =>
-    res.json({
-      items: [
-        {
-          id: "smaj-champions-league",
-          name: "SMAJ Champions League",
-          sport: "Football",
-          teamCount: 16,
-        },
-      ],
-      meta: responseMeta(),
-    }),
-  );
-  router.get("/competitions/:id/standings", (_, res) =>
-    res.json({ items: standings, meta: responseMeta() }),
-  );
-  router.get("/news", (_, res) =>
-    res.json({ items: stories, meta: responseMeta() }),
-  );
-  router.get("/news/:id", (req, res) => {
-    const story = stories.find((item) => item.id === req.params.id);
+  router.get("/competitions", async (_, res) => {
+    const catalog = await getCatalog();
+    res.json({ items: catalog.competitions, meta: catalog.meta });
+  });
+  router.get("/competitions/:id/standings", async (_, res) => {
+    const catalog = await getCatalog();
+    res.json({ items: catalog.standings, meta: catalog.meta });
+  });
+  router.get("/news", async (_, res) => {
+    const catalog = await getCatalog();
+    res.json({ items: catalog.stories, meta: catalog.meta });
+  });
+  router.get("/news/:id", async (req, res) => {
+    const catalog = await getCatalog();
+    const story = catalog.stories.find((item) => item.id === req.params.id);
     if (!story)
       return res
         .status(404)
         .json({ error: "not_found", message: "Story not found." });
-    return res.json({ item: story, meta: responseMeta() });
+    return res.json({ item: story, meta: catalog.meta });
   });
 };
 

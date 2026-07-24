@@ -3,8 +3,13 @@ import dotenv from "dotenv";
 const result = dotenv.config();
 
 if (result.error) {
-  if (process.env.NODE_ENV === "development" && !process.env.RUNNING_IN_CONTAINER) {
-    console.error(".env file not found. This is an error condition in development. Additional error is logged below");
+  if (
+    process.env.NODE_ENV === "development" &&
+    !process.env.RUNNING_IN_CONTAINER
+  ) {
+    console.error(
+      ".env file not found. This is an error condition in development. Additional error is logged below",
+    );
     throw result.error;
   }
 
@@ -37,16 +42,26 @@ interface Environment {
   tmdb_access_token: string;
   cloudflare_stream_account_id: string;
   cloudflare_stream_api_token: string;
+  sports_provider: string;
+  sports_api_key: string;
+  sports_league_ids: string[];
+  sports_cache_seconds: number;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
-const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_EXTERNAL_URL);
+const isRender = Boolean(
+  process.env.RENDER ||
+  process.env.RENDER_SERVICE_ID ||
+  process.env.RENDER_EXTERNAL_URL,
+);
 const isProduction = nodeEnv === "production" || isRender;
 const defaultSessionSecret = "This is my session secret";
 const productionPiPlatformAPIURL = "https://api.minepi.com";
-const normalizePiUsername = (username: string) => username.trim().replace(/^@+/, "").toLowerCase();
+const normalizePiUsername = (username: string) =>
+  username.trim().replace(/^@+/, "").toLowerCase();
 
-const platformApiURL = process.env.PLATFORM_API_URL || productionPiPlatformAPIURL;
+const platformApiURL =
+  process.env.PLATFORM_API_URL || productionPiPlatformAPIURL;
 
 const env: Environment = {
   node_env: nodeEnv,
@@ -62,7 +77,8 @@ const env: Environment = {
   mongo_user: process.env.MONGODB_USERNAME || "",
   mongo_password: process.env.MONGODB_PASSWORD || "",
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3314",
-  use_memory_db: String(process.env.USE_MEMORY_DB || "false").toLowerCase() === "true",
+  use_memory_db:
+    String(process.env.USE_MEMORY_DB || "false").toLowerCase() === "true",
   dev_auth: String(process.env.DEV_AUTH || "false").toLowerCase() === "true",
   admin_pi_usernames: String(process.env.ADMIN_PI_USERNAMES || "")
     .split(",")
@@ -71,30 +87,59 @@ const env: Environment = {
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinary_upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || "",
   cloudinary_folder: process.env.CLOUDINARY_FOLDER || "smajpihub",
-  marketplace_auto_approve_products: String(process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false").toLowerCase() === "true",
-  session_debug: String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
+  marketplace_auto_approve_products:
+    String(
+      process.env.MARKETPLACE_AUTO_APPROVE_PRODUCTS || "false",
+    ).toLowerCase() === "true",
+  session_debug:
+    String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
   tmdb_access_token: process.env.TMDB_ACCESS_TOKEN || "",
   cloudflare_stream_account_id: process.env.CLOUDFLARE_STREAM_ACCOUNT_ID || "",
   cloudflare_stream_api_token: process.env.CLOUDFLARE_STREAM_API_TOKEN || "",
+  sports_provider: String(process.env.SPORTS_PROVIDER || "")
+    .trim()
+    .toLowerCase(),
+  sports_api_key: String(process.env.SPORTS_API_KEY || "").trim(),
+  sports_league_ids: String(process.env.SPORTS_LEAGUE_IDS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
+  sports_cache_seconds: Math.max(
+    60,
+    Number(process.env.SPORTS_CACHE_SECONDS) || 900,
+  ),
 };
 
-if (process.env.PLATFORM_API_URL && process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL) {
-  console.warn(`Using PLATFORM_API_URL=${process.env.PLATFORM_API_URL} for Pi backend requests instead of the default ${productionPiPlatformAPIURL}.`);
+if (
+  process.env.PLATFORM_API_URL &&
+  process.env.PLATFORM_API_URL !== productionPiPlatformAPIURL
+) {
+  console.warn(
+    `Using PLATFORM_API_URL=${process.env.PLATFORM_API_URL} for Pi backend requests instead of the default ${productionPiPlatformAPIURL}.`,
+  );
 }
 
 if (isProduction) {
   const missing: string[] = [];
-  if (!process.env.SESSION_SECRET || env.session_secret === defaultSessionSecret) missing.push("SESSION_SECRET");
+  if (
+    !process.env.SESSION_SECRET ||
+    env.session_secret === defaultSessionSecret
+  )
+    missing.push("SESSION_SECRET");
   if (!env.pi_api_key) missing.push("PI_API_KEY");
   if (!process.env.FRONTEND_URL) missing.push("FRONTEND_URL");
   if (env.use_memory_db) missing.push("USE_MEMORY_DB=false");
-  if (!env.mongodb_uri && !process.env.MONGO_HOST) missing.push("MONGODB_URI or MONGO_HOST");
-  if (!env.mongodb_uri && !process.env.MONGODB_DATABASE_NAME) missing.push("MONGODB_DATABASE_NAME");
+  if (!env.mongodb_uri && !process.env.MONGO_HOST)
+    missing.push("MONGODB_URI or MONGO_HOST");
+  if (!env.mongodb_uri && !process.env.MONGODB_DATABASE_NAME)
+    missing.push("MONGODB_DATABASE_NAME");
   if (!env.cloudinary_cloud_name) missing.push("CLOUDINARY_CLOUD_NAME");
   if (!env.cloudinary_upload_preset) missing.push("CLOUDINARY_UPLOAD_PRESET");
 
   if (missing.length) {
-    throw new Error(`Missing or invalid production environment configuration: ${missing.join(", ")}`);
+    throw new Error(
+      `Missing or invalid production environment configuration: ${missing.join(", ")}`,
+    );
   }
 }
 

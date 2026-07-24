@@ -25,7 +25,7 @@ const useSportsCatalog = () => {
     try {
       const next = await getSportsCatalog(signal);
       setCatalog(next);
-      setUsingFallback(false);
+      setUsingFallback(next.meta?.source !== "thesportsdb");
       setLastUpdated(new Date(next.meta?.updatedAt || Date.now()));
     } catch (error) {
       if (signal?.aborted) return;
