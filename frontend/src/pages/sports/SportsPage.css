@@ -51,9 +51,6 @@
   border-color: #3b82f680;
   color: #fff;
 }
-.sports-back-to-hub svg {
-  font-size: 17px;
-}
 .sports-brand b {
   color: #fff;
   font-size: 20px;
@@ -938,12 +935,8 @@
     width: auto;
     min-width: auto;
     height: 34px;
-    padding: 0 9px 0 7px;
+    padding: 7px 8px;
     justify-content: flex-start;
-  }
-  .sports-back-to-hub span {
-    display: inline;
-    font-size: 10px;
   }
   .sports-data-status {
     padding-inline: 15px;
