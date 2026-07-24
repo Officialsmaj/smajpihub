@@ -64,6 +64,7 @@ import {
 import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
 import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
+import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -126,6 +127,17 @@ const sportsRoutes: Array<[string, SportsPageKind]> = [
   ["community", "community"],
 ];
 
+const jobsRoutes: Array<[string, JobsPageKind]> = [
+  ["search", "search"],
+  ["freelance", "freelance"],
+  ["companies", "companies"],
+  ["saved", "saved"],
+  ["applications", "applications"],
+  ["profile", "profile"],
+  ["post", "post"],
+  ["employer", "employer"],
+];
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -178,6 +190,8 @@ export const router = createBrowserRouter([
         <StreamPage />
       ) : platform.routeSegment === "sports" ? (
         <SportsPage />
+      ) : platform.routeSegment === "jobs" ? (
+        <JobsPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -253,6 +267,18 @@ export const router = createBrowserRouter([
     path: `/services/sports/${path}`,
     element: <SportsPage kind={kind} />,
   })),
+  ...jobsRoutes.map(([path, kind]) => ({
+    path: `/services/jobs/${path}`,
+    element: <JobsPage kind={kind} />,
+  })),
+  {
+    path: "/services/jobs/job/:id",
+    element: <JobsPage kind="job" />,
+  },
+  {
+    path: "/services/jobs/company/:id",
+    element: <JobsPage kind="company" />,
+  },
   {
     path: "/services/sports/match/:id",
     element: <SportsPage kind="match" />,
