@@ -10,6 +10,7 @@ export interface UserData {
   displayName: string,
   country: string,
   contactPhone?: string,
+  contactEmail?: string,
   avatar?: string,
   coverImage?: string,
   bio?: string,

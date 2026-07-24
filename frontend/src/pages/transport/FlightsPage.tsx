@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AirplanemodeActiveRoundedIcon from "@mui/icons-material/AirplanemodeActiveRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -11,6 +11,7 @@ import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import AirlineSeatReclineNormalRoundedIcon from "@mui/icons-material/AirlineSeatReclineNormalRounded";
+import { transportApi } from "../../lib/transportApi";
 import "./FlightsPage.css";
 
 type Flight = {
@@ -24,12 +25,6 @@ type Flight = {
   stops: string;
   price: number;
 };
-
-const flights: Flight[] = [
-  { id: "SA104", airline: "SMAJ Air Connect", code: "SA 104", mark: "SA", depart: "08:20", arrive: "11:05", duration: "6h 45m", stops: "1 stop · ACC", price: 184.6 },
-  { id: "PA228", airline: "Pioneer Airlines", code: "PA 228", mark: "PA", depart: "11:40", arrive: "17:15", duration: "9h 35m", stops: "1 stop · CMN", price: 206.4 },
-  { id: "AO610", airline: "Africa Orbit", code: "AO 610", mark: "AO", depart: "21:10", arrive: "05:40", duration: "5h 30m", stops: "Direct", price: 238.9 },
-];
 
 const airportName = (value: string) => value.split("—")[0]?.trim() || value;
 
@@ -50,9 +45,20 @@ const FlightsPage = () => {
   const [bag, setBag] = useState("Cabin bag");
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [flights, setFlights] = useState<Flight[]>([]);
 
   const extras = useMemo(() => (seat === "18A" ? 4.2 : 0) + (bag === "Checked 23 kg" ? 12.5 : 0), [bag, seat]);
   const total = selected.price * travellers + extras;
+
+  useEffect(() => {
+    const mockFlights: Flight[] = [
+      { id: "SA104", airline: "SMAJ Air Connect", code: "SA 104", mark: "SA", depart: "08:20", arrive: "11:05", duration: "6h 45m", stops: "1 stop · ACC", price: 184.6 },
+      { id: "PA228", airline: "Pioneer Airlines", code: "PA 228", mark: "PA", depart: "11:40", arrive: "17:15", duration: "9h 35m", stops: "1 stop · CMN", price: 206.4 },
+      { id: "AO610", airline: "Africa Orbit", code: "AO 610", mark: "AO", depart: "21:10", arrive: "05:40", duration: "5h 30m", stops: "Direct", price: 238.9 },
+    ];
+    setFlights(mockFlights);
+  }, []);
 
   const search = (event: FormEvent) => {
     event.preventDefault();
@@ -64,7 +70,7 @@ const FlightsPage = () => {
     navigate("/services/transport/flights/results");
   };
 
-  const continuePassenger = (event: FormEvent) => {
+  const continuePassenger = async (event: FormEvent) => {
     event.preventDefault();
     if (!passenger.firstName || !passenger.lastName || !passenger.email || !passenger.nationality) {
       setError("Complete all passenger details to continue.");
@@ -72,6 +78,39 @@ const FlightsPage = () => {
     }
     setError("");
     navigate("/services/transport/flights/checkout");
+  };
+
+  const handleCheckout = async () => {
+    if (!terms) {
+      setError("Accept the booking conditions to continue.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await transportApi.createFlightBooking({
+        airline: selected.airline,
+        flightCode: selected.code,
+        departureAirport: from,
+        arrivalAirport: to,
+        departureTime: `${departure} ${selected.depart}`,
+        arrivalTime: `${departure} ${selected.arrive}`,
+        duration: selected.duration,
+        cabin,
+        seat,
+        baggage: bag,
+        passengerName: `${passenger.firstName} ${passenger.lastName}`,
+        passengerEmail: passenger.email,
+        passengerNationality: passenger.nationality,
+        farePi: selected.price * travellers + extras,
+        fareUsd: (selected.price * travellers + extras) * 0.5,
+      });
+      navigate("/services/transport/flights/ticket");
+    } catch (err: any) {
+      setError(err?.message || "Booking failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const searchScreen = <div className="flight-search-page">
@@ -108,10 +147,10 @@ const FlightsPage = () => {
 
   const checkoutScreen = <section className="flight-workspace flight-details-page">
     <header className="flight-workspace-header"><button onClick={() => navigate("/services/transport/flights/passengers")}><ArrowBackRoundedIcon /></button><div><small>STEP 3 OF 3</small><h1>Review and pay</h1><p>Your seat is held for 12 minutes during checkout.</p></div></header>
-    <div className="flight-details-layout"><div className="flight-checkout-card"><span className="flight-secure"><CheckCircleRoundedIcon /> SECURE PI CHECKOUT</span><h2>Pay with Pi Wallet</h2><div className="flight-wallet"><span>π</span><div><b>Connected Pi Wallet</b><small>pioneer@smaj · Ready</small></div><CheckCircleRoundedIcon /></div><div className="flight-price-lines"><p><span>{travellers} × flight fare</span><b>π {(selected.price * travellers).toFixed(2)}</b></p><p><span>Seat and baggage</span><b>π {extras.toFixed(2)}</b></p><p><span>Taxes and service fees</span><b>Included</b></p><p><strong>Total</strong><strong>π {total.toFixed(2)}</strong></p></div><label className="flight-terms"><input type="checkbox" checked={terms} onChange={(event) => setTerms(event.target.checked)} /><span>I confirm the passenger details and accept the fare, change, and cancellation conditions.</span></label>{error ? <p className="flight-error">{error}</p> : null}<button className="flight-primary" onClick={() => { if (!terms) { setError("Accept the booking conditions to continue."); return; } setError(""); navigate("/services/transport/flights/ticket"); }}>Pay π {total.toFixed(2)} and issue ticket</button></div><FlightSummary flight={selected} from={from} to={to} total={total} travellers={travellers} /></div>
+    <div className="flight-details-layout"><div className="flight-checkout-card"><span className="flight-secure"><CheckCircleRoundedIcon /> SECURE PI CHECKOUT</span><h2>Pay with Pi Wallet</h2><div className="flight-wallet"><span>π</span><div><b>Connected Pi Wallet</b><small>pioneer@smaj · Ready</small></div><CheckCircleRoundedIcon /></div><div className="flight-price-lines"><p><span>{travellers} × flight fare</span><b>π {(selected.price * travellers).toFixed(2)}</b></p><p><span>Seat and baggage</span><b>π {extras.toFixed(2)}</b></p><p><span>Taxes and service fees</span><b>Included</b></p><p><strong>Total</strong><strong>π {total.toFixed(2)}</strong></p></div><label className="flight-terms"><input type="checkbox" checked={terms} onChange={(event) => setTerms(event.target.checked)} /><span>I confirm the passenger details and accept the fare, change, and cancellation conditions.</span></label>{error ? <p className="flight-error">{error}</p> : null}<button className="flight-primary" onClick={handleCheckout} disabled={loading}>{loading ? "Processing payment…" : `Pay π ${total.toFixed(2)} and issue ticket`}</button></div><FlightSummary flight={selected} from={from} to={to} total={total} travellers={travellers} /></div>
   </section>;
 
-  const ticketScreen = <section className="flight-ticket-page"><div className="flight-success"><span><CheckCircleRoundedIcon /></span><small>PAYMENT CONFIRMED</small><h1>Your trip is booked.</h1><p>Your electronic ticket has been sent to {passenger.email || "your email"}.</p></div><article className="flight-ticket"><header><div><span>SA</span><b>SMAJ<br />TRANSPORT</b></div><div><small>BOOKING REFERENCE</small><strong>SMJ7K2</strong></div></header><div className="ticket-route"><div><strong>{airportName(from).match(/\((.*?)\)/)?.[1] || "LOS"}</strong><small>{airportName(from)}</small><b>{selected.depart}</b></div><span><AirplanemodeActiveRoundedIcon /></span><div><strong>{airportName(to).match(/\((.*?)\)/)?.[1] || "LHR"}</strong><small>{airportName(to)}</small><b>{selected.arrive}</b></div></div><div className="ticket-data"><p><small>PASSENGER</small><b>{passenger.firstName || "SMAJ"} {passenger.lastName || "PIONEER"}</b></p><p><small>DATE</small><b>{departure}</b></p><p><small>FLIGHT</small><b>{selected.code}</b></p><p><small>SEAT</small><b>{seat}</b></p><p><small>CABIN</small><b>{cabin}</b></p><p><small>TOTAL PAID</small><b>π {total.toFixed(2)}</b></p></div><footer><div className="ticket-barcode">|||| ||| || ||||| | |||| |||</div><span>Electronic ticket · Provider confirmation required for live issuance</span></footer></article><div className="flight-ticket-actions"><button onClick={() => window.print()}>Download ticket</button><button className="flight-primary" onClick={() => navigate("/services/transport")}>Book airport ride</button></div></section>;
+  const ticketScreen = <section className="flight-ticket-page"><div className="flight-success"><span><CheckCircleRoundedIcon /></span><small>BOOKING CONFIRMED</small><h1>Your trip is booked.</h1><p>Your electronic ticket has been sent to {passenger.email || "your email"}.</p></div><article className="flight-ticket"><header><div><span>SMJ</span><b>SMAJ<br />TRANSPORT</b></div><div><small>BOOKING REFERENCE</small><strong>{`FLT-${Date.now().toString(36).toUpperCase()}`}</strong></div></header><div className="ticket-route"><div><strong>{airportName(from).match(/\((.*?)\)/)?.[1] || "LOS"}</strong><small>{airportName(from)}</small><b>{selected.depart}</b></div><span><AirplanemodeActiveRoundedIcon /></span><div><strong>{airportName(to).match(/\((.*?)\)/)?.[1] || "LHR"}</strong><small>{airportName(to)}</small><b>{selected.arrive}</b></div></div><div className="ticket-data"><p><small>PASSENGER</small><b>{passenger.firstName || "SMAJ"} {passenger.lastName || "PIONEER"}</b></p><p><small>DATE</small><b>{departure}</b></p><p><small>FLIGHT</small><b>{selected.code}</b></p><p><small>SEAT</small><b>{seat}</b></p><p><small>CABIN</small><b>{cabin}</b></p><p><small>TOTAL PAID</small><b>π {total.toFixed(2)}</b></p></div><footer><div className="ticket-barcode">|||| ||| || ||||| | |||| |||</div><span>Electronic ticket · Confirmation sent to {passenger.email || "your email"}</span></footer></article><div className="flight-ticket-actions"><button onClick={() => window.print()}>Download ticket</button><button className="flight-primary" onClick={() => navigate("/services/transport")}>Book airport ride</button></div></section>;
 
   if (stage === "results") return resultsScreen;
   if (stage === "passengers") return passengerScreen;

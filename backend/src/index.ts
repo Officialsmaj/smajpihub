@@ -25,7 +25,7 @@ import mountSupportEndpoints from "./handlers/support";
 import mountUploadEndpoints from "./handlers/uploads";
 import mountStreamEndpoints from "./handlers/stream";
 import mountSportsEndpoints from "./handlers/sports";
-import mountJobsEndpoints from "./handlers/jobs";
+import mountTransportEndpoints from "./handlers/transport";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -255,12 +255,18 @@ const jobsRouter = express.Router();
 mountJobsEndpoints(jobsRouter);
 app.use("/jobs", jobsRouter);
 
+const transportRouter = express.Router();
+mountTransportEndpoints(transportRouter);
+app.use("/transport", transportRouter);
+
 app.get("/health", async (_, res) => {
   const ready = Boolean(
     app.locals.userCollection &&
     app.locals.productCollection &&
     app.locals.marketplaceOrderCollection &&
-    app.locals.notificationCollection,
+    app.locals.notificationCollection &&
+    app.locals.transportBookingCollection &&
+    app.locals.transportDriverCollection,
   );
 
   res.status(ready ? 200 : 503).json({
@@ -305,11 +311,17 @@ const start = async () => {
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
-      app.locals.jobCollection = db.collection("jobs");
-      app.locals.jobCompanyCollection = db.collection("job_companies");
-      app.locals.jobSavedCollection = db.collection("job_saved");
-      app.locals.jobApplicationCollection = db.collection("job_applications");
-      app.locals.sessionCollection = db.collection("user_sessions");
+app.locals.jobCollection = db.collection("jobs");
+       app.locals.jobCompanyCollection = db.collection("job_companies");
+       app.locals.jobSavedCollection = db.collection("job_saved");
+       app.locals.jobApplicationCollection = db.collection("job_applications");
+       app.locals.sessionCollection = db.collection("user_sessions");
+       app.locals.transportBookingCollection = db.collection("transport_bookings");
+       app.locals.transportDriverCollection = db.collection("transport_drivers");
+       app.locals.transportVehicleCollection = db.collection("transport_vehicles");
+       app.locals.transportTripCollection = db.collection("transport_trips");
+       app.locals.transportReceiptCollection = db.collection("transport_receipts");
+       app.locals.transportNotificationCollection = db.collection("transport_notifications");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -372,6 +384,18 @@ const start = async () => {
           { expires: 1 },
           { expireAfterSeconds: 0 },
         ),
+        app.locals.transportBookingCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.transportBookingCollection.createIndex({ bookingId: 1 }, { unique: true }),
+        app.locals.transportDriverCollection.createIndex({ userId: 1 }),
+        app.locals.transportDriverCollection.createIndex({ driverId: 1 }, { unique: true }),
+        app.locals.transportDriverCollection.createIndex({ "currentLocation.lat": 1, "currentLocation.lng": 1 }),
+        app.locals.transportVehicleCollection.createIndex({ userId: 1 }),
+        app.locals.transportVehicleCollection.createIndex({ vehicleId: 1 }, { unique: true }),
+        app.locals.transportTripCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.transportTripCollection.createIndex({ tripId: 1 }, { unique: true }),
+        app.locals.transportReceiptCollection.createIndex({ userId: 1, createdAt: -1 }),
+        app.locals.transportReceiptCollection.createIndex({ receiptId: 1 }, { unique: true }),
+        app.locals.transportNotificationCollection.createIndex({ userId: 1, createdAt: -1 });
       ]);
     }
 
