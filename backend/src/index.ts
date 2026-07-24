@@ -25,6 +25,7 @@ import mountSupportEndpoints from "./handlers/support";
 import mountUploadEndpoints from "./handlers/uploads";
 import mountStreamEndpoints from "./handlers/stream";
 import mountSportsEndpoints from "./handlers/sports";
+import mountJobsEndpoints from "./handlers/jobs";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -250,6 +251,10 @@ const sportsRouter = express.Router();
 mountSportsEndpoints(sportsRouter);
 app.use("/sports", sportsRouter);
 
+const jobsRouter = express.Router();
+mountJobsEndpoints(jobsRouter);
+app.use("/jobs", jobsRouter);
+
 app.get("/health", async (_, res) => {
   const ready = Boolean(
     app.locals.userCollection &&
@@ -300,6 +305,10 @@ const start = async () => {
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
+      app.locals.jobCollection = db.collection("jobs");
+      app.locals.jobCompanyCollection = db.collection("job_companies");
+      app.locals.jobSavedCollection = db.collection("job_saved");
+      app.locals.jobApplicationCollection = db.collection("job_applications");
       app.locals.sessionCollection = db.collection("user_sessions");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
@@ -345,6 +354,11 @@ const start = async () => {
           creatorId: 1,
           createdAt: -1,
         }),
+        app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.jobCollection.createIndex({ status: 1, category: 1, createdAt: -1 }),
+        app.locals.jobCompanyCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.jobSavedCollection.createIndex({ userId: 1, jobId: 1 }, { unique: true }),
+        app.locals.jobApplicationCollection.createIndex({ candidateId: 1, jobId: 1 }, { unique: true }),
         app.locals.streamContentCollection.createIndex(
           { cloudflareUid: 1 },
           { unique: true },

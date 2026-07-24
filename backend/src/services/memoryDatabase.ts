@@ -185,4 +185,8 @@ export const createMemoryCollections = () => ({
   supportCollection: new MemoryCollection(),
   streamContentCollection: new MemoryCollection(),
   streamSettingsCollection: new MemoryCollection(),
+  jobCollection: new MemoryCollection(),
+  jobCompanyCollection: new MemoryCollection(),
+  jobSavedCollection: new MemoryCollection(),
+  jobApplicationCollection: new MemoryCollection(),
 });
