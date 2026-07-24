@@ -24,15 +24,23 @@ export type SportsPageKind =
   | "news"
   | "community"
   | "match"
-  | "team";
+  | "team"
+  | "article";
 
-const filterItems = ["All sports", "Football", "Basketball", "Athletics", "Tennis"];
+const sportLabel = (sport: string) => (sport.toLowerCase() === "soccer" ? "Football" : sport);
 
 type SportsViewProps = {
   catalog: SportsCatalog;
   favorites: Set<string>;
   onToggleFavorite: (teamId: string) => void;
 };
+
+const EmptyState = ({ title, message }: { title: string; message: string }) => (
+  <div className="sports-empty-state">
+    <h2>{title}</h2>
+    <p>{message}</p>
+  </div>
+);
 
 const StandingsTable = ({ standings }: { standings: SportsCatalog["standings"] }) => (
   <div className="sports-table-wrap">
@@ -67,6 +75,12 @@ const StandingsTable = ({ standings }: { standings: SportsCatalog["standings"] }
         ))}
       </tbody>
     </table>
+    {!standings.length ? (
+      <EmptyState
+        title="Standings unavailable"
+        message="The free data feed does not currently include enough completed matches to build a reliable table."
+      />
+    ) : null}
   </div>
 );
 
@@ -98,14 +112,14 @@ const NewsGrid = ({ stories, query = "" }: { stories: SportsCatalog["stories"]; 
 };
 
 const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsViewProps & { query: string }) => {
-  const live = catalog.matches.filter(match => match.status === "live");
-  const featured = live[0] || catalog.matches[0];
+  const latestMatches = catalog.matches.slice(0, 3);
+  const featured = catalog.matches.find(match => match.status === "upcoming") || catalog.matches[0];
   return (
     <>
       <section className="sports-hero">
         <div className="sports-hero-copy">
           <span className="sports-eyebrow">
-            <i /> LIVE · SMAJ CHAMPIONS LEAGUE
+            <i /> {featured ? `${featured.status.toUpperCase()} · ${featured.competition}` : "SMAJ SPORTS"}
           </span>
           <h1>
             Every game.
@@ -117,7 +131,7 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
           </p>
           <div>
             <Link to="/services/sports/live">
-              <PlayArrowRoundedIcon /> Watch live
+              <PlayArrowRoundedIcon /> Latest results
             </Link>
             <Link to="/services/sports/matches">
               <CalendarMonthRoundedIcon /> All matches
@@ -126,8 +140,8 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
         </div>
         {featured ? (
           <Link to={`/services/sports/match/${featured.id}`} className="sports-feature-score">
-            <span>67' · LIVE</span>
-            <p>Unity Arena · Group A</p>
+            <span>{featured.status === "finished" ? "FULL TIME" : featured.dateLabel}</span>
+            <p>{[featured.venue, featured.competition].filter(Boolean).join(" · ")}</p>
             <div>
               <article>
                 <TeamMark team={featured.home} />
@@ -152,17 +166,20 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
       <section className="sports-section">
         <div className="sports-section-head">
           <div>
-            <span>HAPPENING NOW</span>
-            <h2>Live matches</h2>
+            <span>REAL FIXTURES & RESULTS</span>
+            <h2>Latest matches</h2>
           </div>
           <Link to="/services/sports/live">
-            View all <ArrowForwardRoundedIcon />
+            View latest <ArrowForwardRoundedIcon />
           </Link>
         </div>
         <div className="sports-live-grid">
-          {live.map(match => (
+          {latestMatches.map(match => (
             <MatchCard key={match.id} match={match} />
           ))}
+          {!latestMatches.length ? (
+            <EmptyState title="No matches available" message="The provider has not returned fixtures yet." />
+          ) : null}
         </div>
       </section>
       <section className="sports-section">
@@ -214,23 +231,40 @@ const ListingContent = ({
   catalog,
   favorites,
   onToggleFavorite,
-}: SportsViewProps & { kind: SportsPageKind; query: string }) => {
+  activeSport,
+  onSportChange,
+}: SportsViewProps & {
+  kind: SportsPageKind;
+  query: string;
+  activeSport: string;
+  onSportChange: (sport: string) => void;
+}) => {
   if (kind === "live" || kind === "matches") {
+    const filterItems = ["All sports", ...new Set(catalog.matches.map(match => sportLabel(match.sport)))];
     const matches = catalog.matches
-      .filter(match => (kind === "live" ? match.status === "live" : true))
+      .filter(match => activeSport === "All sports" || sportLabel(match.sport) === activeSport)
       .filter(match =>
         `${match.home.name} ${match.away.name} ${match.competition}`.toLowerCase().includes(query.toLowerCase())
       );
     return (
       <section className="sports-workspace">
         <div className="sports-page-title">
-          <span>{kind === "live" ? "LIVE CENTRE" : "FIXTURES & RESULTS"}</span>
-          <h1>{kind === "live" ? "Live right now" : "Every match, one place"}</h1>
-          <p>Scores, schedules and match details from across the SMAJ Sports network.</p>
+          <span>{kind === "live" ? "LATEST SCORES" : "FIXTURES & RESULTS"}</span>
+          <h1>{kind === "live" ? "Latest results and fixtures" : "Every match, one place"}</h1>
+          <p>
+            {kind === "live"
+              ? "The free data plan provides schedules and completed results. Real-time live scores are coming soon."
+              : "Real schedules and results supplied through the SMAJ Sports data service."}
+          </p>
         </div>
         <div className="sports-filter-row">
-          {filterItems.map((item, index) => (
-            <button className={index === 0 ? "active" : ""} type="button" key={item}>
+          {filterItems.map(item => (
+            <button
+              className={activeSport === item ? "active" : ""}
+              type="button"
+              key={item}
+              onClick={() => onSportChange(item)}
+            >
               {item}
             </button>
           ))}
@@ -239,11 +273,18 @@ const ListingContent = ({
           {matches.map(match => (
             <MatchCard match={match} key={match.id} />
           ))}
+          {!matches.length ? (
+            <EmptyState
+              title="No matching fixtures"
+              message="Try another sport or search term. The free provider may not cover this category."
+            />
+          ) : null}
         </div>
       </section>
     );
   }
-  if (kind === "competitions")
+  if (kind === "competitions") {
+    const competition = catalog.competitions[0];
     return (
       <section className="sports-workspace">
         <div className="sports-page-title">
@@ -253,22 +294,27 @@ const ListingContent = ({
         </div>
         <div className="sports-competition-hero">
           <div>
-            <span>SMAJ FEATURED COMPETITION</span>
-            <h2>SMAJ Champions League</h2>
-            <p>16 clubs · 8 cities · One continental champion</p>
+            <span>FEATURED COMPETITION</span>
+            <h2>{competition?.name || "Competition unavailable"}</h2>
+            <p>
+              {competition
+                ? `${competition.teamCount} clubs · ${competition.sport}`
+                : "The provider has not returned competition information."}
+            </p>
           </div>
           <SportsSoccerRoundedIcon />
         </div>
         <StandingsTable standings={catalog.standings} />
       </section>
     );
+  }
   if (kind === "teams")
     return (
       <section className="sports-workspace">
         <div className="sports-page-title">
           <span>CLUB DIRECTORY</span>
           <h1>Find your team</h1>
-          <p>Follow clubs to personalize scores, stories and notifications.</p>
+          <p>Follow clubs on this device to personalize your SMAJ Sports experience.</p>
         </div>
         <div className="sports-teams-grid large">
           {catalog.teams
@@ -284,10 +330,13 @@ const ListingContent = ({
       <section className="sports-workspace">
         <div className="sports-page-title">
           <span>NEWSROOM</span>
-          <h1>The stories behind the score</h1>
-          <p>Match reports, interviews and community stories.</p>
+          <h1>SMAJ Sports stories</h1>
+          <p>Editorial previews from SMAJ Sports. Third-party sports news integration is coming soon.</p>
         </div>
         <NewsGrid stories={catalog.stories} query={query} />
+        {!catalog.stories.length ? (
+          <EmptyState title="No stories available" message="Provider news integration is coming soon." />
+        ) : null}
       </section>
     );
   return (
@@ -295,7 +344,7 @@ const ListingContent = ({
       <div className="sports-page-title">
         <span>FAN COMMUNITY</span>
         <h1>More than spectators</h1>
-        <p>Meet fans, share predictions and celebrate your club together.</p>
+        <p>Community discussions are being prepared and are not yet available in this MVP.</p>
       </div>
       <div className="sports-community-grid">
         {[
@@ -306,7 +355,7 @@ const ListingContent = ({
         ].map((title, index) => (
           <article key={title}>
             <span>
-              <GroupsRoundedIcon /> {1200 + index * 347} fans
+              <GroupsRoundedIcon /> COMING SOON
             </span>
             <h2>{title}</h2>
             <p>
@@ -314,8 +363,8 @@ const ListingContent = ({
                 ? "Share a photo or story with supporters across the ecosystem."
                 : "Join the conversation and make your match prediction."}
             </p>
-            <button type="button">
-              Join discussion <ArrowForwardRoundedIcon />
+            <button type="button" disabled title="Community discussions are coming soon">
+              Coming soon <ArrowForwardRoundedIcon />
             </button>
           </article>
         ))}
@@ -326,6 +375,19 @@ const ListingContent = ({
 
 const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsViewProps & { kind: SportsPageKind }) => {
   const { id } = useParams();
+  if (kind === "article") {
+    const story = catalog.stories.find(item => item.id === id);
+    if (!story) return <EmptyState title="Story not found" message="This SMAJ Sports story is unavailable." />;
+    return (
+      <article className="sports-workspace sports-article-detail">
+        <Link to="/services/sports/news">← Back to stories</Link>
+        <span>{story.category} · SMAJ SPORTS EDITORIAL</span>
+        <h1>{story.title}</h1>
+        <p>{story.summary}</p>
+        <aside>This is an SMAJ Sports editorial preview. Third-party sports news integration is coming soon.</aside>
+      </article>
+    );
+  }
   if (kind === "team") {
     const team = catalog.teams.find(item => item.id === id) || catalog.teams[0];
     if (!team) return <div className="sports-empty-state">Team not found.</div>;
@@ -334,7 +396,7 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
         <div className="sports-team-hero">
           <TeamMark team={team} />
           <div>
-            <span>{team.city.toUpperCase()}</span>
+            <span>{team.city ? team.city.toUpperCase() : "TEAM PROFILE"}</span>
             <h1>{team.name}</h1>
             <p>Official SMAJ Sports club profile</p>
           </div>
@@ -345,30 +407,43 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
         <div className="sports-detail-grid">
           <div>
             <h2>Recent form</h2>
-            <div className="sports-form-large">
-              {team.form.map((result, index) => (
-                <i className={result.toLowerCase()} key={index}>
-                  {result}
-                </i>
-              ))}
-            </div>
+            {team.form.length ? (
+              <div className="sports-form-large">
+                {team.form.map((result, index) => (
+                  <i className={result.toLowerCase()} key={index}>
+                    {result}
+                  </i>
+                ))}
+              </div>
+            ) : (
+              <p className="sports-data-note">Form data is not included in the current free provider feed.</p>
+            )}
             <h2>Recent matches</h2>
             {catalog.matches
               .filter(match => match.home.id === team.id || match.away.id === team.id)
               .map(match => (
                 <MatchCard compact match={match} key={match.id} />
               ))}
+            {!catalog.matches.some(match => match.home.id === team.id || match.away.id === team.id) ? (
+              <EmptyState title="No recent matches" message="No fixtures are currently available for this team." />
+            ) : null}
           </div>
           <aside>
             <h2>Club details</h2>
+            {team.city ? (
+              <p>
+                City <b>{team.city}</b>
+              </p>
+            ) : null}
             <p>
-              City <b>{team.city}</b>
+              Competition{" "}
+              <b>
+                {catalog.matches.find(match => match.home.id === team.id || match.away.id === team.id)?.competition ||
+                  "Unavailable"}
+              </b>
             </p>
             <p>
-              Competition <b>SMAJ Champions League</b>
-            </p>
-            <p>
-              Followers <b>24.8K</b>
+              Data source <b>{catalog.meta?.source === "thesportsdb" ? "TheSportsDB" : "SMAJ fallback"}</b>
             </p>
           </aside>
         </div>
@@ -403,32 +478,25 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
       </div>
       <div className="sports-detail-grid">
         <div>
-          <h2>Match timeline</h2>
-          {[
-            "12'  First big chance of the match",
-            "31'  Goal — Lagos Lions",
-            "45'  Half time",
-            "54'  Goal — Accra Stars",
-            "67'  Goal — Lagos Lions",
-          ].map(event => (
-            <p className="sports-event" key={event}>
-              {event}
-            </p>
-          ))}
+          <h2>Match information</h2>
+          <p className="sports-data-note">
+            Event timelines are not included in the current free provider feed. SMAJ Sports will show them when a
+            supported live-data plan is connected.
+          </p>
         </div>
         <aside>
-          <h2>Match facts</h2>
+          <h2>Details</h2>
           <p>
-            Possession <b>54% — 46%</b>
+            Competition <b>{match.competition}</b>
           </p>
           <p>
-            Shots <b>12 — 8</b>
+            Venue <b>{match.venue || "Unavailable"}</b>
           </p>
           <p>
-            On target <b>6 — 3</b>
+            Status <b>{match.status}</b>
           </p>
           <p>
-            Corners <b>5 — 4</b>
+            Data source <b>{catalog.meta?.source === "thesportsdb" ? "TheSportsDB" : "SMAJ fallback"}</b>
           </p>
         </aside>
       </div>
@@ -438,6 +506,7 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
 
 const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
   const [query, setQuery] = useState("");
+  const [activeSport, setActiveSport] = useState("All sports");
   const { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite } = useSportsCatalog();
   return (
     <AppLayout showFooter={false} showHeader={false}>
@@ -448,8 +517,8 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
             {loading
               ? "Loading latest sports data…"
               : usingFallback
-                ? "Live service unavailable — showing saved demo data."
-                : `Scores updated ${lastUpdated?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "now"}`}
+                ? "Sports provider unavailable — showing saved demo data."
+                : `Updated ${lastUpdated?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "now"} · Data: TheSportsDB`}
           </span>
           {!loading ? (
             <button type="button" onClick={() => void refresh()}>
@@ -460,7 +529,7 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
         <div className="sports-content">
           {kind === "home" ? (
             <HomeContent query={query} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
-          ) : kind === "match" || kind === "team" ? (
+          ) : kind === "match" || kind === "team" || kind === "article" ? (
             <DetailContent kind={kind} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
           ) : (
             <ListingContent
@@ -469,6 +538,8 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
               catalog={catalog}
               favorites={favorites}
               onToggleFavorite={toggleFavorite}
+              activeSport={activeSport}
+              onSportChange={setActiveSport}
             />
           )}
         </div>
@@ -479,7 +550,7 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
           </NavLink>
           <NavLink to="/services/sports/live">
             <LiveTvRoundedIcon />
-            <span>Live</span>
+            <span>Latest</span>
           </NavLink>
           <NavLink to="/services/sports/matches">
             <CalendarMonthRoundedIcon />

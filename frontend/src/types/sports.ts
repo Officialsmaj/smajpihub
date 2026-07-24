@@ -40,11 +40,19 @@ export type SportsStanding = {
   points: number;
 };
 
+export type SportsCompetition = {
+  id: string;
+  name: string;
+  sport: string;
+  teamCount: number;
+};
+
 export type SportsCatalog = {
   matches: SportsMatch[];
   teams: SportsTeam[];
   stories: SportsStory[];
   standings: SportsStanding[];
+  competitions: SportsCompetition[];
   meta?: {
     source: string;
     updatedAt: string;

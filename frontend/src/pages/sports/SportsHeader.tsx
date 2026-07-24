@@ -6,7 +6,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 
 const links = [
   ["", "Home"],
-  ["live", "Live"],
+  ["live", "Latest"],
   ["matches", "Matches"],
   ["competitions", "Competitions"],
   ["teams", "Teams"],
@@ -41,7 +41,13 @@ const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: 
         placeholder="Search teams, matches..."
       />
     </label>
-    <button className="sports-icon-button" type="button" aria-label="Sports notifications">
+    <button
+      className="sports-icon-button"
+      type="button"
+      aria-label="Sports notifications coming soon"
+      title="Notifications coming soon"
+      disabled
+    >
       <NotificationsNoneRoundedIcon />
     </button>
   </header>

@@ -176,6 +176,14 @@ export const fallbackSportsCatalog: SportsCatalog = {
   teams: sportsTeams,
   stories: sportsStories,
   standings,
+  competitions: [
+    {
+      id: "smaj-champions-league",
+      name: "SMAJ Champions League",
+      sport: "Football",
+      teamCount: sportsTeams.length,
+    },
+  ],
   meta: {
     source: "local-fallback",
     updatedAt: new Date(0).toISOString(),

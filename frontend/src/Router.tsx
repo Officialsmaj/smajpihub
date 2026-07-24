@@ -52,7 +52,15 @@ import ServiceDiscoveryPage from "./pages/private/ServiceDiscoveryPage";
 import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
-import { AdminDashboardPage, AdminOnboardingPage, AdminOrdersPage, AdminProductsPage, AdminReportsPage, AdminSettingsPage, AdminUsersPage } from "./pages/admin/AdminPages";
+import {
+  AdminDashboardPage,
+  AdminOnboardingPage,
+  AdminOrdersPage,
+  AdminProductsPage,
+  AdminReportsPage,
+  AdminSettingsPage,
+  AdminUsersPage,
+} from "./pages/admin/AdminPages";
 import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
 import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
@@ -67,79 +75,106 @@ const buildPrivatePageElement = (title: string, description: string, roles?: str
 
   return (
     <ProtectedRoute>
-      <PrivateLayout>{roles ? <RoleRoute allowedRoles={roles} title={title}>{page}</RoleRoute> : page}</PrivateLayout>
+      <PrivateLayout>
+        {roles ? (
+          <RoleRoute allowedRoles={roles} title={title}>
+            {page}
+          </RoleRoute>
+        ) : (
+          page
+        )}
+      </PrivateLayout>
     </ProtectedRoute>
   );
 };
 
 const streamRoutes: Array<[string, StreamPageKind]> = [
-  ["live", "live"], ["search", "search"],
-  ["my-list", "my-list"], ["history", "history"], ["subscriptions", "subscriptions"],
-  ["profile", "profile"], ["notifications", "notifications"], ["plans", "plans"], ["parental", "parental"],
-  ["studio", "studio"], ["studio/upload", "upload"], ["studio/live", "create-live"],
-  ["studio/content", "content"], ["studio/analytics", "analytics"], ["studio/channel", "channel"],
+  ["live", "live"],
+  ["search", "search"],
+  ["my-list", "my-list"],
+  ["history", "history"],
+  ["subscriptions", "subscriptions"],
+  ["profile", "profile"],
+  ["notifications", "notifications"],
+  ["plans", "plans"],
+  ["parental", "parental"],
+  ["studio", "studio"],
+  ["studio/upload", "upload"],
+  ["studio/live", "create-live"],
+  ["studio/content", "content"],
+  ["studio/analytics", "analytics"],
+  ["studio/channel", "channel"],
   ["studio/earnings", "earnings"],
 ];
 
 const streamAdminRoutes: Array<[string, StreamPageKind]> = [
-  ["", "admin"], ["moderation", "moderation"], ["reports", "reports"], ["creators", "creators"],
-  ["catalog", "catalog-admin"], ["analytics", "admin-analytics"], ["settings", "stream-settings"],
+  ["", "admin"],
+  ["moderation", "moderation"],
+  ["reports", "reports"],
+  ["creators", "creators"],
+  ["catalog", "catalog-admin"],
+  ["analytics", "admin-analytics"],
+  ["settings", "stream-settings"],
 ];
 
 const sportsRoutes: Array<[string, SportsPageKind]> = [
-  ["live", "live"], ["matches", "matches"], ["competitions", "competitions"],
-  ["teams", "teams"], ["news", "news"], ["community", "community"],
+  ["live", "live"],
+  ["matches", "matches"],
+  ["competitions", "competitions"],
+  ["teams", "teams"],
+  ["news", "news"],
+  ["community", "community"],
 ];
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <Navigate to="/home" replace />,
-    },
-    {
-      path: "/home",
-      element: <HomePage />,
-    },
-    {
-      path: "/about",
-      element: <AboutPage />,
-    },
-    {
-      path: "/services",
-      element: <ServicesPage />,
-    },
-    {
-      path: "/white-paper",
-      element: <WhitePaperPage />,
-    },
-    {
-      path: "/how-it-works",
-      element: <HowItWorksPage />,
-    },
-    {
-      path: "/faq",
-      element: <FaqPage />,
-    },
-    {
-      path: "/contact",
-      element: <ContactPage />,
-    },
-    {
-      path: "/onboarding",
-      element: <OnboardingPage />,
-    },
-    {
-      path: "/trust",
-      element: <TrustPage />,
-    },
-    {
-      path: "/company",
-      element: <CompanyPage />,
-    },
-    ...platformDefinitions.map((platform) => ({
-      path: `/services/${platform.routeSegment}`,
-      element: platform.routeSegment === "stream" ? (
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/home" replace />,
+  },
+  {
+    path: "/home",
+    element: <HomePage />,
+  },
+  {
+    path: "/about",
+    element: <AboutPage />,
+  },
+  {
+    path: "/services",
+    element: <ServicesPage />,
+  },
+  {
+    path: "/white-paper",
+    element: <WhitePaperPage />,
+  },
+  {
+    path: "/how-it-works",
+    element: <HowItWorksPage />,
+  },
+  {
+    path: "/faq",
+    element: <FaqPage />,
+  },
+  {
+    path: "/contact",
+    element: <ContactPage />,
+  },
+  {
+    path: "/onboarding",
+    element: <OnboardingPage />,
+  },
+  {
+    path: "/trust",
+    element: <TrustPage />,
+  },
+  {
+    path: "/company",
+    element: <CompanyPage />,
+  },
+  ...platformDefinitions.map(platform => ({
+    path: `/services/${platform.routeSegment}`,
+    element:
+      platform.routeSegment === "stream" ? (
         <StreamPage />
       ) : platform.routeSegment === "sports" ? (
         <SportsPage />
@@ -153,246 +188,626 @@ export const router = createBrowserRouter(
           status={platform.status}
         />
       ),
-    })),
-    {
-      path: "/smaj-store",
-      element: <Navigate to="/services/store" replace />,
-    },
-    {
-      path: "/smaj-food-delivery",
-      element: <Navigate to="/services/food-delivery" replace />,
-    },
-    {
-      path: "/services/food",
-      element: <Navigate to="/services/food-delivery" replace />,
-    },
-    {
-      path: "/smaj-pi-jobs",
-      element: <Navigate to="/services/jobs" replace />,
-    },
-    {
-      path: "/smaj-pi-health",
-      element: <Navigate to="/services/health" replace />,
-    },
-    {
-      path: "/smaj-pi-edu",
-      element: <Navigate to="/services/education" replace />,
-    },
-    {
-      path: "/smaj-pi-transport",
-      element: <Navigate to="/services/transport" replace />,
-    },
-    {
-      path: "/smaj-pi-agro",
-      element: <Navigate to="/services/agro" replace />,
-    },
-    {
-      path: "/smaj-pi-energy",
-      element: <Navigate to="/services/energy" replace />,
-    },
-    {
-      path: "/smaj-pi-charity",
-      element: <Navigate to="/services/charity" replace />,
-    },
-    {
-      path: "/smaj-pi-housing",
-      element: <Navigate to="/services/housing" replace />,
-    },
-    {
-      path: "/smaj-pi-events",
-      element: <Navigate to="/services/events" replace />,
-    },
-    {
-      path: "/smaj-pi-swap",
-      element: <Navigate to="/services/swap" replace />,
-    },
-    {
-      path: "/smaj-pi-stream",
-      element: <Navigate to="/services/stream" replace />,
-    },
-    {
-      path: "/smaj-pi-sports",
-      element: <Navigate to="/services/sports" replace />,
-    },
-    ...sportsRoutes.map(([path, kind]) => ({
-      path: `/services/sports/${path}`,
-      element: <SportsPage kind={kind} />,
-    })),
-    {
-      path: "/services/sports/match/:id",
-      element: <SportsPage kind="match" />,
-    },
-    {
-      path: "/services/sports/team/:id",
-      element: <SportsPage kind="team" />,
-    },
-    {
-      path: "/services/sports/news/:id",
-      element: <SportsPage kind="news" />,
-    },
-    {
-      path: "/smaj-token",
-      element: <Navigate to="/services/token" replace />,
-    },
-    {
-      path: "/affiliate",
-      element: <AffiliatePage />,
-    },
-    {
-      path: "/collaborate",
-      element: <CollaboratePage />,
-    },
-    {
-      path: "/partners",
-      element: <PartnersPage />,
-    },
-    {
-      path: "/community",
-      element: <CommunityPage />,
-    },
-    {
-      path: "/developers",
-      element: <DevelopersPage />,
-    },
-    {
-      path: "/blog",
-      element: <BlogPage />,
-    },
-    {
-      path: "/news",
-      element: <BlogPage />,
-    },
-    {
-      path: "/blog/:slug",
-      element: <BlogPostPage />,
-    },
-    {
-      path: "/privacy",
-      element: <PrivacyPage />,
-    },
-    {
-      path: "/terms",
-      element: <TermsPage />,
-    },
-    {
-      path: "/cookies",
-      element: <CookiesPage />,
-    },
-    {
-      path: "/report-abuse",
-      element: <ReportAbusePage />,
-    },
-    {
-      path: "/seller-agreement",
-      element: <SellerAgreementPage />,
-    },
-    {
-      path: "/engagement-tasks",
-      element: <EngagementTasksPage />,
-    },
-    {
-      path: "/app",
-      element: <ProtectedRoute><LastPrivateRouteRedirect /></ProtectedRoute>,
-    },
-    {
-      path: "/dashboard",
-      element: <ProtectedRoute><PrivateLayout><DashboardPage /></PrivateLayout></ProtectedRoute>,
-    },
-    {
-      path: "/profile",
-      element: <ProtectedRoute><PrivateLayout><ProfilePage /></PrivateLayout></ProtectedRoute>,
-    },
-    {
-      path: "/wallet",
-      element: <Navigate to="/app/wallet" replace />,
-    },
-    {
-      path: "/orders",
-      element: <ProtectedRoute><PrivateLayout><OrdersPage /></PrivateLayout></ProtectedRoute>,
-    },
-    {
-      path: "/orders/:id/track",
-      element: <ProtectedRoute><PrivateLayout><OrderTrackingPage /></PrivateLayout></ProtectedRoute>,
-    },
-    {
-      path: "/messages",
-      element: <ProtectedRoute><PrivateLayout><MessagesPage /></PrivateLayout></ProtectedRoute>,
-    },
-    { path: "/notifications", element: <ProtectedRoute><PrivateLayout><NotificationsPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/account", element: <Navigate to="/settings" replace /> },
-    { path: "/account/manage", element: <Navigate to="/settings" replace /> },
-    { path: "/saved", element: <ProtectedRoute><PrivateLayout><SavedProductsPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/cart", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="cart" /></PrivateLayout></ProtectedRoute> },
-    { path: "/checkout", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="checkout" /></PrivateLayout></ProtectedRoute> },
-    { path: "/payment-method", element: <ProtectedRoute><PrivateLayout><CommerceFlowPage mode="payment-method" /></PrivateLayout></ProtectedRoute> },
-    { path: "/my-products", element: <Navigate to="/seller" replace /> },
-    { path: "/app/services", element: <ProtectedRoute><PrivateLayout><ServicesHubPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream", element: <ProtectedRoute><PrivateLayout><StreamPage embedded /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/movies", element: <ProtectedRoute><PrivateLayout><StreamPage embedded categorySlug="movies" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/series", element: <ProtectedRoute><PrivateLayout><StreamPage embedded categorySlug="series" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/category/:slug", element: <ProtectedRoute><PrivateLayout><StreamPage embedded /></PrivateLayout></ProtectedRoute> },
-    ...streamRoutes.map(([path, kind]) => ({ path: `/app/services/stream/${path}`, element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind={kind} /></PrivateLayout></ProtectedRoute> })),
-    { path: "/app/services/stream/title/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="movie-detail" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/series/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="series-detail" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/watch/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="player" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/live/:id", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="live-player" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/stream/channel/:handle", element: <ProtectedRoute><PrivateLayout><StreamWorkspacePage kind="public-channel" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/services/sports", element: <Navigate to="/services/sports" replace /> },
-    { path: "/app/services/:slug", element: <ProtectedRoute><PrivateLayout><ServiceDetailPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/trending", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="trending" /></PrivateLayout></ProtectedRoute> },
-    { path: "/lifestyle", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="lifestyle" /></PrivateLayout></ProtectedRoute> },
-    { path: "/categories", element: <ProtectedRoute><PrivateLayout><ServiceDiscoveryPage mode="categories" /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/help-center", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/help", element: <ProtectedRoute><PrivateLayout><HelpCenterPage /></PrivateLayout></ProtectedRoute> },
-    {
-      path: "/settings",
-      element: <ProtectedRoute><PrivateLayout><AccountDashboardPage /></PrivateLayout></ProtectedRoute>,
-    },
-    {
-      path: "/settings/preferences",
-      element: <ProtectedRoute><PrivateLayout><SettingsPage /></PrivateLayout></ProtectedRoute>,
-    },
-    { path: "/store", element: <ProtectedRoute><PrivateLayout><StorePage /></PrivateLayout></ProtectedRoute> },
-    { path: "/add-product", element: <ProtectedRoute><PrivateLayout><AddProductPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/product/:id", element: <ProtectedRoute><PrivateLayout><ProductDetailPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/seller", element: <ProtectedRoute><PrivateLayout><SellerPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/seller/:id", element: <ProtectedRoute><PrivateLayout><SellerProfilePage /></PrivateLayout></ProtectedRoute> },
-    { path: "/edit-product/:id", element: <ProtectedRoute><PrivateLayout><EditProductPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/app/wallet", element: <ProtectedRoute><PrivateLayout><WalletPage /></PrivateLayout></ProtectedRoute> },
-    { path: "/admin", element: <ProtectedRoute><AdminLayout><AdminDashboardPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/users", element: <ProtectedRoute><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/onboarding", element: <ProtectedRoute><AdminLayout><AdminOnboardingPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/products", element: <ProtectedRoute><AdminLayout><AdminProductsPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/orders", element: <ProtectedRoute><AdminLayout><AdminOrdersPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/reports", element: <ProtectedRoute><AdminLayout><AdminReportsPage /></AdminLayout></ProtectedRoute> },
-    { path: "/admin/settings", element: <ProtectedRoute><AdminLayout><AdminSettingsPage /></AdminLayout></ProtectedRoute> },
-    ...streamAdminRoutes.map(([path, kind]) => ({ path: `/admin/stream${path ? `/${path}` : ""}`, element: <ProtectedRoute><AdminLayout><StreamWorkspacePage kind={kind} /></AdminLayout></ProtectedRoute> })),
-    {
-      path: "/search",
-      element: (
-        <ProtectedRoute>
-          <PrivateLayout>
-            <SearchPage />
-          </PrivateLayout>
-        </ProtectedRoute>
-      ),
-    },
-    { path: "/app/dashboard", element: <Navigate to="/dashboard" replace /> },
-    { path: "/app/store", element: <Navigate to="/store" replace /> },
-    { path: "/app/store/:id", element: <LegacyProductRedirect /> },
-    { path: "/app/add-product", element: <Navigate to="/add-product" replace /> },
-    { path: "/app/orders", element: <Navigate to="/orders" replace /> },
-    { path: "/app/profile", element: <Navigate to="/profile" replace /> },
-    { path: "/app/settings", element: <Navigate to="/settings" replace /> },
-    ...privatePages.filter((page) => !["dashboard", "add-product", "orders", "profile", "settings", "wallet"].includes(page.path)).map((page) => ({
+  })),
+  {
+    path: "/smaj-store",
+    element: <Navigate to="/services/store" replace />,
+  },
+  {
+    path: "/smaj-food-delivery",
+    element: <Navigate to="/services/food-delivery" replace />,
+  },
+  {
+    path: "/services/food",
+    element: <Navigate to="/services/food-delivery" replace />,
+  },
+  {
+    path: "/smaj-pi-jobs",
+    element: <Navigate to="/services/jobs" replace />,
+  },
+  {
+    path: "/smaj-pi-health",
+    element: <Navigate to="/services/health" replace />,
+  },
+  {
+    path: "/smaj-pi-edu",
+    element: <Navigate to="/services/education" replace />,
+  },
+  {
+    path: "/smaj-pi-transport",
+    element: <Navigate to="/services/transport" replace />,
+  },
+  {
+    path: "/smaj-pi-agro",
+    element: <Navigate to="/services/agro" replace />,
+  },
+  {
+    path: "/smaj-pi-energy",
+    element: <Navigate to="/services/energy" replace />,
+  },
+  {
+    path: "/smaj-pi-charity",
+    element: <Navigate to="/services/charity" replace />,
+  },
+  {
+    path: "/smaj-pi-housing",
+    element: <Navigate to="/services/housing" replace />,
+  },
+  {
+    path: "/smaj-pi-events",
+    element: <Navigate to="/services/events" replace />,
+  },
+  {
+    path: "/smaj-pi-swap",
+    element: <Navigate to="/services/swap" replace />,
+  },
+  {
+    path: "/smaj-pi-stream",
+    element: <Navigate to="/services/stream" replace />,
+  },
+  {
+    path: "/smaj-pi-sports",
+    element: <Navigate to="/services/sports" replace />,
+  },
+  ...sportsRoutes.map(([path, kind]) => ({
+    path: `/services/sports/${path}`,
+    element: <SportsPage kind={kind} />,
+  })),
+  {
+    path: "/services/sports/match/:id",
+    element: <SportsPage kind="match" />,
+  },
+  {
+    path: "/services/sports/team/:id",
+    element: <SportsPage kind="team" />,
+  },
+  {
+    path: "/services/sports/news/:id",
+    element: <SportsPage kind="article" />,
+  },
+  {
+    path: "/smaj-token",
+    element: <Navigate to="/services/token" replace />,
+  },
+  {
+    path: "/affiliate",
+    element: <AffiliatePage />,
+  },
+  {
+    path: "/collaborate",
+    element: <CollaboratePage />,
+  },
+  {
+    path: "/partners",
+    element: <PartnersPage />,
+  },
+  {
+    path: "/community",
+    element: <CommunityPage />,
+  },
+  {
+    path: "/developers",
+    element: <DevelopersPage />,
+  },
+  {
+    path: "/blog",
+    element: <BlogPage />,
+  },
+  {
+    path: "/news",
+    element: <BlogPage />,
+  },
+  {
+    path: "/blog/:slug",
+    element: <BlogPostPage />,
+  },
+  {
+    path: "/privacy",
+    element: <PrivacyPage />,
+  },
+  {
+    path: "/terms",
+    element: <TermsPage />,
+  },
+  {
+    path: "/cookies",
+    element: <CookiesPage />,
+  },
+  {
+    path: "/report-abuse",
+    element: <ReportAbusePage />,
+  },
+  {
+    path: "/seller-agreement",
+    element: <SellerAgreementPage />,
+  },
+  {
+    path: "/engagement-tasks",
+    element: <EngagementTasksPage />,
+  },
+  {
+    path: "/app",
+    element: (
+      <ProtectedRoute>
+        <LastPrivateRouteRedirect />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <DashboardPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ProfilePage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/wallet",
+    element: <Navigate to="/app/wallet" replace />,
+  },
+  {
+    path: "/orders",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <OrdersPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/orders/:id/track",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <OrderTrackingPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/messages",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <MessagesPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/notifications",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <NotificationsPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/account", element: <Navigate to="/settings" replace /> },
+  { path: "/account/manage", element: <Navigate to="/settings" replace /> },
+  {
+    path: "/saved",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <SavedProductsPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cart",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CommerceFlowPage mode="cart" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/checkout",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CommerceFlowPage mode="checkout" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/payment-method",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CommerceFlowPage mode="payment-method" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/my-products", element: <Navigate to="/seller" replace /> },
+  {
+    path: "/app/services",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ServicesHubPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamPage embedded />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/movies",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamPage embedded categorySlug="movies" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/series",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamPage embedded categorySlug="series" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/category/:slug",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamPage embedded />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  ...streamRoutes.map(([path, kind]) => ({
+    path: `/app/services/stream/${path}`,
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind={kind} />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  })),
+  {
+    path: "/app/services/stream/title/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind="movie-detail" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/series/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind="series-detail" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/watch/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind="player" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/live/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind="live-player" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/stream/channel/:handle",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StreamWorkspacePage kind="public-channel" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/app/services/sports", element: <Navigate to="/services/sports" replace /> },
+  {
+    path: "/app/services/:slug",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ServiceDetailPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/trending",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ServiceDiscoveryPage mode="trending" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/lifestyle",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ServiceDiscoveryPage mode="lifestyle" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/categories",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ServiceDiscoveryPage mode="categories" />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/help-center",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <HelpCenterPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/help",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <HelpCenterPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <AccountDashboardPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings/preferences",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <SettingsPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/store",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <StorePage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/add-product",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <AddProductPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/product/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <ProductDetailPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/seller",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <SellerPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/seller/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <SellerProfilePage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/edit-product/:id",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <EditProductPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/wallet",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <WalletPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminDashboardPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/users",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminUsersPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/onboarding",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminOnboardingPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/products",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminProductsPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/orders",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminOrdersPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/reports",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminReportsPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/settings",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminSettingsPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  ...streamAdminRoutes.map(([path, kind]) => ({
+    path: `/admin/stream${path ? `/${path}` : ""}`,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <StreamWorkspacePage kind={kind} />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  })),
+  {
+    path: "/search",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <SearchPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/app/dashboard", element: <Navigate to="/dashboard" replace /> },
+  { path: "/app/store", element: <Navigate to="/store" replace /> },
+  { path: "/app/store/:id", element: <LegacyProductRedirect /> },
+  { path: "/app/add-product", element: <Navigate to="/add-product" replace /> },
+  { path: "/app/orders", element: <Navigate to="/orders" replace /> },
+  { path: "/app/profile", element: <Navigate to="/profile" replace /> },
+  { path: "/app/settings", element: <Navigate to="/settings" replace /> },
+  ...privatePages
+    .filter(page => !["dashboard", "add-product", "orders", "profile", "settings", "wallet"].includes(page.path))
+    .map(page => ({
       path: `/app/${page.path}`,
       element: buildPrivatePageElement(page.title, page.description, page.roles),
     })),
-    {
-      path: "*",
-      element: <NotFoundPage />,
-    },
-  ]
-);
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+]);
 
 export default router;
