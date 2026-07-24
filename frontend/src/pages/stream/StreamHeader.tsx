@@ -73,8 +73,7 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
   return <><header className="stream-global-header">
     <div className="stream-global-row">
       <Link className="stream-global-back" to="/app/services">← Hub</Link>
-      <Link className="stream-global-brand" to="/app/services/stream" aria-label="SMAJ Stream home"><span><PlayArrowRoundedIcon /></span><b>SMAJ</b><em>Stream</em></Link>
-      <form className="stream-global-search" role="search" onSubmit={submit}><SearchRoundedIcon /><input type="search" enterKeyHint="search" value={value} onChange={(event) => changeQuery(event.target.value)} placeholder="Search movies, series and creators" aria-label="Search SMAJ Stream" /><button type="submit" aria-label="Submit Stream search"><SearchRoundedIcon /></button></form>
+      <form className="stream-global-search" role="search" onSubmit={submit}><SearchRoundedIcon /><input type="search" enterKeyHint="search" value={value} onChange={(event) => changeQuery(event.target.value)} placeholder="Search movies, series and creators" aria-label="Search SMAJ Stream" /></form>
       <button className="stream-global-menu-button" type="button" aria-label="Open Stream menu" aria-expanded={menuOpen} aria-controls="stream-side-menu" onClick={() => setMenuOpen(true)}><MenuRoundedIcon /></button>
     </div>
     <nav ref={navRef} aria-label="SMAJ Stream categories">{links.map(([label, to]) => {
