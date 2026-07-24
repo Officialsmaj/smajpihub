@@ -66,6 +66,7 @@ import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamW
 import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
 import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
 import TransportPage from "./pages/transport/TransportPage";
+import EducationPage from "./pages/EducationPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -195,6 +196,8 @@ export const router = createBrowserRouter([
         <SportsPage />
       ) : platform.routeSegment === "jobs" ? (
         <JobsPage />
+      ) : platform.routeSegment === "education" ? (
+        <EducationPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
