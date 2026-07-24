@@ -6,7 +6,6 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LiveTvRoundedIcon from "@mui/icons-material/LiveTvRounded";
 import NewspaperRoundedIcon from "@mui/icons-material/NewspaperRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SportsSoccerRoundedIcon from "@mui/icons-material/SportsSoccerRounded";
 import AppLayout from "../../layouts/AppLayout";
 import useSportsCatalog from "../../hooks/useSportsCatalog";
@@ -111,117 +110,165 @@ const NewsGrid = ({ stories, query = "" }: { stories: SportsCatalog["stories"]; 
   );
 };
 
+const HomeMatchRow = ({ match }: { match: SportsCatalog["matches"][number] }) => (
+  <Link className="sports-score-row" to={`/services/sports/match/${match.id}`}>
+    <div>
+      <TeamMark team={match.home} small />
+      <span>{match.home.name}</span>
+    </div>
+    <strong>
+      {match.status === "finished" ? (
+        <>
+          {match.homeScore ?? "–"} <i>–</i> {match.awayScore ?? "–"}
+        </>
+      ) : (
+        match.dateLabel
+      )}
+      <small>{match.status === "finished" ? "FT" : "UPCOMING"}</small>
+    </strong>
+    <div>
+      <span>{match.away.name}</span>
+      <TeamMark team={match.away} small />
+    </div>
+  </Link>
+);
+
+const HomeLeagueSection = ({ competition, matches }: { competition: string; matches: SportsCatalog["matches"] }) => (
+  <section className="sports-league-block">
+    <header>
+      <div>
+        <SportsSoccerRoundedIcon />
+        <span>
+          <b>{competition}</b>
+          <small>{matches[0]?.sport ? sportLabel(matches[0].sport) : "Sport"}</small>
+        </span>
+      </div>
+      <Link to="/services/sports/matches">View all →</Link>
+    </header>
+    <div>
+      {matches.map(match => (
+        <HomeMatchRow match={match} key={match.id} />
+      ))}
+    </div>
+  </section>
+);
+
 const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsViewProps & { query: string }) => {
-  const latestMatches = catalog.matches.slice(0, 3);
-  const featured = catalog.matches.find(match => match.status === "upcoming") || catalog.matches[0];
+  const [status, setStatus] = useState<"all" | "upcoming" | "finished">("all");
+  const sports = ["All", ...new Set(catalog.matches.map(match => sportLabel(match.sport)))];
+  const [selectedSport, setSelectedSport] = useState("All");
+  const visibleMatches = catalog.matches
+    .filter(match => status === "all" || match.status === status)
+    .filter(match => selectedSport === "All" || sportLabel(match.sport) === selectedSport)
+    .filter(match =>
+      `${match.home.name} ${match.away.name} ${match.competition}`.toLowerCase().includes(query.toLowerCase())
+    );
+  const groupedMatches = [...new Set(visibleMatches.map(match => match.competition))].map(competition => ({
+    competition,
+    matches: visibleMatches.filter(match => match.competition === competition),
+  }));
+  const favoriteTeams = catalog.teams.filter(team => favorites.has(team.id));
   return (
-    <>
-      <section className="sports-hero">
-        <div className="sports-hero-copy">
-          <span className="sports-eyebrow">
-            <i /> {featured ? `${featured.status.toUpperCase()} · ${featured.competition}` : "SMAJ SPORTS"}
-          </span>
-          <h1>
-            Every game.
-            <br />
-            <em>One community.</em>
-          </h1>
-          <p>
-            Follow live scores, discover teams and celebrate every moment with sports fans across the SMAJ ecosystem.
-          </p>
-          <div>
-            <Link to="/services/sports/live">
-              <PlayArrowRoundedIcon /> Latest results
-            </Link>
-            <Link to="/services/sports/matches">
-              <CalendarMonthRoundedIcon /> All matches
-            </Link>
-          </div>
+    <div className="sports-score-home">
+      <section className="sports-score-intro">
+        <div>
+          <span>SCORES & FIXTURES</span>
+          <h1>Today in sports</h1>
+          <p>Real fixtures and results from your selected competitions.</p>
         </div>
-        {featured ? (
-          <Link to={`/services/sports/match/${featured.id}`} className="sports-feature-score">
-            <span>{featured.status === "finished" ? "FULL TIME" : featured.dateLabel}</span>
-            <p>{[featured.venue, featured.competition].filter(Boolean).join(" · ")}</p>
-            <div>
-              <article>
-                <TeamMark team={featured.home} />
-                <b>{featured.home.name}</b>
-              </article>
-              <strong>
-                {featured.homeScore ?? "–"}
-                <i>:</i>
-                {featured.awayScore ?? "–"}
-              </strong>
-              <article>
-                <TeamMark team={featured.away} />
-                <b>{featured.away.name}</b>
-              </article>
-            </div>
-            <small>
-              Match centre <ArrowForwardRoundedIcon />
-            </small>
-          </Link>
-        ) : null}
+        <Link to="/services/sports/matches">
+          All matches <ArrowForwardRoundedIcon />
+        </Link>
       </section>
-      <section className="sports-section">
-        <div className="sports-section-head">
-          <div>
-            <span>REAL FIXTURES & RESULTS</span>
-            <h2>Latest matches</h2>
-          </div>
-          <Link to="/services/sports/live">
-            View latest <ArrowForwardRoundedIcon />
-          </Link>
-        </div>
-        <div className="sports-live-grid">
-          {latestMatches.map(match => (
-            <MatchCard key={match.id} match={match} />
+
+      <section className="sports-score-controls">
+        <div className="sports-sport-tabs">
+          {sports.map(sport => (
+            <button
+              type="button"
+              className={selectedSport === sport ? "active" : ""}
+              onClick={() => setSelectedSport(sport)}
+              key={sport}
+            >
+              {sport}
+            </button>
           ))}
-          {!latestMatches.length ? (
-            <EmptyState title="No matches available" message="The provider has not returned fixtures yet." />
+        </div>
+        <div className="sports-status-tabs">
+          {(["all", "upcoming", "finished"] as const).map(item => (
+            <button
+              type="button"
+              className={status === item ? "active" : ""}
+              onClick={() => setStatus(item)}
+              key={item}
+            >
+              {item === "all" ? "All" : item === "upcoming" ? "Upcoming" : "Results"}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="sports-score-layout">
+        <div className="sports-league-list">
+          {groupedMatches.map(group => (
+            <HomeLeagueSection competition={group.competition} matches={group.matches} key={group.competition} />
+          ))}
+          {!groupedMatches.length ? (
+            <EmptyState
+              title="No matches found"
+              message="Try another sport, status, or search. The free provider may not cover this selection."
+            />
           ) : null}
         </div>
-      </section>
-      <section className="sports-section">
-        <div className="sports-section-head">
-          <div>
-            <span>YOUR CLUBS</span>
-            <h2>Teams to follow</h2>
-          </div>
-          <Link to="/services/sports/teams">
-            Explore teams <ArrowForwardRoundedIcon />
-          </Link>
-        </div>
-        <div className="sports-teams-grid">
-          {catalog.teams.slice(0, 4).map(team => (
-            <FavoriteTeam team={team} favorite={favorites.has(team.id)} onToggle={onToggleFavorite} key={team.id} />
-          ))}
-        </div>
-      </section>
-      <section className="sports-section split">
-        <div>
-          <div className="sports-section-head">
-            <div>
-              <span>LATEST</span>
-              <h2>Sports stories</h2>
+        <aside className="sports-score-sidebar">
+          <section>
+            <header>
+              <div>
+                <span>YOUR TEAMS</span>
+                <h2>{favoriteTeams.length ? "Favorites" : "Choose your teams"}</h2>
+              </div>
+              <Link to="/services/sports/teams">Manage →</Link>
+            </header>
+            <div className="sports-favorite-list">
+              {(favoriteTeams.length ? favoriteTeams : catalog.teams.slice(0, 4)).map(team => (
+                <FavoriteTeam team={team} favorite={favorites.has(team.id)} onToggle={onToggleFavorite} key={team.id} />
+              ))}
             </div>
-          </div>
-          <NewsGrid stories={catalog.stories} query={query} />
-        </div>
-        <aside>
-          <div className="sports-section-head">
-            <div>
-              <span>TABLE</span>
-              <h2>Top standings</h2>
+          </section>
+          <section>
+            <header>
+              <div>
+                <span>SMAJ EDITORIAL</span>
+                <h2>Latest stories</h2>
+              </div>
+              <Link to="/services/sports/news">More →</Link>
+            </header>
+            <div className="sports-compact-news">
+              {catalog.stories.slice(0, 3).map(story => (
+                <Link to={`/services/sports/news/${story.id}`} key={story.id}>
+                  <small>{story.category}</small>
+                  <b>{story.title}</b>
+                  <span>{story.time}</span>
+                </Link>
+              ))}
             </div>
-          </div>
-          <StandingsTable standings={catalog.standings} />
-          <Link className="sports-block-link" to="/services/sports/competitions">
-            Full standings <ArrowForwardRoundedIcon />
-          </Link>
+          </section>
         </aside>
       </section>
-    </>
+
+      <section className="sports-home-standings">
+        <div className="sports-section-head">
+          <div>
+            <span>COMPETITION</span>
+            <h2>Standings</h2>
+          </div>
+          <Link to="/services/sports/competitions">
+            Full table <ArrowForwardRoundedIcon />
+          </Link>
+        </div>
+        <StandingsTable standings={catalog.standings} />
+      </section>
+    </div>
   );
 };
 
@@ -560,9 +607,9 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
             <NewspaperRoundedIcon />
             <span>News</span>
           </NavLink>
-          <NavLink to="/services/sports/community">
-            <GroupsRoundedIcon />
-            <span>Community</span>
+          <NavLink to="/services/sports/teams">
+            <SportsSoccerRoundedIcon />
+            <span>Teams</span>
           </NavLink>
         </nav>
       </main>
