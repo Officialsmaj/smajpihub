@@ -54,17 +54,6 @@
 .sports-back-to-hub svg {
   font-size: 17px;
 }
-.sports-brand span {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  margin-right: 4px;
-  border-radius: 11px;
-  color: #fff;
-  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
-  box-shadow: 0 8px 25px #2563eb66;
-}
 .sports-brand b {
   color: #fff;
   font-size: 20px;
@@ -118,9 +107,20 @@
   border: 0;
   outline: 0;
   color: #fff;
-  background: transparent;
+  background: transparent !important;
+  background-color: transparent !important;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none !important;
   font: inherit;
   font-size: 12px;
+}
+.sports-search input:-webkit-autofill,
+.sports-search input:-webkit-autofill:hover,
+.sports-search input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px #0d1a2b inset !important;
+  caret-color: #fff;
 }
 .sports-icon-button {
   width: 40px;
@@ -947,10 +947,6 @@
   }
   .sports-brand b {
     font-size: 17px;
-  }
-  .sports-brand span {
-    width: 32px;
-    height: 32px;
   }
   .sports-search {
     height: 36px;
