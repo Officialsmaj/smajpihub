@@ -29,7 +29,7 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ PI Edu",
     routeSegment: "education",
     description: "Learn skills from trusted mentors.",
-    status: "Coming Soon",
+    status: "Live",
   },
   {
     name: "SMAJ PI Transport",

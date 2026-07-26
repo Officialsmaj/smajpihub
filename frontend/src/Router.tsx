@@ -67,6 +67,7 @@ import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
 import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
 import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
+import CourseDetailPage from "./pages/education/CourseDetailPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -522,6 +523,20 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <PrivateLayout>
           <EducationPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/services/education/courses/:courseId",
+    element: <CourseDetailPage />,
+  },
+  {
+    path: "/app/services/education/courses/:courseId",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CourseDetailPage />
         </PrivateLayout>
       </ProtectedRoute>
     ),
