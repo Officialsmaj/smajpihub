@@ -11,6 +11,7 @@ import {
   getEducationCourses,
   getEducationPartners,
 } from "../lib/educationApi";
+import type { EducationCourse, EducationPartner } from "../types/education";
 import CategoryGrid from "../components/education/CategoryGrid";
 import CourseCard from "../components/education/CourseCard";
 import PartnerCard from "../components/education/PartnerCard";
@@ -24,8 +25,8 @@ const learningStats = [
 
 const EducationPage = () => {
   const [categories, setCategories] = useState<string[]>([]);
-  const [courses, setCourses] = useState<ReturnType<typeof getEducationCourses>>([]);
-  const [partners, setPartners] = useState<ReturnType<typeof getEducationPartners>>([]);
+  const [courses, setCourses] = useState<EducationCourse[]>([]);
+  const [partners, setPartners] = useState<EducationPartner[]>([]);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);

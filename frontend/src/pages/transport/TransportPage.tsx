@@ -73,13 +73,13 @@ const TransportPage = () => {
     destination: string;
     rideName: string;
     price: number;
-    status: "active" | "completed" | "cancelled";
+    status: "active" | "completed" | "cancelled" | "pending" | "confirmed";
     date: string;
     bookingId: string;
   }>>([]);
   const [driverOnline, setDriverOnline] = useState(false);
   const [notice, setNotice] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
   const [nearbyDrivers, setNearbyDrivers] = useState<Array<{
     driverId: string;
     displayName: string;
@@ -103,7 +103,7 @@ const TransportPage = () => {
         rideName: t.vehicleType,
         price: t.farePi,
         status: normalizeStatus(t.status),
-        date: new Date(t.createdAt).toLocaleDateString("en-GB", { day: "short", month: "short", hour: "2-digit", minute: "2-digit" }),
+        date: new Date(t.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
         bookingId: t.bookingId,
       }));
       setTrips(mapped);
@@ -230,7 +230,7 @@ const TransportPage = () => {
       <span className="transport-eyebrow">AVAILABLE NEARBY</span>
       <h1>Choose your ride</h1>
       <div className="transport-route-summary"><i className="pickup-dot" /><div><small>FROM</small><b>{pickup}</b></div><span /><i className="destination-dot" /><div><small>TO</small><b>{destination}</b></div></div>
-      {nearbyDrivers.length > 0 && <div className="transport-nearby-drivers"><span className="transport-eyebrow">NEARBY DRIVERS</span>{nearbyDrivers.slice(0, 3).map((driver) => <div key={driver.driverId} className="nearby-driver-card"><span className="nearby-driver-avatar"><DirectionsCarRoundedIcon /></span><div><b>{driver.displayName}</b><small>{driver.vehicleName} · {driver.vehiclePlate}</small><small>★ {driver.rating.toFixed(1)} · {driver.distanceKm ? `${driver.distanceKm.toFixed(1)} km` : "Nearby"}</small></span><span className={`nearby-driver-status ${driver.isOnline ? "online" : "offline"}`}>{driver.isOnline ? "Online" : "Offline"}</span></div>)}</div>}
+      {nearbyDrivers.length > 0 && <div className="transport-nearby-drivers"><span className="transport-eyebrow">NEARBY DRIVERS</span>{nearbyDrivers.slice(0, 3).map((driver) => <div key={driver.driverId} className="nearby-driver-card"><span className="nearby-driver-avatar"><DirectionsCarRoundedIcon /></span><div><b>{driver.displayName}</b><small>{driver.vehicleName} · {driver.vehiclePlate}</small><small>★ {driver.rating.toFixed(1)} · {driver.distanceKm ? `${driver.distanceKm.toFixed(1)} km` : "Nearby"}</small></div><span className={`nearby-driver-status ${driver.isOnline ? "online" : "offline"}`}>{driver.isOnline ? "Online" : "Offline"}</span></div>)}</div>}
       <div className="transport-ride-list">{rideOptions.map((ride) => <button type="button" key={ride.id} className={selectedRide === ride.id ? "selected" : ""} onClick={() => setSelectedRide(ride.id)}>
         <span className="ride-icon"><RideIcon type={ride.icon} /></span>
         <span className="ride-copy"><b>{ride.name}{ride.popular ? <small>POPULAR</small> : null}</b><small>{ride.eta} away · {ride.seats ? `${ride.seats} seats` : "Packages"}</small></span>

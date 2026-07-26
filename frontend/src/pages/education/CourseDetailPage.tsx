@@ -4,13 +4,14 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
-import AppLayout from "../layouts/AppLayout";
-import { getEducationCourse } from "../lib/educationApi";
+import AppLayout from "../../layouts/AppLayout";
+import { getEducationCourse } from "../../lib/educationApi";
+import type { EducationCourse } from "../../types/education";
 import "../../pages/EducationPage.css";
 
 const CourseDetailPage = () => {
   const { courseId } = useParams();
-  const [course, setCourse] = useState<ReturnType<typeof getEducationCourse>>(undefined);
+  const [course, setCourse] = useState<EducationCourse | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
