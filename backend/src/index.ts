@@ -25,6 +25,7 @@ import mountSupportEndpoints from "./handlers/support";
 import mountUploadEndpoints from "./handlers/uploads";
 import mountStreamEndpoints from "./handlers/stream";
 import mountSportsEndpoints from "./handlers/sports";
+import mountJobsEndpoints from "./handlers/jobs";
 import mountTransportEndpoints from "./handlers/transport";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
@@ -395,7 +396,7 @@ app.locals.jobCollection = db.collection("jobs");
         app.locals.transportTripCollection.createIndex({ tripId: 1 }, { unique: true }),
         app.locals.transportReceiptCollection.createIndex({ userId: 1, createdAt: -1 }),
         app.locals.transportReceiptCollection.createIndex({ receiptId: 1 }, { unique: true }),
-        app.locals.transportNotificationCollection.createIndex({ userId: 1, createdAt: -1 });
+        app.locals.transportNotificationCollection.createIndex({ userId: 1, createdAt: -1 })
       ]);
     }
 

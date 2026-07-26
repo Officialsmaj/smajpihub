@@ -295,7 +295,7 @@ export default function mountTransportEndpoints(router: Router) {
       return res.status(404).json({ error: "not_found", message: "Trip not found" });
     }
     const timeline = Array.isArray(trip.timeline) ? trip.timeline : [];
-    timeline.push(TIMELINE(status, status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), `Trip status updated to ${status}.`));
+    timeline.push(TIMELINE(status, status.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()), `Trip status updated to ${status}.`));
     const updates: Record<string, any> = { status, updatedAt: new Date(), timeline };
     if (status === "completed") {
       updates.completedAt = new Date();
