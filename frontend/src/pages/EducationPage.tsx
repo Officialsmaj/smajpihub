@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -25,10 +25,11 @@ const learningStats = [
 ] as const;
 
 const EducationPage = () => {
+  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState<string[]>([]);
   const [courses, setCourses] = useState<EducationCourse[]>([]);
   const [partners, setPartners] = useState<EducationPartner[]>([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,10 +102,10 @@ const EducationPage = () => {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
-              <Link to="#courses">Explore</Link>
+              <Link to="/services/education/courses">Explore</Link>
             </div>
             <div className="education-hero-actions">
-              <Link to="#courses" className="education-primary-btn">
+              <Link to="/services/education/courses" className="education-primary-btn">
                 Start Learning
                 <ArrowForwardOutlinedIcon />
               </Link>
@@ -184,7 +185,7 @@ const EducationPage = () => {
           )}
         </section>
 
-        <section className="education-section education-partners">
+        <section id="partners" className="education-section education-partners">
           <div className="education-section-head compact">
             <span className="education-kicker">PARTNER ACCESS</span>
             <h2>Verified providers before Pi checkout.</h2>

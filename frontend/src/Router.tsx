@@ -544,6 +544,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/services/education/courses",
+    element: <EducationPage />,
+  },
+  {
+    path: "/services/education/partners",
+    element: <EducationPage />,
+  },
+  {
     path: "/services/education/courses/:courseId",
     element: <CourseDetailPage />,
   },

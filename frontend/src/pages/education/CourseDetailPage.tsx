@@ -5,6 +5,7 @@ import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import EducationHeader from "./EducationHeader";
 import { getEducationCourse } from "../../lib/educationApi";
 import type { EducationCourse } from "../../types/education";
 import "../../pages/EducationPage.css";
@@ -12,6 +13,7 @@ import "../../pages/EducationPage.css";
 const CourseDetailPage = () => {
   const { courseId } = useParams();
   const [course, setCourse] = useState<EducationCourse | undefined>(undefined);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +50,7 @@ const CourseDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="education-page">
+          <EducationHeader query={query} onQueryChange={setQuery} />
           <div className="education-loading">Loading course...</div>
         </main>
       </AppLayout>
@@ -58,6 +61,7 @@ const CourseDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="education-page">
+          <EducationHeader query={query} onQueryChange={setQuery} />
           <div className="education-error">
             <p>{error || "Course not found."}</p>
             <Link to="/services/education" className="education-primary-btn">
@@ -73,6 +77,7 @@ const CourseDetailPage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="education-page">
+        <EducationHeader query={query} onQueryChange={setQuery} />
         <div className="education-course-detail">
           <Link to="/services/education" className="education-back-link">
             <ArrowBackOutlinedIcon />
