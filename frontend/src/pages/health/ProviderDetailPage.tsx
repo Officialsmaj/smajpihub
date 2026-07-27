@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import AppLayout from "../../layouts/AppLayout";
 import { getHealthServices, getHealthProvider } from "../../lib/healthApi";
+import type { HealthProvider, HealthService } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import ServiceCard from "../../components/health/ServiceCard";
 import BookingSummary from "../../components/health/BookingSummary";
@@ -11,8 +12,8 @@ import "./HealthPage.css";
 
 const ProviderDetailPage = () => {
   const { id } = useParams();
-  const [provider, setProvider] = useState<ReturnType<typeof getHealthProvider>>(undefined);
-  const [services, setServices] = useState<ReturnType<typeof getHealthServices>>([]);
+  const [provider, setProvider] = useState<HealthProvider | undefined>(undefined);
+  const [services, setServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

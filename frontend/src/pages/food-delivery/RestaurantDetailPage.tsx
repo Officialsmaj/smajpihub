@@ -4,6 +4,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import AppLayout from "../../layouts/AppLayout";
 import { getFoodMenu, getFoodRestaurant } from "../../lib/foodDeliveryApi";
+import type { FoodRestaurant, FoodMenuItem } from "../../types/food";
 import MenuItemCard from "../../components/food/MenuItemCard";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import CartSummary from "../../components/food/CartSummary";
@@ -11,8 +12,8 @@ import "./FoodDeliveryPage.css";
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
-  const [restaurant, setRestaurant] = useState<ReturnType<typeof getFoodRestaurant>>(undefined);
-  const [menu, setMenu] = useState<ReturnType<typeof getFoodMenu>>([]);
+  const [restaurant, setRestaurant] = useState<FoodRestaurant | undefined>(undefined);
+  const [menu, setMenu] = useState<FoodMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addItem } = useFoodCart();

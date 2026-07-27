@@ -7,6 +7,7 @@ import AppLayout from "../../layouts/AppLayout";
 import {
   getFoodCategories,
   getFoodRestaurants,
+  type FoodRestaurant,
 } from "../../lib/foodDeliveryApi";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import RestaurantCard from "../../components/food/RestaurantCard";
@@ -22,7 +23,7 @@ const FEATURED_STATS = [
 
 const FoodDeliveryPage = () => {
   const [categories, setCategories] = useState<string[]>([]);
-  const [restaurants, setRestaurants] = useState<ReturnType<typeof getFoodRestaurants>>([]);
+  const [restaurants, setRestaurants] = useState<FoodRestaurant[]>([]);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(true);

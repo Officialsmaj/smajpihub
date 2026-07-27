@@ -1,5 +1,5 @@
 import { axiosClient } from "./axiosClient";
-import type { HealthProvider, HealthService, HealthCategory } from "../types/health";
+import type { BookingDetails, HealthCategory, HealthProvider, HealthService } from "../types/health";
 
 const FALLBACK_CATEGORIES: HealthCategory[] = [
   "All",

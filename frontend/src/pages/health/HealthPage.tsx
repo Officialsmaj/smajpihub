@@ -6,6 +6,7 @@ import AppLayout from "../../layouts/AppLayout";
 import {
   getHealthCategories,
   getHealthProviders,
+  type HealthProvider,
 } from "../../lib/healthApi";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import ProviderCard from "../../components/health/ProviderCard";
@@ -21,7 +22,7 @@ const FEATURED_STATS = [
 
 const HealthPage = () => {
   const [categories, setCategories] = useState<string[]>([]);
-  const [providers, setProviders] = useState<ReturnType<typeof getHealthProviders>>([]);
+  const [providers, setProviders] = useState<HealthProvider[]>([]);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(true);

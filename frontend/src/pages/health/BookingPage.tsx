@@ -1,24 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import { getHealthProvider, getHealthServices, createHealthBooking } from "../../lib/healthApi";
+import type { HealthProvider, HealthService } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
-import { useNavigate } from "react-router-dom";
 import "./HealthPage.css";
 
 const BookingPage = () => {
   const { providerId, serviceId } = useParams();
-  const [provider, setProvider] = useState<ReturnType<typeof getHealthProvider>>(undefined);
-  const [services, setServices] = useState<ReturnType<typeof getHealthServices>>([]);
+  const [provider, setProvider] = useState<HealthProvider | undefined>(undefined);
+  const [services, setServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({ date: "", time: "", patientName: "", patientEmail: "", notes: "" });
   const { selectedService, clearBooking } = useHealthBooking();
-  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
