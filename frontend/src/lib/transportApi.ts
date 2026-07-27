@@ -179,6 +179,15 @@ export type AdminTransportStats = {
   activeTrips: number;
 };
 
+export type TransportNotification = {
+  _id: string;
+  type: string;
+  title: string;
+  message: string;
+  read?: boolean;
+  createdAt: string;
+};
+
 export const transportApi = {
   getBookings: async (params?: { type?: string; status?: string }) => {
     const response = await axiosClient.get<{ bookings: TransportBooking[] }>("/transport/bookings", { params });
@@ -223,13 +232,19 @@ export const transportApi = {
     return response.data.booking;
   },
 
-  updateBookingStatus: async (id: string, data: {
-    status?: string;
-    paymentStatus?: string;
-    paymentId?: string;
-    paymentTxid?: string;
-  }) => {
-    const response = await axiosClient.patch<{ message: string; bookingId: string }>(`/transport/bookings/${id}/status`, data);
+  updateBookingStatus: async (
+    id: string,
+    data: {
+      status?: string;
+      paymentStatus?: string;
+      paymentId?: string;
+      paymentTxid?: string;
+    }
+  ) => {
+    const response = await axiosClient.patch<{ message: string; bookingId: string }>(
+      `/transport/bookings/${id}/status`,
+      data
+    );
     return response.data;
   },
 
@@ -249,7 +264,9 @@ export const transportApi = {
   },
 
   updateTripStatus: async (id: string, status: string) => {
-    const response = await axiosClient.patch<{ message: string; tripId: string }>(`/transport/trips/${id}/status`, { status });
+    const response = await axiosClient.patch<{ message: string; tripId: string }>(`/transport/trips/${id}/status`, {
+      status,
+    });
     return response.data;
   },
 
@@ -315,7 +332,7 @@ export const transportApi = {
   },
 
   getNotifications: async (limit?: number) => {
-    const response = await axiosClient.get<{ notifications: any[] }>("/transport/notifications", {
+    const response = await axiosClient.get<{ notifications: TransportNotification[] }>("/transport/notifications", {
       params: { limit },
     });
     return response.data.notifications;
