@@ -79,7 +79,7 @@ const TransportPage = () => {
   }>>([]);
   const [driverOnline, setDriverOnline] = useState(false);
   const [notice, setNotice] = useState("");
-  const [loading, _setLoading] = useState(false);
+  const [loading] = useState(false);
   const [nearbyDrivers, setNearbyDrivers] = useState<Array<{
     driverId: string;
     displayName: string;
@@ -133,10 +133,12 @@ const TransportPage = () => {
     }
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchTrips();
     fetchNearbyDrivers();
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const quote = useMemo(() => {
     const distanceFactor = Math.max(1, Math.min(2.4, destination.trim().length / 12));

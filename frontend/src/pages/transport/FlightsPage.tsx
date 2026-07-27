@@ -28,6 +28,18 @@ type Flight = {
 
 const airportName = (value: string) => value.split("—")[0]?.trim() || value;
 
+const defaultFlight: Flight = {
+  id: "SA104",
+  airline: "SMAJ Air Connect",
+  code: "SA 104",
+  mark: "SA",
+  depart: "08:20",
+  arrive: "11:05",
+  duration: "6h 45m",
+  stops: "1 stop · ACC",
+  price: 184.6,
+};
+
 const FlightsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,14 +51,14 @@ const FlightsPage = () => {
   const [returnDate, setReturnDate] = useState("2026-08-24");
   const [travellers, setTravellers] = useState(1);
   const [cabin, setCabin] = useState("Economy");
-  const [selected, setSelected] = useState<Flight>(flights[0]);
+  const [flights, setFlights] = useState<Flight[]>([defaultFlight]);
+  const [selected, setSelected] = useState<Flight>(defaultFlight);
   const [passenger, setPassenger] = useState({ firstName: "", lastName: "", email: "", nationality: "" });
   const [seat, setSeat] = useState("18A");
   const [bag, setBag] = useState("Cabin bag");
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [flights, setFlights] = useState<Flight[]>([]);
 
   const extras = useMemo(() => (seat === "18A" ? 4.2 : 0) + (bag === "Checked 23 kg" ? 12.5 : 0), [bag, seat]);
   const total = selected.price * travellers + extras;
@@ -106,8 +118,8 @@ const FlightsPage = () => {
         fareUsd: (selected.price * travellers + extras) * 0.5,
       });
       navigate("/services/transport/flights/ticket");
-    } catch (err: any) {
-      setError(err?.message || "Booking failed. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Booking failed. Please try again.");
     } finally {
       setLoading(false);
     }
