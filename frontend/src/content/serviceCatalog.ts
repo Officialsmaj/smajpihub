@@ -30,7 +30,7 @@ export const serviceCatalog: ServiceDefinition[] = [
 export const serviceRoute = (slug: string) => `/services/${slug}`;
 
 export const serviceAppPath = (slug: string) => {
-  if (slug === "store") return "/services/store";
+  if (slug === "store") return "/store";
   if (slug === "food") return "/services/food-delivery";
   return `/services/${slug}`;
 };
