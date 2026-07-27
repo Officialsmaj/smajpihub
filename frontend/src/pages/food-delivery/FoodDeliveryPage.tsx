@@ -7,8 +7,8 @@ import AppLayout from "../../layouts/AppLayout";
 import {
   getFoodCategories,
   getFoodRestaurants,
-  type FoodRestaurant,
 } from "../../lib/foodDeliveryApi";
+import type { FoodRestaurant } from "../../types/food";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import RestaurantCard from "../../components/food/RestaurantCard";
 import CartSummary from "../../components/food/CartSummary";

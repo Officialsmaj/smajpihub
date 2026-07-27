@@ -6,8 +6,8 @@ import AppLayout from "../../layouts/AppLayout";
 import {
   getHealthCategories,
   getHealthProviders,
-  type HealthProvider,
 } from "../../lib/healthApi";
+import type { HealthProvider } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import ProviderCard from "../../components/health/ProviderCard";
 import BookingSummary from "../../components/health/BookingSummary";
@@ -28,7 +28,7 @@ const HealthPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { selectedService, selectProvider } = useHealthBooking();
+  const { selectedService } = useHealthBooking();
   const navigate = useNavigate();
 
   useEffect(() => {

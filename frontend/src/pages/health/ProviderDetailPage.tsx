@@ -18,6 +18,7 @@ const ProviderDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { selectService, selectedService } = useHealthBooking();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
