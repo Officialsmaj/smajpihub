@@ -77,6 +77,7 @@ import ProviderDetailPage from "./pages/health/ProviderDetailPage";
 import BookingPage from "./pages/health/BookingPage";
 import HousingPage, { type HousingPageKind } from "./pages/housing/HousingPage";
 import EventsPage, { type EventsPageKind } from "./pages/events/EventsPage";
+import AgroPage, { type AgroPageKind } from "./pages/agro/AgroPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -160,7 +161,20 @@ const housingRoutes: Array<[string, HousingPageKind]> = [
   ["add", "add"],
 ];
 const eventsRoutes: Array<[string, EventsPageKind]> = [
-  ["search", "search"], ["saved", "saved"], ["tickets", "tickets"], ["organizer", "organizer"], ["create", "create"],
+  ["search", "search"],
+  ["saved", "saved"],
+  ["tickets", "tickets"],
+  ["organizer", "organizer"],
+  ["create", "create"],
+];
+const agroRoutes: Array<[string, AgroPageKind]> = [
+  ["search", "search"],
+  ["saved", "saved"],
+  ["quotes", "quotes"],
+  ["orders", "orders"],
+  ["farmer", "farmer"],
+  ["add", "add"],
+  ["requests", "requests"],
 ];
 
 export const router = createBrowserRouter([
@@ -229,6 +243,8 @@ export const router = createBrowserRouter([
         <HousingPage />
       ) : platform.routeSegment === "events" ? (
         <EventsPage />
+      ) : platform.routeSegment === "agro" ? (
+        <AgroPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -329,6 +345,12 @@ export const router = createBrowserRouter([
   { path: "/services/events/ticket/:id", element: <EventsPage kind="ticket" /> },
   { path: "/services/events/organizer/:id", element: <EventsPage kind="organizer" /> },
   { path: "/services/events/venue/:id", element: <EventsPage kind="venue" /> },
+  ...agroRoutes.map(([path, kind]) => ({
+    path: `/services/agro/${path}`,
+    element: <AgroPage kind={kind} />,
+  })),
+  { path: "/services/agro/product/:id", element: <AgroPage kind="product" /> },
+  { path: "/services/agro/supplier/:id", element: <AgroPage kind="supplier" /> },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
