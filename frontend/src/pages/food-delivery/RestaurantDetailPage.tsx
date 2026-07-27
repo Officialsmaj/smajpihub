@@ -8,6 +8,7 @@ import type { FoodRestaurant, FoodMenuItem } from "../../types/food";
 import MenuItemCard from "../../components/food/MenuItemCard";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import CartSummary from "../../components/food/CartSummary";
+import FoodDeliveryHeader from "./FoodDeliveryHeader";
 import "./FoodDeliveryPage.css";
 
 const RestaurantDetailPage = () => {
@@ -16,7 +17,8 @@ const RestaurantDetailPage = () => {
   const [menu, setMenu] = useState<FoodMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { addItem } = useFoodCart();
+  const { addItem, totalItems } = useFoodCart();
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -26,10 +28,7 @@ const RestaurantDetailPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [restaurantData, menuData] = await Promise.all([
-          getFoodRestaurant(id),
-          getFoodMenu(id),
-        ]);
+        const [restaurantData, menuData] = await Promise.all([getFoodRestaurant(id), getFoodMenu(id)]);
         if (!cancelled) {
           setRestaurant(restaurantData);
           setMenu(menuData);
@@ -55,6 +54,7 @@ const RestaurantDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="food-page">
+          <FoodDeliveryHeader query={query} onQueryChange={setQuery} cartCount={totalItems} />
           <div className="food-loading">Loading restaurant...</div>
         </main>
       </AppLayout>
@@ -65,6 +65,7 @@ const RestaurantDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="food-page">
+          <FoodDeliveryHeader query={query} onQueryChange={setQuery} cartCount={totalItems} />
           <div className="food-error">
             <p>{error || "Restaurant not found."}</p>
             <Link to="/services/food-delivery" className="food-search a">
@@ -77,11 +78,12 @@ const RestaurantDetailPage = () => {
     );
   }
 
-  const categories = Array.from(new Set(menu.map((item) => item.category)));
+  const categories = Array.from(new Set(menu.map(item => item.category)));
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="food-page">
+        <FoodDeliveryHeader query={query} onQueryChange={setQuery} cartCount={totalItems} />
         <Link to="/services/food-delivery" className="food-back-link">
           <ArrowBackRoundedIcon />
           Back to restaurants
@@ -104,13 +106,13 @@ const RestaurantDetailPage = () => {
             <span className="food-kicker">MENU</span>
             <h2>Choose your meal.</h2>
           </div>
-          {categories.map((category) => (
+          {categories.map(category => (
             <div key={category} className="food-menu-category">
               <h3>{category}</h3>
               <div className="food-menu-grid">
                 {menu
-                  .filter((item) => item.category === category)
-                  .map((item) => (
+                  .filter(item => item.category === category)
+                  .map(item => (
                     <MenuItemCard key={item.id} item={item} onAdd={addItem} />
                   ))}
               </div>
@@ -118,7 +120,7 @@ const RestaurantDetailPage = () => {
           ))}
         </section>
 
-        <CartSummary onCheckout={() => {}} />
+        <CartSummary onCheckout={() => window.location.assign("/services/food-delivery/cart")} />
       </main>
     </AppLayout>
   );

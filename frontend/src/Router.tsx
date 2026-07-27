@@ -71,7 +71,7 @@ import CourseDetailPage from "./pages/education/CourseDetailPage";
 import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
 import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
 import CartPage from "./pages/food-delivery/CartPage";
-import { FoodCartProvider } from "./contexts/FoodCartContext";
+import FoodDealsOrdersPage from "./pages/food-delivery/FoodDealsOrdersPage";
 import HealthPage from "./pages/health/HealthPage";
 import ProviderDetailPage from "./pages/health/ProviderDetailPage";
 import BookingPage from "./pages/health/BookingPage";
@@ -208,9 +208,7 @@ export const router = createBrowserRouter([
       ) : platform.routeSegment === "education" ? (
         <EducationPage />
       ) : platform.routeSegment === "food-delivery" ? (
-        <FoodCartProvider>
-          <FoodDeliveryPage />
-        </FoodCartProvider>
+        <FoodDeliveryPage />
       ) : platform.routeSegment === "health" ? (
         <HealthBookingProvider>
           <HealthPage />
@@ -566,32 +564,46 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/services/food-delivery/deals",
+    element: <FoodDealsOrdersPage kind="deals" />,
+  },
+  {
+    path: "/services/food-delivery/orders",
+    element: <FoodDealsOrdersPage kind="orders" />,
+  },
+  {
     path: "/services/food-delivery/restaurants/:id",
-    element: (
-      <FoodCartProvider>
-        <RestaurantDetailPage />
-      </FoodCartProvider>
-    ),
+    element: <RestaurantDetailPage />,
   },
   {
     path: "/services/food-delivery/cart",
-    element: (
-      <FoodCartProvider>
-        <CartPage />
-      </FoodCartProvider>
-    ),
+    element: <CartPage />,
   },
   {
     path: "/app/services/food-delivery",
     element: (
       <ProtectedRoute>
         <PrivateLayout>
-          <FoodCartProvider>
-            <FoodDeliveryPage />
-          </FoodCartProvider>
+          <FoodDeliveryPage />
         </PrivateLayout>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/app/services/food-delivery/cart",
+    element: <Navigate to="/services/food-delivery/cart" replace />,
+  },
+  {
+    path: "/app/services/food-delivery/deals",
+    element: <Navigate to="/services/food-delivery/deals" replace />,
+  },
+  {
+    path: "/app/services/food-delivery/orders",
+    element: <Navigate to="/services/food-delivery/orders" replace />,
+  },
+  {
+    path: "/app/services/food-delivery/restaurants/:id",
+    element: <RestaurantDetailPage />,
   },
   {
     path: "/app/services/food-delivery/*",

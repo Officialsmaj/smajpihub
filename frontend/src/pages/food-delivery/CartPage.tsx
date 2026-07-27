@@ -1,20 +1,41 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import { useFoodCart } from "../../contexts/FoodCartContext";
+import FoodDeliveryHeader from "./FoodDeliveryHeader";
 import "./FoodDeliveryPage.css";
 
 const CartPage = () => {
-  const { items, removeItem, totalItems, totalPrice } = useFoodCart();
+  const { items, addItem, decreaseItem, removeItem, clearCart, totalItems, totalPrice } = useFoodCart();
+  const [query, setQuery] = useState("");
+  const [address, setAddress] = useState("");
+  const navigate = useNavigate();
 
   const deliveryFee = items.length > 0 ? 3.5 : 0;
   const serviceFee = totalPrice * 0.05;
   const grandTotal = totalPrice + deliveryFee + serviceFee;
+  const checkout = () => {
+    if (!address.trim() || items.length === 0) return;
+    const orders = JSON.parse(window.localStorage.getItem("smaj_food_orders") || "[]") as unknown[];
+    orders.unshift({
+      id: `FOOD-${Date.now().toString(36).toUpperCase()}`,
+      createdAt: new Date().toISOString(),
+      status: "Preparing",
+      address: address.trim(),
+      total: grandTotal,
+      items,
+    });
+    window.localStorage.setItem("smaj_food_orders", JSON.stringify(orders));
+    clearCart();
+    navigate("/services/food-delivery/orders");
+  };
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="food-page">
+        <FoodDeliveryHeader query={query} onQueryChange={setQuery} cartCount={totalItems} />
         <Link to="/services/food-delivery" className="food-back-link">
           <ArrowBackRoundedIcon />
           Back to restaurants
@@ -22,7 +43,9 @@ const CartPage = () => {
         <section className="food-section">
           <div className="food-section-head compact">
             <span className="food-kicker">YOUR CART</span>
-            <h2>{totalItems} item{totalItems !== 1 ? "s" : ""} ready to order.</h2>
+            <h2>
+              {totalItems} item{totalItems !== 1 ? "s" : ""} ready to order.
+            </h2>
           </div>
           {items.length === 0 ? (
             <div className="food-empty">
@@ -34,14 +57,28 @@ const CartPage = () => {
           ) : (
             <div className="food-cart-layout">
               <div className="food-cart-items">
-                {items.map((cartItem) => (
+                {items.map(cartItem => (
                   <article key={cartItem.menuItem.id} className="food-cart-item">
                     <img src={cartItem.menuItem.image} alt="" />
                     <div>
                       <h4>{cartItem.menuItem.name}</h4>
                       <p>π {cartItem.menuItem.price.toFixed(2)} each</p>
                       <div className="food-cart-item-actions">
+                        <button
+                          type="button"
+                          onClick={() => decreaseItem(cartItem.menuItem.id)}
+                          aria-label={`Remove one ${cartItem.menuItem.name}`}
+                        >
+                          −
+                        </button>
                         <span>Qty: {cartItem.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => addItem(cartItem.menuItem)}
+                          aria-label={`Add one ${cartItem.menuItem.name}`}
+                        >
+                          +
+                        </button>
                         <button type="button" onClick={() => removeItem(cartItem.menuItem.id)}>
                           Remove
                         </button>
@@ -69,8 +106,16 @@ const CartPage = () => {
                   <span>Total</span>
                   <strong>π {grandTotal.toFixed(2)}</strong>
                 </div>
-                <button className="food-cart-checkout-btn" type="button">
-                  Pay with Pi
+                <label className="food-address-field">
+                  Delivery address
+                  <textarea
+                    value={address}
+                    onChange={event => setAddress(event.target.value)}
+                    placeholder="Street, city, delivery instructions"
+                  />
+                </label>
+                <button className="food-cart-checkout-btn" type="button" onClick={checkout} disabled={!address.trim()}>
+                  Place Pi order
                   <AccountBalanceWalletOutlinedIcon />
                 </button>
               </aside>

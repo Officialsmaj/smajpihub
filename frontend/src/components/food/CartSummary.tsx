@@ -14,7 +14,9 @@ const CartSummary = ({ onCheckout }: CartSummaryProps) => {
     <div className="food-cart-summary">
       <div className="food-cart-summary-inner">
         <div>
-          <strong>{totalItems} item{totalItems !== 1 ? "s" : ""}</strong>
+          <strong>
+            {totalItems} item{totalItems !== 1 ? "s" : ""}
+          </strong>
           <span>π {totalPrice.toFixed(2)}</span>
         </div>
         <div>

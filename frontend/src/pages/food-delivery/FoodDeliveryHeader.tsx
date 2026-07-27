@@ -2,6 +2,7 @@ import { type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
+import "./FoodDeliveryHeader.css";
 
 type FoodDeliveryHeaderProps = {
   query: string;

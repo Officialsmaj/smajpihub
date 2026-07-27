@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import LocalFireDepartmentOutlinedIcon from "@mui/icons-material/LocalFireDepartmentOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 import AppLayout from "../../layouts/AppLayout";
-import {
-  getFoodCategories,
-  getFoodRestaurants,
-} from "../../lib/foodDeliveryApi";
+import { getFoodCategories, getFoodRestaurants } from "../../lib/foodDeliveryApi";
 import type { FoodRestaurant } from "../../types/food";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import RestaurantCard from "../../components/food/RestaurantCard";
@@ -22,9 +19,10 @@ const FEATURED_STATS = [
 ] as const;
 
 const FoodDeliveryPage = () => {
+  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState<string[]>([]);
   const [restaurants, setRestaurants] = useState<FoodRestaurant[]>([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +37,7 @@ const FoodDeliveryPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [cats, initialRestaurants] = await Promise.all([
-          getFoodCategories(),
-          getFoodRestaurants(),
-        ]);
+        const [cats, initialRestaurants] = await Promise.all([getFoodCategories(), getFoodRestaurants()]);
         if (!cancelled) {
           setCategories(cats);
           setRestaurants(initialRestaurants);
@@ -66,10 +61,11 @@ const FoodDeliveryPage = () => {
 
   const filteredRestaurants = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return restaurants.filter((restaurant) => {
-      const matchesQuery = !q ||
+    return restaurants.filter(restaurant => {
+      const matchesQuery =
+        !q ||
         restaurant.name.toLowerCase().includes(q) ||
-        restaurant.categories.some((category) => category.toLowerCase().includes(q));
+        restaurant.categories.some(category => category.toLowerCase().includes(q));
       const matchesCategory = selectedCategory === "All" || restaurant.categories.includes(selectedCategory);
       return matchesQuery && matchesCategory;
     });
@@ -83,16 +79,14 @@ const FoodDeliveryPage = () => {
           <div className="food-hero-copy">
             <span className="food-kicker">SMAJ PI FOOD DELIVERY</span>
             <h1>Hungry? Get it in minutes.</h1>
-            <p>
-              Order from local restaurants, track your delivery, and pay with Pi.
-            </p>
+            <p>Order from local restaurants, track your delivery, and pay with Pi.</p>
             <div className="food-search" role="search">
               <SearchOutlinedIcon />
               <input
                 type="search"
                 placeholder="Search restaurants, cuisines..."
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={event => setQuery(event.target.value)}
               />
               <Link to="#restaurants">Find food</Link>
             </div>
@@ -129,12 +123,10 @@ const FoodDeliveryPage = () => {
           <div className="food-section-head">
             <span className="food-kicker">WHAT YOU CAN ORDER</span>
             <h2>Restaurants near you.</h2>
-            <p>
-              Browse verified restaurants, track live delivery, and pay securely with Pi.
-            </p>
+            <p>Browse verified restaurants, track live delivery, and pay securely with Pi.</p>
           </div>
           <div className="food-category-grid">
-            {categories.map((category) => (
+            {categories.map(category => (
               <button
                 key={category}
                 type="button"
@@ -165,7 +157,7 @@ const FoodDeliveryPage = () => {
             </div>
           ) : (
             <div className="food-restaurant-grid">
-              {filteredRestaurants.map((restaurant) => (
+              {filteredRestaurants.map(restaurant => (
                 <RestaurantCard key={restaurant.id} restaurant={restaurant} />
               ))}
             </div>

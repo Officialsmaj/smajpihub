@@ -17,9 +17,7 @@ const RestaurantCard = ({ restaurant }: RestaurantCardProps) => (
         <p className="food-restaurant-meta">
           {restaurant.categories.join(" · ")} · {restaurant.deliveryTime}
         </p>
-        <p className="food-restaurant-delivery">
-          Delivery fee π {restaurant.deliveryFee.toFixed(2)}
-        </p>
+        <p className="food-restaurant-delivery">Delivery fee π {restaurant.deliveryFee.toFixed(2)}</p>
       </div>
     </Link>
   </article>
