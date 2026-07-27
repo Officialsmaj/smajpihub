@@ -6,6 +6,7 @@ import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutli
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AppLayout from "../layouts/AppLayout";
+import EducationHeader from "./education/EducationHeader";
 import {
   getEducationCategories,
   getEducationCourses,
@@ -81,8 +82,9 @@ const EducationPage = () => {
   }, [courses, query, selectedCategory]);
 
   return (
-    <AppLayout>
+    <AppLayout showHeader={false} showFooter={false}>
       <main className="education-page">
+        <EducationHeader query={query} onQueryChange={setQuery} />
         <section className="education-hero">
           <div className="education-hero-copy">
             <span className="education-kicker">SMAJ PI EDUCATION</span>

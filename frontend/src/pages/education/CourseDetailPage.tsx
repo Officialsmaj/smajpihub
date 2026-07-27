@@ -56,7 +56,7 @@ const CourseDetailPage = () => {
 
   if (error || !course) {
     return (
-      <AppLayout>
+      <AppLayout showHeader={false} showFooter={false}>
         <main className="education-page">
           <div className="education-error">
             <p>{error || "Course not found."}</p>
@@ -71,7 +71,7 @@ const CourseDetailPage = () => {
   }
 
   return (
-    <AppLayout>
+    <AppLayout showHeader={false} showFooter={false}>
       <main className="education-page">
         <div className="education-course-detail">
           <Link to="/services/education" className="education-back-link">
