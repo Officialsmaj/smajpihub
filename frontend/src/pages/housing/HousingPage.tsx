@@ -7,6 +7,7 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice } from "../../lib/piPricing";
 import "./HousingPage.css";
 
@@ -138,6 +139,19 @@ const HousingHeader = () => (
       <NavLink to="/services/housing/viewings">Viewings</NavLink>
       <NavLink to="/services/housing/landlord">List property</NavLink>
     </nav>
+    <ServiceMobileMenu
+      title="SMAJ Housing"
+      accent="#315c82"
+      items={[
+        { label: "Discover", to: "/services/housing" },
+        { label: "Properties", to: "/services/housing/search" },
+        { label: "Saved", to: "/services/housing/saved" },
+        { label: "Compare", to: "/services/housing/compare" },
+        { label: "Viewings", to: "/services/housing/viewings" },
+        { label: "List property", to: "/services/housing/landlord" },
+        { label: "Add property", to: "/services/housing/add" },
+      ]}
+    />
   </header>
 );
 const PropertyCard = ({ property, saved, onSave }: { property: Property; saved: boolean; onSave: () => void }) => (

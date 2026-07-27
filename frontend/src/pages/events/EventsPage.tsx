@@ -8,6 +8,7 @@ import QrCode2OutlinedIcon from "@mui/icons-material/QrCode2Outlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./EventsPage.css";
 
@@ -142,6 +143,18 @@ const Header = () => (
       <NavLink to="/services/events/tickets">My tickets</NavLink>
       <NavLink to="/services/events/organizer">Organize</NavLink>
     </nav>
+    <ServiceMobileMenu
+      title="SMAJ Events"
+      accent="#7c3aed"
+      items={[
+        { label: "Discover", to: "/services/events" },
+        { label: "Browse events", to: "/services/events/search" },
+        { label: "Saved", to: "/services/events/saved" },
+        { label: "My tickets", to: "/services/events/tickets" },
+        { label: "Organizer dashboard", to: "/services/events/organizer" },
+        { label: "Create event", to: "/services/events/create" },
+      ]}
+    />
   </header>
 );
 const Card = ({ event, saved, onSave }: { event: EventItem; saved: boolean; onSave: () => void }) => (

@@ -2,6 +2,7 @@ import { type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import "./FoodDeliveryHeader.css";
 
 type FoodDeliveryHeaderProps = {
@@ -54,6 +55,16 @@ const FoodDeliveryHeader = ({ query, onQueryChange, cartCount }: FoodDeliveryHea
         <ShoppingCartRoundedIcon />
         {cartCount > 0 ? <span>{cartCount}</span> : null}
       </Link>
+      <ServiceMobileMenu
+        title="SMAJ Food"
+        accent="#e85d2a"
+        items={[
+          { label: "Restaurants", to: "/services/food-delivery" },
+          { label: "Deals", to: "/services/food-delivery/deals" },
+          { label: "My orders", to: "/services/food-delivery/orders" },
+          { label: "Cart", to: "/services/food-delivery/cart" },
+        ]}
+      />
     </header>
   );
 };

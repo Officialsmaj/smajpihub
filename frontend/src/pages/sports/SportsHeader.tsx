@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 
 const links = [
   ["", "Home"],
@@ -44,6 +45,14 @@ const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: 
     >
       <NotificationsNoneRoundedIcon />
     </button>
+    <ServiceMobileMenu
+      title="SMAJ Sports"
+      accent="#1d64d8"
+      items={links.map(([path, label]) => ({
+        label,
+        to: `/services/sports${path ? `/${path}` : ""}`,
+      }))}
+    />
   </header>
 );
 

@@ -7,6 +7,7 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./AgroPage.css";
 
@@ -137,6 +138,19 @@ const Header = () => (
       <NavLink to="/services/agro/orders">Orders</NavLink>
       <NavLink to="/services/agro/farmer">Sell</NavLink>
     </nav>
+    <ServiceMobileMenu
+      title="SMAJ Agro"
+      accent="#2b8a3e"
+      items={[
+        { label: "Market", to: "/services/agro" },
+        { label: "Products", to: "/services/agro/search" },
+        { label: "Saved", to: "/services/agro/saved" },
+        { label: "Quotes", to: "/services/agro/quotes" },
+        { label: "Orders", to: "/services/agro/orders" },
+        { label: "Sell products", to: "/services/agro/farmer" },
+        { label: "Buyer requests", to: "/services/agro/requests" },
+      ]}
+    />
   </header>
 );
 const ProductCard = ({ product, saved, onSave }: { product: AgroProduct; saved: boolean; onSave: () => void }) => (

@@ -1,6 +1,7 @@
 import { type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import "./HealthHeader.css";
 
 type HealthHeaderProps = {
@@ -48,6 +49,15 @@ const HealthHeader = ({ query, onQueryChange }: HealthHeaderProps) => {
           aria-label="Search SMAJ PI Health"
         />
       </form>
+      <ServiceMobileMenu
+        title="SMAJ Health"
+        accent="#16836f"
+        items={[
+          { label: "Find care", to: "/services/health" },
+          { label: "Providers", to: "/services/health/providers" },
+          { label: "My appointments", to: "/services/health/appointments" },
+        ]}
+      />
     </header>
   );
 };

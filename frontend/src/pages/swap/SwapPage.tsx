@@ -7,6 +7,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SwapVertOutlinedIcon from "@mui/icons-material/SwapVertOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice, PI_USDT_RATE } from "../../lib/piPricing";
 import "./SwapPage.css";
 
@@ -90,6 +91,17 @@ const SwapHeader = () => (
     <Link className="swap-wallet" to="/services/swap/history">
       <AccountBalanceWalletOutlinedIcon /> π 1,240.50
     </Link>
+    <ServiceMobileMenu
+      title="SMAJ Swap"
+      accent="#6437b4"
+      items={[
+        { label: "Swap tokens", to: "/services/swap" },
+        { label: "Liquidity pools", to: "/services/swap/pools" },
+        { label: "Manage liquidity", to: "/services/swap/liquidity" },
+        { label: "Supported tokens", to: "/services/swap/tokens" },
+        { label: "Activity", to: "/services/swap/history" },
+      ]}
+    />
   </header>
 );
 

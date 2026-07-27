@@ -8,6 +8,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SolarPowerOutlinedIcon from "@mui/icons-material/SolarPowerOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./EnergyPage.css";
 
@@ -142,6 +143,21 @@ const EnergyHeader = () => (
       <NavLink to="/services/energy/providers">Providers</NavLink>
       <NavLink to="/services/energy/dashboard">My energy</NavLink>
     </nav>
+    <ServiceMobileMenu
+      title="SMAJ Energy"
+      accent="#126b57"
+      items={[
+        { label: "Explore", to: "/services/energy" },
+        { label: "Solutions", to: "/services/energy/search" },
+        { label: "Providers", to: "/services/energy/providers" },
+        { label: "Saved", to: "/services/energy/saved" },
+        { label: "Quotes", to: "/services/energy/quotes" },
+        { label: "Bookings", to: "/services/energy/bookings" },
+        { label: "Orders", to: "/services/energy/orders" },
+        { label: "Utility bills", to: "/services/energy/utilities" },
+        { label: "My energy", to: "/services/energy/dashboard" },
+      ]}
+    />
   </header>
 );
 

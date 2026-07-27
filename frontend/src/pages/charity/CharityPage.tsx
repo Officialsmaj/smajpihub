@@ -7,6 +7,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import ServiceMobileMenu from "../../components/ServiceMobileMenu";
 import { formatServicePrice, piFromUsdt, PI_USDT_RATE, usdtFromPi } from "../../lib/piPricing";
 import "./CharityPage.css";
 
@@ -139,6 +140,18 @@ const CharityHeader = () => (
       <NavLink to="/services/charity/donations">My donations</NavLink>
       <NavLink to="/services/charity/fundraise">Start a fundraiser</NavLink>
     </nav>
+    <ServiceMobileMenu
+      title="SMAJ Charity"
+      accent="#e5414f"
+      items={[
+        { label: "Home", to: "/services/charity" },
+        { label: "Discover campaigns", to: "/services/charity/discover" },
+        { label: "Saved campaigns", to: "/services/charity/saved" },
+        { label: "My donations", to: "/services/charity/donations" },
+        { label: "Start a fundraiser", to: "/services/charity/fundraise" },
+        { label: "Organizer dashboard", to: "/services/charity/dashboard" },
+      ]}
+    />
   </header>
 );
 
