@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import LoginWithPiButton from "../components/LoginWithPiButton";
@@ -8,6 +9,8 @@ import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
+import { axiosClient } from "../lib/axiosClient";
+import type { Product } from "../types/marketplace";
 
 const storeFeatures = [
   ["Product Listings", "Sellers can prepare clear products, categories, images, and marketplace details.", StorefrontOutlinedIcon],
@@ -25,7 +28,20 @@ const launchSteps = [
   "Review the experience and use support if a dispute needs attention.",
 ];
 
-const PublicStorePage = () => (
+const PublicStorePage = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void axiosClient.get<{ products: Product[] }>("/marketplace/products")
+      .then(({ data }) => { if (active) setProducts(data.products.slice(0, 8)); })
+      .catch(() => { if (active) setProducts([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  return (
   <AppLayout>
     <main className="home-page public-store-page">
       <section className="home-hero public-store-hero">
@@ -37,7 +53,7 @@ const PublicStorePage = () => (
             buyer/seller chat, Pi payment flow, payment confirmation, reviews, and marketplace support.
           </p>
           <div className="home-hero-cta">
-            <LoginWithPiButton className="home-hero-primary-btn">Login with Pi</LoginWithPiButton>
+            <LoginWithPiButton className="home-hero-primary-btn" redirectTo="/store">Open SMAJ Store</LoginWithPiButton>
             <Link to="/onboarding" className="home-hero-secondary-btn">Apply to Join</Link>
           </div>
         </div>
@@ -47,6 +63,28 @@ const PublicStorePage = () => (
           <strong>Marketplace first</strong>
           <p>Start with store activity, then expand into the wider service ecosystem.</p>
         </aside>
+      </section>
+
+      <section className="home-section public-store-section">
+        <div className="home-section-head">
+          <span className="home-kicker">LIVE MARKETPLACE</span>
+          <h2>Browse products before signing in.</h2>
+          <p>Product discovery is public. Pi login is requested when you open a product or start shopping.</p>
+        </div>
+        {loading ? <p className="public-store-catalog-state">Loading marketplace products...</p> : products.length ? (
+          <div className="public-store-product-grid">
+            {products.map(product => (
+              <article key={product._id} className="public-store-product-card">
+                <div>{product.image ? <img src={product.image} alt={product.title} /> : <span>No image</span>}</div>
+                <small>{product.category || "Marketplace"}</small>
+                <h3>{product.title}</h3>
+                <p>{product.sellerName || "SMAJ Seller"}</p>
+                <strong>π {product.pricePi.toFixed(2)}</strong>
+                <LoginWithPiButton redirectTo={`/product/${product._id}`}>View product</LoginWithPiButton>
+              </article>
+            ))}
+          </div>
+        ) : <div className="public-store-catalog-state"><p>No live products are available yet.</p><LoginWithPiButton redirectTo="/store">Open authenticated Store</LoginWithPiButton></div>}
       </section>
 
       <section className="home-section public-store-section">
@@ -82,6 +120,7 @@ const PublicStorePage = () => (
       </section>
     </main>
   </AppLayout>
-);
+  );
+};
 
 export default PublicStorePage;

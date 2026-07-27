@@ -1,7 +1,7 @@
 import { AxiosError, isAxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { axiosClient, getBaseURL } from "../lib/axiosClient";
-import type { AuthResult, PaymentDTO, User } from "../types/pi";
+import type { AuthResult, User } from "../types/pi";
 
 type AuthFeedback = { type: "success" | "error"; message: string };
 type BackendErrorBody = { error?: string; message?: string };
@@ -37,7 +37,7 @@ const isPiSandboxMode = () =>
     window.location.hostname === "sandbox.minepi.com" ||
     document.referrer.includes("sandbox.minepi.com"));
 
-const onIncompletePaymentFound = (_payment: PaymentDTO) => {
+const onIncompletePaymentFound = () => {
   console.info("Pi incomplete payment handling is disabled.");
 };
 
@@ -114,6 +114,11 @@ const authResultUser = (authResult: AuthResult): User => ({
 });
 
 const getDashboardUrl = () => {
+  const requestedPath = window.sessionStorage.getItem("smaj_post_auth_redirect");
+  if (requestedPath?.startsWith("/") && !requestedPath.startsWith("//")) {
+    window.sessionStorage.removeItem("smaj_post_auth_redirect");
+    return requestedPath;
+  }
   const baseUrl = import.meta.env.BASE_URL || "/";
   return `${baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`}dashboard`;
 };
