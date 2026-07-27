@@ -68,6 +68,10 @@ import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
 import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
 import CourseDetailPage from "./pages/education/CourseDetailPage";
+import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
+import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
+import CartPage from "./pages/food-delivery/CartPage";
+import { FoodCartProvider } from "./contexts/FoodCartContext";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -199,6 +203,10 @@ export const router = createBrowserRouter([
         <JobsPage />
       ) : platform.routeSegment === "education" ? (
         <EducationPage />
+      ) : platform.routeSegment === "food-delivery" ? (
+        <FoodCartProvider>
+          <FoodDeliveryPage />
+        </FoodCartProvider>
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -540,6 +548,38 @@ export const router = createBrowserRouter([
         </PrivateLayout>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/services/food-delivery/restaurants/:id",
+    element: (
+      <FoodCartProvider>
+        <RestaurantDetailPage />
+      </FoodCartProvider>
+    ),
+  },
+  {
+    path: "/services/food-delivery/cart",
+    element: (
+      <FoodCartProvider>
+        <CartPage />
+      </FoodCartProvider>
+    ),
+  },
+  {
+    path: "/app/services/food-delivery",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <FoodCartProvider>
+            <FoodDeliveryPage />
+          </FoodCartProvider>
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/food-delivery/*",
+    element: <Navigate to="/services/food-delivery" replace />,
   },
   {
     path: "/app/services/stream/movies",

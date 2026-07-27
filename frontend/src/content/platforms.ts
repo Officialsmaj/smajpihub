@@ -11,7 +11,7 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ Food Delivery",
     routeSegment: "food-delivery",
     description: "Order food through trusted local merchants.",
-    status: "Coming Soon",
+    status: "Live",
   },
   {
     name: "SMAJ PI Jobs",
