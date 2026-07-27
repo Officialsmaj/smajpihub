@@ -76,6 +76,7 @@ import HealthPage from "./pages/health/HealthPage";
 import ProviderDetailPage from "./pages/health/ProviderDetailPage";
 import BookingPage from "./pages/health/BookingPage";
 import HousingPage, { type HousingPageKind } from "./pages/housing/HousingPage";
+import EventsPage, { type EventsPageKind } from "./pages/events/EventsPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -158,6 +159,9 @@ const housingRoutes: Array<[string, HousingPageKind]> = [
   ["landlord", "landlord"],
   ["add", "add"],
 ];
+const eventsRoutes: Array<[string, EventsPageKind]> = [
+  ["search", "search"], ["saved", "saved"], ["tickets", "tickets"], ["organizer", "organizer"], ["create", "create"],
+];
 
 export const router = createBrowserRouter([
   {
@@ -223,6 +227,8 @@ export const router = createBrowserRouter([
         <HealthPage />
       ) : platform.routeSegment === "housing" ? (
         <HousingPage />
+      ) : platform.routeSegment === "events" ? (
+        <EventsPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -314,6 +320,15 @@ export const router = createBrowserRouter([
     path: "/services/housing/agent/:id",
     element: <HousingPage kind="agent" />,
   },
+  ...eventsRoutes.map(([path, kind]) => ({
+    path: `/services/events/${path}`,
+    element: <EventsPage kind={kind} />,
+  })),
+  { path: "/services/events/event/:id", element: <EventsPage kind="detail" /> },
+  { path: "/services/events/checkout/:id", element: <EventsPage kind="checkout" /> },
+  { path: "/services/events/ticket/:id", element: <EventsPage kind="ticket" /> },
+  { path: "/services/events/organizer/:id", element: <EventsPage kind="organizer" /> },
+  { path: "/services/events/venue/:id", element: <EventsPage kind="venue" /> },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
