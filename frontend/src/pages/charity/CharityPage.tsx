@@ -7,6 +7,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import VolunteerActivismOutlinedIcon from "@mui/icons-material/VolunteerActivismOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE, usdtFromPi } from "../../lib/piPricing";
 import "./CharityPage.css";
 
 export type CharityPageKind =
@@ -149,7 +150,7 @@ const Progress = ({ raised, goal }: { raised: number; goal: number }) => {
         <span style={{ width: `${value}%` }} />
       </div>
       <p>
-        <strong>π {raised.toLocaleString()}</strong> raised of π {goal.toLocaleString()} <b>{value}%</b>
+        <strong>{formatServicePrice(raised)}</strong> raised of {formatServicePrice(goal)} <b>{value}%</b>
       </p>
     </div>
   );
@@ -231,7 +232,9 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
       campaignId: campaign.id,
       campaign: campaign.title,
       organization: campaign.organization,
-      amount,
+      amount: piFromUsdt(amount),
+      amountUsdt: amount,
+      piRateUsed: PI_USDT_RATE,
       date: new Date().toLocaleDateString(),
       status: "Completed",
       ...form,
@@ -273,7 +276,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
         <main className="charity-inner">
           <div className="charity-impact">
             <div>
-              <strong>π 245K+</strong>
+              <strong>{formatServicePrice(245000)}+</strong>
               <span>Raised by the community</span>
             </div>
             <div>
@@ -432,12 +435,12 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
                   onClick={() => setAmount(value)}
                   key={value}
                 >
-                  π {value}
+                  ${value}
                 </button>
               ))}
             </div>
             <label>
-              Custom amount in Pi
+              Custom amount in USDT
               <input type="number" min="1" value={amount} onChange={event => setAmount(Number(event.target.value))} />
             </label>
             <label>
@@ -450,7 +453,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
             <label className="charity-check">
               <input type="checkbox" name="anonymous" /> Hide my name publicly
             </label>
-            <button>Donate π {amount}</button>
+            <button>Donate {formatServicePrice(amount)}</button>
           </form>
         </section>
         <aside>
@@ -459,11 +462,11 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
             Campaign <strong>{campaign.title}</strong>
           </p>
           <p>
-            Donation <strong>π {amount}</strong>
+            Donation <strong>{formatServicePrice(amount)}</strong>
           </p>
           <hr />
           <p>
-            Total <strong>π {amount}</strong>
+            Total <strong>{formatServicePrice(amount)}</strong>
           </p>
           <small>Demo checkout: no real Pi will be transferred.</small>
         </aside>
@@ -493,7 +496,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
             </div>
             <div>
               <dt>Amount</dt>
-              <dd>π {donation.amount}</dd>
+              <dd>{formatServicePrice(Number(donation.amountUsdt ?? usdtFromPi(Number(donation.amount))))}</dd>
             </div>
             <div>
               <dt>Date</dt>
@@ -547,7 +550,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
                   <p>{item.organization}</p>
                 </div>
                 <div>
-                  <strong>π {item.amount}</strong>
+                  <strong>{formatServicePrice(Number(item.amountUsdt ?? usdtFromPi(Number(item.amount))))}</strong>
                   <span>
                     {item.recurring ? "Monthly" : "One-time"} · {item.status}
                   </span>
@@ -595,7 +598,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
             </select>
           </label>
           <label>
-            Funding goal in Pi
+            Funding goal in USDT
             <input name="goal" type="number" min="10" required />
           </label>
           <label>
@@ -632,7 +635,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
           </article>
           <article>
             <small>TOTAL RAISED</small>
-            <strong>π 0</strong>
+            <strong>{formatServicePrice(0)}</strong>
             <span>Across your campaigns</span>
           </article>
           <article>
@@ -659,7 +662,7 @@ const CharityPage = ({ kind = "home" }: { kind?: CharityPageKind }) => {
                 </div>
                 <div>
                   <strong>
-                    π {item.raised} / π {item.goal}
+                    {formatServicePrice(Number(item.raised))} / {formatServicePrice(Number(item.goal))}
                   </strong>
                   <span>{item.status}</span>
                 </div>

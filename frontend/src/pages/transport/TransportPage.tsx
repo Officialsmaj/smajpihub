@@ -22,6 +22,7 @@ import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import FlightRoundedIcon from "@mui/icons-material/FlightRounded";
 import AppLayout from "../../layouts/AppLayout";
 import { transportApi } from "../../lib/transportApi";
+import { formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 import type { AdminTransportStats, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
 import FlightsPage from "./FlightsPage";
 import "./TransportPage.css";
@@ -148,7 +149,7 @@ const TransportPage = () => {
         pickup: t.pickup,
         destination: t.destination,
         rideName: t.vehicleType,
-        price: t.farePi,
+        price: usdtFromPi(t.farePi),
         status: normalizeStatus(t.status),
         date: new Date(t.createdAt).toLocaleDateString("en-GB", {
           day: "numeric",
@@ -240,7 +241,7 @@ const TransportPage = () => {
         pickup,
         destination,
         rideName: activeRide.name,
-        price: booking.farePi,
+        price: booking.fareUsd || usdtFromPi(booking.farePi),
         status: "active" as const,
         date: "Now",
         bookingId: booking.bookingId,
@@ -478,7 +479,9 @@ const TransportPage = () => {
                 </small>
               </span>
               <strong>
-                π {(ride.pricePerKm * Math.max(1, Math.min(2.4, destination.trim().length / 12))).toFixed(2)}
+                {formatServicePrice(
+                  ride.pricePerKm * Math.max(1, Math.min(2.4, destination.trim().length / 12))
+                )}
               </strong>
             </button>
           ))}
@@ -492,7 +495,7 @@ const TransportPage = () => {
           <button type="button">Change</button>
         </div>
         <button className="transport-main-button" type="button" onClick={() => setBookingStep("review")}>
-          Choose {activeRide.name} · π {quote.toFixed(2)}
+          Choose {activeRide.name} · {formatServicePrice(quote)}
         </button>
       </div>
       <MapCanvas pickup={pickup} destination={destination} drivers={nearbyDrivers} />
@@ -529,7 +532,7 @@ const TransportPage = () => {
               </small>
             </div>
             <div className="trip-price">
-              <strong>π {trip.price.toFixed(2)}</strong>
+              <strong>{formatServicePrice(trip.price)}</strong>
               <span className={`trip-status ${trip.status}`}>{trip.status}</span>
               {trip.status === "active" ? (
                 <>
@@ -704,7 +707,7 @@ const TransportPage = () => {
   const receiptsPage = (
     <section className="transport-inner-page">
       <header><span className="transport-eyebrow">PAYMENT HISTORY</span><h1>Receipts</h1><p>Review completed ride payments.</p></header>
-      <div className="transport-receipt-list">{receipts.length ? receipts.map(receipt => <article key={receipt.receiptId}><PaymentsRoundedIcon /><div><h2>{receipt.pickup} → {receipt.destination}</h2><p>{receipt.driverName} · {receipt.vehicleName}</p><small>{new Date(receipt.createdAt).toLocaleString()}</small></div><strong>π {receipt.farePi.toFixed(2)}</strong></article>) : <p>No receipts yet. Completed trips will appear here.</p>}</div>
+      <div className="transport-receipt-list">{receipts.length ? receipts.map(receipt => <article key={receipt.receiptId}><PaymentsRoundedIcon /><div><h2>{receipt.pickup} → {receipt.destination}</h2><p>{receipt.driverName} · {receipt.vehicleName}</p><small>{new Date(receipt.createdAt).toLocaleString()}</small></div><strong>{formatServicePrice(receipt.fareUsd || usdtFromPi(receipt.farePi))}</strong></article>) : <p>No receipts yet. Completed trips will appear here.</p>}</div>
     </section>
   );
 
@@ -758,7 +761,7 @@ const TransportPage = () => {
             <PaymentsRoundedIcon />
             <span>
               <small>FARE</small>
-              <b>π {(activeTrip?.price || quote).toFixed(2)} · Pi Wallet</b>
+              <b>{formatServicePrice(activeTrip?.price || quote)} · Pi Wallet</b>
             </span>
           </p>
         </div>
@@ -818,7 +821,7 @@ const TransportPage = () => {
                 </p>
                 <p>
                   <small>ESTIMATED FARE</small>
-                  <b>π {quote.toFixed(2)}</b>
+                  <b>{formatServicePrice(quote)}</b>
                 </p>
               </div>
               <button className="transport-main-button" onClick={confirmBooking} disabled={loading}>

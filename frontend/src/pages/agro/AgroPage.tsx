@@ -7,6 +7,7 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./AgroPage.css";
 
 export type AgroPageKind =
@@ -24,7 +25,7 @@ type AgroProduct = {
   id: string;
   name: string;
   category: string;
-  pricePi: number;
+  priceUsdt: number;
   unit: string;
   minimum: number;
   location: string;
@@ -41,7 +42,7 @@ const products: AgroProduct[] = [
     id: "premium-maize",
     name: "Premium yellow maize",
     category: "Crops",
-    pricePi: 4.8,
+    priceUsdt: 240,
     unit: "50 kg bag",
     minimum: 5,
     location: "Kaduna, Nigeria",
@@ -57,7 +58,7 @@ const products: AgroProduct[] = [
     id: "fresh-tomatoes",
     name: "Fresh market tomatoes",
     category: "Produce",
-    pricePi: 2.2,
+    priceUsdt: 44,
     unit: "20 kg crate",
     minimum: 3,
     location: "Nakuru, Kenya",
@@ -73,7 +74,7 @@ const products: AgroProduct[] = [
     id: "rice-seed",
     name: "Certified rice seed",
     category: "Seeds",
-    pricePi: 1.6,
+    priceUsdt: 16,
     unit: "10 kg pack",
     minimum: 2,
     location: "Kumasi, Ghana",
@@ -89,7 +90,7 @@ const products: AgroProduct[] = [
     id: "compact-tractor",
     name: "Compact farm tractor",
     category: "Equipment",
-    pricePi: 4850,
+    priceUsdt: 4850,
     unit: "unit",
     minimum: 1,
     location: "Dakar, Senegal",
@@ -150,7 +151,7 @@ const ProductCard = ({ product, saved, onSave }: { product: AgroProduct; saved: 
           {product.location}
         </p>
         <strong>
-          π {product.pricePi.toLocaleString()} / {product.unit}
+          {formatServicePrice(product.priceUsdt)} / {product.unit}
         </strong>
         <span>
           Minimum {product.minimum} · {product.stock} available
@@ -228,7 +229,9 @@ const AgroPage = ({ kind = "home" }: { kind?: AgroPageKind }) => {
       product: product.name,
       supplier: product.supplier,
       quantity,
-      total: product.pricePi * quantity,
+      total: piFromUsdt(product.priceUsdt * quantity),
+      totalUsdt: product.priceUsdt * quantity,
+      piRateUsed: PI_USDT_RATE,
       status: "Requested",
       ...form,
     });
@@ -287,7 +290,7 @@ const AgroPage = ({ kind = "home" }: { kind?: AgroPageKind }) => {
               {product.location}
             </p>
             <strong>
-              π {product.pricePi.toLocaleString()} / {product.unit}
+              {formatServicePrice(product.priceUsdt)} / {product.unit}
             </strong>
             <p>{product.description}</p>
             <p>
@@ -336,7 +339,7 @@ const AgroPage = ({ kind = "home" }: { kind?: AgroPageKind }) => {
               Contact
               <input name="contact" required />
             </label>
-            <strong>Estimated total: π {(product.pricePi * quantity).toLocaleString()}</strong>
+            <strong>Estimated total: {formatServicePrice(product.priceUsdt * quantity)}</strong>
             <button>Request order</button>
             <p>Final price and Pi payment follow supplier confirmation.</p>
           </form>

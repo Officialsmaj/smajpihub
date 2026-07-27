@@ -7,6 +7,7 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice } from "../../lib/piPricing";
 import "./HousingPage.css";
 
 export type HousingPageKind =
@@ -26,7 +27,7 @@ type Property = {
   purpose: string;
   city: string;
   country: string;
-  pricePi: number;
+  priceUsdt: number;
   beds: number;
   baths: number;
   area: string;
@@ -45,7 +46,7 @@ const properties: Property[] = [
     purpose: "Rent",
     city: "Lagos",
     country: "Nigeria",
-    pricePi: 420,
+    priceUsdt: 420,
     beds: 2,
     baths: 2,
     area: "110 m²",
@@ -63,7 +64,7 @@ const properties: Property[] = [
     purpose: "Sale",
     city: "Accra",
     country: "Ghana",
-    pricePi: 18500,
+    priceUsdt: 18500,
     beds: 4,
     baths: 3,
     area: "280 m²",
@@ -81,7 +82,7 @@ const properties: Property[] = [
     purpose: "Rent",
     city: "Nairobi",
     country: "Kenya",
-    pricePi: 210,
+    priceUsdt: 210,
     beds: 1,
     baths: 1,
     area: "48 m²",
@@ -99,7 +100,7 @@ const properties: Property[] = [
     purpose: "Sale",
     city: "Dakar",
     country: "Senegal",
-    pricePi: 7200,
+    priceUsdt: 7200,
     beds: 0,
     baths: 0,
     area: "500 m²",
@@ -153,7 +154,7 @@ const PropertyCard = ({ property, saved, onSave }: { property: Property; saved: 
           {property.city}, {property.country}
         </p>
         <strong>
-          π {property.pricePi.toLocaleString()} {property.purpose === "Rent" ? "/ month" : ""}
+          {formatServicePrice(property.priceUsdt)} {property.purpose === "Rent" ? "/ month" : ""}
         </strong>
         <span>
           {property.beds || "—"} beds · {property.baths || "—"} baths · {property.area}
@@ -276,7 +277,7 @@ const HousingPage = ({ kind = "home" }: { kind?: HousingPageKind }) => {
               <LocationOnOutlinedIcon />
               {property.city}, {property.country}
             </p>
-            <strong>π {property.pricePi.toLocaleString()}</strong>
+            <strong>{formatServicePrice(property.priceUsdt)}</strong>
             <p>{property.description}</p>
             <div>
               {property.amenities.map(a => (
@@ -444,8 +445,8 @@ const HousingPage = ({ kind = "home" }: { kind?: HousingPageKind }) => {
             </label>
           </div>
           <label>
-            Price in Pi
-            <input name="pricePi" type="number" min="1" required />
+            Real-world price in USDT
+            <input name="priceUsdt" type="number" min="1" required />
           </label>
           <label>
             Description

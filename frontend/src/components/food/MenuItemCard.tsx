@@ -1,4 +1,5 @@
 import type { FoodMenuItem } from "../../types/food";
+import { formatServicePrice } from "../../lib/piPricing";
 
 type MenuItemCardProps = {
   item: FoodMenuItem;
@@ -12,7 +13,7 @@ const MenuItemCard = ({ item, onAdd }: MenuItemCardProps) => (
       <h4>{item.name}</h4>
       <p>{item.description}</p>
       <footer>
-        <strong>π {item.price.toFixed(2)}</strong>
+        <strong>{formatServicePrice(item.price)}</strong>
         <button type="button" onClick={() => onAdd(item)}>
           Add
         </button>

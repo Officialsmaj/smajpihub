@@ -12,6 +12,7 @@ import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import AirlineSeatReclineNormalRoundedIcon from "@mui/icons-material/AirlineSeatReclineNormalRounded";
 import { transportApi } from "../../lib/transportApi";
+import { formatServicePrice, piFromUsdt } from "../../lib/piPricing";
 import "./FlightsPage.css";
 
 type Flight = {
@@ -144,8 +145,8 @@ const FlightsPage = () => {
         passengerName: `${passenger.firstName} ${passenger.lastName}`,
         passengerEmail: passenger.email,
         passengerNationality: passenger.nationality,
-        farePi: selected.price * travellers + extras,
-        fareUsd: (selected.price * travellers + extras) * 0.5,
+        farePi: piFromUsdt(total),
+        fareUsd: total,
       });
       navigate("/services/transport/flights/ticket");
     } catch (err) {
@@ -363,7 +364,7 @@ const FlightsPage = () => {
               </div>
               <div className="flight-fare">
                 <small>{index === 0 ? "BEST VALUE" : "PER TRAVELLER"}</small>
-                <strong>π {flight.price.toFixed(2)}</strong>
+                <strong>{formatServicePrice(flight.price)}</strong>
                 <button
                   onClick={() => {
                     setSelected(flight);
@@ -486,11 +487,11 @@ const FlightsPage = () => {
           <div className="flight-price-lines">
             <p>
               <span>{travellers} × flight fare</span>
-              <b>π {(selected.price * travellers).toFixed(2)}</b>
+              <b>{formatServicePrice(selected.price * travellers)}</b>
             </p>
             <p>
               <span>Seat and baggage</span>
-              <b>π {extras.toFixed(2)}</b>
+              <b>{formatServicePrice(extras)}</b>
             </p>
             <p>
               <span>Taxes and service fees</span>
@@ -498,7 +499,7 @@ const FlightsPage = () => {
             </p>
             <p>
               <strong>Total</strong>
-              <strong>π {total.toFixed(2)}</strong>
+              <strong>{formatServicePrice(total)}</strong>
             </p>
           </div>
           <label className="flight-terms">
@@ -507,7 +508,7 @@ const FlightsPage = () => {
           </label>
           {error ? <p className="flight-error">{error}</p> : null}
           <button className="flight-primary" onClick={handleCheckout} disabled={loading}>
-            {loading ? "Processing payment…" : `Pay π ${total.toFixed(2)} and issue ticket`}
+            {loading ? "Processing payment…" : `Pay ${formatServicePrice(total)} and issue ticket`}
           </button>
         </div>
         <FlightSummary flight={selected} from={from} to={to} total={total} travellers={travellers} />
@@ -580,7 +581,7 @@ const FlightsPage = () => {
           </p>
           <p>
             <small>TOTAL PAID</small>
-            <b>π {total.toFixed(2)}</b>
+            <b>{formatServicePrice(total)}</b>
           </p>
         </div>
         <footer>
@@ -641,7 +642,7 @@ const FlightSummary = ({
     </p>
     <footer>
       <span>Booking total</span>
-      <strong>π {total.toFixed(2)}</strong>
+      <strong>{formatServicePrice(total)}</strong>
     </footer>
   </aside>
 );

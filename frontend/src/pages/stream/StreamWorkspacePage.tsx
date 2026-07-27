@@ -25,7 +25,7 @@ import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
 import { getStreamAdminOverview, getStreamAdminSettings, getTitleAvailability, saveStreamAdminSettings, type StreamAdminOverview, type StreamAdminSettings } from "../../lib/streamAdmin";
-import { formatPiAmount } from "../../lib/formatters";
+import { formatServicePrice } from "../../lib/piPricing";
 import { formatPiRate } from "../../lib/piPricing";
 import {
   getStreamCatalog,
@@ -712,7 +712,7 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
                 <span>{index === 1 ? "POPULAR" : "PLAN"}</span>
                 <h2>{name}</h2>
                 <strong>
-                  {formatPiAmount(Number(price))}
+                  {formatServicePrice(Number(price))}
                   <small>/month</small>
                 </strong>
                 <p>{text}</p>

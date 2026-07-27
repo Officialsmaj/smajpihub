@@ -8,6 +8,7 @@ import QrCode2OutlinedIcon from "@mui/icons-material/QrCode2Outlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./EventsPage.css";
 
 export type EventsPageKind =
@@ -33,7 +34,7 @@ type EventItem = {
   organizer: string;
   organizerId: string;
   image: string;
-  fromPi: number;
+  fromUsdt: number;
   description: string;
   tiers: Array<{ name: string; price: number; remaining: number }>;
 };
@@ -50,7 +51,7 @@ const events: EventItem[] = [
     organizer: "SMAJ Community",
     organizerId: "smaj-community",
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1100&q=85",
-    fromPi: 35,
+    fromUsdt: 35,
     description: "A full day of product talks, workshops, founder stories, and community networking.",
     tiers: [
       { name: "General", price: 35, remaining: 180 },
@@ -70,7 +71,7 @@ const events: EventItem[] = [
     organizer: "Pulse Live",
     organizerId: "pulse-live",
     image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1100&q=85",
-    fromPi: 22,
+    fromUsdt: 22,
     description: "Live artists, DJs, food, and an unforgettable celebration of African sound.",
     tiers: [
       { name: "Standard", price: 22, remaining: 320 },
@@ -89,7 +90,7 @@ const events: EventItem[] = [
     organizer: "Build Africa",
     organizerId: "build-africa",
     image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1100&q=85",
-    fromPi: 12,
+    fromUsdt: 12,
     description: "Discover new products, meet creators, and join practical business sessions.",
     tiers: [
       { name: "Entry", price: 12, remaining: 240 },
@@ -108,7 +109,7 @@ const events: EventItem[] = [
     organizer: "Nia Wellness",
     organizerId: "nia-wellness",
     image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1100&q=85",
-    fromPi: 18,
+    fromUsdt: 18,
     description: "Movement, mindfulness, healthy food, and guided wellness sessions.",
     tiers: [
       { name: "Day pass", price: 18, remaining: 90 },
@@ -163,7 +164,7 @@ const Card = ({ event, saved, onSave }: { event: EventItem; saved: boolean; onSa
           <LocationOnOutlinedIcon />
           {event.venue}, {event.city}
         </p>
-        <strong>From π {event.fromPi}</strong>
+        <strong>From {formatServicePrice(event.fromUsdt)}</strong>
       </div>
     </Link>
     <button className={saved ? "saved" : ""} onClick={onSave}>
@@ -238,7 +239,9 @@ const EventsPage = ({ kind = "home" }: { kind?: EventsPageKind }) => {
       city: event.city,
       tier: tier.name,
       quantity,
-      total: tier.price * quantity,
+      total: piFromUsdt(tier.price * quantity),
+      totalUsdt: tier.price * quantity,
+      piRateUsed: PI_USDT_RATE,
       status: "Confirmed",
       ...form,
     };
@@ -301,7 +304,7 @@ const EventsPage = ({ kind = "home" }: { kind?: EventsPageKind }) => {
                   <b>{tier.name}</b>
                   <small>{tier.remaining} remaining</small>
                 </span>
-                <strong>π {tier.price}</strong>
+                <strong>{formatServicePrice(tier.price)}</strong>
               </button>
             ))}
           </article>
@@ -348,7 +351,7 @@ const EventsPage = ({ kind = "home" }: { kind?: EventsPageKind }) => {
             <label className="event-terms">
               <input type="checkbox" required />I accept the event and cancellation conditions.
             </label>
-            <button>Confirm ticket · π {tier.price * quantity}</button>
+            <button>Confirm ticket · {formatServicePrice(tier.price * quantity)}</button>
             <p>Pi payment integration will activate when the event payment backend is enabled.</p>
           </form>
           <aside>
@@ -389,7 +392,7 @@ const EventsPage = ({ kind = "home" }: { kind?: EventsPageKind }) => {
               <span>
                 {ticket.tier} × {ticket.quantity}
               </span>
-              <b>π {ticket.total}</b>
+              <b>{formatServicePrice(Number(ticket.totalUsdt ?? 0))}</b>
             </div>
             <button onClick={() => window.print()}>Download ticket</button>
           </article>
@@ -539,7 +542,7 @@ const EventsPage = ({ kind = "home" }: { kind?: EventsPageKind }) => {
           </label>
           <div>
             <label>
-              Starting price in Pi
+              Starting real-world price in USDT
               <input name="price" type="number" min="0" required />
             </label>
             <label>

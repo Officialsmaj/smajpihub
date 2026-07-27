@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useFoodCart } from "../../contexts/FoodCartContext";
+import { formatServicePrice } from "../../lib/piPricing";
 
 type CartSummaryProps = {
   onCheckout: () => void;
@@ -17,7 +18,7 @@ const CartSummary = ({ onCheckout }: CartSummaryProps) => {
           <strong>
             {totalItems} item{totalItems !== 1 ? "s" : ""}
           </strong>
-          <span>π {totalPrice.toFixed(2)}</span>
+          <span>{formatServicePrice(totalPrice)}</span>
         </div>
         <div>
           <Link to="/services/food-delivery/cart" className="food-cart-view-btn">

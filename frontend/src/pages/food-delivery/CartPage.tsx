@@ -6,6 +6,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import FoodDeliveryHeader from "./FoodDeliveryHeader";
 import "./FoodDeliveryPage.css";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 
 const CartPage = () => {
   const { items, addItem, decreaseItem, removeItem, clearCart, totalItems, totalPrice } = useFoodCart();
@@ -24,7 +25,9 @@ const CartPage = () => {
       createdAt: new Date().toISOString(),
       status: "Preparing",
       address: address.trim(),
-      total: grandTotal,
+      total: piFromUsdt(grandTotal),
+      totalUsdt: grandTotal,
+      piRateUsed: PI_USDT_RATE,
       items,
     });
     window.localStorage.setItem("smaj_food_orders", JSON.stringify(orders));
@@ -62,7 +65,7 @@ const CartPage = () => {
                     <img src={cartItem.menuItem.image} alt="" />
                     <div>
                       <h4>{cartItem.menuItem.name}</h4>
-                      <p>π {cartItem.menuItem.price.toFixed(2)} each</p>
+                      <p>{formatServicePrice(cartItem.menuItem.price)} each</p>
                       <div className="food-cart-item-actions">
                         <button
                           type="button"
@@ -84,7 +87,7 @@ const CartPage = () => {
                         </button>
                       </div>
                     </div>
-                    <strong>π {(cartItem.menuItem.price * cartItem.quantity).toFixed(2)}</strong>
+                    <strong>{formatServicePrice(cartItem.menuItem.price * cartItem.quantity)}</strong>
                   </article>
                 ))}
               </div>
@@ -92,19 +95,19 @@ const CartPage = () => {
                 <h3>Order summary</h3>
                 <div className="food-summary-row">
                   <span>Subtotal</span>
-                  <strong>π {totalPrice.toFixed(2)}</strong>
+                  <strong>{formatServicePrice(totalPrice)}</strong>
                 </div>
                 <div className="food-summary-row">
                   <span>Delivery fee</span>
-                  <strong>π {deliveryFee.toFixed(2)}</strong>
+                  <strong>{formatServicePrice(deliveryFee)}</strong>
                 </div>
                 <div className="food-summary-row">
                   <span>Service fee</span>
-                  <strong>π {serviceFee.toFixed(2)}</strong>
+                  <strong>{formatServicePrice(serviceFee)}</strong>
                 </div>
                 <div className="food-summary-row total">
                   <span>Total</span>
-                  <strong>π {grandTotal.toFixed(2)}</strong>
+                  <strong>{formatServicePrice(grandTotal)}</strong>
                 </div>
                 <label className="food-address-field">
                   Delivery address

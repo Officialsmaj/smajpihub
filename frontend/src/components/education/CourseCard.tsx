@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { EducationCourse } from "../../types/education";
+import { formatServicePrice } from "../../lib/piPricing";
 
 type CourseCardProps = {
   course: EducationCourse;
@@ -29,7 +30,7 @@ const CourseCard = ({ course }: CourseCardProps) => (
         </div>
       </dl>
       <footer>
-        <strong>{course.pricePi} Pi</strong>
+        <strong>{formatServicePrice(course.priceUsdt)}</strong>
         <Link to={`/services/education/courses/${course.id}`}>Enroll</Link>
       </footer>
     </div>

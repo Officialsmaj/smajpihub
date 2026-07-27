@@ -4,6 +4,7 @@ import EventAvailableOutlinedIcon from "@mui/icons-material/EventAvailableOutlin
 import AppLayout from "../../layouts/AppLayout";
 import HealthHeader from "./HealthHeader";
 import "./HealthPage.css";
+import { formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 
 type Appointment = {
   bookingId: string;
@@ -12,6 +13,7 @@ type Appointment = {
   date: string;
   time: string;
   total: number;
+  totalUsdt?: number;
   status: string;
 };
 
@@ -47,7 +49,7 @@ const HealthAppointmentsPage = () => {
                   </div>
                   <div>
                     <b>{item.status}</b>
-                    <strong>π {item.total.toFixed(2)}</strong>
+                    <strong>{formatServicePrice(item.totalUsdt ?? usdtFromPi(item.total))}</strong>
                   </div>
                 </article>
               ))}

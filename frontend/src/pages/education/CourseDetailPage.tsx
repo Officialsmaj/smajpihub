@@ -8,6 +8,7 @@ import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
 import { getEducationCourse } from "../../lib/educationApi";
 import type { EducationCourse } from "../../types/education";
+import { formatServicePrice } from "../../lib/piPricing";
 import "../../pages/EducationPage.css";
 
 const CourseDetailPage = () => {
@@ -107,7 +108,7 @@ const CourseDetailPage = () => {
                 </div>
               </dl>
               <footer className="education-course-actions">
-                <strong>{course.pricePi} Pi</strong>
+                <strong>{formatServicePrice(course.priceUsdt)}</strong>
                 <Link to="/dashboard" className="education-primary-btn">
                   Enroll Now
                   <AccountBalanceWalletOutlinedIcon />

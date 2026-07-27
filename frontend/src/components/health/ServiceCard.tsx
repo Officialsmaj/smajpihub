@@ -1,4 +1,5 @@
 import type { HealthService } from "../../types/health";
+import { formatServicePrice } from "../../lib/piPricing";
 
 type ServiceCardProps = {
   service: HealthService;
@@ -13,7 +14,7 @@ const ServiceCard = ({ service, onSelect }: ServiceCardProps) => (
       <p>{service.description}</p>
       <footer>
         <span>{service.duration}</span>
-        <strong>π {service.price.toFixed(2)}</strong>
+        <strong>{formatServicePrice(service.price)}</strong>
       </footer>
     </div>
     <button type="button" onClick={onSelect}>

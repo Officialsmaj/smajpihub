@@ -10,6 +10,7 @@ import { useFoodCart } from "../../contexts/FoodCartContext";
 import CartSummary from "../../components/food/CartSummary";
 import FoodDeliveryHeader from "./FoodDeliveryHeader";
 import "./FoodDeliveryPage.css";
+import { formatServicePrice } from "../../lib/piPricing";
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
@@ -95,7 +96,8 @@ const RestaurantDetailPage = () => {
             <h1>{restaurant.name}</h1>
             <p className="food-restaurant-meta">
               <StarRoundedIcon />
-              {restaurant.rating} · {restaurant.deliveryTime} · Delivery fee π {restaurant.deliveryFee.toFixed(2)}
+              {restaurant.rating} · {restaurant.deliveryTime} · Delivery fee{" "}
+              {formatServicePrice(restaurant.deliveryFee)}
             </p>
             <p>{restaurant.description}</p>
           </div>

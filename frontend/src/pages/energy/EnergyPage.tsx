@@ -8,6 +8,7 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SolarPowerOutlinedIcon from "@mui/icons-material/SolarPowerOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 import "./EnergyPage.css";
 
 export type EnergyPageKind =
@@ -27,7 +28,7 @@ type EnergyProduct = {
   id: string;
   name: string;
   category: string;
-  pricePi: number;
+  priceUsdt: number;
   location: string;
   warranty: string;
   rating: number;
@@ -43,7 +44,7 @@ const products: EnergyProduct[] = [
     id: "home-solar-3kw",
     name: "3 kW Home Solar System",
     category: "Solar kits",
-    pricePi: 1280,
+    priceUsdt: 1280,
     location: "Lagos, Nigeria",
     warranty: "10-year panel warranty",
     rating: 4.9,
@@ -58,7 +59,7 @@ const products: EnergyProduct[] = [
     id: "lithium-powerwall",
     name: "10 kWh Lithium Powerwall",
     category: "Batteries",
-    pricePi: 890,
+    priceUsdt: 890,
     location: "Nairobi, Kenya",
     warranty: "8-year warranty",
     rating: 4.8,
@@ -72,7 +73,7 @@ const products: EnergyProduct[] = [
     id: "commercial-install",
     name: "Commercial Solar Installation",
     category: "Installation",
-    pricePi: 3500,
+    priceUsdt: 3500,
     location: "Accra, Ghana",
     warranty: "5-year workmanship",
     rating: 4.7,
@@ -87,7 +88,7 @@ const products: EnergyProduct[] = [
     id: "smart-generator",
     name: "8 kVA Smart Backup Generator",
     category: "Backup power",
-    pricePi: 620,
+    priceUsdt: 620,
     location: "Dakar, Senegal",
     warranty: "3-year warranty",
     rating: 4.6,
@@ -154,7 +155,7 @@ const ProductCard = ({ item, saved, onSave }: { item: EnergyProduct; saved: bool
         <p>
           <LocationOnOutlinedIcon /> {item.location}
         </p>
-        <strong>π {item.pricePi.toLocaleString()}</strong>
+        <strong>{formatServicePrice(item.priceUsdt)}</strong>
         <span>{item.warranty}</span>
         <p>
           <VerifiedOutlinedIcon /> {item.provider} · {item.rating} ★
@@ -187,7 +188,9 @@ const RecordList = ({ records, empty }: { records: SavedRecord[]; empty: string 
             <p>{record.provider || record.account || "SMAJ Energy"}</p>
           </div>
           <div>
-            <strong>{record.total ? `π ${Number(record.total).toLocaleString()}` : record.date || "Submitted"}</strong>
+            <strong>
+              {record.totalUsdt ? formatServicePrice(Number(record.totalUsdt)) : record.date || "Submitted"}
+            </strong>
             <span>{record.status}</span>
           </div>
         </article>
@@ -255,7 +258,9 @@ const EnergyPage = ({ kind = "home" }: { kind?: EnergyPageKind }) => {
       id: `ENO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       product: product.name,
       provider: product.provider,
-      total: product.pricePi * quantity,
+      total: piFromUsdt(product.priceUsdt * quantity),
+      totalUsdt: product.priceUsdt * quantity,
+      piRateUsed: PI_USDT_RATE,
       status: "Order requested",
       quantity,
     });
@@ -406,7 +411,7 @@ const EnergyPage = ({ kind = "home" }: { kind?: EnergyPageKind }) => {
               <VerifiedOutlinedIcon /> {product.provider} · {product.rating} ★
             </Link>
             <p className="energy-description">{product.description}</p>
-            <strong className="energy-price">π {product.pricePi.toLocaleString()}</strong>
+            <strong className="energy-price">{formatServicePrice(product.priceUsdt)}</strong>
             <p>
               <LocationOnOutlinedIcon /> Available from {product.location}
             </p>
@@ -425,7 +430,7 @@ const EnergyPage = ({ kind = "home" }: { kind?: EnergyPageKind }) => {
                   onChange={event => setQuantity(Number(event.target.value))}
                 />
               </label>
-              <button>Request order · π {(product.pricePi * quantity).toLocaleString()}</button>
+              <button>Request order · {formatServicePrice(product.priceUsdt * quantity)}</button>
               <button type="button" className="secondary" onClick={() => toggleSaved(product.id)}>
                 {saved.has(product.id) ? "Saved" : "Save for later"}
               </button>

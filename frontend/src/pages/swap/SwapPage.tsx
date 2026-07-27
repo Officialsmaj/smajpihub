@@ -7,6 +7,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SwapVertOutlinedIcon from "@mui/icons-material/SwapVertOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import { formatServicePrice, PI_USDT_RATE } from "../../lib/piPricing";
 import "./SwapPage.css";
 
 export type SwapPageKind = "home" | "tokens" | "history" | "pools" | "liquidity" | "confirm" | "receipt";
@@ -15,7 +16,7 @@ type Token = {
   symbol: string;
   name: string;
   icon: string;
-  pricePi: number;
+  priceUsdt: number;
   balance: number;
   color: string;
   verified: boolean;
@@ -29,6 +30,7 @@ type SwapRecord = {
   fee: number;
   status: string;
   date: string;
+  piRateUsed?: number;
 };
 type LiquidityRecord = {
   id: string;
@@ -40,11 +42,11 @@ type LiquidityRecord = {
 };
 
 const tokens: Token[] = [
-  { symbol: "PI", name: "Pi", icon: "π", pricePi: 1, balance: 1240.5, color: "#6d3fc0", verified: true },
-  { symbol: "SMAJ", name: "SMAJ Token", icon: "S", pricePi: 0.24, balance: 8500, color: "#f2a900", verified: true },
-  { symbol: "USDM", name: "USD Mirror", icon: "$", pricePi: 2.15, balance: 382.4, color: "#2a9d68", verified: true },
-  { symbol: "AQUA", name: "Aqua Utility", icon: "A", pricePi: 0.08, balance: 4200, color: "#238acb", verified: true },
-  { symbol: "SOLR", name: "Solar Credit", icon: "☀", pricePi: 0.61, balance: 690, color: "#e8852e", verified: true },
+  { symbol: "PI", name: "Pi", icon: "π", priceUsdt: PI_USDT_RATE, balance: 1240.5, color: "#6d3fc0", verified: true },
+  { symbol: "SMAJ", name: "SMAJ Token", icon: "S", priceUsdt: 2, balance: 8500, color: "#f2a900", verified: true },
+  { symbol: "USDM", name: "USD Mirror", icon: "$", priceUsdt: 1, balance: 382.4, color: "#2a9d68", verified: true },
+  { symbol: "AQUA", name: "Aqua Utility", icon: "A", priceUsdt: 0.08, balance: 4200, color: "#238acb", verified: true },
+  { symbol: "SOLR", name: "Solar Credit", icon: "☀", priceUsdt: 10, balance: 690, color: "#e8852e", verified: true },
 ];
 const pools = [
   { pair: "PI / SMAJ", tokenA: "PI", tokenB: "SMAJ", liquidity: 482000, apr: 18.4, volume: 68420 },
@@ -107,7 +109,7 @@ const SwapBox = () => {
   const from = tokens.find(token => token.symbol === fromSymbol) ?? tokens[0];
   const to = tokens.find(token => token.symbol === toSymbol) ?? tokens[1];
   const numericAmount = Math.max(0, Number(amount) || 0);
-  const output = (numericAmount * from.pricePi) / to.pricePi;
+  const output = (numericAmount * from.priceUsdt) / to.priceUsdt;
   const fee = numericAmount * 0.003;
   const switchTokens = () => {
     setFromSymbol(toSymbol);
@@ -153,7 +155,7 @@ const SwapBox = () => {
             ))}
           </select>
         </div>
-        <small>≈ π {(numericAmount * from.pricePi).toLocaleString()}</small>
+        <small>≈ ${(numericAmount * from.priceUsdt).toLocaleString()} USDT</small>
       </label>
       <button type="button" className="swap-switch" onClick={switchTokens}>
         <SwapVertOutlinedIcon />
@@ -179,7 +181,7 @@ const SwapBox = () => {
         <p>
           <span>Rate</span>
           <strong>
-            1 {from.symbol} = {(from.pricePi / to.pricePi).toFixed(4)} {to.symbol}
+            1 {from.symbol} = {(from.priceUsdt / to.priceUsdt).toFixed(4)} {to.symbol}
           </strong>
         </p>
         <p>
@@ -229,7 +231,10 @@ const SwapPage = ({ kind = "home" }: { kind?: SwapPageKind }) => {
         <section className="swap-intro">
           <small>DECENTRALIZED EXCHANGE EXPERIENCE</small>
           <h1>Move value across the SMAJ ecosystem.</h1>
-          <p>Preview token trades with transparent simulated rates, fees, price impact, and minimum received.</p>
+          <p>
+            Convert real-world token values using the fixed SMAJ ecosystem reference rate:
+            1 Pi = 314,159 USDT.
+          </p>
           <div className="swap-trust">
             <span>
               <LockOutlinedIcon /> Self-custody design
@@ -252,7 +257,7 @@ const SwapPage = ({ kind = "home" }: { kind?: SwapPageKind }) => {
           <div>
             <small>SUPPORTED ASSETS</small>
             <h1>Token directory</h1>
-            <p>Only verified ecosystem assets are shown in this demonstration.</p>
+          <p>Verified assets use USDT reference prices, with Pi fixed at 314,159 USDT.</p>
           </div>
         </div>
         <div className="swap-table swap-token-table">
@@ -268,7 +273,7 @@ const SwapPage = ({ kind = "home" }: { kind?: SwapPageKind }) => {
                 <TokenBadge token={token} />
                 <small>{token.name}</small>
               </span>
-              <strong>π {token.pricePi.toFixed(2)}</strong>
+              <strong>{token.symbol === "PI" ? formatServicePrice(PI_USDT_RATE) : `$${token.priceUsdt.toLocaleString()} USDT`}</strong>
               <strong>
                 {token.balance.toLocaleString()} {token.symbol}
               </strong>
@@ -312,11 +317,11 @@ const SwapPage = ({ kind = "home" }: { kind?: SwapPageKind }) => {
               <dl>
                 <div>
                   <dt>Total liquidity</dt>
-                  <dd>π {pool.liquidity.toLocaleString()}</dd>
+                  <dd>{formatServicePrice(pool.liquidity)}</dd>
                 </div>
                 <div>
                   <dt>24h volume</dt>
-                  <dd>π {pool.volume.toLocaleString()}</dd>
+                  <dd>{formatServicePrice(pool.volume)}</dd>
                 </div>
                 <div>
                   <dt>Estimated APR</dt>
@@ -544,6 +549,7 @@ const ConfirmSwap = () => {
       fee,
       status: "Completed",
       date: new Date().toLocaleString(),
+      piRateUsed: PI_USDT_RATE,
     };
     localStorage.setItem(SWAPS, JSON.stringify([record, ...readSwaps()]));
     navigate(`/services/swap/receipt/${record.id}`);

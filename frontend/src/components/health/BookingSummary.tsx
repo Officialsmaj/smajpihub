@@ -1,4 +1,5 @@
 import type { HealthService } from "../../types/health";
+import { formatServicePrice } from "../../lib/piPricing";
 
 type BookingSummaryProps = {
   providerName: string;
@@ -16,7 +17,7 @@ const BookingSummary = ({ providerName, service, onCheckout }: BookingSummaryPro
         </span>
       </div>
       <div>
-        <strong>π {service.price.toFixed(2)}</strong>
+        <strong>{formatServicePrice(service.price)}</strong>
         <button type="button" onClick={onCheckout}>
           Book now
         </button>

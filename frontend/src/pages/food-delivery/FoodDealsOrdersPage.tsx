@@ -6,6 +6,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { useFoodCart } from "../../contexts/FoodCartContext";
 import FoodDeliveryHeader from "./FoodDeliveryHeader";
 import "./FoodDeliveryPage.css";
+import { formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 
 type StoredOrder = {
   id: string;
@@ -13,6 +14,7 @@ type StoredOrder = {
   status: string;
   address: string;
   total: number;
+  totalUsdt?: number;
   items: Array<{ quantity: number; menuItem: { name: string } }>;
 };
 
@@ -65,7 +67,7 @@ const FoodDealsOrdersPage = ({ kind }: { kind: "deals" | "orders" }) => {
                   </div>
                   <div>
                     <b>{order.status}</b>
-                    <strong>π {order.total.toFixed(2)}</strong>
+                    <strong>{formatServicePrice(order.totalUsdt ?? usdtFromPi(order.total))}</strong>
                   </div>
                 </article>
               ))}

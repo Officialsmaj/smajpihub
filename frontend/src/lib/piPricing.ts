@@ -11,5 +11,20 @@ export const usdtFromPi = (value: number) =>
 export const formatPiRate = () =>
   `1 Pi = ${PI_USDT_RATE.toLocaleString()} USDT`;
 
+export const servicePriceFromUsdt = (priceUsdt: number) => ({
+  priceUsdt,
+  pricePi: piFromUsdt(priceUsdt),
+  piRateUsed: PI_USDT_RATE,
+});
+
+export const formatServicePrice = (priceUsdt: number) =>
+  `${formatUsdAmount(priceUsdt)} · ${formatPiAmount(piFromUsdt(priceUsdt))}`;
+
+export const servicePaymentSnapshot = (priceUsdt: number) => ({
+  priceUsdt,
+  amountPi: piFromUsdt(priceUsdt),
+  piRateUsed: PI_USDT_RATE,
+});
+
 export const formatPiWithUsdt = (piAmount: number) =>
   `${formatPiAmount(piAmount)} · ${formatUsdAmount(usdtFromPi(piAmount))}`;

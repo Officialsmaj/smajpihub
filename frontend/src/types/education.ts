@@ -5,7 +5,7 @@ export type EducationCourse = {
   category: string;
   level: string;
   duration: string;
-  pricePi: number;
+  priceUsdt: number;
   rating: string;
   image: string;
   description?: string;

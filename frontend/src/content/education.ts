@@ -5,7 +5,7 @@ export type EducationCourse = {
   category: string;
   level: string;
   duration: string;
-  pricePi: number;
+  priceUsdt: number;
   rating: string;
   image: string;
 };
@@ -36,7 +36,7 @@ export const featuredEducationCourses: EducationCourse[] = [
     category: "Tech Skills",
     level: "Beginner",
     duration: "6 weeks",
-    pricePi: 12,
+    priceUsdt: 120,
     rating: "4.8",
     image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85",
   },
@@ -47,7 +47,7 @@ export const featuredEducationCourses: EducationCourse[] = [
     category: "Business",
     level: "Intermediate",
     duration: "4 weeks",
-    pricePi: 9,
+    priceUsdt: 90,
     rating: "4.7",
     image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=85",
   },
@@ -58,7 +58,7 @@ export const featuredEducationCourses: EducationCourse[] = [
     category: "Exam Prep",
     level: "All levels",
     duration: "8 weeks",
-    pricePi: 15,
+    priceUsdt: 150,
     rating: "4.9",
     image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=85",
   },

@@ -8,6 +8,7 @@ import type { HealthProvider, HealthService } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import HealthHeader from "./HealthHeader";
 import "./HealthPage.css";
+import { formatServicePrice, piFromUsdt, PI_USDT_RATE } from "../../lib/piPricing";
 const TODAY = new Date().toISOString().slice(0, 10);
 
 const BookingPage = () => {
@@ -85,7 +86,9 @@ const BookingPage = () => {
         serviceName: service.name,
         date: form.date,
         time: form.time,
-        total: service.price * 1.05,
+        total: piFromUsdt(service.price * 1.05),
+        totalUsdt: service.price * 1.05,
+        piRateUsed: PI_USDT_RATE,
         status: "Confirmed",
       });
       localStorage.setItem("smaj_health_appointments", JSON.stringify(appointments));
@@ -219,7 +222,7 @@ const BookingPage = () => {
               </label>
               {error ? <p className="health-error">{error}</p> : null}
               <button className="health-booking-submit" type="submit" disabled={submitting}>
-                {submitting ? "Booking..." : `Confirm appointment · π ${total.toFixed(2)}`}
+                {submitting ? "Booking..." : `Confirm appointment · ${formatServicePrice(total)}`}
               </button>
             </form>
             <aside className="health-booking-summary-card">
@@ -232,15 +235,15 @@ const BookingPage = () => {
               </p>
               <div className="health-summary-row">
                 <span>Consultation</span>
-                <strong>π {service.price.toFixed(2)}</strong>
+                <strong>{formatServicePrice(service.price)}</strong>
               </div>
               <div className="health-summary-row">
                 <span>Service fee</span>
-                <strong>π {serviceFee.toFixed(2)}</strong>
+                <strong>{formatServicePrice(serviceFee)}</strong>
               </div>
               <div className="health-summary-row total">
                 <span>Total</span>
-                <strong>π {total.toFixed(2)}</strong>
+                <strong>{formatServicePrice(total)}</strong>
               </div>
               <p className="health-payment-note">
                 <AccountBalanceWalletOutlinedIcon />

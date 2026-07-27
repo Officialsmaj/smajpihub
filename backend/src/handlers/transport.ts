@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
+import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
 
 const TIMELINE = (status: string, label: string, note?: string) => ({
   status,
@@ -124,7 +125,7 @@ export default function mountTransportEndpoints(router: Router) {
       airline, flightCode, departureAirport, arrivalAirport,
       departureTime, arrivalTime, duration, cabin, seat, baggage,
       passengerName, passengerEmail, passengerNationality,
-      farePi, fareUsd,
+      fareUsd,
     } = req.body || {};
     if (!airline || !flightCode || !departureAirport || !arrivalAirport || !departureTime || !passengerName || !passengerEmail) {
       return res.status(400).json({ error: "bad_request", message: "Required flight fields are missing" });
@@ -142,8 +143,9 @@ export default function mountTransportEndpoints(router: Router) {
       paymentId: null,
       paymentTxid: null,
       providerRef: null,
-      farePi: Number(farePi) || 0,
+      farePi: piFromUsdt(fareUsd),
       fareUsd: Number(fareUsd) || 0,
+      piRateUsed: PI_USDT_RATE,
       currency: "PI",
       airline,
       flightCode,
