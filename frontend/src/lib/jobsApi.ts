@@ -24,6 +24,16 @@ export type JobsApiCompany = {
   mark: string;
 };
 
+export type JobsApiApplication = {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  coverNote?: string;
+  status: string;
+  createdAt: string;
+};
+
 export const getJobs = async () => {
   const response = await axiosClient.get<{ jobs: JobsApiJob[] }>("/jobs/jobs");
   return response.data.jobs;
@@ -39,8 +49,22 @@ export const toggleSavedJob = async (jobId: string) => {
   return response.data.saved;
 };
 
-export const applyToJob = async (jobId: string) => {
-  await axiosClient.post(`/jobs/jobs/${encodeURIComponent(jobId)}/apply`, {});
+export const getSavedJobs = async () => {
+  const response = await axiosClient.get<{ jobs: JobsApiJob[] }>("/jobs/saved");
+  return response.data.jobs;
+};
+
+export const getJobApplications = async () => {
+  const response = await axiosClient.get<{ applications: JobsApiApplication[] }>("/jobs/applications");
+  return response.data.applications;
+};
+
+export const applyToJob = async (jobId: string, coverNote = "") => {
+  const response = await axiosClient.post<{ application: JobsApiApplication }>(
+    `/jobs/jobs/${encodeURIComponent(jobId)}/apply`,
+    { coverNote }
+  );
+  return response.data.application;
 };
 
 export const createJob = async (job: {
@@ -48,6 +72,9 @@ export const createJob = async (job: {
   company: string;
   location: string;
   type: string;
+  mode: string;
+  category: string;
+  skills: string[];
   salary: string;
   summary: string;
 }) => {

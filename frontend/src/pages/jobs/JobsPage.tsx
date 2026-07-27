@@ -9,23 +9,113 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import AppLayout from "../../layouts/AppLayout";
-import { applyToJob, createJob, getJobCompanies, getJobs, toggleSavedJob, type JobsApiCompany, type JobsApiJob } from "../../lib/jobsApi";
+import {
+  applyToJob,
+  createJob,
+  getJobApplications,
+  getJobCompanies,
+  getJobs,
+  getSavedJobs,
+  toggleSavedJob,
+  type JobsApiApplication,
+  type JobsApiCompany,
+  type JobsApiJob,
+} from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import "./JobsPage.css";
 
 export type JobsPageKind =
-  | "home" | "search" | "freelance" | "companies" | "saved"
-  | "applications" | "profile" | "post" | "employer" | "job" | "company";
+  | "home"
+  | "search"
+  | "freelance"
+  | "companies"
+  | "saved"
+  | "applications"
+  | "profile"
+  | "post"
+  | "employer"
+  | "job"
+  | "company";
 
 type Job = JobsApiJob;
 
 const fallbackJobs: Job[] = [
-  { id: "product-designer", title: "Senior Product Designer", company: "Pioneer Labs", location: "Remote", type: "Full time", mode: "Remote", salary: "1,800–2,400 Pi / mo", category: "Design", featured: true, summary: "Shape trusted marketplace experiences used by a growing global Pi community.", skills: ["Figma", "Design systems", "Research"] },
-  { id: "react-engineer", title: "React Frontend Engineer", company: "Orbit Commerce", location: "Lagos, Nigeria", type: "Full time", mode: "Hybrid", salary: "2,200–3,000 Pi / mo", category: "Engineering", featured: true, summary: "Build fast, accessible commerce tools for merchants and customers.", skills: ["React", "TypeScript", "APIs"] },
-  { id: "community-lead", title: "Community Growth Lead", company: "PiWorks Africa", location: "Accra, Ghana", type: "Contract", mode: "Remote", salary: "900–1,200 Pi / mo", category: "Marketing", summary: "Grow a welcoming community through partnerships, events and content.", skills: ["Community", "Content", "Analytics"] },
-  { id: "mobile-audit", title: "Mobile UX Audit", company: "Nova Health", location: "Remote", type: "Project", mode: "Remote", salary: "350 Pi fixed", category: "Design", freelance: true, summary: "Review an existing health app and deliver an actionable UX report.", skills: ["UX audit", "Mobile", "Accessibility"] },
-  { id: "api-integration", title: "Payment API Integration", company: "Sahara Market", location: "Remote", type: "Project", mode: "Remote", salary: "600 Pi fixed", category: "Engineering", freelance: true, summary: "Connect a marketplace checkout to a documented payment API.", skills: ["Node.js", "REST", "Payments"] },
-  { id: "support-specialist", title: "Customer Support Specialist", company: "SMAJ Services", location: "Dakar, Senegal", type: "Part time", mode: "Hybrid", salary: "650–850 Pi / mo", category: "Operations", summary: "Help customers and providers complete their service journeys.", skills: ["Support", "French", "English"] },
+  {
+    id: "product-designer",
+    title: "Senior Product Designer",
+    company: "Pioneer Labs",
+    location: "Remote",
+    type: "Full time",
+    mode: "Remote",
+    salary: "1,800–2,400 Pi / mo",
+    category: "Design",
+    featured: true,
+    summary: "Shape trusted marketplace experiences used by a growing global Pi community.",
+    skills: ["Figma", "Design systems", "Research"],
+  },
+  {
+    id: "react-engineer",
+    title: "React Frontend Engineer",
+    company: "Orbit Commerce",
+    location: "Lagos, Nigeria",
+    type: "Full time",
+    mode: "Hybrid",
+    salary: "2,200–3,000 Pi / mo",
+    category: "Engineering",
+    featured: true,
+    summary: "Build fast, accessible commerce tools for merchants and customers.",
+    skills: ["React", "TypeScript", "APIs"],
+  },
+  {
+    id: "community-lead",
+    title: "Community Growth Lead",
+    company: "PiWorks Africa",
+    location: "Accra, Ghana",
+    type: "Contract",
+    mode: "Remote",
+    salary: "900–1,200 Pi / mo",
+    category: "Marketing",
+    summary: "Grow a welcoming community through partnerships, events and content.",
+    skills: ["Community", "Content", "Analytics"],
+  },
+  {
+    id: "mobile-audit",
+    title: "Mobile UX Audit",
+    company: "Nova Health",
+    location: "Remote",
+    type: "Project",
+    mode: "Remote",
+    salary: "350 Pi fixed",
+    category: "Design",
+    freelance: true,
+    summary: "Review an existing health app and deliver an actionable UX report.",
+    skills: ["UX audit", "Mobile", "Accessibility"],
+  },
+  {
+    id: "api-integration",
+    title: "Payment API Integration",
+    company: "Sahara Market",
+    location: "Remote",
+    type: "Project",
+    mode: "Remote",
+    salary: "600 Pi fixed",
+    category: "Engineering",
+    freelance: true,
+    summary: "Connect a marketplace checkout to a documented payment API.",
+    skills: ["Node.js", "REST", "Payments"],
+  },
+  {
+    id: "support-specialist",
+    title: "Customer Support Specialist",
+    company: "SMAJ Services",
+    location: "Dakar, Senegal",
+    type: "Part time",
+    mode: "Hybrid",
+    salary: "650–850 Pi / mo",
+    category: "Operations",
+    summary: "Help customers and providers complete their service journeys.",
+    skills: ["Support", "French", "English"],
+  },
 ];
 
 const fallbackCompanies: JobsApiCompany[] = [
@@ -37,15 +127,29 @@ const fallbackCompanies: JobsApiCompany[] = [
 
 const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () => void }) => (
   <article className="job-card">
-    <div className="job-company-mark">{job.company.split(" ").map(word => word[0]).join("").slice(0, 2)}</div>
+    <div className="job-company-mark">
+      {job.company
+        .split(" ")
+        .map(word => word[0])
+        .join("")
+        .slice(0, 2)}
+    </div>
     <div className="job-card-main">
       <div className="job-card-top">
-        <span>{job.company} <CheckCircleRoundedIcon /></span>
+        <span>
+          {job.company} <CheckCircleRoundedIcon />
+        </span>
         <small>{job.featured ? "Featured" : "Recently added"}</small>
       </div>
       <Link to={`/services/jobs/job/${job.id}`}>{job.title}</Link>
-      <p><LocationOnOutlinedIcon /> {job.location} · {job.mode} · {job.type}</p>
-      <div>{job.skills.map(skill => <span key={skill}>{skill}</span>)}</div>
+      <p>
+        <LocationOnOutlinedIcon /> {job.location} · {job.mode} · {job.type}
+      </p>
+      <div>
+        {job.skills.map(skill => (
+          <span key={skill}>{skill}</span>
+        ))}
+      </div>
       <strong>{job.salary}</strong>
     </div>
     <button className={saved ? "saved" : ""} type="button" onClick={onSave} aria-label={`Save ${job.title}`}>
@@ -60,16 +164,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [applications, setApplications] = useState<JobsApiApplication[]>([]);
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [applyNote, setApplyNote] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [profileSaved, setProfileSaved] = useState(false);
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([getJobs(), getJobCompanies()])
-      .then(([nextJobs, nextCompanies]) => {
+    Promise.all([getJobs(), getJobCompanies(), getSavedJobs().catch(() => []), getJobApplications().catch(() => [])])
+      .then(([nextJobs, nextCompanies, savedJobs, nextApplications]) => {
         if (controller.signal.aborted) return;
         if (nextJobs.length) setJobs(nextJobs);
         if (nextCompanies.length) setCompanies(nextCompanies);
+        setSaved(new Set(savedJobs.map(job => job.id)));
+        setApplications(nextApplications);
       })
       .catch(() => {
         // The built-in catalog keeps Jobs usable while the backend wakes up.
@@ -77,22 +188,32 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     return () => controller.abort();
   }, []);
   const effectiveQuery = query || searchParams.get("q") || "";
-  const visibleJobs = useMemo(() => jobs.filter(job => {
-    const text = `${job.title} ${job.company} ${job.location} ${job.skills.join(" ")}`.toLowerCase();
-    return text.includes(effectiveQuery.toLowerCase()) && (category === "All" || job.category === category);
-  }), [effectiveQuery, category]);
-  const toggleSaved = (jobId: string) => setSaved(current => {
-    const next = new Set(current);
-    if (next.has(jobId)) next.delete(jobId); else next.add(jobId);
-    return next;
-  });
+  const visibleJobs = useMemo(
+    () =>
+      jobs.filter(job => {
+        const text = `${job.title} ${job.company} ${job.location} ${job.skills.join(" ")}`.toLowerCase();
+        return text.includes(effectiveQuery.toLowerCase()) && (category === "All" || job.category === category);
+      }),
+    [jobs, effectiveQuery, category]
+  );
+  const toggleSaved = (jobId: string) =>
+    setSaved(current => {
+      const next = new Set(current);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      return next;
+    });
   const saveJob = (jobId: string) => {
     toggleSaved(jobId);
     void toggleSavedJob(jobId).catch(() => toggleSaved(jobId));
   };
 
-  const listings = kind === "freelance" ? visibleJobs.filter(job => job.freelance)
-    : kind === "saved" ? visibleJobs.filter(job => saved.has(job.id)) : visibleJobs;
+  const listings =
+    kind === "freelance"
+      ? visibleJobs.filter(job => job.freelance)
+      : kind === "saved"
+        ? visibleJobs.filter(job => saved.has(job.id))
+        : visibleJobs;
   const selectedJob = jobs.find(job => job.id === id);
   const selectedCompany = companies.find(company => company.id === id);
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
@@ -103,11 +224,32 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       company: String(data.get("company") || ""),
       location: String(data.get("location") || ""),
       type: String(data.get("type") || ""),
+      mode: String(data.get("mode") || "Remote"),
+      category: String(data.get("category") || "Other"),
+      skills: String(data.get("skills") || "").split(",").map(skill => skill.trim()).filter(Boolean),
       salary: String(data.get("salary") || ""),
       summary: String(data.get("summary") || ""),
     });
     setJobs(current => [created, ...current]);
     navigate(`/services/jobs/job/${created.id}`);
+  };
+  const submitApplication = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedJob) return;
+    try {
+      const application = await applyToJob(selectedJob.id, applyNote);
+      setApplications(current => [application, ...current]);
+      setApplyOpen(false);
+      setApplyNote("");
+      setActionMessage("Application submitted successfully.");
+    } catch {
+      setActionMessage("This application could not be submitted. Sign in or check whether you already applied.");
+    }
+  };
+  const saveProfile = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    localStorage.setItem("smaj_jobs_profile", JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))));
+    setProfileSaved(true);
   };
 
   return (
@@ -119,45 +261,360 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <section className="jobs-hero">
               <div>
                 <span className="jobs-kicker">VERIFIED TALENT. REAL OPPORTUNITIES.</span>
-                <h1>Build your future in the <em>Pi economy.</em></h1>
+                <h1>
+                  Build your future in the <em>Pi economy.</em>
+                </h1>
                 <p>Find trusted jobs and freelance projects, connect with verified employers, and get paid in Pi.</p>
                 <form onSubmit={event => event.preventDefault()}>
-                  <label><SearchRoundedIcon /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Job title, skill or company" /></label>
-                  <label><LocationOnOutlinedIcon /><input placeholder="City or Remote" /></label>
+                  <label>
+                    <SearchRoundedIcon />
+                    <input
+                      value={query}
+                      onChange={event => setQuery(event.target.value)}
+                      placeholder="Job title, skill or company"
+                    />
+                  </label>
+                  <label>
+                    <LocationOnOutlinedIcon />
+                    <input placeholder="City or Remote" />
+                  </label>
                   <Link to={`/services/jobs/search${query ? `?q=${encodeURIComponent(query)}` : ""}`}>Search jobs</Link>
                 </form>
                 <small>Popular: React · Design · Marketing · Customer support</small>
               </div>
               <aside>
                 <span>OPPORTUNITY SNAPSHOT</span>
-                <strong>1,240+</strong><p>active opportunities</p>
-                <div><b>420</b><small>Verified employers</small></div>
-                <div><b>68%</b><small>Remote friendly</small></div>
-                <div><b>100%</b><small>Pi-powered</small></div>
+                <strong>1,240+</strong>
+                <p>active opportunities</p>
+                <div>
+                  <b>420</b>
+                  <small>Verified employers</small>
+                </div>
+                <div>
+                  <b>68%</b>
+                  <small>Remote friendly</small>
+                </div>
+                <div>
+                  <b>100%</b>
+                  <small>Pi-powered</small>
+                </div>
               </aside>
             </section>
             <section className="jobs-section">
-              <header><div><span className="jobs-kicker">CURATED FOR YOU</span><h2>Featured opportunities</h2></div><Link to="/services/jobs/search">View all <ArrowForwardRoundedIcon /></Link></header>
-              <div className="jobs-list">{jobs.filter(job => job.featured).map(job => <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />)}</div>
+              <header>
+                <div>
+                  <span className="jobs-kicker">CURATED FOR YOU</span>
+                  <h2>Featured opportunities</h2>
+                </div>
+                <Link to="/services/jobs/search">
+                  View all <ArrowForwardRoundedIcon />
+                </Link>
+              </header>
+              <div className="jobs-list">
+                {jobs
+                  .filter(job => job.featured)
+                  .map(job => (
+                    <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
+                  ))}
+              </div>
             </section>
             <section className="jobs-section jobs-categories">
-              <header><div><span className="jobs-kicker">EXPLORE</span><h2>Find work by category</h2></div></header>
-              <div>{["Engineering", "Design", "Marketing", "Operations"].map((name, index) => <Link key={name} to={`/services/jobs/search?q=${name}`}><span>{["⌘", "✦", "↗", "◎"][index]}</span><b>{name}</b><small>{18 + index * 11} open roles</small></Link>)}</div>
+              <header>
+                <div>
+                  <span className="jobs-kicker">EXPLORE</span>
+                  <h2>Find work by category</h2>
+                </div>
+              </header>
+              <div>
+                {["Engineering", "Design", "Marketing", "Operations"].map((name, index) => (
+                  <Link key={name} to={`/services/jobs/search?q=${name}`}>
+                    <span>{["⌘", "✦", "↗", "◎"][index]}</span>
+                    <b>{name}</b>
+                    <small>{18 + index * 11} open roles</small>
+                  </Link>
+                ))}
+              </div>
             </section>
-            <section className="jobs-cta"><div><span className="jobs-kicker">FOR EMPLOYERS</span><h2>Meet talent that is ready to build.</h2><p>Publish a role, review verified profiles and manage candidates in one place.</p></div><Link to="/services/jobs/post">Post your first job <ArrowForwardRoundedIcon /></Link></section>
+            <section className="jobs-cta">
+              <div>
+                <span className="jobs-kicker">FOR EMPLOYERS</span>
+                <h2>Meet talent that is ready to build.</h2>
+                <p>Publish a role, review verified profiles and manage candidates in one place.</p>
+              </div>
+              <Link to="/services/jobs/post">
+                Post your first job <ArrowForwardRoundedIcon />
+              </Link>
+            </section>
           </>
         ) : kind === "companies" ? (
-          <section className="jobs-directory"><div className="jobs-page-heading"><span className="jobs-kicker">TRUSTED ORGANIZATIONS</span><h1>Explore companies</h1><p>Discover verified teams building products and services across the Pi ecosystem.</p></div><div className="company-grid">{companies.map(company => <Link to={`/services/jobs/company/${company.id}`} key={company.id}><span>{company.mark}</span><h2>{company.name} <CheckCircleRoundedIcon /></h2><p>{company.field}</p><b>{company.openings} open opportunities</b></Link>)}</div></section>
+          <section className="jobs-directory">
+            <div className="jobs-page-heading">
+              <span className="jobs-kicker">TRUSTED ORGANIZATIONS</span>
+              <h1>Explore companies</h1>
+              <p>Discover verified teams building products and services across the Pi ecosystem.</p>
+            </div>
+            <div className="company-grid">
+              {companies.map(company => (
+                <Link to={`/services/jobs/company/${company.id}`} key={company.id}>
+                  <span>{company.mark}</span>
+                  <h2>
+                    {company.name} <CheckCircleRoundedIcon />
+                  </h2>
+                  <p>{company.field}</p>
+                  <b>{company.openings} open opportunities</b>
+                </Link>
+              ))}
+            </div>
+          </section>
         ) : kind === "job" && selectedJob ? (
-          <section className="job-detail"><Link to="/services/jobs/search">← Back to jobs</Link><div className="job-detail-grid"><article><span className="jobs-kicker">{selectedJob.company} · VERIFIED</span><h1>{selectedJob.title}</h1><p><LocationOnOutlinedIcon /> {selectedJob.location} · {selectedJob.mode} · {selectedJob.type}</p><div className="job-detail-actions"><button onClick={() => void applyToJob(selectedJob.id)}>Apply now</button><button onClick={() => saveJob(selectedJob.id)}>Save job</button></div><h2>About the role</h2><p>{selectedJob.summary} You will collaborate with a distributed team, own meaningful outcomes and help create reliable digital experiences.</p><h2>What you will bring</h2><ul><li>Strong practical experience in your discipline.</li><li>Clear communication and thoughtful collaboration.</li><li>A portfolio or examples of relevant work.</li></ul><h2>Skills</h2><div className="job-skills">{selectedJob.skills.map(skill => <span key={skill}>{skill}</span>)}</div></article><aside><b>{selectedJob.salary}</b><p>Paid through the Pi ecosystem</p><hr/><span>Category</span><strong>{selectedJob.category}</strong><span>Work type</span><strong>{selectedJob.type}</strong><span>Location</span><strong>{selectedJob.location}</strong></aside></div></section>
+          <section className="job-detail">
+            <Link to="/services/jobs/search">← Back to jobs</Link>
+            <div className="job-detail-grid">
+              <article>
+                <span className="jobs-kicker">{selectedJob.company} · VERIFIED</span>
+                <h1>{selectedJob.title}</h1>
+                <p>
+                  <LocationOnOutlinedIcon /> {selectedJob.location} · {selectedJob.mode} · {selectedJob.type}
+                </p>
+                <div className="job-detail-actions">
+                  <button onClick={() => setApplyOpen(value => !value)}>Apply now</button>
+                  <button onClick={() => saveJob(selectedJob.id)}>Save job</button>
+                </div>
+                {actionMessage ? <p className="jobs-action-message">{actionMessage}</p> : null}
+                {applyOpen ? (
+                  <form className="job-application-form" onSubmit={submitApplication}>
+                    <h2>Apply for this role</h2>
+                    <label>
+                      Cover note
+                      <textarea
+                        value={applyNote}
+                        onChange={event => setApplyNote(event.target.value)}
+                        rows={5}
+                        minLength={20}
+                        required
+                        placeholder="Introduce yourself and explain why you are a strong match."
+                      />
+                    </label>
+                    <button type="submit">Submit application</button>
+                  </form>
+                ) : null}
+                <h2>About the role</h2>
+                <p>
+                  {selectedJob.summary} You will collaborate with a distributed team, own meaningful outcomes and help
+                  create reliable digital experiences.
+                </p>
+                <h2>What you will bring</h2>
+                <ul>
+                  <li>Strong practical experience in your discipline.</li>
+                  <li>Clear communication and thoughtful collaboration.</li>
+                  <li>A portfolio or examples of relevant work.</li>
+                </ul>
+                <h2>Skills</h2>
+                <div className="job-skills">
+                  {selectedJob.skills.map(skill => (
+                    <span key={skill}>{skill}</span>
+                  ))}
+                </div>
+              </article>
+              <aside>
+                <b>{selectedJob.salary}</b>
+                <p>Paid through the Pi ecosystem</p>
+                <hr />
+                <span>Category</span>
+                <strong>{selectedJob.category}</strong>
+                <span>Work type</span>
+                <strong>{selectedJob.type}</strong>
+                <span>Location</span>
+                <strong>{selectedJob.location}</strong>
+              </aside>
+            </div>
+          </section>
         ) : kind === "company" && selectedCompany ? (
-          <section className="jobs-directory"><div className="company-hero"><span>{selectedCompany.mark}</span><div><small>VERIFIED EMPLOYER</small><h1>{selectedCompany.name}</h1><p>{selectedCompany.field} · Building useful products for the Pi community.</p></div></div><div className="jobs-page-heading"><h2>Open opportunities</h2></div><div className="jobs-list">{jobs.filter(job => job.company === selectedCompany.name).map(job => <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />)}</div></section>
+          <section className="jobs-directory">
+            <div className="company-hero">
+              <span>{selectedCompany.mark}</span>
+              <div>
+                <small>VERIFIED EMPLOYER</small>
+                <h1>{selectedCompany.name}</h1>
+                <p>{selectedCompany.field} · Building useful products for the Pi community.</p>
+              </div>
+            </div>
+            <div className="jobs-page-heading">
+              <h2>Open opportunities</h2>
+            </div>
+            <div className="jobs-list">
+              {jobs
+                .filter(job => job.company === selectedCompany.name)
+                .map(job => (
+                  <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
+                ))}
+            </div>
+          </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
-          <section className="jobs-workspace"><div className="jobs-page-heading"><span className="jobs-kicker">{kind === "post" ? "EMPLOYER WORKSPACE" : "YOUR JOBS WORKSPACE"}</span><h1>{kind === "post" ? "Post a new opportunity" : kind === "profile" ? "Professional profile" : kind === "employer" ? "Employer dashboard" : "Applications"}</h1><p>Everything you need to manage your next step in the Pi economy.</p></div>{kind === "post" ? <form className="job-form" onSubmit={event => void submitJob(event)}><label>Job title<input name="title" required placeholder="e.g. Product Designer" /></label><label>Company<input name="company" required placeholder="Your company" /></label><div><label>Location<input name="location" required placeholder="Remote or city" /></label><label>Job type<select name="type"><option>Full time</option><option>Part time</option><option>Contract</option><option>Project</option></select></label></div><label>Description<textarea name="summary" required minLength={30} rows={6} placeholder="Describe the opportunity, responsibilities and requirements" /></label><label>Compensation in Pi<input name="salary" required placeholder="e.g. 1,200–1,600 Pi / month" /></label><button type="submit">Publish job</button></form> : <div className="workspace-empty"><WorkOutlineRoundedIcon /><h2>{kind === "applications" ? "No active applications yet" : "Your workspace is ready"}</h2><p>Sign in with your Pi account to securely manage this area.</p><Link to="/services/jobs/search">Explore opportunities</Link></div>}</section>
+          <section className="jobs-workspace">
+            <div className="jobs-page-heading">
+              <span className="jobs-kicker">{kind === "post" ? "EMPLOYER WORKSPACE" : "YOUR JOBS WORKSPACE"}</span>
+              <h1>
+                {kind === "post"
+                  ? "Post a new opportunity"
+                  : kind === "profile"
+                    ? "Professional profile"
+                    : kind === "employer"
+                      ? "Employer dashboard"
+                      : "Applications"}
+              </h1>
+              <p>Everything you need to manage your next step in the Pi economy.</p>
+            </div>
+            {kind === "post" ? (
+              <form className="job-form" onSubmit={event => void submitJob(event)}>
+                <label>
+                  Job title
+                  <input name="title" required placeholder="e.g. Product Designer" />
+                </label>
+                <label>
+                  Company
+                  <input name="company" required placeholder="Your company" />
+                </label>
+                <div>
+                  <label>
+                    Location
+                    <input name="location" required placeholder="Remote or city" />
+                  </label>
+                  <label>
+                    Job type
+                    <select name="type">
+                      <option>Full time</option>
+                      <option>Part time</option>
+                      <option>Contract</option>
+                      <option>Project</option>
+                    </select>
+                  </label>
+                  <label>
+                    Work mode
+                    <select name="mode"><option>Remote</option><option>Hybrid</option><option>On-site</option></select>
+                  </label>
+                </div>
+                <div>
+                  <label>Category<select name="category"><option>Engineering</option><option>Design</option><option>Marketing</option><option>Operations</option><option>Other</option></select></label>
+                  <label>Skills<input name="skills" required placeholder="React, Research, Communication" /></label>
+                </div>
+                <label>
+                  Description
+                  <textarea
+                    name="summary"
+                    required
+                    minLength={30}
+                    rows={6}
+                    placeholder="Describe the opportunity, responsibilities and requirements"
+                  />
+                </label>
+                <label>
+                  Compensation in Pi
+                  <input name="salary" required placeholder="e.g. 1,200–1,600 Pi / month" />
+                </label>
+                <button type="submit">Publish job</button>
+              </form>
+            ) : kind === "applications" && applications.length ? (
+              <div className="jobs-application-list">
+                {applications.map(application => (
+                  <article key={application.id}>
+                    <CheckCircleRoundedIcon />
+                    <div>
+                      <h2>{application.jobTitle}</h2>
+                      <p>{application.company}</p>
+                      <small>{new Date(application.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <b>{application.status}</b>
+                  </article>
+                ))}
+              </div>
+            ) : kind === "profile" ? (
+              <form className="job-form" onSubmit={saveProfile}>
+                <label>Professional title<input name="title" required placeholder="e.g. Frontend Engineer" /></label>
+                <label>Skills<input name="skills" required placeholder="React, TypeScript, product design" /></label>
+                <div><label>Location<input name="location" placeholder="City or Remote" /></label><label>Availability<select name="availability"><option>Available now</option><option>Open to offers</option><option>Not available</option></select></label></div>
+                <label>Portfolio URL<input name="portfolio" type="url" placeholder="https://..." /></label>
+                <label>Professional summary<textarea name="summary" required minLength={30} rows={6} /></label>
+                <button type="submit">Save profile</button>
+                {profileSaved ? <p className="jobs-action-message">Profile saved on this device.</p> : null}
+              </form>
+            ) : kind === "employer" ? (
+              <div className="jobs-employer-dashboard">
+                <article><strong>{jobs.length}</strong><span>Active opportunities</span></article>
+                <article><strong>{applications.length}</strong><span>Applications</span></article>
+                <article><strong>{companies.length}</strong><span>Verified companies</span></article>
+                <Link to="/services/jobs/post">Post another job</Link>
+              </div>
+            ) : (
+              <div className="workspace-empty">
+                <WorkOutlineRoundedIcon />
+                <h2>{kind === "applications" ? "No active applications yet" : "Your workspace is ready"}</h2>
+                <p>Sign in with your Pi account to securely manage this area.</p>
+                <Link to="/services/jobs/search">Explore opportunities</Link>
+              </div>
+            )}
+          </section>
         ) : (
-          <section className="jobs-directory"><div className="jobs-page-heading"><span className="jobs-kicker">{kind === "freelance" ? "PROJECT-BASED WORK" : kind === "saved" ? "YOUR SHORTLIST" : "DISCOVER OPPORTUNITIES"}</span><h1>{kind === "freelance" ? "Freelance projects" : kind === "saved" ? "Saved jobs" : "Find your next role"}</h1><p>{listings.length} opportunities match your search.</p></div><div className="jobs-results-layout"><aside><b>Filter jobs</b>{["All", "Engineering", "Design", "Marketing", "Operations"].map(item => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</aside><div className="jobs-list">{listings.map(job => <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />)}{!listings.length ? <div className="workspace-empty"><SearchRoundedIcon /><h2>No opportunities found</h2><p>Try another search or category.</p></div> : null}</div></div></section>
+          <section className="jobs-directory">
+            <div className="jobs-page-heading">
+              <span className="jobs-kicker">
+                {kind === "freelance"
+                  ? "PROJECT-BASED WORK"
+                  : kind === "saved"
+                    ? "YOUR SHORTLIST"
+                    : "DISCOVER OPPORTUNITIES"}
+              </span>
+              <h1>
+                {kind === "freelance" ? "Freelance projects" : kind === "saved" ? "Saved jobs" : "Find your next role"}
+              </h1>
+              <p>{listings.length} opportunities match your search.</p>
+            </div>
+            <div className="jobs-results-layout">
+              <aside>
+                <b>Filter jobs</b>
+                {["All", "Engineering", "Design", "Marketing", "Operations"].map(item => (
+                  <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>
+                    {item}
+                  </button>
+                ))}
+              </aside>
+              <div className="jobs-list">
+                {listings.map(job => (
+                  <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
+                ))}
+                {!listings.length ? (
+                  <div className="workspace-empty">
+                    <SearchRoundedIcon />
+                    <h2>No opportunities found</h2>
+                    <p>Try another search or category.</p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </section>
         )}
-        <nav className="jobs-mobile-nav"><NavLink end to="/services/jobs"><HomeRoundedIcon /><span>Home</span></NavLink><NavLink to="/services/jobs/search"><SearchRoundedIcon /><span>Jobs</span></NavLink><NavLink to="/services/jobs/saved"><BookmarkBorderRoundedIcon /><span>Saved</span></NavLink><NavLink to="/services/jobs/applications"><WorkOutlineRoundedIcon /><span>Applications</span></NavLink><NavLink to="/services/jobs/companies"><BusinessRoundedIcon /><span>Companies</span></NavLink></nav>
+        <nav className="jobs-mobile-nav">
+          <NavLink end to="/services/jobs">
+            <HomeRoundedIcon />
+            <span>Home</span>
+          </NavLink>
+          <NavLink to="/services/jobs/search">
+            <SearchRoundedIcon />
+            <span>Jobs</span>
+          </NavLink>
+          <NavLink to="/services/jobs/saved">
+            <BookmarkBorderRoundedIcon />
+            <span>Saved</span>
+          </NavLink>
+          <NavLink to="/services/jobs/applications">
+            <WorkOutlineRoundedIcon />
+            <span>Applications</span>
+          </NavLink>
+          <NavLink to="/services/jobs/companies">
+            <BusinessRoundedIcon />
+            <span>Companies</span>
+          </NavLink>
+        </nav>
       </main>
     </AppLayout>
   );

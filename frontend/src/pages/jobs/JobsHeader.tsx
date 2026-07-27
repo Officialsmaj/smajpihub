@@ -25,15 +25,26 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
 
   return (
     <header className="jobs-header">
-      <Link to="/app/services" className="jobs-hub-link">← Hub</Link>
+      <Link to="/app/services" className="jobs-hub-link">
+        ← Hub
+      </Link>
       <NavLink end to="/services/jobs" className="jobs-brand">
         Jobs
       </NavLink>
       <nav className={menuOpen ? "open" : ""} aria-label="Jobs navigation">
         {links.map(([path, label]) => (
-          <NavLink key={label} end={!path} to={`/services/jobs${path ? `/${path}` : ""}`} onClick={() => setMenuOpen(false)}>{label}</NavLink>
+          <NavLink
+            key={label}
+            end={!path}
+            to={`/services/jobs${path ? `/${path}` : ""}`}
+            onClick={() => setMenuOpen(false)}
+          >
+            {label}
+          </NavLink>
         ))}
-        <NavLink className="jobs-mobile-post" to="/services/jobs/post">Post a job</NavLink>
+        <NavLink className="jobs-mobile-post" to="/services/jobs/post">
+          Post a job
+        </NavLink>
       </nav>
       <form className="jobs-header-search" role="search" onSubmit={submit}>
         <SearchRoundedIcon />
@@ -48,7 +59,9 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
       <NavLink className="jobs-notification" to="/notifications" aria-label="Notifications">
         <NotificationsNoneRoundedIcon />
       </NavLink>
-      <NavLink className="jobs-post-button" to="/services/jobs/post">Post a job</NavLink>
+      <NavLink className="jobs-post-button" to="/services/jobs/post">
+        Post a job
+      </NavLink>
       <button
         className="jobs-menu-button"
         type="button"
