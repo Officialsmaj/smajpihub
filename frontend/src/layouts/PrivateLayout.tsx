@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
+import GridViewOutlinedIcon from "@mui/icons-material/GridViewOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
@@ -32,7 +33,7 @@ import { axiosClient } from "../lib/axiosClient";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 import WelcomeTour from "../components/WelcomeTour";
 import logoImage from "/logo.png";
-import { serviceCatalog } from "../content/serviceCatalog";
+import { serviceAppPath, serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
 import { getStreamMyList, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
 
@@ -138,6 +139,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [serviceMenuOpen, setServiceMenuOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [unreadCount, setUnreadCount] = useState(0);
   const [streamDownloadCount, setStreamDownloadCount] = useState(0);
@@ -265,7 +267,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     await updateSettings({ ...settings, theme: next }).catch(() => undefined);
   };
   const themeIcon = themeMode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
-  const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? "/store" : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
+  const headerResults = useMemo(() => { const query = headerSearch.trim().toLowerCase(); if (!query) return []; const services = serviceCatalog.filter((item) => [item.name, item.experience, item.description, ...item.items].join(" ").toLowerCase().includes(query)).map((item) => ({ group: "Services", label: item.name, to: item.live ? serviceAppPath(item.slug) : `/app/services/${item.slug}` })); const pages = [{ group: "Account", label: "Profile", to: "/profile" }, { group: "Account", label: "Wallet", to: "/wallet" }, { group: "Account", label: "Settings", to: "/settings" }, { group: "Support", label: "Help Center", to: "/help" }, { group: "Marketplace", label: "Products and sellers", to: `/store?search=${encodeURIComponent(query)}` }].filter((item) => item.label.toLowerCase().includes(query) || ["products", "stores", "sellers", "help", "settings"].some((term) => query.includes(term))); return [...services, ...pages].slice(0, 10); }, [headerSearch]);
   const submitHeaderSearch = (event: FormEvent) => { event.preventDefault(); if (headerResults[0]) { navigate(headerResults[0].to); setSearchOpen(false); setHeaderSearch(""); } else if (headerSearch.trim()) { const target = `/store?search=${encodeURIComponent(headerSearch.trim())}`; navigate(target); } };
   const positionProfileMenu = () => {
     const avatar = profileAvatarRef.current;
@@ -398,6 +400,18 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               </NavLink>
             ))}
           </nav>
+          <section className="private-service-menu">
+            <button type="button" onClick={() => setServiceMenuOpen(open => !open)} aria-expanded={serviceMenuOpen} title={sidebarCollapsed ? "All service apps" : undefined}>
+              <GridViewOutlinedIcon />
+              <span className="private-nav-label">All service apps</span>
+              <KeyboardArrowUpIcon className={serviceMenuOpen ? "open" : ""} />
+            </button>
+            {serviceMenuOpen && !sidebarCollapsed ? <div>{serviceCatalog.map(service => (
+              <Link key={service.slug} to={service.live ? serviceAppPath(service.slug) : `/app/services/${service.slug}`} onClick={() => setMobileSidebarOpen(false)}>
+                <span>{service.name.replace("SMAJ ", "")}</span><small>{service.live ? "Open" : "Soon"}</small>
+              </Link>
+            ))}</div> : null}
+          </section>
           <div className="private-sidebar-account">
             {profileMenuOpen ? <div className="private-profile-menu"><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Account</Link><Link to="/app/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings/preferences" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
             <button type="button" className="private-sidebar-profile" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} title={sidebarCollapsed ? (user?.displayName || user?.username) : undefined}>

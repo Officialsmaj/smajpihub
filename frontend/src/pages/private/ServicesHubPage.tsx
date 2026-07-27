@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import ServiceArt from "../../components/ServiceArt";
-import { serviceCatalog } from "../../content/serviceCatalog";
+import { serviceAppPath, serviceCatalog } from "../../content/serviceCatalog";
 import { formatPiRate } from "../../lib/piPricing";
 
 const serviceHints: Record<string, string> = {
@@ -25,10 +25,7 @@ const serviceHints: Record<string, string> = {
 };
 
 const servicePath = (slug: string, live?: boolean) => {
-  if (slug === "store") return "/store";
-  if (slug === "stream") return "/app/services/stream";
-  if (slug === "sports") return "/services/sports";
-  return live ? `/services/${slug}` : `/app/services/${slug}`;
+  return live ? serviceAppPath(slug) : `/app/services/${slug}`;
 };
 const prioritySlugs = ["store", "stream", "sports"];
 const orderedServices = [...serviceCatalog].sort((left, right) => {

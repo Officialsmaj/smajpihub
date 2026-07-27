@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import ServiceArt from "../../components/ServiceArt";
-import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
+import { serviceAppPath, serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 
 type DiscoveryMode = "trending" | "lifestyle" | "categories";
 
@@ -15,10 +15,7 @@ const ratings: Record<string, string> = {
 const lifestyleSlugs = ["food", "health", "housing", "transport", "education", "charity", "events", "agro"];
 const trendingSlugs = ["store", "stream", "sports", "events", "food", "jobs", "education", "health", "housing", "transport"];
 const routeFor = (service: ServiceDefinition) => {
-  if (service.slug === "store") return "/store";
-  if (service.slug === "stream") return "/app/services/stream";
-  if (service.slug === "sports") return "/services/sports";
-  return `/app/services/${service.slug}`;
+  return service.live ? serviceAppPath(service.slug) : `/app/services/${service.slug}`;
 };
 
 const DiscoveryTabs = ({ active }: { active: Exclude<DiscoveryMode, "categories"> }) => (

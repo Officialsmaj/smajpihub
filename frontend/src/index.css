@@ -5443,6 +5443,18 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 .private-shell { overflow-x: hidden; }
 .private-sidebar { overflow: hidden; }
 .private-sidebar nav { overflow: visible; }
+.private-service-menu { min-height: 0; margin-top: 10px; display: grid; }
+.private-service-menu > button { width: 100%; padding: 10px 12px; display: flex; align-items: center; gap: 11px; color: #aeb5c6; background: transparent; border: 0; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.private-service-menu > button:hover { color: #fff; background: #1d2331; }
+.private-service-menu > button > svg:first-child { font-size: 20px; }
+.private-service-menu > button > svg:last-child { margin-left: auto; font-size: 18px; transform: rotate(180deg); transition: transform 160ms ease; }
+.private-service-menu > button > svg:last-child.open { transform: rotate(0); }
+.private-service-menu > div { max-height: min(38vh,330px); margin: 5px 4px 0 13px; padding: 4px 0 4px 13px; display: grid; gap: 2px; overflow-y: auto; border-left: 1px solid #343c4d; scrollbar-width: thin; }
+.private-service-menu > div a { padding: 7px 8px; display: flex; justify-content: space-between; gap: 8px; color: #aeb5c6; border-radius: 7px; text-decoration: none; font-size: 12px; }
+.private-service-menu > div a:hover { color: #fff; background: #1d2331; }
+.private-service-menu > div small { color: #8b93a5; font-size: 9px; text-transform: uppercase; }
+.private-sidebar-collapsed .private-service-menu > button { justify-content: center; }
+.private-sidebar-collapsed .private-service-menu > button > svg:last-child { display: none; }
 .private-sidebar-top { justify-content: flex-end; }
 .private-sidebar-collapsed .private-sidebar-top { justify-content: center; }
 :root[data-theme="light"] .smaj-auth-search-btn,

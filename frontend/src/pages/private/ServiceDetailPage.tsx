@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import ServiceArt from "../../components/ServiceArt";
-import { serviceCatalog } from "../../content/serviceCatalog";
+import { serviceAppPath, serviceCatalog } from "../../content/serviceCatalog";
 import { formatPiRate } from "../../lib/piPricing";
 
 const ServiceDetailPage = () => {
@@ -16,7 +16,7 @@ const ServiceDetailPage = () => {
     try {
       const current = JSON.parse(window.localStorage.getItem("smaj_recent_services") || "[]");
       const items = Array.isArray(current) ? current : [];
-      const to = service.live ? "/store" : `/app/services/${service.slug}`;
+      const to = service.live ? serviceAppPath(service.slug) : `/app/services/${service.slug}`;
       const next = [{ label: service.name, to, meta: "Service" }, ...items.filter((item) => item?.to !== to)].slice(0, 8);
       window.localStorage.setItem("smaj_recent_services", JSON.stringify(next));
     } catch {
@@ -24,7 +24,7 @@ const ServiceDetailPage = () => {
     }
   }, [service]);
   if (!service) return <Navigate to="/app/services" replace />;
-  if (service.live) return <Navigate to="/store" replace />;
+  if (service.live) return <Navigate to={serviceAppPath(service.slug)} replace />;
   const matches = service.items.filter((item) => item.toLowerCase().includes(search.toLowerCase()));
 
   return (
