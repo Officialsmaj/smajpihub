@@ -72,6 +72,10 @@ import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
 import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
 import CartPage from "./pages/food-delivery/CartPage";
 import { FoodCartProvider } from "./contexts/FoodCartContext";
+import HealthPage from "./pages/health/HealthPage";
+import ProviderDetailPage from "./pages/health/ProviderDetailPage";
+import BookingPage from "./pages/health/BookingPage";
+import { HealthBookingProvider } from "./contexts/HealthBookingContext";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -207,6 +211,10 @@ export const router = createBrowserRouter([
         <FoodCartProvider>
           <FoodDeliveryPage />
         </FoodCartProvider>
+      ) : platform.routeSegment === "health" ? (
+        <HealthBookingProvider>
+          <HealthPage />
+        </HealthBookingProvider>
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -580,6 +588,38 @@ export const router = createBrowserRouter([
   {
     path: "/app/services/food-delivery/*",
     element: <Navigate to="/services/food-delivery" replace />,
+  },
+  {
+    path: "/services/health/providers/:id",
+    element: (
+      <HealthBookingProvider>
+        <ProviderDetailPage />
+      </HealthBookingProvider>
+    ),
+  },
+  {
+    path: "/services/health/book/:providerId/:serviceId",
+    element: (
+      <HealthBookingProvider>
+        <BookingPage />
+      </HealthBookingProvider>
+    ),
+  },
+  {
+    path: "/app/services/health",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <HealthBookingProvider>
+            <HealthPage />
+          </HealthBookingProvider>
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/health/*",
+    element: <Navigate to="/services/health" replace />,
   },
   {
     path: "/app/services/stream/movies",
