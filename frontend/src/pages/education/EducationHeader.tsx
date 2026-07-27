@@ -1,5 +1,7 @@
-import { type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 const links = [
@@ -9,6 +11,7 @@ const links = [
 ] as const;
 
 const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const submit = (event: FormEvent) => {
@@ -25,9 +28,9 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
       <Link to="/services/education" className="education-brand">
         <b>Education</b>
       </Link>
-      <nav aria-label="Education navigation">
+      <nav className={menuOpen ? "open" : ""} aria-label="Education navigation">
         {links.map(([path, label]) => (
-          <NavLink key={label} end={!path} to={`/services/education${path ? `/${path}` : ""}`}>
+          <NavLink key={label} end={!path} to={`/services/education${path ? `/${path}` : ""}`} onClick={() => setMenuOpen(false)}>
             {label}
           </NavLink>
         ))}
@@ -42,6 +45,23 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
           aria-label="Search SMAJ PI Education"
         />
       </form>
+      <button
+        className="education-menu-button"
+        type="button"
+        aria-label={menuOpen ? "Close Education menu" : "Open Education menu"}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen(value => !value)}
+      >
+        {menuOpen ? <CloseRoundedIcon /> : <MenuRoundedIcon />}
+      </button>
+      {menuOpen ? (
+        <div className="education-mobile-menu open">
+          <NavLink end to="/services/education" onClick={() => setMenuOpen(false)}>Courses</NavLink>
+          <NavLink to="/services/education/courses" onClick={() => setMenuOpen(false)}>All Courses</NavLink>
+          <NavLink to="/services/education/partners" onClick={() => setMenuOpen(false)}>Partners</NavLink>
+          <Link to="/app/services">Back to SMAJ Hub</Link>
+        </div>
+      ) : null}
     </header>
   );
 };
