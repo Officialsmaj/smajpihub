@@ -78,6 +78,7 @@ import BookingPage from "./pages/health/BookingPage";
 import HousingPage, { type HousingPageKind } from "./pages/housing/HousingPage";
 import EventsPage, { type EventsPageKind } from "./pages/events/EventsPage";
 import AgroPage, { type AgroPageKind } from "./pages/agro/AgroPage";
+import EnergyPage, { type EnergyPageKind } from "./pages/energy/EnergyPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -176,6 +177,16 @@ const agroRoutes: Array<[string, AgroPageKind]> = [
   ["add", "add"],
   ["requests", "requests"],
 ];
+const energyRoutes: Array<[string, EnergyPageKind]> = [
+  ["search", "search"],
+  ["saved", "saved"],
+  ["quotes", "quotes"],
+  ["bookings", "bookings"],
+  ["orders", "orders"],
+  ["dashboard", "dashboard"],
+  ["utilities", "utilities"],
+  ["providers", "providers"],
+];
 
 export const router = createBrowserRouter([
   {
@@ -245,6 +256,8 @@ export const router = createBrowserRouter([
         <EventsPage />
       ) : platform.routeSegment === "agro" ? (
         <AgroPage />
+      ) : platform.routeSegment === "energy" ? (
+        <EnergyPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -351,6 +364,12 @@ export const router = createBrowserRouter([
   })),
   { path: "/services/agro/product/:id", element: <AgroPage kind="product" /> },
   { path: "/services/agro/supplier/:id", element: <AgroPage kind="supplier" /> },
+  ...energyRoutes.map(([path, kind]) => ({
+    path: `/services/energy/${path}`,
+    element: <EnergyPage kind={kind} />,
+  })),
+  { path: "/services/energy/product/:id", element: <EnergyPage kind="product" /> },
+  { path: "/services/energy/provider/:id", element: <EnergyPage kind="provider" /> },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
