@@ -46,7 +46,7 @@ const CourseDetailPage = () => {
 
   if (loading) {
     return (
-      <AppLayout>
+      <AppLayout showHeader={false} showFooter={false}>
         <main className="education-page">
           <div className="education-loading">Loading course...</div>
         </main>
