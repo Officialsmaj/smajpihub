@@ -1,1 +1,90 @@
-.health-header{height:72px;padding:0 max(3vw,24px);display:flex;align-items:center;gap:25px;position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(19,32,51,.08);background:#fffffff2;backdrop-filter:blur(16px)}.health-back-to-hub{padding:9px 11px;border:1px solid rgba(19,32,51,.08);border-radius:10px;color:#5a6675;font-size:11px;font-weight:800;text-decoration:none}.health-brand{color:#132033;font-size:21px;font-weight:900;text-decoration:none;white-space:nowrap}.health-brand b{color:#0d9488}.health-header nav{display:flex;gap:22px}.health-header nav a{color:#5a6675;font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}.health-header nav a.active{color:#132033}.health-header-search{width:min(250px,20vw);height:40px;margin-left:auto;padding:0 12px;display:flex;align-items:center;gap:7px;border:1px solid rgba(19,32,51,.08);border-radius:11px;background:#f6faf9}.health-header-search svg{font-size:19px;color:#0d9488}.health-header-search input{width:100%;border:0;outline:0;background:transparent;font:inherit;font-size:12px}.health-menu-button{width:40px;height:40px;display:none;grid;place-items:center;border:1px solid rgba(19,32,51,.08);border-radius:11px;color:#5a6675;background:#fff}.health-mobile-menu{display:none}@media(max-width:760px){.health-header{height:62px;padding:0 14px;gap:10px}.health-header nav{display:none}.health-header-search{display:none}.health-menu-button{display:grid;margin-left:auto}.health-mobile-menu{position:absolute;top:62px;left:0;right:0;display:none;flex-direction:column;padding:22px;border-bottom:1px solid rgba(19,32,51,.08);background:#fff;box-shadow:0 15px 30px rgba(25,50,87,.1);gap:12px;z-index:39}.health-mobile-menu.open{display:flex}.health-mobile-menu a{padding:10px 12px;border-radius:10px;color:#132033;font-weight:800;text-decoration:none}.health-mobile-menu a.active{background:rgba(13,148,136,.08);color:#0d9488}}
+.health-header {
+  height: 72px;
+  padding: 0 max(3vw, 24px);
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid rgba(19, 32, 51, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+}
+.health-back-to-hub {
+  padding: 9px 11px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 10px;
+  color: #5a6675;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.health-brand {
+  color: #0d9488;
+  font-size: 21px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.health-header nav {
+  display: flex;
+  gap: 22px;
+}
+.health-header nav a {
+  color: #5a6675;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.health-header nav a.active {
+  color: #132033;
+}
+.health-header-search {
+  width: min(250px, 20vw);
+  height: 40px;
+  margin-left: auto;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 11px;
+  background: #f6faf9;
+}
+.health-header-search svg {
+  font-size: 19px;
+  color: #0d9488;
+}
+.health-header-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .health-header {
+    height: 62px;
+    padding: 0 14px;
+    gap: 10px;
+    margin-bottom: 49px;
+  }
+  .health-header-search {
+    display: none;
+  }
+  .health-header nav {
+    position: absolute;
+    top: 62px;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+    padding: 8px 14px;
+    overflow-x: auto;
+    border-bottom: 1px solid rgba(19, 32, 51, 0.08);
+    background: #fff;
+  }
+}

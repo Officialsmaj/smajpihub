@@ -75,7 +75,7 @@ import FoodDealsOrdersPage from "./pages/food-delivery/FoodDealsOrdersPage";
 import HealthPage from "./pages/health/HealthPage";
 import ProviderDetailPage from "./pages/health/ProviderDetailPage";
 import BookingPage from "./pages/health/BookingPage";
-import { HealthBookingProvider } from "./contexts/HealthBookingContext";
+import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
   const { id } = useParams();
@@ -210,9 +210,7 @@ export const router = createBrowserRouter([
       ) : platform.routeSegment === "food-delivery" ? (
         <FoodDeliveryPage />
       ) : platform.routeSegment === "health" ? (
-        <HealthBookingProvider>
-          <HealthPage />
-        </HealthBookingProvider>
+        <HealthPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -610,32 +608,42 @@ export const router = createBrowserRouter([
     element: <Navigate to="/services/food-delivery" replace />,
   },
   {
+    path: "/services/health/providers",
+    element: <HealthPage />,
+  },
+  {
+    path: "/services/health/appointments",
+    element: <HealthAppointmentsPage />,
+  },
+  {
     path: "/services/health/providers/:id",
-    element: (
-      <HealthBookingProvider>
-        <ProviderDetailPage />
-      </HealthBookingProvider>
-    ),
+    element: <ProviderDetailPage />,
   },
   {
     path: "/services/health/book/:providerId/:serviceId",
-    element: (
-      <HealthBookingProvider>
-        <BookingPage />
-      </HealthBookingProvider>
-    ),
+    element: <BookingPage />,
   },
   {
     path: "/app/services/health",
     element: (
       <ProtectedRoute>
         <PrivateLayout>
-          <HealthBookingProvider>
-            <HealthPage />
-          </HealthBookingProvider>
+          <HealthPage />
         </PrivateLayout>
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/app/services/health/appointments",
+    element: <Navigate to="/services/health/appointments" replace />,
+  },
+  {
+    path: "/app/services/health/providers/:id",
+    element: <ProviderDetailPage />,
+  },
+  {
+    path: "/app/services/health/book/:providerId/:serviceId",
+    element: <BookingPage />,
   },
   {
     path: "/app/services/health/*",

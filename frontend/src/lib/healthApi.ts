@@ -1,14 +1,7 @@
 import { axiosClient } from "./axiosClient";
 import type { BookingDetails, HealthCategory, HealthProvider, HealthService } from "../types/health";
 
-const FALLBACK_CATEGORIES: HealthCategory[] = [
-  "All",
-  "Doctors",
-  "Clinics",
-  "Diagnostics",
-  "Pharmacy",
-  "Therapy",
-];
+const FALLBACK_CATEGORIES: HealthCategory[] = ["All", "General Practice", "Diagnostics", "Pharmacy", "Therapy"];
 
 const FALLBACK_PROVIDERS: HealthProvider[] = [
   {
@@ -59,20 +52,84 @@ const FALLBACK_PROVIDERS: HealthProvider[] = [
 
 const FALLBACK_SERVICES: Record<string, HealthService[]> = {
   "smaj-health-clinic": [
-    { id: "smaj-health-clinic-1", providerId: "smaj-health-clinic", name: "General Consultation", description: "Routine checkup and medical advice.", duration: "30 min", price: 25, category: "Doctors" },
-    { id: "smaj-health-clinic-2", providerId: "smaj-health-clinic", name: "Follow-up Visit", description: "Post-treatment review and care plan.", duration: "20 min", price: 18, category: "Doctors" },
+    {
+      id: "smaj-health-clinic-1",
+      providerId: "smaj-health-clinic",
+      name: "General Consultation",
+      description: "Routine checkup and medical advice.",
+      duration: "30 min",
+      price: 25,
+      category: "Doctors",
+    },
+    {
+      id: "smaj-health-clinic-2",
+      providerId: "smaj-health-clinic",
+      name: "Follow-up Visit",
+      description: "Post-treatment review and care plan.",
+      duration: "20 min",
+      price: 18,
+      category: "Doctors",
+    },
   ],
   "pioneer-diagnostics": [
-    { id: "pioneer-diagnostics-1", providerId: "pioneer-diagnostics", name: "Blood Panel", description: "Complete blood count and metabolic panel.", duration: "15 min", price: 40, category: "Diagnostics" },
-    { id: "pioneer-diagnostics-2", providerId: "pioneer-diagnostics", name: "Chest X-Ray", description: "Digital chest radiography with report.", duration: "20 min", price: 60, category: "Diagnostics" },
+    {
+      id: "pioneer-diagnostics-1",
+      providerId: "pioneer-diagnostics",
+      name: "Blood Panel",
+      description: "Complete blood count and metabolic panel.",
+      duration: "15 min",
+      price: 40,
+      category: "Diagnostics",
+    },
+    {
+      id: "pioneer-diagnostics-2",
+      providerId: "pioneer-diagnostics",
+      name: "Chest X-Ray",
+      description: "Digital chest radiography with report.",
+      duration: "20 min",
+      price: 60,
+      category: "Diagnostics",
+    },
   ],
   "orbit-pharmacy": [
-    { id: "orbit-pharmacy-1", providerId: "orbit-pharmacy", name: "Prescription Delivery", description: "Fast delivery of prescribed medication.", duration: "Same day", price: 8, category: "Pharmacy" },
-    { id: "orbit-pharmacy-2", providerId: "orbit-pharmacy", name: "Pharmacist Consultation", description: "One-to-one medication review.", duration: "15 min", price: 12, category: "Pharmacy" },
+    {
+      id: "orbit-pharmacy-1",
+      providerId: "orbit-pharmacy",
+      name: "Prescription Delivery",
+      description: "Fast delivery of prescribed medication.",
+      duration: "Same day",
+      price: 8,
+      category: "Pharmacy",
+    },
+    {
+      id: "orbit-pharmacy-2",
+      providerId: "orbit-pharmacy",
+      name: "Pharmacist Consultation",
+      description: "One-to-one medication review.",
+      duration: "15 min",
+      price: 12,
+      category: "Pharmacy",
+    },
   ],
   "wellness-hub": [
-    { id: "wellness-hub-1", providerId: "wellness-hub", name: "Therapy Session", description: "Licensed therapist one-to-one session.", duration: "45 min", price: 35, category: "Therapy" },
-    { id: "wellness-hub-2", providerId: "wellness-hub", name: "Wellness Check-in", description: "Mood and lifestyle review with a coach.", duration: "30 min", price: 22, category: "Therapy" },
+    {
+      id: "wellness-hub-1",
+      providerId: "wellness-hub",
+      name: "Therapy Session",
+      description: "Licensed therapist one-to-one session.",
+      duration: "45 min",
+      price: 35,
+      category: "Therapy",
+    },
+    {
+      id: "wellness-hub-2",
+      providerId: "wellness-hub",
+      name: "Wellness Check-in",
+      description: "Mood and lifestyle review with a coach.",
+      duration: "30 min",
+      price: 22,
+      category: "Therapy",
+    },
   ],
 };
 
@@ -101,15 +158,17 @@ export const getHealthProvider = async (id: string): Promise<HealthProvider | un
     const response = await axiosClient.get<{ provider: HealthProvider }>(`/health/providers/${encodeURIComponent(id)}`);
     return response.data.provider;
   } catch {
-    return FALLBACK_PROVIDERS.find((provider) => provider.id === id);
+    return FALLBACK_PROVIDERS.find(provider => provider.id === id);
   }
 };
 
 export const getHealthServices = async (providerId: string): Promise<HealthService[]> => {
   try {
-    const response = await axiosClient.get<{ services: HealthService[] }>(`/health/providers/${encodeURIComponent(providerId)}/services`);
+    const response = await axiosClient.get<{ services: HealthService[] }>(
+      `/health/providers/${encodeURIComponent(providerId)}/services`
+    );
     const data = response.data.services;
-    return data.length ? data : FALLBACK_SERVICES[providerId] ?? [];
+    return data.length ? data : (FALLBACK_SERVICES[providerId] ?? []);
   } catch {
     return FALLBACK_SERVICES[providerId] ?? [];
   }
@@ -119,7 +178,7 @@ export const createHealthBooking = async (booking: BookingDetails): Promise<{ bo
   try {
     const response = await axiosClient.post<{ bookingId: string }>("/health/bookings", booking);
     return response.data;
-  } catch (error) {
+  } catch {
     return { bookingId: `HEALTH-${Date.now().toString(36).toUpperCase()}` };
   }
 };

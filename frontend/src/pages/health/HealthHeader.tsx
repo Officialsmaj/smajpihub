@@ -1,6 +1,7 @@
 import { type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import "./HealthHeader.css";
 
 type HealthHeaderProps = {
   query: string;
@@ -10,7 +11,7 @@ type HealthHeaderProps = {
 const links = [
   ["", "Find care"],
   ["providers", "Providers"],
-  ["services", "Services"],
+  ["appointments", "My appointments"],
 ] as const;
 
 const HealthHeader = ({ query, onQueryChange }: HealthHeaderProps) => {

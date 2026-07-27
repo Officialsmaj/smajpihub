@@ -8,6 +8,7 @@ import type { HealthProvider, HealthService } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import ServiceCard from "../../components/health/ServiceCard";
 import BookingSummary from "../../components/health/BookingSummary";
+import HealthHeader from "./HealthHeader";
 import "./HealthPage.css";
 
 const ProviderDetailPage = () => {
@@ -16,6 +17,7 @@ const ProviderDetailPage = () => {
   const [services, setServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   const { selectService, selectedService } = useHealthBooking();
   const navigate = useNavigate();
@@ -28,10 +30,7 @@ const ProviderDetailPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [providerData, servicesData] = await Promise.all([
-          getHealthProvider(id),
-          getHealthServices(id),
-        ]);
+        const [providerData, servicesData] = await Promise.all([getHealthProvider(id), getHealthServices(id)]);
         if (!cancelled) {
           setProvider(providerData);
           setServices(servicesData);
@@ -57,6 +56,7 @@ const ProviderDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="health-page">
+          <HealthHeader query={query} onQueryChange={setQuery} />
           <div className="health-loading">Loading provider...</div>
         </main>
       </AppLayout>
@@ -67,6 +67,7 @@ const ProviderDetailPage = () => {
     return (
       <AppLayout showHeader={false} showFooter={false}>
         <main className="health-page">
+          <HealthHeader query={query} onQueryChange={setQuery} />
           <div className="health-error">
             <p>{error || "Provider not found."}</p>
             <Link to="/services/health" className="health-search a">
@@ -82,6 +83,7 @@ const ProviderDetailPage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="health-page">
+        <HealthHeader query={query} onQueryChange={setQuery} />
         <Link to="/services/health" className="health-back-link">
           <ArrowBackRoundedIcon />
           Back to providers
@@ -105,17 +107,13 @@ const ProviderDetailPage = () => {
             <h2>Choose a service.</h2>
           </div>
           <div className="health-service-list">
-            {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onSelect={() => selectService(service)}
-              />
+            {services.map(service => (
+              <ServiceCard key={service.id} service={service} onSelect={() => selectService(service)} />
             ))}
           </div>
         </section>
 
-        {selectedService ? (
+        {selectedService?.providerId === provider.id ? (
           <BookingSummary
             providerName={provider.name}
             service={selectedService}

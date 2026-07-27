@@ -11,11 +11,15 @@ const BookingSummary = ({ providerName, service, onCheckout }: BookingSummaryPro
     <div className="health-booking-summary-inner">
       <div>
         <strong>{providerName}</strong>
-        <span>{service.name} · {service.duration}</span>
+        <span>
+          {service.name} · {service.duration}
+        </span>
       </div>
       <div>
         <strong>π {service.price.toFixed(2)}</strong>
-        <button type="button" onClick={onCheckout}>Book now</button>
+        <button type="button" onClick={onCheckout}>
+          Book now
+        </button>
       </div>
     </div>
   </div>

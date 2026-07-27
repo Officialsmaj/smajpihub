@@ -1,1 +1,556 @@
-.health-back-link{display:inline-flex;align-items:center;gap:8px;color:#0d9488;font-weight:800;margin-bottom:18px;font-size:.95rem;text-decoration:none}.health-provider-hero{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,1fr);gap:28px;align-items:start;margin-top:18px}.health-provider-hero img{width:100%;border-radius:20px;aspect-ratio:16/10;object-fit:cover;display:block}.health-provider-hero h1{margin:14px 0 8px;font-size:clamp(1.6rem,4vw,2.6rem);line-height:1.1}.health-provider-hero .health-provider-meta{margin:0 0 14px;color:#5a6675;font-size:1.05rem;display:flex;align-items:center;gap:8px}.health-service-list{display:grid;gap:14px;margin-top:18px}.health-service-card{display:grid;grid-template-columns:1fr auto;gap:14px;padding:18px;border-radius:18px;border:1px solid rgba(19,32,51,.08);background:#fff;align-items:center}.health-service-card>div{display:grid;gap:6px}.health-service-category{display:inline-flex;width:fit-content;padding:6px 10px;border-radius:999px;background:rgba(13,148,136,.1);color:#0d9488;font-size:.78rem;font-weight:800}.health-service-card h4{margin:0;font-size:1.05rem}.health-service-card p{margin:0;color:#5a6675;font-size:.92rem;line-height:1.5}.health-service-card footer{display:flex;align-items:center;gap:12px;margin-top:4px;color:#5a6675;font-size:.92rem}.health-service-card footer strong{color:#132033;font-size:1.05rem}.health-service-card button{padding:10px 16px;border-radius:999px;border:0;background:#0d9488;color:#fff;font-weight:800;cursor:pointer}.health-booking-layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;margin-top:18px}.health-booking-form{display:grid;gap:14px}.health-form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.health-booking-form label{display:grid;gap:6px;color:#5a6675;font-size:.92rem;font-weight:800}.health-booking-form label span{font-size:.85rem}.health-booking-form input,.health-booking-form textarea{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(19,32,51,.08);background:#fff;font:inherit;font-size:.95rem;outline:0}.health-booking-form textarea{resize:vertical}.health-booking-submit{padding:12px 18px;border-radius:999px;border:0;background:#0d9488;color:#fff;font-weight:800;cursor:pointer;font-size:1rem}.health-booking-submit:disabled{opacity:.7;cursor:not-allowed}.health-booking-summary-card{padding:18px;border-radius:20px;border:1px solid rgba(19,32,51,.08);background:#fff;position:sticky;top:88px;display:grid;gap:12px}.health-booking-summary-card h3{margin:0;font-size:1.15rem}.health-booking-summary-card p{margin:0;color:#5a6675;font-size:.95rem;line-height:1.5}.health-summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#5a6675;font-size:.95rem}.health-summary-row.total{padding-top:10px;border-top:1px solid rgba(19,32,51,.08);color:#132033;font-weight:800}.health-summary-row.total strong{font-size:1.15rem}.health-payment-note{display:flex;align-items:center;gap:8px;color:#0d9488;font-weight:800;font-size:.95rem}.health-success{text-align:center;padding:48px 20px;display:grid;gap:12px}.health-success span{width:56px;height:56px;border-radius:50%;background:rgba(13,148,136,.1);color:#0d9488;font-size:28px;font-weight:800;display:grid;place-items:center;margin:0 auto}.health-success h2{margin:0;font-size:1.5rem}.health-success p{margin:0;color:#5a6675}@media(max-width:860px){.health-provider-hero{grid-template-columns:1fr}.health-booking-layout{grid-template-columns:1fr}.health-booking-summary-card{position:static}}@media(max-width:480px){.health-form-row{grid-template-columns:1fr}.health-service-card button{width:100%}}
+.health-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #0d9488;
+  font-weight: 800;
+  margin-bottom: 18px;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+.health-provider-hero {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 18px;
+}
+.health-provider-hero img {
+  width: 100%;
+  border-radius: 20px;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  display: block;
+}
+.health-provider-hero h1 {
+  margin: 14px 0 8px;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  line-height: 1.1;
+}
+.health-provider-hero .health-provider-meta {
+  margin: 0 0 14px;
+  color: #5a6675;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.health-service-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+.health-service-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  background: #fff;
+  align-items: center;
+}
+.health-service-card > div {
+  display: grid;
+  gap: 6px;
+}
+.health-service-category {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.health-service-card h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.health-service-card p {
+  margin: 0;
+  color: #5a6675;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.health-service-card footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  color: #5a6675;
+  font-size: 0.92rem;
+}
+.health-service-card footer strong {
+  color: #132033;
+  font-size: 1.05rem;
+}
+.health-service-card button {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: #0d9488;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.health-booking-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 18px;
+}
+.health-booking-form {
+  display: grid;
+  gap: 14px;
+}
+.health-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.health-booking-form label {
+  display: grid;
+  gap: 6px;
+  color: #5a6675;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+.health-booking-form label span {
+  font-size: 0.85rem;
+}
+.health-booking-form input,
+.health-booking-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: 0;
+}
+.health-booking-form textarea {
+  resize: vertical;
+}
+.health-booking-submit {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 0;
+  background: #0d9488;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.health-booking-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.health-booking-summary-card {
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  background: #fff;
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 12px;
+}
+.health-booking-summary-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.health-booking-summary-card p {
+  margin: 0;
+  color: #5a6675;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.health-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #5a6675;
+  font-size: 0.95rem;
+}
+.health-summary-row.total {
+  padding-top: 10px;
+  border-top: 1px solid rgba(19, 32, 51, 0.08);
+  color: #132033;
+  font-weight: 800;
+}
+.health-summary-row.total strong {
+  font-size: 1.15rem;
+}
+.health-payment-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0d9488;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.health-success {
+  text-align: center;
+  padding: 48px 20px;
+  display: grid;
+  gap: 12px;
+}
+.health-success span {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+  font-size: 28px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+.health-success h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.health-success p {
+  margin: 0;
+  color: #5a6675;
+}
+@media (max-width: 860px) {
+  .health-provider-hero {
+    grid-template-columns: 1fr;
+  }
+  .health-booking-layout {
+    grid-template-columns: 1fr;
+  }
+  .health-booking-summary-card {
+    position: static;
+  }
+}
+@media (max-width: 480px) {
+  .health-form-row {
+    grid-template-columns: 1fr;
+  }
+  .health-service-card button {
+    width: 100%;
+  }
+}
+.health-page {
+  --accent: #0d9488;
+  --ink: #132033;
+  min-height: 100vh;
+  color: var(--ink);
+  background: linear-gradient(180deg, #f2fbf9, #fff 36%);
+  font-family: Inter, "DM Sans", system-ui, sans-serif;
+}
+.health-page * {
+  box-sizing: border-box;
+}
+.health-hero {
+  width: min(1180px, calc(100% - 32px));
+  margin: auto;
+  padding: 64px 0 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.76fr);
+  gap: 32px;
+  align-items: center;
+}
+.health-kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.health-hero h1 {
+  margin: 18px 0 16px;
+  font-size: clamp(2.35rem, 6vw, 5rem);
+  line-height: 0.98;
+}
+.health-hero p,
+.health-section-head p {
+  color: #5a6675;
+  line-height: 1.7;
+}
+.health-search {
+  max-width: 720px;
+  margin-top: 28px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(19, 32, 51, 0.1);
+  border-radius: 18px;
+  background: #fff;
+}
+.health-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+.health-search a,
+.health-action-link {
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #0d9488;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+.health-hero-panel {
+  display: grid;
+  gap: 16px;
+}
+.health-popular-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  aspect-ratio: 16/10;
+}
+.health-popular-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.health-popular-card span {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #0008;
+  color: #fff;
+  font-weight: 800;
+}
+.health-booking-card {
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 20px;
+  background: #fff;
+}
+.health-booking-card div {
+  display: grid;
+  gap: 4px;
+}
+.health-booking-card small {
+  color: #5a6675;
+}
+.health-booking-card a {
+  padding: 12px;
+  border-radius: 999px;
+  background: #0d9488;
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  text-decoration: none;
+}
+.health-stats,
+.health-section {
+  width: min(1180px, calc(100% - 32px));
+  margin: auto;
+  padding: 28px 0;
+}
+.health-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.health-stats article {
+  padding: 18px;
+  display: grid;
+  gap: 6px;
+  text-align: center;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 18px;
+  background: #fff;
+}
+.health-stats strong {
+  color: #0d9488;
+  font-size: 2rem;
+}
+.health-stats span {
+  color: #5a6675;
+  font-weight: 800;
+}
+.health-section-head h2 {
+  margin: 14px 0 10px;
+  font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+}
+.health-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.health-category-tile {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.health-category-tile.selected {
+  border-color: #0d9488;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+}
+.health-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.health-provider-card {
+  overflow: hidden;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 20px;
+  background: #fff;
+}
+.health-provider-card a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.health-provider-card img {
+  width: 100%;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+}
+.health-provider-card a > div {
+  padding: 16px;
+}
+.health-provider-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.health-provider-header h3 {
+  margin: 0;
+}
+.health-rating,
+.health-available-badge {
+  color: #0d9488;
+  font-weight: 800;
+}
+.health-provider-specialty,
+.health-provider-meta {
+  color: #5a6675;
+}
+.health-loading,
+.health-error,
+.health-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: #5a6675;
+}
+.health-booking-summary {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 12px 24px;
+  background: #fffffff2;
+  border-top: 1px solid rgba(19, 32, 51, 0.08);
+}
+.health-booking-summary-inner {
+  width: min(1180px, 100%);
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.health-booking-summary-inner > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.health-booking-summary button {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #0d9488;
+  color: #fff;
+  font-weight: 800;
+}
+.health-subpage {
+  padding-top: 64px;
+}
+.health-appointment-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+.health-appointment-list article {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(19, 32, 51, 0.08);
+  border-radius: 18px;
+  background: #fff;
+}
+.health-appointment-list h3,
+.health-appointment-list p {
+  margin: 0 0 5px;
+}
+.health-appointment-list p,
+.health-appointment-list small {
+  color: #5a6675;
+}
+.health-appointment-list article > div:last-child {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+}
+.health-appointment-list b,
+.health-appointment-list svg {
+  color: #0d9488;
+}
+@media (max-width: 860px) {
+  .health-hero {
+    grid-template-columns: 1fr;
+  }
+  .health-hero-panel {
+    display: none;
+  }
+  .health-stats {
+    grid-template-columns: 1fr;
+  }
+  .health-provider-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .health-search {
+    grid-template-columns: 1fr;
+  }
+  .health-booking-summary-inner,
+  .health-booking-summary-inner > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .health-appointment-list article {
+    grid-template-columns: 1fr;
+  }
+  .health-appointment-list article > div:last-child {
+    text-align: left;
+  }
+}

@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 import AppLayout from "../../layouts/AppLayout";
-import {
-  getHealthCategories,
-  getHealthProviders,
-} from "../../lib/healthApi";
+import { getHealthCategories, getHealthProviders } from "../../lib/healthApi";
 import type { HealthProvider } from "../../types/health";
 import { useHealthBooking } from "../../contexts/HealthBookingContext";
 import ProviderCard from "../../components/health/ProviderCard";
@@ -21,9 +18,10 @@ const FEATURED_STATS = [
 ] as const;
 
 const HealthPage = () => {
+  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState<string[]>([]);
   const [providers, setProviders] = useState<HealthProvider[]>([]);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,10 +36,7 @@ const HealthPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const [cats, initialProviders] = await Promise.all([
-          getHealthCategories(),
-          getHealthProviders(),
-        ]);
+        const [cats, initialProviders] = await Promise.all([getHealthCategories(), getHealthProviders()]);
         if (!cancelled) {
           setCategories(cats);
           setProviders(initialProviders);
@@ -65,8 +60,9 @@ const HealthPage = () => {
 
   const filteredProviders = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return providers.filter((provider) => {
-      const matchesQuery = !q ||
+    return providers.filter(provider => {
+      const matchesQuery =
+        !q ||
         provider.name.toLowerCase().includes(q) ||
         provider.specialty.toLowerCase().includes(q) ||
         provider.location.toLowerCase().includes(q);
@@ -83,16 +79,14 @@ const HealthPage = () => {
           <div className="health-hero-copy">
             <span className="health-kicker">SMAJ PI HEALTH</span>
             <h1>Care when you need it.</h1>
-            <p>
-              Book appointments with verified doctors, clinics, diagnostics, and pharmacies. Pay securely with Pi.
-            </p>
+            <p>Book appointments with verified doctors, clinics, diagnostics, and pharmacies. Pay securely with Pi.</p>
             <div className="health-search" role="search">
               <SearchOutlinedIcon />
               <input
                 type="search"
                 placeholder="Search providers, services..."
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={event => setQuery(event.target.value)}
               />
               <Link to="#providers">Find care</Link>
             </div>
@@ -129,12 +123,10 @@ const HealthPage = () => {
           <div className="health-section-head">
             <span className="health-kicker">WHAT YOU CAN BOOK</span>
             <h2>Find care near you.</h2>
-            <p>
-              Browse verified providers, check availability, and book appointments in minutes.
-            </p>
+            <p>Browse verified providers, check availability, and book appointments in minutes.</p>
           </div>
           <div className="health-category-grid">
-            {categories.map((category) => (
+            {categories.map(category => (
               <button
                 key={category}
                 type="button"
@@ -165,7 +157,7 @@ const HealthPage = () => {
             </div>
           ) : (
             <div className="health-provider-grid">
-              {filteredProviders.map((provider) => (
+              {filteredProviders.map(provider => (
                 <ProviderCard key={provider.id} provider={provider} />
               ))}
             </div>

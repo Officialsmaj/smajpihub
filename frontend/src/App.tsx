@@ -4,6 +4,7 @@ import AuthToast from "./components/AuthToast";
 import GlobalFeedbackCenter from "./components/GlobalFeedbackCenter";
 import useSliceReveal from "./hooks/useSliceReveal";
 import { FoodCartProvider } from "./contexts/FoodCartContext";
+import { HealthBookingProvider } from "./contexts/HealthBookingContext";
 
 function App() {
   useSliceReveal();
@@ -11,7 +12,9 @@ function App() {
   return (
     <>
       <FoodCartProvider>
-        <RouterProvider router={router} />
+        <HealthBookingProvider>
+          <RouterProvider router={router} />
+        </HealthBookingProvider>
       </FoodCartProvider>
       <AuthToast />
       <GlobalFeedbackCenter />

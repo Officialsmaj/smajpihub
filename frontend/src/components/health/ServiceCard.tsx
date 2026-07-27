@@ -16,7 +16,9 @@ const ServiceCard = ({ service, onSelect }: ServiceCardProps) => (
         <strong>π {service.price.toFixed(2)}</strong>
       </footer>
     </div>
-    <button type="button" onClick={onSelect}>Book</button>
+    <button type="button" onClick={onSelect}>
+      Book
+    </button>
   </article>
 );
 
