@@ -75,6 +75,7 @@ import FoodDealsOrdersPage from "./pages/food-delivery/FoodDealsOrdersPage";
 import HealthPage from "./pages/health/HealthPage";
 import ProviderDetailPage from "./pages/health/ProviderDetailPage";
 import BookingPage from "./pages/health/BookingPage";
+import HousingPage, { type HousingPageKind } from "./pages/housing/HousingPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -149,6 +150,15 @@ const jobsRoutes: Array<[string, JobsPageKind]> = [
   ["employer", "employer"],
 ];
 
+const housingRoutes: Array<[string, HousingPageKind]> = [
+  ["search", "search"],
+  ["saved", "saved"],
+  ["compare", "compare"],
+  ["viewings", "viewings"],
+  ["landlord", "landlord"],
+  ["add", "add"],
+];
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -211,6 +221,8 @@ export const router = createBrowserRouter([
         <FoodDeliveryPage />
       ) : platform.routeSegment === "health" ? (
         <HealthPage />
+      ) : platform.routeSegment === "housing" ? (
+        <HousingPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -290,6 +302,18 @@ export const router = createBrowserRouter([
     path: `/services/jobs/${path}`,
     element: <JobsPage kind={kind} />,
   })),
+  ...housingRoutes.map(([path, kind]) => ({
+    path: `/services/housing/${path}`,
+    element: <HousingPage kind={kind} />,
+  })),
+  {
+    path: "/services/housing/property/:id",
+    element: <HousingPage kind="property" />,
+  },
+  {
+    path: "/services/housing/agent/:id",
+    element: <HousingPage kind="agent" />,
+  },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
