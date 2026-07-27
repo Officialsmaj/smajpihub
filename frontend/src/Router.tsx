@@ -80,6 +80,7 @@ import EventsPage, { type EventsPageKind } from "./pages/events/EventsPage";
 import AgroPage, { type AgroPageKind } from "./pages/agro/AgroPage";
 import EnergyPage, { type EnergyPageKind } from "./pages/energy/EnergyPage";
 import CharityPage, { type CharityPageKind } from "./pages/charity/CharityPage";
+import SwapPage, { type SwapPageKind } from "./pages/swap/SwapPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -195,6 +196,13 @@ const charityRoutes: Array<[string, CharityPageKind]> = [
   ["fundraise", "fundraise"],
   ["dashboard", "dashboard"],
 ];
+const swapRoutes: Array<[string, SwapPageKind]> = [
+  ["tokens", "tokens"],
+  ["history", "history"],
+  ["pools", "pools"],
+  ["liquidity", "liquidity"],
+  ["confirm", "confirm"],
+];
 
 export const router = createBrowserRouter([
   {
@@ -268,6 +276,8 @@ export const router = createBrowserRouter([
         <EnergyPage />
       ) : platform.routeSegment === "charity" ? (
         <CharityPage />
+      ) : platform.routeSegment === "swap" ? (
+        <SwapPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -388,6 +398,11 @@ export const router = createBrowserRouter([
   { path: "/services/charity/checkout/:id", element: <CharityPage kind="checkout" /> },
   { path: "/services/charity/receipt/:id", element: <CharityPage kind="receipt" /> },
   { path: "/services/charity/organization/:id", element: <CharityPage kind="organization" /> },
+  ...swapRoutes.map(([path, kind]) => ({
+    path: `/services/swap/${path}`,
+    element: <SwapPage kind={kind} />,
+  })),
+  { path: "/services/swap/receipt/:id", element: <SwapPage kind="receipt" /> },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
