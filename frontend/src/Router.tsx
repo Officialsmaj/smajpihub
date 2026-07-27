@@ -79,6 +79,7 @@ import HousingPage, { type HousingPageKind } from "./pages/housing/HousingPage";
 import EventsPage, { type EventsPageKind } from "./pages/events/EventsPage";
 import AgroPage, { type AgroPageKind } from "./pages/agro/AgroPage";
 import EnergyPage, { type EnergyPageKind } from "./pages/energy/EnergyPage";
+import CharityPage, { type CharityPageKind } from "./pages/charity/CharityPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
 const LegacyProductRedirect = () => {
@@ -187,6 +188,13 @@ const energyRoutes: Array<[string, EnergyPageKind]> = [
   ["utilities", "utilities"],
   ["providers", "providers"],
 ];
+const charityRoutes: Array<[string, CharityPageKind]> = [
+  ["discover", "discover"],
+  ["saved", "saved"],
+  ["donations", "donations"],
+  ["fundraise", "fundraise"],
+  ["dashboard", "dashboard"],
+];
 
 export const router = createBrowserRouter([
   {
@@ -258,6 +266,8 @@ export const router = createBrowserRouter([
         <AgroPage />
       ) : platform.routeSegment === "energy" ? (
         <EnergyPage />
+      ) : platform.routeSegment === "charity" ? (
+        <CharityPage />
       ) : platform.routeSegment === "store" ? (
         <PublicStorePage />
       ) : (
@@ -370,6 +380,14 @@ export const router = createBrowserRouter([
   })),
   { path: "/services/energy/product/:id", element: <EnergyPage kind="product" /> },
   { path: "/services/energy/provider/:id", element: <EnergyPage kind="provider" /> },
+  ...charityRoutes.map(([path, kind]) => ({
+    path: `/services/charity/${path}`,
+    element: <CharityPage kind={kind} />,
+  })),
+  { path: "/services/charity/campaign/:id", element: <CharityPage kind="campaign" /> },
+  { path: "/services/charity/checkout/:id", element: <CharityPage kind="checkout" /> },
+  { path: "/services/charity/receipt/:id", element: <CharityPage kind="receipt" /> },
+  { path: "/services/charity/organization/:id", element: <CharityPage kind="organization" /> },
   {
     path: "/services/jobs/job/:id",
     element: <JobsPage kind="job" />,
