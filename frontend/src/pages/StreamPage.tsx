@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import AppLayout from "../layouts/AppLayout";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -61,7 +60,7 @@ const uniqueCatalogTitles = (items: StreamCatalogTitle[], excluded = new Set<str
   });
 };
 
-const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
+const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const params = useParams();
   const activeSlug = categorySlug || params.slug || "trending";
   const categoryLabel = categoryLabels[activeSlug] || activeSlug.split("-").map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ");
@@ -228,7 +227,7 @@ const StreamPage = ({ embedded = false, categorySlug }: StreamPageProps) => {
     </>
   );
 
-  return embedded ? experience : <AppLayout showFooter={false}>{experience}</AppLayout>;
+  return experience;
 };
 
 export default StreamPage;
