@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
@@ -47,8 +48,12 @@ const ServiceMobileMenu = ({
       >
         <MenuRoundedIcon />
       </button>
-      {open ? (
-        <div className="service-mobile-menu-layer">
+      {open
+        ? createPortal(
+        <div
+          className="service-mobile-menu-layer"
+          style={{ "--service-menu-accent": accent } as React.CSSProperties}
+        >
           <button
             className="service-mobile-menu-overlay"
             type="button"
@@ -64,9 +69,7 @@ const ServiceMobileMenu = ({
             </header>
             <nav>
               {items.map(item => {
-                const active =
-                  location.pathname === item.to ||
-                  (item.to !== "/app/services" && location.pathname.startsWith(`${item.to}/`));
+                const active = location.pathname === item.to;
                 return (
                   <Link
                     className={active ? "active" : ""}
@@ -83,8 +86,10 @@ const ServiceMobileMenu = ({
               <AppsOutlinedIcon /> All SMAJ Services
             </Link>
           </aside>
-        </div>
-      ) : null}
+        </div>,
+        document.body
+      )
+        : null}
     </div>
   );
 };
