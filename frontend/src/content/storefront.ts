@@ -3,6 +3,7 @@ export type StoreHeroSlide = {
   subtitle: string;
   image: string;
   search: string;
+  textColor?: string;
 };
 
 export type StoreCategoryTile = {

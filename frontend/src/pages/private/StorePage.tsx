@@ -113,7 +113,7 @@ const StorePage = () => {
   useEffect(() => {
     void getHeroBanners("store").then((banners) => {
       if (banners.length) {
-        setDisplayHeroSlides(banners.map((banner) => ({ title: banner.title || "SMAJ Store", subtitle: banner.subtitle || "Discover products from SMAJ sellers.", image: banner.image, search: banner.search || banner.title })));
+        setDisplayHeroSlides(banners.map((banner) => ({ title: banner.title || "SMAJ Store", subtitle: banner.subtitle || "Discover products from SMAJ sellers.", image: banner.image, search: banner.search || banner.title, textColor: banner.textColor || "#ffffff" })));
         setHeroIndex(0);
       }
     }).catch(() => undefined);
@@ -422,7 +422,7 @@ const StorePage = () => {
           <button type="button" className="storefront-arrow left" onClick={() => setHeroIndex((value) => (value - 1 + displayHeroSlides.length) % displayHeroSlides.length)} aria-label="Previous banner"><ArrowBackIosNewOutlinedIcon /></button>
           <div className="storefront-hero-track" style={{ transform: `translateX(-${heroIndex * 100}%)` }}>
             {displayHeroSlides.map((slide) => (
-              <article className="storefront-hero-slide" key={slide.title}>
+              <article className="storefront-hero-slide" key={slide.title} style={{ color: slide.textColor || "#ffffff" }}>
                 <img src={slide.image} alt={slide.title} />
                 <div>
                   <span>SMAJ Store</span>

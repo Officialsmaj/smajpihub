@@ -3,7 +3,7 @@ import { axiosClient } from "../../lib/axiosClient";
 import { uploadImage } from "../../lib/uploadImage";
 import type { HeroBanner } from "../../lib/heroBanners";
 
-const emptyForm = { placement: "dashboard" as HeroBanner["placement"], image: "", title: "", subtitle: "", search: "", active: true, order: 0 };
+const emptyForm = { placement: "dashboard" as HeroBanner["placement"], image: "", title: "", subtitle: "", search: "", textColor: "#ffffff", active: true, order: 0 };
 
 const AdminHeroBannersPage = () => {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
@@ -49,7 +49,7 @@ const AdminHeroBannersPage = () => {
 
   const edit = (banner: HeroBanner) => {
     setEditingId(banner._id);
-    setForm({ placement: banner.placement, image: banner.image, title: banner.title || "", subtitle: banner.subtitle || "", search: banner.search || "", active: banner.active, order: banner.order || 0 });
+    setForm({ placement: banner.placement, image: banner.image, title: banner.title || "", subtitle: banner.subtitle || "", search: banner.search || "", textColor: banner.textColor || "#ffffff", active: banner.active, order: banner.order || 0 });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -77,6 +77,7 @@ const AdminHeroBannersPage = () => {
         <label>Title<input value={form.title} maxLength={120} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Banner title" /></label>
         <label>Description<textarea value={form.subtitle} maxLength={300} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} placeholder="Short banner description" /></label>
         <label>Store search keyword<input value={form.search} maxLength={120} onChange={(e) => setForm({ ...form, search: e.target.value })} placeholder="Example: Electronics" /></label>
+        <label>Text color<div className="admin-hero-color"><input type="color" value={form.textColor} onChange={(e) => setForm({ ...form, textColor: e.target.value })} /><input value={form.textColor} pattern="^#[0-9a-fA-F]{6}$" onChange={(e) => setForm({ ...form, textColor: e.target.value })} aria-label="Hero text color value" /></div></label>
         <label>Display order<input type="number" min="0" max="999" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></label>
         <label className="admin-hero-check"><input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active</label>
         <div className="admin-hero-actions"><button className="private-primary-button" disabled={saving}>{saving ? "Saving..." : editingId ? "Update banner" : "Add banner"}</button>{editingId ? <button type="button" className="private-secondary-button" onClick={() => { setEditingId(""); setForm(emptyForm); }}>Cancel</button> : null}</div>

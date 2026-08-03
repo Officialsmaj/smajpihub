@@ -7,6 +7,7 @@ export type HeroBanner = {
   title: string;
   subtitle: string;
   search: string;
+  textColor: string;
   active: boolean;
   order: number;
 };

@@ -97,6 +97,11 @@ export default function mountAdminEndpoints(router: Router) {
     if (body.title !== undefined) updates.title = String(body.title || "").trim().slice(0, 120);
     if (body.subtitle !== undefined) updates.subtitle = String(body.subtitle || "").trim().slice(0, 300);
     if (body.search !== undefined) updates.search = String(body.search || "").trim().slice(0, 120);
+    if (body.textColor !== undefined) {
+      const textColor = String(body.textColor || "").trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(textColor)) throw new Error("Choose a valid text color.");
+      updates.textColor = textColor.toLowerCase();
+    }
     if (body.active !== undefined) updates.active = Boolean(body.active);
     if (body.order !== undefined) updates.order = Math.max(0, Math.min(999, Number(body.order) || 0));
     return updates;

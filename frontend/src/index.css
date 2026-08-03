@@ -9112,7 +9112,7 @@ html[data-private-theme="dark"] .storefront-tool-panel label { color: var(--smaj
   display: grid;
   align-content: end;
   gap: 7px;
-  color: #fff;
+  color: inherit;
   background: linear-gradient(180deg, rgba(15, 23, 42, .08), rgba(15, 23, 42, .72));
 }
 
@@ -9120,9 +9120,11 @@ html[data-private-theme="dark"] .storefront-tool-panel label { color: var(--smaj
 .storefront-hero-slide > div p {
   margin: 0;
   max-width: 460px;
+  color: inherit !important;
 }
 
 .storefront-hero-slide > div span {
+  color: inherit !important;
   font-size: 12px;
   font-weight: 850;
   letter-spacing: .08em;
@@ -19770,6 +19772,7 @@ svg {
 .admin-attention-panel strong{margin:5px 0;color:var(--smaj-primary);font-size:1.45rem}
 .admin-attention-panel small{color:var(--smaj-text-secondary)}
 .admin-mobile-bottom-nav{display:none}
+.admin-hero-color{display:grid;grid-template-columns:46px 1fr;gap:8px}.admin-hero-color input[type="color"]{height:40px;padding:3px;cursor:pointer}
 .admin-hero-form{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(300px,1.15fr);gap:20px;padding:20px;background:var(--smaj-card);border:1px solid var(--smaj-border);border-radius:16px}
 .admin-hero-preview{min-height:260px;display:grid;place-items:center;overflow:hidden;color:var(--smaj-text-secondary);background:var(--smaj-secondary-bg);border:1px dashed var(--smaj-border);border-radius:13px;text-align:center}
 .admin-hero-preview img{width:100%;height:100%;min-height:260px;object-fit:cover}
