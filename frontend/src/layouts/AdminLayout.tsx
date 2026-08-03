@@ -26,6 +26,7 @@ const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
 const links = [
   ["/admin", "Dashboard", <DashboardOutlinedIcon />],
+  ["/admin/heroes", "Hero Banners", <Inventory2OutlinedIcon />],
   ["/admin/users", "Users", <PeopleOutlineIcon />],
   ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],

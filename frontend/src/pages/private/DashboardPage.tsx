@@ -22,6 +22,7 @@ import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
 import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { getHeroBanners } from "../../lib/heroBanners";
 import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName, countryFlag, formatPiAmount } from "../../lib/formatters";
@@ -51,7 +52,7 @@ const betaActivity = [
   "Pi users are exploring services globally",
 ];
 const trustIndicators = ["Pi verified users", "Reviewed listings", "Buyer/seller chat", "Safer marketplace support"];
-const mobileHeroImages = [
+const fallbackHeroImages = [
   "/assets/smaj-mobile-hero-v2.png",
   "/assets/smaj-mobile-hero-business.jpg",
   "/assets/smaj-mobile-hero-work.jpg",
@@ -246,6 +247,7 @@ const DashboardStreamSections = ({ rows, loading, compact }: { rows: DashboardSt
 const MobileHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean }) => {
   const [tabsPinned, setTabsPinned] = useState(false);
   const [heroSlide, setHeroSlide] = useState(0);
+  const [heroImages, setHeroImages] = useState(fallbackHeroImages);
   const [heroPaused, setHeroPaused] = useState(false);
   const [heroReducedMotion, setHeroReducedMotion] = useState(false);
   const tabsAnchorRef = useRef<HTMLDivElement>(null);
@@ -274,9 +276,15 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
 
   useEffect(() => {
     if (heroPaused || heroReducedMotion) return;
-    const timer = window.setInterval(() => setHeroSlide((current) => (current + 1) % mobileHeroImages.length), 5500);
+    const timer = window.setInterval(() => setHeroSlide((current) => (current + 1) % heroImages.length), 5500);
     return () => window.clearInterval(timer);
-  }, [heroPaused, heroReducedMotion]);
+  }, [heroImages.length, heroPaused, heroReducedMotion]);
+
+  useEffect(() => {
+    void getHeroBanners("dashboard").then((banners) => {
+      if (banners.length) { setHeroImages(banners.map((banner) => banner.image)); setHeroSlide(0); }
+    }).catch(() => undefined);
+  }, []);
 
   const handleHeroTouchStart = (event: TouchEvent<HTMLElement>) => {
     if (event.touches.length !== 1 || (event.target instanceof Element && Boolean(event.target.closest("a, button")))) return;
@@ -291,16 +299,16 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     if (startX === null || event.changedTouches.length !== 1) return;
     const distance = event.changedTouches[0].clientX - startX;
     if (Math.abs(distance) < 45) return;
-    setHeroSlide((current) => (current + (distance < 0 ? 1 : mobileHeroImages.length - 1)) % mobileHeroImages.length);
+    setHeroSlide((current) => (current + (distance < 0 ? 1 : heroImages.length - 1)) % heroImages.length);
   };
 
   return <div className="mobile-super-home">
     <section className="mobile-home-hero" onTouchStart={handleHeroTouchStart} onTouchEnd={handleHeroTouchEnd}>
       <div className="mobile-home-hero-track" style={{ transform: `translateX(-${heroSlide * 100}%)`, transition: heroReducedMotion ? "none" : undefined }} aria-hidden="true">
-        {mobileHeroImages.map((image) => <div className="mobile-home-hero-slide" style={{ backgroundImage: `url("${image}")` }} key={image} />)}
+        {heroImages.map((image) => <div className="mobile-home-hero-slide" style={{ backgroundImage: `url("${image}")` }} key={image} />)}
       </div>
       <div className="mobile-home-hero-copy"><span>WELCOME TO</span><h1>SMAJ PI HUB</h1><p>Everything you need. One place.</p><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div>
-      <div className="mobile-home-hero-dots" aria-label="Hero slides">{mobileHeroImages.map((_, index) => <button type="button" className={index === heroSlide ? "active" : ""} aria-label={`Show hero image ${index + 1}`} aria-current={index === heroSlide ? "true" : undefined} onClick={() => setHeroSlide(index)} key={index} />)}</div>
+      <div className="mobile-home-hero-dots" aria-label="Hero slides">{heroImages.map((_, index) => <button type="button" className={index === heroSlide ? "active" : ""} aria-label={`Show hero image ${index + 1}`} aria-current={index === heroSlide ? "true" : undefined} onClick={() => setHeroSlide(index)} key={index} />)}</div>
     </section>
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={onTabChange} /></div>
     <ContinueSection compact items={recentItems} />

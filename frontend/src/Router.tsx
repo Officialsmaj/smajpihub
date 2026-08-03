@@ -52,6 +52,7 @@ import ServiceDiscoveryPage from "./pages/private/ServiceDiscoveryPage";
 import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
+import AdminHeroBannersPage from "./pages/admin/AdminHeroBannersPage";
 import {
   AdminDashboardPage,
   AdminOnboardingPage,
@@ -1009,6 +1010,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminDashboardPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/heroes",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminHeroBannersPage />
         </AdminLayout>
       </ProtectedRoute>
     ),

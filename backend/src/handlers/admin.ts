@@ -83,6 +83,60 @@ export default function mountAdminEndpoints(router: Router) {
   });
   router.use(async (req, res, next) => { if (await requireAdmin(req, res)) next(); });
 
+  const heroUpdates = (body: Record<string, any>, partial = false) => {
+    const updates: Record<string, any> = {};
+    if (!partial || body.placement !== undefined) {
+      if (!["dashboard", "store"].includes(body.placement)) throw new Error("Choose dashboard or store.");
+      updates.placement = body.placement;
+    }
+    if (!partial || body.image !== undefined) {
+      const image = String(body.image || "").trim();
+      if (!image) throw new Error("Banner image is required.");
+      updates.image = image.slice(0, 2048);
+    }
+    if (body.title !== undefined) updates.title = String(body.title || "").trim().slice(0, 120);
+    if (body.subtitle !== undefined) updates.subtitle = String(body.subtitle || "").trim().slice(0, 300);
+    if (body.search !== undefined) updates.search = String(body.search || "").trim().slice(0, 120);
+    if (body.active !== undefined) updates.active = Boolean(body.active);
+    if (body.order !== undefined) updates.order = Math.max(0, Math.min(999, Number(body.order) || 0));
+    return updates;
+  };
+
+  router.get("/hero-banners", async (req, res) => {
+    const banners = await req.app.locals.heroBannerCollection.find({}).sort({ order: 1 }).toArray();
+    return res.status(200).json({ banners: banners.map(serialize) });
+  });
+
+  router.post("/hero-banners", async (req, res) => {
+    try {
+      const now = new Date();
+      const banner = { ...heroUpdates(req.body || {}), active: req.body?.active !== false, order: Number(req.body?.order) || 0, createdAt: now, updatedAt: now };
+      const result = await req.app.locals.heroBannerCollection.insertOne(banner);
+      return res.status(201).json({ message: "Hero banner created.", banner: serialize({ ...banner, _id: result.insertedId }) });
+    } catch (error: any) {
+      return res.status(400).json({ error: "bad_request", message: error.message });
+    }
+  });
+
+  router.patch("/hero-banners/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid banner id." });
+    try {
+      await req.app.locals.heroBannerCollection.updateOne({ _id: new ObjectId(req.params.id) }, { $set: { ...heroUpdates(req.body || {}, true), updatedAt: new Date() } });
+      const banner = await req.app.locals.heroBannerCollection.findOne({ _id: new ObjectId(req.params.id) });
+      if (!banner) return res.status(404).json({ error: "not_found", message: "Banner not found." });
+      return res.status(200).json({ message: "Hero banner updated.", banner: serialize(banner) });
+    } catch (error: any) {
+      return res.status(400).json({ error: "bad_request", message: error.message });
+    }
+  });
+
+  router.delete("/hero-banners/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid banner id." });
+    const result = await req.app.locals.heroBannerCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+    if (!result.deletedCount) return res.status(404).json({ error: "not_found", message: "Banner not found." });
+    return res.status(200).json({ message: "Hero banner deleted." });
+  });
+
   router.get("/stats", async (req, res) => {
     try {
       const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, notificationCollection } = req.app.locals;
