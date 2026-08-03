@@ -42,6 +42,20 @@ const ProductDetailPage = () => {
   const galleryTouchStart = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!imageViewerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImageViewerOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [imageViewerOpen]);
+
+  useEffect(() => {
     axiosClient
       .get(`/marketplace/products/${id}`)
       .then(({ data }) => {
@@ -249,9 +263,9 @@ const ProductDetailPage = () => {
       ) : null}
 
       {imageViewerOpen && selectedImage ? createPortal((
-        <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product image">
+        <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product image" onClick={() => setImageViewerOpen(false)}>
           <button type="button" className="product-image-viewer-close" onClick={() => setImageViewerOpen(false)} aria-label="Close full screen image"><CloseOutlinedIcon /></button>
-          <img src={selectedImage} alt={product.title} />
+          <img src={selectedImage} alt={product.title} onClick={(event) => event.stopPropagation()} />
         </div>
       ), document.body) : null}
 

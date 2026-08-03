@@ -14173,7 +14173,7 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
 .product-image-viewer {
   position: fixed;
   inset: 0;
-  z-index: 320;
+  z-index: 10000;
   display: grid;
   place-items: center;
   padding: 64px 18px 24px;
@@ -14191,9 +14191,9 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
 
 .product-image-viewer-close {
   position: absolute;
-  top: max(16px, env(safe-area-inset-top, 0px));
-  right: 16px;
-  z-index: 1;
+  top: max(16px, calc(env(safe-area-inset-top, 0px) + 10px));
+  right: max(16px, calc(env(safe-area-inset-right, 0px) + 10px));
+  z-index: 10001;
   width: 46px;
   height: 46px;
   display: grid;
@@ -14203,6 +14203,7 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
   border: 1px solid rgba(255,255,255,.26);
   border-radius: 50%;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .product-image-viewer-close svg { font-size: 26px !important; }
