@@ -10,6 +10,8 @@ import type { Product } from "../../types/marketplace";
 import { LocationFields } from "../../components/LocationFields";
 
 const MAX_PRODUCT_IMAGES = 12;
+const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
+const PRODUCT_FORM_STEPS = 10;
 const PRODUCT_DRAFT_KEY = "smaj_add_product_draft";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
 type CategoryName = (typeof categoryNames)[number];
@@ -56,6 +58,27 @@ type VariantRow = Record<(typeof variantFields)[number], string> & { stock: stri
 const emptyVariant = (): VariantRow => ({ color: "", size: "", material: "", storage: "", ram: "", weight: "", model: "", edition: "", style: "", stock: "0", priceUsdt: "", image: "" });
 const trimAmount = (value: number, decimals: number) => Number.isFinite(value) && value > 0 ? value.toFixed(decimals).replace(/\.?0+$/, "") : "";
 const categoryToApiCategory = (category: CategoryName) => category === "Fashion & Clothing" ? "Fashion" : category === "Cars & Vehicles" ? "Vehicles" : category === "Digital Products" ? "Digital" : category;
+
+const compressProductImage = (file: File) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onerror = reject;
+  reader.onload = () => {
+    const image = new Image();
+    image.onerror = reject;
+    image.onload = () => {
+      const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) return reject(new Error("Image compression is unavailable."));
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/webp", .82));
+    };
+    image.src = String(reader.result || "");
+  };
+  reader.readAsDataURL(file);
+});
 
 const initialForm = {
   title: "",
@@ -129,6 +152,7 @@ const AddProductPage = () => {
   const [activatingSeller, setActivatingSeller] = useState(false);
   const [sellerActivatedHere, setSellerActivatedHere] = useState(false);
   const [profileLocationLocked, setProfileLocationLocked] = useState(true);
+  const [mobileStep, setMobileStep] = useState(0);
   const sellerActive = Boolean(sellerActivatedHere || user?.sellerActive || user?.role === "seller");
   const titleInsight = useMemo(() => {
     const title = form.title.toLowerCase();
@@ -209,13 +233,8 @@ const AddProductPage = () => {
     if (!selected.length) return;
     const availableSlots = MAX_PRODUCT_IMAGES - form.images.length;
     if (availableSlots <= 0) return setError("You can add up to 12 product images.");
-    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) return setError("Choose up to 12 images, each 2 MB or smaller.");
-    Promise.all(selected.slice(0, availableSlots).map((file) => new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    }))).then((images) => setForm((current) => {
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > MAX_SOURCE_IMAGE_BYTES)) return setError("Choose up to 12 images, each 10 MB or smaller. Large photos are compressed automatically.");
+    Promise.all(selected.slice(0, availableSlots).map(compressProductImage)).then((images) => setForm((current) => {
       const gallery = [...current.images, ...images].slice(0, MAX_PRODUCT_IMAGES);
       return { ...current, image: gallery[0] || "", images: gallery };
     })).catch(() => setError("Could not read the selected images."));
@@ -363,13 +382,18 @@ const AddProductPage = () => {
     }
   };
 
-  const continueToNextSection = () => {
+  const continueToNextSection = (button: HTMLButtonElement) => {
     const sections = Array.from(document.querySelectorAll<HTMLDetailsElement>(".smart-product-form .product-accordion"));
     const currentIndex = Math.max(0, sections.findIndex((section) => section.open));
+    if (currentIndex >= sections.length - 1) {
+      button.closest("form")?.requestSubmit();
+      return;
+    }
     const next = sections[Math.min(currentIndex + 1, sections.length - 1)];
     if (!next) return;
     sections.forEach((section) => { if (section !== next) section.open = false; });
     next.open = true;
+    setMobileStep(Math.min(currentIndex + 1, PRODUCT_FORM_STEPS - 1));
     next.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -384,7 +408,7 @@ const AddProductPage = () => {
           <button className="private-primary-button" type="button" disabled={activatingSeller} onClick={() => void activateSeller()}>{activatingSeller ? "Activating..." : "Activate Seller Tools"}</button>
         </section>
       ) : null}
-      <form className="private-form product-form-accordions smart-product-form" onSubmit={(event) => void submit(event)}>
+      <form className="private-form product-form-accordions smart-product-form" noValidate onSubmit={(event) => void submit(event)}>
         <details className="product-accordion" open>
           <summary><span><strong>1. Product Search / Name</strong><small>Type the product name to suggest the best category and fields.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
           <label>Product name<input required maxLength={120} value={form.title} onChange={(event) => setProductTitle(event.target.value)} placeholder="Example: Nike running shoes size 42" /></label>
@@ -471,7 +495,7 @@ const AddProductPage = () => {
         <button className="private-primary-button" disabled={publishDisabled}>{submitting ? "Publishing..." : form.sellerAgreementAccepted ? "Publish for Review" : "Accept Agreement to Publish"}</button>
         <div className="product-form-mobile-actions" aria-label="Listing form actions">
           <button type="button" onClick={() => setSuccess("Draft saved on this device.")}>Save draft</button>
-          <button type="button" onClick={continueToNextSection}>Continue</button>
+          <button type="button" onClick={(event) => continueToNextSection(event.currentTarget)}>{mobileStep >= PRODUCT_FORM_STEPS - 1 ? "Publish for Review" : "Continue"}</button>
         </div>
       </form>
     </main>

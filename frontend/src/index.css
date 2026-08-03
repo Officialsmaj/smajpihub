@@ -3675,10 +3675,14 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .product-upload-preview { width: min(100%, 420px); height: 230px; overflow: hidden; background: #10151f; border: 1px solid #343d50; border-radius: 10px; }
 .product-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
 .product-gallery-preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  display: flex;
   gap: 10px;
   margin-top: 10px;
+  padding-bottom: 5px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
 }
 
 .product-gallery-preview figure {
@@ -8515,7 +8519,10 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 }
 
 .dashboard-sports-card {
-  min-width: 0;
+  width: 76px;
+  min-width: 76px;
+  flex: 0 0 76px;
+  scroll-snap-align: start;
   overflow: hidden;
   padding: 16px;
   color: var(--smaj-text);
