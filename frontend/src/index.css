@@ -14017,43 +14017,43 @@ html[data-private-theme="dark"] .storefront-product-card .storefront-seller-name
 
   .live-activity-trigger {
     position: relative;
-    width: 54px;
-    height: 54px;
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
     color: #ffffff;
     background: linear-gradient(135deg, #7c3aed, #5b21b6);
     border: 1px solid rgba(255,255,255,.22);
     border-radius: 50%;
-    box-shadow: 0 12px 28px rgba(91,33,182,.42);
+    box-shadow: 0 8px 18px rgba(91,33,182,.36);
     cursor: pointer;
   }
 
-  .live-activity-trigger svg { font-size: 26px !important; }
+  .live-activity-trigger svg { font-size: 18px !important; }
   .live-activity-trigger b {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 5px;
+    top: -6px;
+    right: -6px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
     display: grid;
     place-items: center;
     color: #ffffff;
     background: #e11d48;
     border: 2px solid var(--smaj-bg);
     border-radius: 999px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 900;
     animation: live-activity-badge 1.7s ease-in-out infinite;
   }
 
   .live-activity-status {
     position: absolute;
-    right: 6px;
-    bottom: 7px;
-    width: 9px;
-    height: 9px;
+    right: 3px;
+    bottom: 4px;
+    width: 7px;
+    height: 7px;
     background: #22c55e;
     border: 2px solid #6d28d9;
     border-radius: 50%;
