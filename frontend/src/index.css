@@ -3730,6 +3730,16 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
   font-weight: 850;
   cursor: pointer;
 }
+.product-color-picker { display: grid; gap: 7px; margin-top: 5px; }
+.product-color-picker > small { color: var(--smaj-text-secondary); font-size: 11px; font-weight: 650; }
+.product-color-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.product-color-swatches button,
+.product-custom-color { position: relative; width: 34px; height: 34px; display: grid; flex: 0 0 34px; place-items: center; padding: 3px; overflow: hidden; background: var(--smaj-card); border: 2px solid var(--smaj-border); border-radius: 50%; cursor: pointer; }
+.product-color-swatches button > span { width: 100%; height: 100%; display: block; background: var(--product-color); border: 1px solid rgb(15 23 42 / .18); border-radius: 50%; }
+.product-color-swatches button.selected { border-color: var(--smaj-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--smaj-primary) 22%, transparent); }
+.product-color-swatches button.selected::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 950; text-shadow: 0 1px 3px #000; }
+.product-custom-color input { position: absolute; inset: -8px; width: 52px; height: 52px; padding: 0; opacity: 0; cursor: pointer; }
+.product-custom-color span { pointer-events: none; color: var(--smaj-primary); font-size: 21px; font-weight: 900; }
 .product-variant-list { display: grid; gap: 12px; }
 .product-variant-list article { padding: 14px; display: grid; gap: 12px; background: var(--smaj-card, #171d29); border: 1px solid var(--smaj-border, #2c3446); border-radius: 12px; }
 .product-variant-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }

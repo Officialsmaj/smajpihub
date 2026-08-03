@@ -8,7 +8,7 @@ import { formatPiAmount, formatPiInputValue } from "../../lib/formatters";
 import { PI_USDT_RATE, piFromUsdt, usdtFromPi } from "../../lib/piPricing";
 import { LocationFields } from "../../components/LocationFields";
 
-const MAX_PRODUCT_IMAGES = 5;
+const MAX_PRODUCT_IMAGES = 12;
 const variantFields = ["color", "size", "material", "storage", "ram", "weight", "model", "edition", "style"] as const;
 type VariantRow = Record<(typeof variantFields)[number], string> & { stock: string; pricePi: string; priceUsdt: string; image: string };
 const emptyVariant = (): VariantRow => ({ color: "", size: "", material: "", storage: "", ram: "", weight: "", model: "", edition: "", style: "", stock: "0", pricePi: "", priceUsdt: "", image: "" });
@@ -102,13 +102,13 @@ const EditProductPage = () => {
     const selected = Array.from(files || []);
     if (!selected.length) return;
     if (form.images.length >= MAX_PRODUCT_IMAGES) {
-      setError("You can add up to five product images.");
+      setError("You can add up to 12 product images.");
       return;
     }
     const availableSlots = MAX_PRODUCT_IMAGES - form.images.length;
     const nextFiles = selected.slice(0, availableSlots);
     if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) {
-      setError("Choose up to five images, each 2 MB or smaller.");
+      setError("Choose up to 12 images, each 2 MB or smaller.");
       return;
     }
     if (selected.length > availableSlots) setError(`Only ${availableSlots} more image${availableSlots === 1 ? "" : "s"} can be added.`);
@@ -187,7 +187,7 @@ const EditProductPage = () => {
       <label>Product title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
       <div className="private-form-row"><label>Product status<select value={form.productStatus} onChange={(event) => setForm({ ...form, productStatus: event.target.value as typeof form.productStatus })}>{[["draft", "Draft"], ["active", "Active"], ["out_of_stock", "Out of Stock"], ["hidden", "Hidden"]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
       <div className="product-form-section-title"><h2>Images</h2><p>Main image, gallery, and variant images.</p></div>
-      <label>Product gallery ({form.images.length}/5 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>{form.images.length ? <div className="product-gallery-preview">{form.images.map((image, index) => <figure key={`${image.slice(-30)}-${index}`}><img src={image} alt={`Product preview ${index + 1}`} />{index === 0 ? <span>Main</span> : null}<button type="button" onClick={() => removeImage(index)}>Remove</button></figure>)}</div> : null}
+      <label>Product gallery ({form.images.length}/12 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>{form.images.length ? <div className="product-gallery-preview">{form.images.map((image, index) => <figure key={`${image.slice(-30)}-${index}`}><img src={image} alt={`Product preview ${index + 1}`} />{index === 0 ? <span>Main</span> : null}<button type="button" onClick={() => removeImage(index)}>Remove</button></figure>)}</div> : null}
       <div className="product-form-section-title"><h2>Price & Inventory</h2><p>Base price and overall stock.</p></div>
       <div className="private-form-row"><label>$ price (USDT)<input required type="number" min="0.01" step="0.01" value={form.priceUsdt} onChange={(event) => setForm({ ...form, priceUsdt: event.target.value, pricePi: formatPiInputValue(piFromUsdt(Number(event.target.value))) })} /></label><label>π price<input required type="number" min="0.0000000001" step="any" value={form.pricePi} onChange={(event) => setForm({ ...form, pricePi: event.target.value, priceUsdt: String(usdtFromPi(Number(event.target.value))) })} /></label></div>
       <div className="private-form-row"><label>Category<input required value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></label><label>Condition<input required value={form.condition} onChange={(event) => setForm({ ...form, condition: event.target.value })} /></label></div>

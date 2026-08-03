@@ -17,7 +17,7 @@ export const uploadImage = async (image: string, purpose: string) => {
 };
 
 export const uploadImages = async (images: string[], purpose: string) => {
-  const cleanImages = images.filter(Boolean).slice(0, 5);
+  const cleanImages = images.filter(Boolean).slice(0, 12);
   if (!cleanImages.length) return [];
 
   try {

@@ -109,7 +109,7 @@ const productFields = (body: any) => {
     city: String(body?.city || "").trim(),
     areaAddress: String(body?.areaAddress || "").trim(),
     sellerAgreementAccepted: Boolean(body?.sellerAgreementAccepted),
-    images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 5) : [],
+    images: Array.isArray(body?.images) ? body.images.map((item: unknown) => String(item)).filter(Boolean).slice(0, 12) : [],
     productStatus,
     variants,
     specifications: cleanRecord(body?.specifications),

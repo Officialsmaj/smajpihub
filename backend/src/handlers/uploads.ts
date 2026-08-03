@@ -27,7 +27,7 @@ export default function mountUploadEndpoints(router: Router) {
 
   router.post("/images", async (req: Request, res: Response) => {
     try {
-      const images: string[] = Array.isArray(req.body?.images) ? req.body.images.map((item: unknown) => String(item || "")).filter(Boolean).slice(0, 5) : [];
+      const images: string[] = Array.isArray(req.body?.images) ? req.body.images.map((item: unknown) => String(item || "")).filter(Boolean).slice(0, 12) : [];
       if (!images.length) return res.status(400).json({ error: "bad_request", message: "Upload at least one image." });
 
       const uploads = await Promise.all(images.map((image) => uploadImageValue(image, safePurpose(req.body?.purpose))));

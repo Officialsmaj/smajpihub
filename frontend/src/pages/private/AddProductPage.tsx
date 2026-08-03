@@ -9,7 +9,7 @@ import { uploadImage, uploadImages } from "../../lib/uploadImage";
 import type { Product } from "../../types/marketplace";
 import { LocationFields } from "../../components/LocationFields";
 
-const MAX_PRODUCT_IMAGES = 5;
+const MAX_PRODUCT_IMAGES = 12;
 const PRODUCT_DRAFT_KEY = "smaj_add_product_draft";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
 type CategoryName = (typeof categoryNames)[number];
@@ -45,6 +45,12 @@ const selectOptionsByField: Record<string, string[]> = {
   size: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "One Size", "Other"],
   "shoe size": ["EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "EU 46", "US 6", "US 7", "US 8", "US 9", "US 10", "US 11", "US 12", "Other"],
 };
+const productColors = [
+  ["Black", "#111827"], ["White", "#ffffff"], ["Gray", "#6b7280"], ["Silver", "#c0c0c0"],
+  ["Blue", "#2563eb"], ["Red", "#dc2626"], ["Green", "#16a34a"], ["Yellow", "#facc15"],
+  ["Pink", "#ec4899"], ["Purple", "#9333ea"], ["Brown", "#8b5a2b"], ["Gold", "#d4a017"],
+  ["Orange", "#f97316"], ["Beige", "#e7d7bd"], ["Navy", "#172554"], ["Teal", "#0f766e"],
+] as const;
 const variantFields = ["color", "size", "material", "storage", "ram", "weight", "model", "edition", "style"] as const;
 type VariantRow = Record<(typeof variantFields)[number], string> & { stock: string; priceUsdt: string; image: string };
 const emptyVariant = (): VariantRow => ({ color: "", size: "", material: "", storage: "", ram: "", weight: "", model: "", edition: "", style: "", stock: "0", priceUsdt: "", image: "" });
@@ -76,6 +82,21 @@ const initialForm = {
   serviceDetails: { enabled: false, duration: "", locationType: "Offline", appointmentRequired: false },
   sellerContact: "",
   sellerAgreementAccepted: false,
+};
+
+const ColorPicker = ({ value, onChange, multiple = false }: { value: string; onChange: (value: string) => void; multiple?: boolean }) => {
+  const selected = value.split(",").map((item) => item.trim()).filter(Boolean);
+  const toggle = (name: string) => {
+    if (!multiple) return onChange(name);
+    onChange(selected.includes(name) ? selected.filter((item) => item !== name).join(", ") : [...selected, name].join(", "));
+  };
+  return <div className="product-color-picker">
+    <div className="product-color-swatches" role={multiple ? "group" : "radiogroup"} aria-label="Choose product color">
+      {productColors.map(([name, hex]) => <button type="button" className={selected.includes(name) ? "selected" : ""} style={{ "--product-color": hex } as React.CSSProperties} aria-label={name} aria-pressed={selected.includes(name)} title={name} onClick={() => toggle(name)} key={name}><span /></button>)}
+      <label className="product-custom-color" title="Custom color"><input type="color" aria-label="Choose custom color" value={selected.find((item) => /^#[0-9a-f]{6}$/i.test(item)) || "#6d3fc0"} onChange={(event) => onChange(multiple ? [...selected.filter((item) => !/^#[0-9a-f]{6}$/i.test(item)), event.target.value].join(", ") : event.target.value)} /><span>+</span></label>
+    </div>
+    <small>{selected.length ? selected.join(", ") : multiple ? "Select one or more colors" : "Select a color"}</small>
+  </div>;
 };
 
 const loadProductDraft = (): typeof initialForm => {
@@ -187,8 +208,8 @@ const AddProductPage = () => {
     const selected = Array.from(files || []);
     if (!selected.length) return;
     const availableSlots = MAX_PRODUCT_IMAGES - form.images.length;
-    if (availableSlots <= 0) return setError("You can add up to five product images.");
-    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) return setError("Choose up to five images, each 2 MB or smaller.");
+    if (availableSlots <= 0) return setError("You can add up to 12 product images.");
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 2 * 1024 * 1024)) return setError("Choose up to 12 images, each 2 MB or smaller.");
     Promise.all(selected.slice(0, availableSlots).map((file) => new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ""));
@@ -213,7 +234,9 @@ const AddProductPage = () => {
     return (
       <label key={field}>
         {field}
-        {options ? (
+        {field.toLowerCase().includes("color") ? (
+          <ColorPicker value={form.specifications[field] || ""} onChange={(value) => setSpec(field, value)} multiple />
+        ) : options ? (
           <select value={form.specifications[field] || ""} onChange={(event) => setSpec(field, event.target.value)}>
             <option value="">Select {field.toLowerCase()}</option>
             {options.map((option) => <option value={option} key={option}>{option}</option>)}
@@ -373,8 +396,8 @@ const AddProductPage = () => {
         </details>
 
         <details className="product-accordion" open>
-          <summary><span><strong>2. Photos</strong><small>Add up to five clear images. First image is the main image.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
-          <label>Product gallery ({form.images.length}/5 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>
+          <summary><span><strong>2. Photos</strong><small>Add up to 12 clear images. First image is the main image.</small></span><span className="accordion-chevron" aria-hidden="true">▾</span></summary>
+          <label>Product gallery ({form.images.length}/12 images)<input multiple type="file" accept="image/*" onChange={(event) => { selectImages(event.target.files); event.currentTarget.value = ""; }} /></label>
           {form.images.length ? <div className="product-gallery-preview">{form.images.map((image, index) => <figure key={`${image.slice(-30)}-${index}`}><img src={image} alt={`Product preview ${index + 1}`} />{index === 0 ? <span>Main</span> : null}<button type="button" onClick={() => removeImage(index)}>Remove</button></figure>)}</div> : null}
         </details>
 
@@ -407,7 +430,7 @@ const AddProductPage = () => {
           <button type="button" className="private-secondary-button" onClick={addVariant}>Add Variant</button>
           {form.variants.length ? <div className="product-variant-list">{form.variants.map((variant, index) => <article key={index}><div className="product-variant-head"><strong>Variant {index + 1}</strong><button type="button" onClick={() => removeVariant(index)}>Remove</button></div><div className="private-form-row">{variantFields.map((field) => {
             const options = selectOptionsByField[field];
-            return <label key={field}>{field}{options ? <select value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)}><option value="">Select {field}</option>{options.map((option) => <option value={option} key={option}>{option}</option>)}</select> : <input value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)} />}</label>;
+            return <label key={field}>{field}{field === "color" ? <ColorPicker value={variant.color} onChange={(value) => updateVariant(index, { color: value })} /> : options ? <select value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)}><option value="">Select {field}</option>{options.map((option) => <option value={option} key={option}>{option}</option>)}</select> : <input value={variant[field]} onChange={(event) => updateVariant(index, { [field]: event.target.value } as Partial<VariantRow>)} />}</label>;
           })}</div><div className="private-form-row"><label>Variant stock<input type="number" min="0" value={variant.stock} onChange={(event) => updateVariant(index, { stock: event.target.value })} /></label><label>Variant $ price (USDT)<input type="number" min="0" step="any" value={variant.priceUsdt} onChange={(event) => updateVariant(index, { priceUsdt: event.target.value })} /></label><label>Variant image<input type="file" accept="image/*" onChange={(event) => { selectVariantImage(index, event.target.files?.[0]); event.currentTarget.value = ""; }} /></label></div>{variant.image ? <img className="product-variant-image" src={variant.image} alt="" /> : null}</article>)}</div> : <div className="private-state compact"><h3>No variants yet</h3><p>Add only if the item has choices like sizes, colors, storage, or models.</p></div>}
         </details>
 
