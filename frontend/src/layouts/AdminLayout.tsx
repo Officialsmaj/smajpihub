@@ -151,7 +151,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         <div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div>
       </header>
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
-        <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
+        <aside id="admin-mobile-sidebar" className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
           <div className="private-sidebar-top">
             <Link to="/admin" className="private-sidebar-brand" title="SMAJ ADMIN" aria-label="SMAJ Admin dashboard"><img src={logoImage} alt="" /></Link>
             <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
@@ -180,8 +180,16 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
           ["/admin/products", "Review", <ShieldOutlinedIcon />],
           ["/admin/stream", "Stream", <LiveTvOutlinedIcon />],
-          ["/admin/reports", "More", <MoreHorizOutlinedIcon />],
         ].map(([to, label, icon]) => <NavLink key={String(to)} to={String(to)} end={to === "/admin"}>{icon}<span>{label}</span></NavLink>)}
+        <button
+          type="button"
+          className={mobileSidebarOpen ? "active" : undefined}
+          onClick={() => setMobileSidebarOpen((open) => !open)}
+          aria-expanded={mobileSidebarOpen}
+          aria-controls="admin-mobile-sidebar"
+        >
+          <MoreHorizOutlinedIcon /><span>More</span>
+        </button>
       </nav>
       <ConfirmSignOutModal open={showSignOut} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>

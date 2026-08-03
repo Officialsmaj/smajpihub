@@ -16860,9 +16860,9 @@ button.private-primary-button {
   }
 
   .admin-shell .private-sidebar nav {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-height: 0;
-    height: 0;
+    height: auto;
     display: grid !important;
     align-content: start;
     gap: 6px;
@@ -19777,8 +19777,8 @@ svg {
   .admin-attention-panel span{min-height:0}
   .admin-attention-panel strong{grid-row:1/3;grid-column:2}
   .admin-mobile-bottom-nav{position:fixed;z-index:1200;left:0;right:0;bottom:0;height:calc(66px + env(safe-area-inset-bottom));padding:6px 6px env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);color:var(--smaj-text-secondary);background:var(--smaj-card);border-top:1px solid var(--smaj-border);box-shadow:0 -8px 24px rgba(15,23,42,.1)}
-  .admin-mobile-bottom-nav a{min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:inherit;border-radius:10px;text-decoration:none;font-size:9px;font-weight:800}
-  .admin-mobile-bottom-nav a.active{color:var(--smaj-primary);background:var(--smaj-secondary-bg)}
+  .admin-mobile-bottom-nav a,.admin-mobile-bottom-nav button{min-width:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;padding:0;color:inherit;background:transparent;border:0;border-radius:10px;text-decoration:none;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+  .admin-mobile-bottom-nav a.active,.admin-mobile-bottom-nav button.active{color:var(--smaj-primary);background:var(--smaj-secondary-bg)}
   .admin-mobile-bottom-nav svg{font-size:21px}
 }
 
