@@ -25,6 +25,7 @@ import { useAuthContext } from "../../contexts/AuthContext";
 import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName, countryFlag, formatPiAmount } from "../../lib/formatters";
+import { getStreamCatalog, type StreamCatalogTitle } from "../../lib/streamCatalog";
 import type { Product, VerificationLevel, VerificationStatus } from "../../types/marketplace";
 
 type DiscoveryTab = "for-you" | "trending" | "lifestyle" | "categories";
@@ -64,7 +65,6 @@ const featureCards = [
 ];
 
 const mediaSections = [
-  { title: "Watch anytime", slug: "stream", image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=85", items: ["Trending movies", "Popular series", "Top creators", "New releases"] },
   { title: "Live sports", slug: "sports", image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=900&q=85", items: ["Live matches", "Latest scores", "Top teams", "Tournament highlights"] },
   { title: "Events happening now", slug: "events", image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=85", items: ["Concerts", "Conferences", "Shows", "Experiences"], badges: ["Live now", "Starts today", "This weekend", "Ends on 7/8/26"] },
 ];
@@ -84,6 +84,7 @@ const tabServices = (tab: DiscoveryTab) => {
 const tabTitle = (tab: DiscoveryTab) => tab === "categories" ? "All categories" : tab === "trending" ? "Trending services" : tab === "lifestyle" ? "Lifestyle services" : "Suggested for you";
 type RecentItem = { label: string; to: string; meta?: string };
 type SellerCard = { id: string; name: string; location: string; rating: string; listings: number; avatar?: string; verificationLevel?: VerificationLevel; verificationStatus?: VerificationStatus };
+type DashboardStreamRow = { title: string; description: string; seeAll: string; items: StreamCatalogTitle[] };
 
 const readRecentItems = (key: string) => {
   try {
@@ -230,7 +231,19 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
   )
 );
 
-const MobileHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[] }) => {
+const DashboardStreamSections = ({ rows, loading, compact }: { rows: DashboardStreamRow[]; loading: boolean; compact: boolean }) => {
+  if (loading) return <section className={compact ? "mobile-feed-section" : "desktop-feed-section"}><div className={compact ? "mobile-section-heading" : "desktop-feed-section-head"}><div><h2>Watch anytime</h2><p>Loading movies and series...</p></div></div><PrivateSkeleton variant="grid" count={4} /></section>;
+  if (!rows.length) return <section className={compact ? "mobile-feed-section" : "desktop-feed-section"}><div className={compact ? "mobile-section-heading" : "desktop-feed-section-head"}><div><h2>Watch anytime</h2><p>The live entertainment catalogue is temporarily unavailable.</p></div><Link to="/app/services/stream">Open Stream</Link></div></section>;
+  return <>{rows.map((row) => <section className={compact ? "mobile-feed-section" : "desktop-feed-section"} key={row.title}>
+    <div className={compact ? "mobile-section-heading" : "desktop-feed-section-head"}><div><h2>{row.title}</h2>{compact ? null : <p>{row.description}</p>}</div><Link to={row.seeAll}>See all</Link></div>
+    <div className={compact ? "mobile-media-strip" : "desktop-media-grid"}>{row.items.map((item) => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} className={compact ? "mobile-media-card" : "desktop-media-card"} key={`${row.title}-${item.mediaType}-${item.id}`}>
+      <img loading="lazy" src={item.backdropUrl || item.posterUrl || "/logo.png"} alt={`${item.title} artwork`} onError={(event) => { event.currentTarget.src = "/logo.png"; }} />
+      <div><b>{item.mediaType === "tv" ? "SERIES" : "MOVIE"}</b><span>{item.title}</span><small>{item.rating ? `★ ${item.rating.toFixed(1)}` : "New"}{item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}</small></div>
+    </Link>)}</div>
+  </section>)}</>;
+};
+
+const MobileHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean }) => {
   const [tabsPinned, setTabsPinned] = useState(false);
   const [heroSlide, setHeroSlide] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
@@ -299,6 +312,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     {activeTab === "for-you" ? <>
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Suggested for you</h2><Link to="/app/services">See all</Link></div><div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span><small className={service.live ? "live-rating-badge" : undefined}>{service.live ? "LIVE" : `${serviceRatings[service.slug]} star`}</small></div></Link>)}</div>)}</div></section>
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Discover what's new</h2></div><div className="mobile-feature-strip">{featureCards.map((card) => <Link className="mobile-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" />{card.slug === "store" ? <b className="live-card-badge feature-live-badge">LIVE</b> : null}<div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
+      <DashboardStreamSections rows={streamRows} loading={streamLoading} compact />
       {mediaSections.map((section) => <section className="mobile-feed-section" key={section.slug}><div className="mobile-section-heading"><h2>{section.title}</h2></div><div className="mobile-media-strip">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="mobile-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>{section.slug === "stream" ? "SMAJ Stream" : section.slug === "sports" ? "SMAJ Sports" : "SMAJ Events"}</small></div></Link>)}</div></section>)}
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Need help?</h2></div><div className="mobile-help-grid">{support.map(([Icon, title, , items, to]) => <Link to={to} key={title}><Icon /><div><strong>{title}</strong><span>{items.slice(0, 3).join(" - ")}</span></div><ArrowForwardOutlinedIcon /></Link>)}</div></section>
     </> : <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>{tabTitle(activeTab)}</h2><Link to="/app/services">See all</Link></div><ServiceList services={tabServices(activeTab)} mode="mobile" /></section>}
@@ -306,7 +320,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
   </div>;
 };
 
-const DesktopFeedHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[] }) => <div className="desktop-private-home desktop-feed-home">
+const DesktopFeedHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean }) => <div className="desktop-private-home desktop-feed-home">
   <section className="desktop-feed-hero"><div><p className="private-kicker">SMAJ PI HUB</p><h1>Everything you need.<br />One place.</h1><p>Discover services, products, media, support, and everyday tools from one connected dashboard.</p><div className="desktop-feed-hero-actions"><Link className="private-primary-button" to="/app/services">Explore Services <ArrowForwardOutlinedIcon /></Link><Link className="private-secondary-button" to="/store">Open SMAJ Store</Link></div></div><div className="desktop-feed-hero-icons">{serviceCatalog.slice(0, 6).map((service) => <Link key={service.slug} to={servicePath(service)} title={service.name}><ServiceArt index={service.atlasIndex} />{service.live ? <em>LIVE</em> : null}</Link>)}</div></section>
   <DiscoveryTabButtons className="desktop-feed-tabs" activeTab={activeTab} onTabChange={onTabChange} />
   <div className="desktop-feed-priority-grid">
@@ -324,6 +338,7 @@ const DesktopFeedHome = ({ activeTab, onTabChange, products, productsLoading, pr
     {activeTab === "for-you" ? <>
       <section className="desktop-feed-section"><div className="desktop-feed-section-head"><div><h2>Suggested for you</h2><p>Fast access to the core SMAJ services.</p></div><Link to="/app/services">See all</Link></div><ServiceList services={serviceCatalog.slice(0, 6)} mode="desktop" /></section>
       <section className="desktop-feed-section"><div className="desktop-feed-section-head"><div><h2>Discover what's new</h2><p>Fresh entry points into useful services.</p></div></div><div className="desktop-feature-grid">{featureCards.map((card) => <Link className="desktop-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" />{card.slug === "store" ? <b className="live-card-badge feature-live-badge">LIVE</b> : null}<div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
+      <DashboardStreamSections rows={streamRows} loading={streamLoading} compact={false} />
       {mediaSections.map((section) => <section className="desktop-feed-section" key={section.slug}><div className="desktop-feed-section-head"><div><h2>{section.title}</h2><p>{section.slug === "stream" ? "Entertainment picks across the ecosystem." : section.slug === "sports" ? "Scores, activities, and sports communities." : "Tickets, events, and local experiences."}</p></div></div><div className="desktop-media-grid">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="desktop-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>{section.slug === "stream" ? "SMAJ Stream" : section.slug === "sports" ? "SMAJ Sports" : "SMAJ Events"}</small></div></Link>)}</div></section>)}
     </> : <section className="desktop-feed-section"><div className="desktop-feed-section-head"><div><h2>{tabTitle(activeTab)}</h2><p>{activeTab === "categories" ? "Browse every connected SMAJ PI HUB service." : "Switch services without leaving your dashboard."}</p></div><Link to="/app/services">See all</Link></div><ServiceList services={tabServices(activeTab)} mode="desktop" /></section>}
   </div><aside className="desktop-feed-side"><section><strong>Need help?</strong><div>{support.map(([Icon, title, text, , to]) => <Link to={to} key={title}><Icon /><span><b>{title}</b><small>{text}</small></span></Link>)}</div></section><section><strong>Why SMAJ PI HUB?</strong><div>{why.map(([Icon, title, text]) => <article key={title}><Icon /><span><b>{title}</b><small>{text}</small></span></article>)}</div></section></aside></div>
@@ -340,6 +355,8 @@ const DashboardPage = () => {
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
+  const [streamRows, setStreamRows] = useState<DashboardStreamRow[]>([]);
+  const [streamLoading, setStreamLoading] = useState(true);
   const setActiveTab = useCallback((tab: DiscoveryTab) => {
     setActiveTabState(tab);
     setParams((current) => {
@@ -380,6 +397,24 @@ const DashboardPage = () => {
     void loadProducts(true);
   }, [loadProducts]);
 
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      getStreamCatalog("trending"),
+      getStreamCatalog("series"),
+      getStreamCatalog("movies", 1, "primary_release_date.desc"),
+    ]).then(([trending, series, releases]) => {
+      if (!active) return;
+      const usable = (items: StreamCatalogTitle[]) => items.filter((item) => item.posterUrl || item.backdropUrl).slice(0, 8);
+      setStreamRows([
+        { title: "Trending now", description: "Movies and series people are watching now.", seeAll: "/app/services/stream", items: usable(trending.results) },
+        { title: "Popular series", description: "Popular shows ready to discover.", seeAll: "/app/services/stream/series", items: usable(series.results) },
+        { title: "New releases", description: "Recently released entertainment.", seeAll: "/app/services/stream/movies", items: usable(releases.results) },
+      ].filter((row) => row.items.length));
+    }).catch(() => active && setStreamRows([])).finally(() => active && setStreamLoading(false));
+    return () => { active = false; };
+  }, []);
+
   const sellers = useMemo(() => {
     const map = new Map<string, SellerCard>();
     products.forEach((product) => {
@@ -410,7 +445,7 @@ const DashboardPage = () => {
     return <main className="private-home"><PrivateSkeleton variant="home" count={6} /></main>;
   }
 
-  return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} /></main>;
+  return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} /></main>;
 };
 
 export default DashboardPage;
