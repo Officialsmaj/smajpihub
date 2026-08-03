@@ -345,7 +345,6 @@ const Header = () => {
               <div className="smaj-mobile-pref-item">
                 <div className="smaj-mobile-pref-label smaj-mobile-pref-lang-btn" aria-label="Language">
                   <LanguageIcon fontSize="small" />
-                  <span>{t(`language.${language === "fr" ? "french" : "english"}`)}</span>
                   <select
                     className="smaj-mobile-language-select"
                     value={language}
