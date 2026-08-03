@@ -582,6 +582,36 @@ h4, h5, h6 {
   transform: none;
 }
 
+.smaj-language-picker {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.smaj-language-picker select,
+.smaj-mobile-language-select {
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.smaj-language-picker option,
+.smaj-mobile-language-select option {
+  color: #172033;
+  background: #ffffff;
+}
+
+.smaj-mobile-language-select {
+  margin-left: 8px;
+}
+
 .smaj-username {
   font-size: 14px;
   font-weight: 600;

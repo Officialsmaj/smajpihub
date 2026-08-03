@@ -5,6 +5,7 @@ import GlobalFeedbackCenter from "./components/GlobalFeedbackCenter";
 import useSliceReveal from "./hooks/useSliceReveal";
 import { FoodCartProvider } from "./contexts/FoodCartContext";
 import { HealthBookingProvider } from "./contexts/HealthBookingContext";
+import AutomaticPageTranslator from "./components/AutomaticPageTranslator";
 
 function App() {
   useSliceReveal();
@@ -18,6 +19,7 @@ function App() {
       </FoodCartProvider>
       <AuthToast />
       <GlobalFeedbackCenter />
+      <AutomaticPageTranslator />
     </>
   );
 }

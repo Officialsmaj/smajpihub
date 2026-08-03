@@ -27,6 +27,7 @@ import mountStreamEndpoints from "./handlers/stream";
 import mountSportsEndpoints from "./handlers/sports";
 import mountJobsEndpoints from "./handlers/jobs";
 import mountTransportEndpoints from "./handlers/transport";
+import mountTranslationEndpoints from "./handlers/translations";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -259,6 +260,10 @@ app.use("/jobs", jobsRouter);
 const transportRouter = express.Router();
 mountTransportEndpoints(transportRouter);
 app.use("/transport", transportRouter);
+
+const translationRouter = express.Router();
+mountTranslationEndpoints(translationRouter);
+app.use("/translations", translationRouter);
 
 app.get("/health", async (_, res) => {
   const ready = Boolean(

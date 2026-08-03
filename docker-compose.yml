@@ -42,6 +42,20 @@ services:
       MONGODB_USERNAME: ${MONGODB_USERNAME}
       MONGODB_PASSWORD: ${MONGODB_PASSWORD}
       FRONTEND_URL: ${FRONTEND_URL}
+      TRANSLATION_API_URL: ${TRANSLATION_API_URL:-http://libretranslate:5000}
+      TRANSLATION_API_KEY: ${TRANSLATION_API_KEY:-}
+
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    environment:
+      LT_LOAD_ONLY: en,fr
+      LT_DISABLE_WEB_UI: "true"
+      LT_BATCH_LIMIT: "50"
+      LT_CHAR_LIMIT: "100000"
+    volumes:
+      - ${DATA_DIRECTORY}/libretranslate:/home/libretranslate/.local
+    expose:
+      - "5000"
 
   mongo:
     image: mongo:7.0

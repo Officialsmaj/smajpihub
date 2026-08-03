@@ -46,6 +46,8 @@ interface Environment {
   sports_api_key: string;
   sports_league_ids: string[];
   sports_cache_seconds: number;
+  translation_api_url: string;
+  translation_api_key: string;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -108,6 +110,8 @@ const env: Environment = {
     60,
     Number(process.env.SPORTS_CACHE_SECONDS) || 900,
   ),
+  translation_api_url: String(process.env.TRANSLATION_API_URL || "http://localhost:5000").trim(),
+  translation_api_key: String(process.env.TRANSLATION_API_KEY || "").trim(),
 };
 
 if (

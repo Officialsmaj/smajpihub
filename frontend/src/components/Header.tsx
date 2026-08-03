@@ -10,6 +10,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { useAuthContext } from "../contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import LoginWithPiButton from "./LoginWithPiButton";
 import logoImage from "/logo.png";
 
@@ -70,11 +71,25 @@ const readRecentSearches = () => {
 
 const readPublicTheme = (): "light" | "dark" => window.localStorage.getItem("smaj_public_theme") === "dark" ? "dark" : "light";
 
-const UtilityIcons = ({ theme, onToggleTheme }: { theme: "light" | "dark"; onToggleTheme: () => void }) => (
+const UtilityIcons = ({
+  theme,
+  language,
+  onLanguageChange,
+  onToggleTheme,
+}: {
+  theme: "light" | "dark";
+  language: string;
+  onLanguageChange: (language: string) => void;
+  onToggleTheme: () => void;
+}) => (
   <div className="smaj-utility-icons" aria-label="Utility actions">
-    <button type="button" className="smaj-utility-icon-btn" aria-label="Language and region">
+    <label className="smaj-language-picker" aria-label="Language and region">
       <LanguageIcon fontSize="small" />
-    </button>
+      <select value={language} onChange={(event) => onLanguageChange(event.target.value)}>
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+      </select>
+    </label>
     <button type="button" className="smaj-utility-icon-btn" aria-label="Toggle display mode" onClick={onToggleTheme}>
       {theme === "dark" ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
     </button>
@@ -82,6 +97,7 @@ const UtilityIcons = ({ theme, onToggleTheme }: { theme: "light" | "dark"; onTog
 );
 
 const Header = () => {
+  const { t, i18n } = useTranslation();
   const { isAuthenticated, isLoading } = useAuthContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
@@ -98,6 +114,11 @@ const Header = () => {
     setMobileThemeMode(theme);
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem("smaj_public_theme", theme);
+  };
+  const language = i18n.resolvedLanguage === "fr" ? "fr" : "en";
+  const selectLanguage = (nextLanguage: string) => {
+    void i18n.changeLanguage(nextLanguage);
+    document.documentElement.lang = nextLanguage;
   };
   useEffect(() => {
     document.documentElement.dataset.theme = mobileThemeMode;
@@ -258,8 +279,8 @@ const Header = () => {
             <span>Close</span>
             <CloseIcon fontSize="small" />
           </button>
-          <NavLink to="/home">Home</NavLink>
-          <NavLink to="/about">About</NavLink>
+          <NavLink to="/home">{t("nav.home")}</NavLink>
+          <NavLink to="/about">{t("nav.about")}</NavLink>
           <div
             className={`smaj-services-menu ${isServicesMenuOpen ? "smaj-services-menu-open" : ""}`}
             onMouseEnter={() => setIsServicesMenuOpen(true)}
@@ -272,7 +293,7 @@ const Header = () => {
               aria-expanded={isServicesMenuOpen}
               aria-label="Toggle services menu"
             >
-              <span>Services</span>
+              <span>{t("nav.services")}</span>
               {isServicesMenuOpen ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
             </button>
             <div className="smaj-services-dropdown" role="menu" aria-label="Services categories">
@@ -290,9 +311,9 @@ const Header = () => {
               ))}
             </div>
           </div>
-          {navItems.map((item) => (
+          {navItems.map((item, index) => (
             <NavLink key={item.to} to={item.to}>
-              {item.label}
+              {t(["nav.whitePaper", "nav.howItWorks", "nav.join", "nav.contact"][index])}
             </NavLink>
           ))}
           <div className="smaj-mobile-auth-sheet">
@@ -322,20 +343,29 @@ const Header = () => {
                 </div>
               </div>
               <div className="smaj-mobile-pref-item">
-                <button type="button" className="smaj-mobile-pref-label smaj-mobile-pref-lang-btn" aria-label="Language">
+                <div className="smaj-mobile-pref-label smaj-mobile-pref-lang-btn" aria-label="Language">
                   <LanguageIcon fontSize="small" />
-                  <span>English</span>
-                </button>
+                  <span>{t(`language.${language === "fr" ? "french" : "english"}`)}</span>
+                  <select
+                    className="smaj-mobile-language-select"
+                    value={language}
+                    onChange={(event) => selectLanguage(event.target.value)}
+                    aria-label={t("language.label")}
+                  >
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                  </select>
+                </div>
               </div>
             </div>
             {isAuthenticated ? (
-              <NavLink to="/dashboard" className="smaj-login-btn" onClick={() => setIsMobileMenuOpen(false)}>Go to Dashboard</NavLink>
+              <NavLink to="/dashboard" className="smaj-login-btn" onClick={() => setIsMobileMenuOpen(false)}>{t("nav.dashboard")}</NavLink>
             ) : (
               <LoginWithPiButton className="smaj-login-btn">
                 <span className="smaj-login-icon" aria-hidden="true">
                   <LoginIcon fontSize="small" />
                 </span>
-                <span className="smaj-login-text">{isLoading ? "Signing in..." : "Login with Pi"}</span>
+                <span className="smaj-login-text">{isLoading ? t("nav.signingIn") : t("nav.login")}</span>
               </LoginWithPiButton>
             )}
           </div>
@@ -353,16 +383,21 @@ const Header = () => {
             <SearchIcon fontSize="small" />
           </button>
           {isAuthenticated ? (
-            <NavLink to="/dashboard" className="smaj-login-btn">Go to Dashboard</NavLink>
+            <NavLink to="/dashboard" className="smaj-login-btn">{t("nav.dashboard")}</NavLink>
           ) : (
             <>
               <LoginWithPiButton className="smaj-login-btn">
                 <span className="smaj-login-icon" aria-hidden="true">
                   <LoginIcon fontSize="small" />
                 </span>
-                <span className="smaj-login-text">{isLoading ? "Signing in..." : "Login with Pi"}</span>
+                <span className="smaj-login-text">{isLoading ? t("nav.signingIn") : t("nav.login")}</span>
               </LoginWithPiButton>
-              <UtilityIcons theme={mobileThemeMode} onToggleTheme={() => selectTheme(mobileThemeMode === "dark" ? "light" : "dark")} />
+              <UtilityIcons
+                theme={mobileThemeMode}
+                language={language}
+                onLanguageChange={selectLanguage}
+                onToggleTheme={() => selectTheme(mobileThemeMode === "dark" ? "light" : "dark")}
+              />
             </>
           )}
         </div>

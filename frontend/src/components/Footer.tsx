@@ -9,10 +9,12 @@ import MailOutlineOutlinedIcon from "@mui/icons-material/MailOutlineOutlined";
 import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
 import ArrowUpwardOutlinedIcon from "@mui/icons-material/ArrowUpwardOutlined";
 import styles from "./Footer.module.css";
+import { useTranslation } from "react-i18next";
 
 const companyEmail = "info@smajpihub.com";
 
 const Footer = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -40,39 +42,39 @@ const Footer = () => {
       <div className={styles.footerGrid}>
         <div>
           <h4>SMAJ PI HUB</h4>
-          <p>Built for Pi wallet access, with SMAJ Token utility expanding across the ecosystem.</p>
+          <p>{t("footer.description")}</p>
         </div>
         <div>
-          <h4>Platform</h4>
-          <Link to="/home">Home</Link>
-          <Link to="/about">About</Link>
-          <Link to="/services">Services</Link>
-          <Link to="/white-paper">White Paper</Link>
-          <Link to="/trust">Trust & Safety</Link>
-          <Link to="/company">Company</Link>
-          <Link to="/contact">Contact</Link>
+          <h4>{t("footer.platform")}</h4>
+          <Link to="/home">{t("nav.home")}</Link>
+          <Link to="/about">{t("nav.about")}</Link>
+          <Link to="/services">{t("nav.services")}</Link>
+          <Link to="/white-paper">{t("nav.whitePaper")}</Link>
+          <Link to="/trust">{t("footer.trust")}</Link>
+          <Link to="/company">{t("footer.company")}</Link>
+          <Link to="/contact">{t("nav.contact")}</Link>
         </div>
         <div>
-          <h4>Programs</h4>
-          <Link to="/affiliate">Affiliate Program</Link>
-          <Link to="/onboarding">Apply to Join</Link>
-          <Link to="/collaborate">Collaborate With Us</Link>
-          <Link to="/partners">Partners</Link>
-          <Link to="/community">Community</Link>
-          <Link to="/developers">Developers</Link>
+          <h4>{t("footer.programs")}</h4>
+          <Link to="/affiliate">{t("footer.affiliate")}</Link>
+          <Link to="/onboarding">{t("nav.join")}</Link>
+          <Link to="/collaborate">{t("footer.collaborate")}</Link>
+          <Link to="/partners">{t("footer.partners")}</Link>
+          <Link to="/community">{t("footer.community")}</Link>
+          <Link to="/developers">{t("footer.developers")}</Link>
         </div>
         <div>
-          <h4>Key Services</h4>
+          <h4>{t("footer.keyServices")}</h4>
           <Link to="/services/store">STORE</Link>
           <Link to="/services/jobs">JOBS</Link>
           <Link to="/services/health">HEALTH</Link>
           <Link to="/services/education">EDUCATION</Link>
           <Link to="/services/sports">SPORTS</Link>
           <Link to="/services/stream">STREAM</Link>
-          <Link to="/services">View All Services</Link>
+          <Link to="/services">{t("footer.viewAll")}</Link>
         </div>
         <div>
-          <h4>Social</h4>
+          <h4>{t("footer.social")}</h4>
           <a href={`mailto:${companyEmail}`}><MailOutlineOutlinedIcon fontSize="small" />{companyEmail}</a>
           <div className={styles.socialRow} aria-label="Social links">
             <a className={styles.socialIcon} href="https://x.com/smajpihub" aria-label="X" target="_blank" rel="noreferrer">
@@ -103,28 +105,28 @@ const Footer = () => {
             <img src="/smaj_ecosystem_logo.png" alt="SMAJ Ecosystem Logo" className={styles.logoImg} />
           </a>
           <p className={styles.poweredText}>
-            <span>Powered By SMAJ Ecosystem</span>
+            <span>{t("footer.poweredBy")}</span>
           </p>
         </div>
 
         <div className={styles.legalLinksRow}>
-          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/privacy">{t("footer.privacy")}</Link>
           <span className={styles.legalSeparator}>|</span>
-          <Link to="/terms">Terms & Conditions</Link>
+          <Link to="/terms">{t("footer.terms")}</Link>
           <span className={styles.legalSeparator}>|</span>
-          <Link to="/cookies">Cookie Policy</Link>
+          <Link to="/cookies">{t("footer.cookies")}</Link>
           <span className={styles.legalSeparator}>|</span>
-          <Link to="/report-abuse">Report Abuse</Link>
+          <Link to="/report-abuse">{t("footer.reportAbuse")}</Link>
           <span className={styles.legalSeparator}>|</span>
-          <Link to="/seller-agreement">Seller Agreement</Link>
+          <Link to="/seller-agreement">{t("footer.sellerAgreement")}</Link>
         </div>
 
-        <p className={styles.copyright}>&copy; 2026 SMAJ PI HUB. All rights reserved.</p>
+        <p className={styles.copyright}>&copy; 2026 SMAJ PI HUB. {t("footer.rights")}</p>
 
       </div>
 
 
-      <Tooltip title="Scroll to top" placement="left">
+      <Tooltip title={t("footer.scrollTop")} placement="left">
         <button
           type="button"
           onClick={scrollToTop}

@@ -6,12 +6,13 @@
 > intent to make it 100% secure, infinitely scalable, or suitable for a live production app handling
 > real Pi on the mainnet. Use it at your own risk and customize it as needed to improve security and scalability.
 
-The production deployment uses docker-compose, and needs to run 4 containers:
+The production deployment uses docker-compose, and needs to run 5 containers:
 
 - **reverse-proxy**: a simple nginx setup to reverse-proxy requests to the frontend and backend containers
 - **backend**: the backend app (a very simple JSON API built with Express)
 - **mongo**: the database (uses an extremely simple single-instance MongoDB setup)
 - **frontend**: the SPA frontend app (built with React and Vite)
+- **libretranslate**: the private automatic English-to-French translation service
 
 ## Setup steps
 
@@ -177,3 +178,15 @@ This should verify your frontend domain and mark it as verified (green check mar
 
 Open your frontend app's URL in the Pi Browser and make sure everything works by signing in and placing
 an order, then proceeding with the payment (you will need a testnet wallet in order to complete this step).
+## Automatic translation
+
+French automatic fallback requires a LibreTranslate service. Docker Compose starts the included private service automatically and stores its language models under `DATA_DIRECTORY/libretranslate`.
+
+For deployments where the backend and LibreTranslate run as separate services (for example Render), set these backend environment variables:
+
+```env
+TRANSLATION_API_URL=https://your-private-libretranslate-service.example.com
+TRANSLATION_API_KEY=
+```
+
+Keep the LibreTranslate service private when possible. An API key is optional for the bundled private instance and should be configured when the provider requires one.

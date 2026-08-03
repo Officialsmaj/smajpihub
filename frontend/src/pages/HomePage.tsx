@@ -19,6 +19,7 @@ import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import TravelExploreOutlinedIcon from "@mui/icons-material/TravelExploreOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import WalletOutlinedIcon from "@mui/icons-material/WalletOutlined";
+import { useTranslation } from "react-i18next";
 
 const publicServicePath = (service: ServiceDefinition) =>
   `/services/${service.slug === "food" ? "food-delivery" : service.slug}`;
@@ -66,6 +67,7 @@ const mvpFeatures = [
 ] as const;
 
 const HomePage = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading } = useAuthContext();
   const navigate = useNavigate();
   const [servicesPage, setServicesPage] = useState(0);
@@ -107,18 +109,17 @@ const HomePage = () => {
         <section className="home-hero public-home-hero">
           <div className="home-hero-grid public-home-hero-grid">
             <div>
-              <span className="home-kicker">ONE PI IDENTITY. ONE WALLET. MULTIPLE SERVICES.</span>
+              <span className="home-kicker">{t("home.kicker")}</span>
               <h1>SMAJ PI HUB</h1>
               <p>
-                SMAJ PI HUB connects verified users to marketplace, services, opportunities, and daily digital tools
-                through one Pi identity and one Pi wallet.
+                {t("home.description")}
               </p>
               <div className="home-hero-cta">
                 <LoginWithPiButton className="home-hero-primary-btn">
-                  {isLoading ? "Signing in..." : "Login with Pi"}
+                  {isLoading ? t("nav.signingIn") : t("nav.login")}
                 </LoginWithPiButton>
                 <Link to="/services" className="home-hero-secondary-btn">
-                  Explore Services
+                  {t("home.explore")}
                 </Link>
               </div>
             </div>
@@ -139,21 +140,18 @@ const HomePage = () => {
 
         <section className="home-section public-home-section">
           <div className="home-section-head public-home-section-head">
-            <span className="home-kicker">CLEAR PRODUCT PROMISE</span>
-            <h2>One Access Point for Real Pi Utility</h2>
-            <p>
-              The public page explains the platform. The private dashboard becomes the workspace where users actually
-              explore, manage, and use SMAJ services.
-            </p>
+            <span className="home-kicker">{t("home.promise")}</span>
+            <h2>{t("home.promiseTitle")}</h2>
+            <p>{t("home.promiseText")}</p>
           </div>
           <div className="home-highlight-grid public-home-pillar-grid">
-            {valuePillars.map(({ title, text, Icon }) => (
+            {valuePillars.map(({ title, Icon }, index) => (
               <article key={title} className="home-highlight-card public-home-icon-card">
                 <span className="public-home-card-icon">
                   <Icon />
                 </span>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{t(`home.pillars.${index}.title`)}</h3>
+                <p>{t(`home.pillars.${index}.text`)}</p>
               </article>
             ))}
           </div>
@@ -161,12 +159,9 @@ const HomePage = () => {
 
         <section className="home-section public-home-section public-home-services-section">
           <div className="home-section-head public-home-section-head">
-            <span className="home-kicker">SMAJ PI HUB SERVICES</span>
-            <h2>15 Connected Services, One Familiar Direction</h2>
-            <p>
-              Users should instantly understand what each platform does, which service is live, and how everything fits
-              into the Pi-powered hub.
-            </p>
+            <span className="home-kicker">{t("home.servicesKicker")}</span>
+            <h2>{t("home.servicesTitle")}</h2>
+            <p>{t("home.servicesText")}</p>
           </div>
           <div className="public-home-service-carousel">
             <div className="public-home-service-carousel-top">
@@ -208,7 +203,7 @@ const HomePage = () => {
                               <p>{service.items.slice(0, 2).join(" • ")}</p>
                             </div>
                             <small className={getServiceStatus(service) ? "live-rating-badge" : service.inProgress ? "status-chip in-progress" : undefined}>
-                              {getServiceStatus(service) ? "LIVE" : service.inProgress ? "IN PROGRESS" : "SOON"}
+                              {getServiceStatus(service) ? t("home.live") : service.inProgress ? t("home.inProgress") : t("home.soon")}
                             </small>
                           </Link>
                         ))}
@@ -223,21 +218,18 @@ const HomePage = () => {
 
         <section className="home-section public-home-section public-home-mvp-section">
           <div className="public-home-mvp-copy">
-            <span className="home-kicker">MVP STARTS HERE</span>
-            <h2>SMAJ Store Is the First Marketplace Layer</h2>
-            <p>
-              The launch focus is a trusted marketplace where users can discover products, sellers can list items, and
-              Pi-powered payments can become practical inside a real service flow.
-            </p>
+            <span className="home-kicker">{t("home.mvpKicker")}</span>
+            <h2>{t("home.mvpTitle")}</h2>
+            <p>{t("home.mvpText")}</p>
             <Link to="/services/store" className="home-hero-secondary-btn">
-              View Store Service
+              {t("home.viewStore")}
             </Link>
           </div>
           <div className="public-home-mvp-grid">
-            {mvpFeatures.map(([title, Icon]) => (
+            {mvpFeatures.map(([title, Icon], index) => (
               <article key={title} className="public-home-mini-card">
                 <Icon />
-                <strong>{title}</strong>
+                <strong>{t(`home.mvpFeatures.${index}`)}</strong>
               </article>
             ))}
           </div>
@@ -245,16 +237,16 @@ const HomePage = () => {
 
         <section className="home-section public-home-section">
           <div className="home-section-head public-home-section-head">
-            <span className="home-kicker">HOW IT WORKS</span>
-            <h2>A Simple Flow Users Can Follow</h2>
+            <span className="home-kicker">{t("home.howKicker")}</span>
+            <h2>{t("home.howTitle")}</h2>
           </div>
           <div className="public-home-steps">
-            {howItWorks.map(([title, text, Icon], index) => (
+            {howItWorks.map(([title, , Icon], index) => (
               <article key={title}>
                 <span>{index + 1}</span>
                 <Icon />
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{t(`home.steps.${index}.title`)}</h3>
+                <p>{t(`home.steps.${index}.text`)}</p>
               </article>
             ))}
           </div>
@@ -262,21 +254,18 @@ const HomePage = () => {
 
         <section className="home-section public-home-section">
           <div className="home-section-head public-home-section-head">
-            <span className="home-kicker">TRUST LAYER</span>
-            <h2>Built Around Verified Participation</h2>
-            <p>
-              The platform message stays practical: trust, clear service access, marketplace safety, and real-world Pi
-              utility.
-            </p>
+            <span className="home-kicker">{t("home.trustKicker")}</span>
+            <h2>{t("home.trustTitle")}</h2>
+            <p>{t("home.trustText")}</p>
           </div>
           <div className="home-trust-grid">
-            {trustFeatures.map(([title, text, Icon]) => (
+            {trustFeatures.map(([title, , Icon], index) => (
               <article key={title} className="home-trust-card public-home-icon-card">
                 <span className="public-home-card-icon">
                   <Icon />
                 </span>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{t(`home.trustFeatures.${index}.title`)}</h3>
+                <p>{t(`home.trustFeatures.${index}.text`)}</p>
               </article>
             ))}
           </div>
@@ -284,11 +273,11 @@ const HomePage = () => {
 
         <section className="home-section public-home-section public-home-final-cta">
           <span className="home-kicker">SMAJ PI HUB</span>
-          <h2>One Pi Identity. One Wallet. Multiple Services. Real Utility.</h2>
+          <h2>{t("home.finalTitle")}</h2>
           <div className="home-hero-cta">
-            <LoginWithPiButton className="home-hero-primary-btn">Login with Pi</LoginWithPiButton>
+            <LoginWithPiButton className="home-hero-primary-btn">{t("nav.login")}</LoginWithPiButton>
             <Link to="/white-paper" className="home-hero-secondary-btn">
-              Read White Paper
+              {t("home.readWhitePaper")}
             </Link>
           </div>
         </section>
