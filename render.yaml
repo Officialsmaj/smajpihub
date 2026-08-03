@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: smajpihub
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: TRANSLATION_API_URL
+        fromService:
+          type: web
+          name: smajpihub-translate
+          property: hostport
+
+  - type: web
+    name: smajpihub-translate
+    runtime: image
+    plan: free
+    image:
+      url: docker.io/libretranslate/libretranslate:latest
+    healthCheckPath: /languages
+    envVars:
+      - key: LT_LOAD_ONLY
+        value: en,fr
+      - key: LT_DISABLE_WEB_UI
+        value: "true"
+      - key: LT_BATCH_LIMIT
+        value: "50"
+      - key: LT_CHAR_LIMIT
+        value: "100000"
+      - key: LT_REQ_LIMIT
+        value: "120"

@@ -8,6 +8,11 @@ const MAX_TEXTS = 50;
 const MAX_TEXT_LENGTH = 2_000;
 const MAX_REQUESTS_PER_MINUTE = 120;
 
+const getProviderBaseUrl = () => {
+  const configured = env.translation_api_url.replace(/\/+$/, "");
+  return /^https?:\/\//i.test(configured) ? configured : `http://${configured}`;
+};
+
 const mountTranslationEndpoints = (router: Router) => {
   router.post("/batch", async (req, res) => {
     const client = req.ip || req.socket.remoteAddress || "unknown";
@@ -39,7 +44,7 @@ const mountTranslationEndpoints = (router: Router) => {
     try {
       if (missing.length) {
         const response = await axios.post(
-          `${env.translation_api_url.replace(/\/+$/, "")}/translate`,
+          `${getProviderBaseUrl()}/translate`,
           {
             q: missing,
             source: "auto",
