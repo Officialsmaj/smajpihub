@@ -3,6 +3,14 @@ import { showFeedback } from "./feedback";
 
 const PRODUCTION_API_BASE_URL = "https://smajpihub.onrender.com";
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
+const MAX_READ_RETRIES = 2;
+const RETRY_DELAYS_MS = [1_500, 3_000] as const;
+const STARTUP_NOTICE_COOLDOWN_MS = 15_000;
+let lastStartupNoticeAt = 0;
+
+type RetryableRequestConfig = AxiosRequestConfig & {
+  __smajRetryCount?: number;
+};
 const API_CREDENTIALS_CONFIG: Pick<AxiosRequestConfig, "withCredentials"> = {
   withCredentials: true,
 };
@@ -58,9 +66,21 @@ axiosClient.interceptors.request.use((config) => {
 
 axiosClient.interceptors.response.use(
   response => response,
-  error => {
+  async error => {
+    const config = error?.config as RetryableRequestConfig | undefined;
+    const method = String(config?.method || "get").toLowerCase();
+    const status = Number(error?.response?.status || 0);
+    const isReadRequest = method === "get" || method === "head";
+    const isTemporaryFailure = error?.code === "ECONNABORTED" || !error?.response || [502, 503, 504].includes(status);
+    const retryCount = config?.__smajRetryCount || 0;
+
+    if (config && isReadRequest && isTemporaryFailure && retryCount < MAX_READ_RETRIES) {
+      config.__smajRetryCount = retryCount + 1;
+      await new Promise(resolve => window.setTimeout(resolve, RETRY_DELAYS_MS[retryCount]));
+      return axiosClient.request(config);
+    }
+
     if (typeof window !== "undefined") {
-      const status = Number(error?.response?.status || 0);
       const backendMessage = error?.response?.data?.message;
       const message = typeof backendMessage === "string" && backendMessage.trim()
         ? backendMessage
@@ -68,12 +88,17 @@ axiosClient.interceptors.response.use(
           ? "Your session has expired. Please sign in again."
           : status === 403
             ? "You do not have permission to complete this action."
-            : error?.code === "ECONNABORTED"
-              ? "The request took too long. Please try again."
+            : isReadRequest && isTemporaryFailure
+              ? "SMAJ PI HUB is still starting. Please wait a moment and try again."
               : !error?.response
                 ? "The service could not be reached. Check your connection and try again."
                 : "Something went wrong. Please try again.";
-      showFeedback(message, "error");
+      const isStartupMessage = isReadRequest && isTemporaryFailure;
+      const now = Date.now();
+      if (!isStartupMessage || now - lastStartupNoticeAt >= STARTUP_NOTICE_COOLDOWN_MS) {
+        showFeedback(message, isStartupMessage ? "info" : "error");
+        if (isStartupMessage) lastStartupNoticeAt = now;
+      }
     }
     return Promise.reject(error);
   },
