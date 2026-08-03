@@ -10,6 +10,7 @@ import TrustBadge from "../../components/TrustBadge";
 import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
+import { disablePushNotifications, enablePushNotifications, getPushState } from "../../lib/pushNotifications";
 
 type SavedSettings = {
   fullName: string;
@@ -81,6 +82,9 @@ const SettingsPage = () => {
     allowContact: saved.allowContact ?? true,
   });
   const [message, setMessage] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushSupported, setPushSupported] = useState(true);
+  const [pushBusy, setPushBusy] = useState(false);
   const [showSignOut, setShowSignOut] = useState(false);
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -106,6 +110,25 @@ const SettingsPage = () => {
       });
     }).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    getPushState().then((state) => { setPushSupported(state.supported); setPushEnabled(state.subscribed); }).catch(() => setPushSupported(false));
+  }, []);
+
+  const togglePhoneNotifications = async () => {
+    setPushBusy(true);
+    setMessage("");
+    try {
+      if (pushEnabled) await disablePushNotifications();
+      else await enablePushNotifications();
+      setPushEnabled(!pushEnabled);
+      setMessage(pushEnabled ? "Phone notifications disabled on this device." : "Phone notifications enabled on this device.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Phone notifications could not be changed.");
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   const setField = <Key extends keyof SavedSettings>(key: Key, value: SavedSettings[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -290,6 +313,7 @@ const SettingsPage = () => {
 
         <section>
           <h2>Notification Settings</h2>
+          <div className="setting-line toggle-line"><span><strong>Phone push notifications</strong><small>{pushSupported ? "Show important alerts even when SMAJ PI HUB is closed." : "Install this site on your Home Screen and use a supported browser."}</small></span><button type="button" className="private-secondary-button" disabled={!pushSupported || pushBusy} onClick={() => void togglePhoneNotifications()}>{pushBusy ? "Please wait..." : pushEnabled ? "Disable" : "Enable"}</button></div>
           <label className="setting-line toggle-line"><span><strong>Email notifications</strong><small>Receive important account and support updates.</small></span><input type="checkbox" checked={form.emailNotifications} onChange={(event) => setField("emailNotifications", event.target.checked)} /></label>
           <label className="setting-line toggle-line"><span><strong>Product/order notifications</strong><small>Get marketplace listing, order, and payment updates.</small></span><input type="checkbox" checked={form.productNotifications} onChange={(event) => setField("productNotifications", event.target.checked)} /></label>
           <label className="setting-line toggle-line"><span><strong>Message notifications</strong><small>Get alerts for buyer and seller conversations.</small></span><input type="checkbox" checked={form.messageNotifications} onChange={(event) => setField("messageNotifications", event.target.checked)} /></label>

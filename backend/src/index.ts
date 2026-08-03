@@ -311,6 +311,7 @@ const start = async () => {
       app.locals.conversationCollection = db.collection("conversations");
       app.locals.messageCollection = db.collection("messages");
       app.locals.notificationCollection = db.collection("notifications");
+      app.locals.pushSubscriptionCollection = db.collection("push_subscriptions");
       app.locals.onboardingCollection = db.collection(
         "onboarding_applications",
       );
@@ -368,6 +369,8 @@ app.locals.jobCollection = db.collection("jobs");
           userId: 1,
           createdAt: -1,
         }),
+        app.locals.pushSubscriptionCollection.createIndex({ endpoint: 1 }, { unique: true }),
+        app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
         app.locals.streamContentCollection.createIndex({
           creatorId: 1,
           createdAt: -1,

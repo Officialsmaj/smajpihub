@@ -13,6 +13,10 @@ if ('scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined))
+}
+
 const redirectPath = window.sessionStorage.getItem('smaj_redirect_path')
 if (redirectPath) {
   window.sessionStorage.removeItem('smaj_redirect_path')

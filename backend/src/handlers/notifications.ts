@@ -1,10 +1,39 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
+import { getVapidPublicKey, pushConfigured } from "../services/pushNotifications";
 
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
 
 export default function mountNotificationEndpoints(router: Router) {
+  router.get("/push/config", (_req, res) => res.json({ configured: pushConfigured(), publicKey: getVapidPublicKey() }));
+
+  router.get("/push/status", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.json({ subscribed: false });
+    const count = await req.app.locals.pushSubscriptionCollection.countDocuments({ userId: currentUser.uid });
+    return res.json({ subscribed: count > 0 });
+  });
+
+  router.post("/push/subscribe", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    const subscription = req.body?.subscription;
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) return res.status(400).json({ error: "invalid_subscription" });
+    await req.app.locals.pushSubscriptionCollection.updateOne(
+      { endpoint: subscription.endpoint },
+      { $set: { userId: currentUser.uid, endpoint: subscription.endpoint, subscription, userAgent: req.get("user-agent"), updatedAt: new Date() } },
+      { upsert: true },
+    );
+    return res.status(201).json({ subscribed: true });
+  });
+
+  router.post("/push/unsubscribe", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (currentUser && req.body?.endpoint) await req.app.locals.pushSubscriptionCollection.deleteOne({ userId: currentUser.uid, endpoint: req.body.endpoint });
+    return res.json({ subscribed: false });
+  });
+
   router.get("/", async (req, res) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) {
