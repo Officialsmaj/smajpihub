@@ -89,7 +89,7 @@ axiosClient.interceptors.response.use(
           : status === 403
             ? "You do not have permission to complete this action."
             : isReadRequest && isTemporaryFailure
-              ? "SMAJ PI HUB is still starting. Please wait a moment and try again."
+              ? "SMAJ PI HUB is still starting. Please wait a moment."
               : !error?.response
                 ? "The service could not be reached. Check your connection and try again."
                 : "Something went wrong. Please try again.";
