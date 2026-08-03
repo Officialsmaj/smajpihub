@@ -25,6 +25,40 @@ const imageDataPattern = /^data:image\/(png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$
 const documentDataPattern = /^data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,[a-z0-9+/=]+$/i;
 const allowedMessageTypes = new Set(["text", "voice", "image", "document"]);
 const safeAttachmentName = (value: unknown) => String(value || "Attachment").trim().replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-").slice(0, 120) || "Attachment";
+const pairKeyFor = (firstId: string, secondId: string) => [firstId, secondId].sort().join(":");
+
+const mergePairConversations = async (req: any, conversations: Array<Record<string, any>>): Promise<Record<string, any> | null> => {
+  if (!conversations.length) return null;
+  const sorted = [...conversations].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+  const primary = sorted[0];
+  const duplicates = sorted.slice(1);
+  const pairKey = pairKeyFor(primary.buyerId, primary.sellerId);
+  const unreadBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.unreadBy) ? item.unreadBy : []))];
+  const archivedBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.archivedBy) ? item.archivedBy : []))];
+
+  if (duplicates.length || primary.pairKey !== pairKey) {
+    for (const conversation of sorted) {
+      const conversationId = conversation._id.toString();
+      await req.app.locals.messageCollection.updateMany(
+        { conversationId },
+        { $set: {
+          conversationId: primary._id.toString(),
+          productId: conversation.productId || "",
+          productTitle: conversation.productTitle || "",
+          productImage: conversation.productImage || "",
+        } },
+      );
+    }
+  }
+  await req.app.locals.conversationCollection.updateOne(
+    { _id: primary._id },
+    { $set: { pairKey, unreadBy, archivedBy } },
+  );
+  for (const duplicate of duplicates) {
+    await req.app.locals.conversationCollection.deleteOne({ _id: duplicate._id });
+  }
+  return { ...primary, pairKey, unreadBy, archivedBy };
+};
 
 const enrichConversations = async (req: any, currentUser: Record<string, any>, conversations: Array<Record<string, any>>) => {
   const otherUserIds = conversations
@@ -64,7 +98,14 @@ export default function mountMessageEndpoints(router: Router) {
     if (!currentUser) return res.status(200).json({ conversations: [] });
     const uid = currentUser.uid;
     const conversations = await req.app.locals.conversationCollection.find({ participants: uid }).sort({ updatedAt: -1 }).toArray();
-    return res.status(200).json({ conversations: await enrichConversations(req, currentUser, conversations) });
+    const grouped = new Map<string, Array<Record<string, any>>>();
+    conversations.forEach((conversation: Record<string, any>) => {
+      const key = conversation.pairKey || pairKeyFor(conversation.buyerId, conversation.sellerId);
+      grouped.set(key, [...(grouped.get(key) || []), conversation]);
+    });
+    const merged = (await Promise.all([...grouped.values()].map((items) => mergePairConversations(req, items)))).filter(Boolean) as Array<Record<string, any>>;
+    merged.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+    return res.status(200).json({ conversations: await enrichConversations(req, currentUser, merged) });
   });
 
   router.post("/start", async (req, res) => {
@@ -74,9 +115,18 @@ export default function mountMessageEndpoints(router: Router) {
     if (!ObjectId.isValid(productId)) return res.status(400).json({ error: "bad_request", message: "Invalid product id" });
     const product = await req.app.locals.productCollection.findOne({ _id: new ObjectId(productId) });
     if (!product || product.sellerId === user.uid) return res.status(400).json({ error: "bad_request", message: "Conversation cannot be created" });
-    let conversation = await req.app.locals.conversationCollection.findOne({ buyerId: user.uid, sellerId: product.sellerId, productId });
+    const pairKey = pairKeyFor(user.uid, product.sellerId);
+    const pairConversations = await req.app.locals.conversationCollection.find({
+      $or: [
+        { pairKey },
+        { buyerId: user.uid, sellerId: product.sellerId },
+        { buyerId: product.sellerId, sellerId: user.uid },
+      ],
+    }).sort({ updatedAt: -1 }).toArray();
+    let conversation: Record<string, any> | null = await mergePairConversations(req, pairConversations);
     if (!conversation) {
       const document = {
+        pairKey,
         buyerId: user.uid,
         buyerName: user.displayName || user.username,
         sellerId: product.sellerId,
@@ -90,8 +140,18 @@ export default function mountMessageEndpoints(router: Router) {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      const result = await req.app.locals.conversationCollection.insertOne(document);
-      conversation = { ...document, _id: result.insertedId };
+      try {
+        const result = await req.app.locals.conversationCollection.insertOne(document);
+        conversation = { ...document, _id: result.insertedId };
+      } catch (error: any) {
+        if (error?.code !== 11000) throw error;
+        conversation = await req.app.locals.conversationCollection.findOne({ pairKey });
+        if (!conversation) throw error;
+      }
+    } else {
+      const productContext = { productId, productTitle: product.title, productImage: product.image, updatedAt: new Date() };
+      await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: productContext });
+      conversation = { ...conversation, ...productContext };
     }
     return res.status(200).json({ conversation: serialize(conversation) });
   });
@@ -172,6 +232,9 @@ export default function mountMessageEndpoints(router: Router) {
     const displayMessage = messageType === "voice" ? "Voice note" : messageType === "image" ? "Photo" : messageType === "document" ? `Document: ${attachmentName}` : message;
     const document = {
       conversationId: req.params.id,
+      productId: conversation.productId || "",
+      productTitle: conversation.productTitle || "",
+      productImage: conversation.productImage || "",
       senderId: user.uid,
       senderName: user.displayName || user.username,
       message: displayMessage,

@@ -17348,6 +17348,17 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   overflow-wrap: anywhere;
 }
 
+.chat-message-product { min-width: 210px; display: flex; align-items: center; gap: 9px; margin: -4px -6px 9px; padding: 7px; color: var(--smaj-text); background: var(--smaj-secondary-bg); border: 1px solid var(--smaj-border); border-radius: 10px; text-decoration: none; }
+.chat-message-product > img,
+.chat-message-product > svg { width: 42px; height: 42px; flex: 0 0 42px; object-fit: cover; border-radius: 8px; }
+.chat-message-product > svg { padding: 9px; box-sizing: border-box; color: var(--smaj-primary); background: var(--smaj-card); }
+.chat-message-product > span { min-width: 0; display: grid; gap: 2px; }
+.chat-message-product small,
+.chat-message-product strong { overflow: hidden; color: inherit !important; text-overflow: ellipsis; white-space: nowrap; }
+.chat-message-product small { opacity: .68; font-size: 9px; text-transform: uppercase; }
+.chat-message-product strong { font-size: 11px; }
+.chat-messages article.mine .chat-message-product { color: #111827; background: #ffffff; border-color: rgb(255 255 255 / .55); }
+
 .chat-messages article p {
   color: var(--smaj-text);
   line-height: 1.35;

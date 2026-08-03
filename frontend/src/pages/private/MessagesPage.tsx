@@ -506,8 +506,12 @@ const MessagesPage = () => {
                     <span>Marketplace product</span>
                   </div>
                 </div>
-                {messages.map((item) => (
+                {messages.map((item, index) => (
                   <article className={item.senderId === user?.uid ? "mine" : ""} key={item._id}>
+                    {item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                      {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
+                      <span><small>About this product</small><strong>{item.productTitle}</strong></span>
+                    </Link> : null}
                     {item.messageType === "voice" && item.audioDataUrl ? (
                       <div className="voice-message">
                         <MicNoneOutlinedIcon />

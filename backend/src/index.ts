@@ -367,6 +367,10 @@ app.locals.jobCollection = db.collection("jobs");
           participants: 1,
           updatedAt: -1,
         }),
+        app.locals.conversationCollection.createIndex(
+          { pairKey: 1 },
+          { unique: true, partialFilterExpression: { pairKey: { $type: "string" } } },
+        ),
         app.locals.messageCollection.createIndex({
           conversationId: 1,
           createdAt: 1,
