@@ -56,7 +56,7 @@
 }
 .housing-hero > div,
 .housing-search-head > div {
-  max-width: 760px;
+  max-width: 1023px;
 }
 .housing-hero small,
 .housing-search-head small,
@@ -390,7 +390,7 @@
 .housing-mobile-nav {
   display: none;
 }
-@media (max-width: 760px) {
+@media (max-width: 1023px) {
   .housing-page {
     padding-bottom: 60px;
   }

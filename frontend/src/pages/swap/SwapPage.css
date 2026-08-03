@@ -660,7 +660,7 @@
   text-decoration: none;
   font-size: 13px;
 }
-@media (max-width: 850px) {
+@media (max-width: 1023px) {
   .swap-header {
     flex-wrap: wrap;
     padding: 13px 17px;

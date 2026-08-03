@@ -180,7 +180,7 @@ const AddProductPage = () => {
   }, [form]);
 
   useEffect(() => {
-    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
     const sections = document.querySelectorAll<HTMLDetailsElement>(".smart-product-form .product-accordion");
     sections.forEach((section, index) => { section.open = index === 0; });
   }, []);

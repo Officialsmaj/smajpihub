@@ -220,7 +220,7 @@
   margin: 0;
   color: #5a6675;
 }
-@media (max-width: 860px) {
+@media (max-width: 1023px) {
   .health-provider-hero {
     grid-template-columns: 1fr;
   }
@@ -524,7 +524,7 @@
 .health-appointment-list svg {
   color: #0d9488;
 }
-@media (max-width: 860px) {
+@media (max-width: 1023px) {
   .health-hero {
     grid-template-columns: 1fr;
   }

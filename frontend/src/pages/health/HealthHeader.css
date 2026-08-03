@@ -65,7 +65,7 @@
   font: inherit;
   font-size: 12px;
 }
-@media (max-width: 760px) {
+@media (max-width: 1023px) {
   .health-header {
     height: 62px;
     padding: 0 14px;

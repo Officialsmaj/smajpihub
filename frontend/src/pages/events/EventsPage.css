@@ -443,7 +443,7 @@
 .events-mobile-nav {
   display: none;
 }
-@media (max-width: 760px) {
+@media (max-width: 1023px) {
   .events-page {
     padding-bottom: 60px;
   }

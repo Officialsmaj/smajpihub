@@ -15,7 +15,7 @@ const isInteractiveTarget = (target: EventTarget | null) => {
 };
 
 const isMobilePullDevice = () =>
-  window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
+  window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches;
 
 const PullToRefresh = ({ onRefresh, disabled = false }: PullToRefreshProps) => {
   const [pull, setPull] = useState(0);

@@ -93,7 +93,7 @@
   display: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1023px) {
   .education-header {
     height: 62px;
     padding: 0 14px;

@@ -289,7 +289,7 @@
    MOBILE (below 768px)
    Hamburger required, compact drawer
    ============================================ */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .header {
     padding: 0.6rem 1rem;
   }

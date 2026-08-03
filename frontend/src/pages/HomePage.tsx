@@ -78,7 +78,7 @@ const HomePage = () => {
   }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 768px)");
+    const media = window.matchMedia("(max-width: 1023px)");
     const updateServicesMode = () => setIsMobileServices(media.matches);
 
     updateServicesMode();

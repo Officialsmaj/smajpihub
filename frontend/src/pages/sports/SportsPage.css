@@ -1140,7 +1140,7 @@
   margin-top: 24px;
 }
 .sports-article-detail {
-  max-width: 860px;
+  max-width: 1023px;
 }
 .sports-article-detail > a {
   color: #8db5ff;
@@ -1192,7 +1192,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .sports-page {
     padding-bottom: 72px;
   }
