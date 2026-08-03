@@ -16884,13 +16884,14 @@ button.private-primary-button {
     justify-content: flex-start;
     gap: 11px;
     padding: 11px 12px;
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--smaj-text) !important;
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
     border-radius: 10px;
   }
 
   .admin-shell .private-sidebar nav a.active {
+    color: #ffffff !important;
     background: var(--smaj-primary);
     border-color: var(--smaj-primary);
   }
@@ -16898,12 +16899,12 @@ button.private-primary-button {
   .admin-shell .private-sidebar nav a svg,
   .admin-shell .private-sidebar .private-sidebar-logout svg {
     flex: 0 0 auto;
-    color: #ffffff !important;
+    color: currentColor !important;
   }
 
   .admin-shell .private-sidebar .private-nav-label {
     min-width: 0;
-    color: #ffffff !important;
+    color: inherit !important;
     font-size: 13px;
     font-weight: 800;
     line-height: 1.2;
