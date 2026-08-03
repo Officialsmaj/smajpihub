@@ -94,8 +94,9 @@ axiosClient.interceptors.response.use(
                 ? "The service could not be reached. Check your connection and try again."
                 : "Something went wrong. Please try again.";
       const isStartupMessage = isReadRequest && isTemporaryFailure;
+      const isGenericMessage = message === "Something went wrong. Please try again.";
       const now = Date.now();
-      if (!isStartupMessage || now - lastStartupNoticeAt >= STARTUP_NOTICE_COOLDOWN_MS) {
+      if (!isGenericMessage && (!isStartupMessage || now - lastStartupNoticeAt >= STARTUP_NOTICE_COOLDOWN_MS)) {
         showFeedback(message, isStartupMessage ? "info" : "error");
         if (isStartupMessage) lastStartupNoticeAt = now;
       }
