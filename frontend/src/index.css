@@ -8981,6 +8981,47 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   box-shadow: 0 18px 42px rgba(15, 23, 42, .16);
 }
 
+.storefront-tool-trigger {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.storefront-tool-trigger svg { font-size: 18px !important; }
+.storefront-tool-menu.open .storefront-tool-trigger { color: #ffffff; background: var(--smaj-primary); border-color: var(--smaj-primary); }
+.storefront-tool-panel { position: absolute; top: calc(100% + 8px); left: 0; z-index: 230; width: max-content; min-width: 210px; max-width: calc(100vw - 28px); padding: 10px; display: grid; gap: 8px; color: #0f172a; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 18px 42px rgba(15,23,42,.16); }
+.storefront-tool-menu:nth-of-type(n+3) .storefront-tool-panel { right: 0; left: auto; }
+.storefront-tool-panel > button { min-height: 38px; padding: 0 10px; color: inherit; background: transparent; border: 0; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 750; text-align: left; cursor: pointer; }
+.storefront-tool-panel > button:hover,.storefront-tool-panel > button.active { color: var(--smaj-primary); background: var(--smaj-secondary-bg); }
+.storefront-tool-panel label { display: grid; gap: 5px; color: #475569; font-size: 12px; font-weight: 800; }
+.storefront-tool-panel select,.storefront-tool-panel input[type="number"] { min-width: 190px; min-height: 40px; padding: 0 10px; color: #0f172a; background: #ffffff; border: 1px solid #dbe1ea; border-radius: 9px; font: inherit; }
+.storefront-filter-check { grid-template-columns: auto 1fr !important; align-items: center; color: #0f172a !important; cursor: pointer; }
+.storefront-filter-check input { width: 18px; height: 18px; accent-color: var(--smaj-primary); }
+.storefront-clear-tools { flex: 0 0 auto; min-height: 38px; padding: 0 12px; color: var(--smaj-primary); background: var(--smaj-secondary-bg); border: 1px solid color-mix(in srgb,var(--smaj-primary) 25%,#e5e7eb); border-radius: 999px; font: inherit; font-size: 12px; font-weight: 850; cursor: pointer; }
+
+html[data-private-theme="dark"] .storefront-tool-trigger,
+html[data-private-theme="dark"] .storefront-tool-panel,
+html[data-private-theme="dark"] .storefront-tool-panel select,
+html[data-private-theme="dark"] .storefront-tool-panel input[type="number"] { color: var(--smaj-text) !important; background: var(--smaj-card) !important; border-color: var(--smaj-border) !important; }
+html[data-private-theme="dark"] .storefront-tool-panel label { color: var(--smaj-text-secondary); }
+
+@media (max-width: 767px) {
+  .storefront-tool-trigger { min-height: 38px; padding: 0 13px; font-size: 13px; }
+  .storefront-tool-panel { position: fixed; top: auto; right: 14px !important; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); left: 14px !important; width: auto; max-height: min(65vh, 480px); overflow-y: auto; }
+}
+
 .storefront-tool-menu > div button {
   min-height: 36px;
   padding: 0 10px;

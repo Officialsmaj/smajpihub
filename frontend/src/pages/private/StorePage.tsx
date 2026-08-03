@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -18,6 +18,7 @@ import { useAddToCartToast } from "../../hooks/useAddToCartToast";
 import type { Product } from "../../types/marketplace";
 import { heroSlides, promoStripItems } from "../../content/storefront";
 import logoImage from "/logo.png";
+import { PI_USDT_RATE } from "../../lib/piPricing";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
 const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion", "Kids Fashion", "Home, Kitchen & Appliances", "Beauty & Fragrance", "Toys", "Baby", "Health & Nutrition"];
@@ -32,12 +33,10 @@ const mobileMenuSubcategories: Record<string, string[]> = {
   Baby: ["Diapers", "Feeding", "Strollers", "Baby Care", "Baby Clothing", "All Baby"],
   "Health & Nutrition": ["Vitamins", "Fitness", "Wellness", "Medical Supplies", "Nutrition", "All Health"],
 };
-const shoppingTools = [
-  { label: "Sort", items: ["Newest", "Oldest", "Price: Low to High", "Price: High to Low", "Most Popular", "Best Rated"] },
-  { label: "Filter", items: ["Category", "Condition", "Brand", "Verified Seller", "In Stock", "Delivery / Pickup"] },
-  { label: "Price", items: ["Min Price", "Max Price", "Currency: USDT / Pi", "Price Range"] },
-  { label: "Nearby", items: ["Near Me", "Country", "State/Region", "City"] },
-];
+const sortOptions = [
+  ["newest", "Newest"], ["oldest", "Oldest"], ["price-low", "Price: Low to High"],
+  ["price-high", "Price: High to Low"], ["popular", "Most Popular"], ["rated", "Best Rated"],
+] as const;
 const PRODUCT_BATCH_SIZE = 10;
 const STORE_PRODUCT_LIMIT_KEY = "smaj_store_product_limit";
 
@@ -52,6 +51,14 @@ const StorePage = () => {
   const [search, setSearch] = useState(params.get("search") || "");
   const [category, setCategory] = useState(params.get("category") || "All");
   const [openShoppingTool, setOpenShoppingTool] = useState("");
+  const [sort, setSort] = useState(params.get("sort") || "newest");
+  const [condition, setCondition] = useState(params.get("condition") || "All");
+  const [verifiedOnly, setVerifiedOnly] = useState(params.get("verified") === "true");
+  const [inStockOnly, setInStockOnly] = useState(params.get("stock") === "true");
+  const [minPrice, setMinPrice] = useState(params.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(params.get("maxPrice") || "");
+  const [locationFilter, setLocationFilter] = useState(params.get("location") || "All");
+  const shoppingToolsRef = useRef<HTMLElement | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
@@ -111,12 +118,41 @@ const StorePage = () => {
     };
   }, []);
 
+  const availableCategories = useMemo(() => ["All", ...new Set(products.map((product) => product.category).filter(Boolean))], [products]);
+  const availableLocations = useMemo(() => ["All", ...new Set(products.flatMap((product) => [product.country, product.stateRegion, product.city]).filter((value): value is string => Boolean(value?.trim())).map((value) => value.trim()))], [products]);
+
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return products.filter((product) => (category === "All" || product.category === category) && (!query || [product.title, product.category, product.description, product.sellerName].join(" ").toLowerCase().includes(query)));
-  }, [category, products, search]);
+    const minimum = minPrice === "" ? null : Number(minPrice);
+    const maximum = maxPrice === "" ? null : Number(maxPrice);
+    const filtered = products.filter((product) => {
+      const price = product.priceUsdt ?? product.pricePi * PI_USDT_RATE;
+      const verified = product.verificationStatus === "approved" && ["pi_verified", "seller_verified", "trusted_seller"].includes(product.verificationLevel || "");
+      const inStock = product.productStatus !== "out_of_stock" && (product.quantity === undefined || product.quantity > 0) && (product.variants?.length ? product.variants.some((variant) => (variant.stock || 0) > 0) : true);
+      const matchesLocation = locationFilter === "All" || [product.country, product.stateRegion, product.city, product.location].some((value) => value?.toLowerCase().includes(locationFilter.toLowerCase()));
+      return (category === "All" || product.category === category)
+        && (condition === "All" || product.condition === condition)
+        && (!verifiedOnly || verified)
+        && (!inStockOnly || inStock)
+        && (minimum === null || !Number.isFinite(minimum) || price >= minimum)
+        && (maximum === null || !Number.isFinite(maximum) || price <= maximum)
+        && matchesLocation
+        && (!query || [product.title, product.category, product.description, product.sellerName].join(" ").toLowerCase().includes(query));
+    });
+    return filtered.sort((left, right) => {
+      const leftPrice = left.priceUsdt ?? left.pricePi * PI_USDT_RATE;
+      const rightPrice = right.priceUsdt ?? right.pricePi * PI_USDT_RATE;
+      if (sort === "oldest") return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+      if (sort === "price-low") return leftPrice - rightPrice;
+      if (sort === "price-high") return rightPrice - leftPrice;
+      if (sort === "popular") return (right.viewCount || 0) - (left.viewCount || 0);
+      if (sort === "rated") return (right.rating || 0) - (left.rating || 0);
+      return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    });
+  }, [category, condition, inStockOnly, locationFilter, maxPrice, minPrice, products, search, sort, verifiedOnly]);
 
-  const showSearchResults = Boolean(search.trim()) || category !== "All";
+  const hasActiveFilters = category !== "All" || condition !== "All" || verifiedOnly || inStockOnly || minPrice !== "" || maxPrice !== "" || locationFilter !== "All" || sort !== "newest";
+  const showSearchResults = Boolean(search.trim()) || hasActiveFilters;
   const activeProducts = showSearchResults ? visibleProducts : products;
   const displayedProducts = activeProducts.slice(0, productLimit);
   const hiddenProductCount = Math.max(activeProducts.length - displayedProducts.length, 0);
@@ -135,6 +171,36 @@ const StorePage = () => {
       return next;
     }, { replace: true });
   };
+
+  const updateFilterParam = (key: string, value: string, defaultValue = "") => {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (!value || value === defaultValue) next.delete(key);
+      else next.set(key, value);
+      return next;
+    }, { replace: true });
+  };
+
+  const clearStoreFilters = () => {
+    setSort("newest"); setCondition("All"); setVerifiedOnly(false); setInStockOnly(false);
+    setMinPrice(""); setMaxPrice(""); setLocationFilter("All"); updateCategory("All");
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      ["sort", "condition", "verified", "stock", "minPrice", "maxPrice", "location", "category"].forEach((key) => next.delete(key));
+      return next;
+    }, { replace: true });
+    setOpenShoppingTool("");
+  };
+
+  useEffect(() => {
+    const closeMenus = (event: PointerEvent) => {
+      if (!shoppingToolsRef.current?.contains(event.target as Node)) setOpenShoppingTool("");
+    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpenShoppingTool(""); };
+    document.addEventListener("pointerdown", closeMenus);
+    window.addEventListener("keydown", closeOnEscape);
+    return () => { document.removeEventListener("pointerdown", closeMenus); window.removeEventListener("keydown", closeOnEscape); };
+  }, []);
 
   const showMoreProducts = () => {
     setProductLimit((value) => {
@@ -291,30 +357,50 @@ const StorePage = () => {
           ) : null}
         </header>
 
-        <section className="storefront-shopping-tools" aria-label="Shopping tools">
-          {shoppingTools.map((tool) => (
-            <details className="storefront-tool-menu" key={tool.label} open={openShoppingTool === tool.label} onToggle={(event) => setOpenShoppingTool((event.currentTarget as HTMLDetailsElement).open ? tool.label : "")}>
-              <summary>
-                <span>{tool.label}</span>
-                <KeyboardArrowDownOutlinedIcon />
-              </summary>
-              <div>
-                {tool.items.map((item) => (
-                  <button
-                    type="button"
-                    key={item}
-                    onClick={() => {
-                      if (tool.label === "Nearby" && item === "Near Me") updateSearch("Abu Dhabi");
-                      else updateSearch(item);
-                      setOpenShoppingTool("");
-                    }}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </details>
-          ))}
+        <section ref={shoppingToolsRef} className="storefront-shopping-tools" aria-label="Shopping tools">
+          <div className={`storefront-tool-menu ${openShoppingTool === "Sort" ? "open" : ""}`}>
+            <button type="button" className="storefront-tool-trigger" aria-expanded={openShoppingTool === "Sort"} onClick={() => setOpenShoppingTool((value) => value === "Sort" ? "" : "Sort")}>
+              <span>{sort === "newest" ? "Sort" : sortOptions.find(([value]) => value === sort)?.[1] || "Sort"}</span><KeyboardArrowDownOutlinedIcon />
+            </button>
+            {openShoppingTool === "Sort" ? <div className="storefront-tool-panel">
+              {sortOptions.map(([value, label]) => <button type="button" className={sort === value ? "active" : ""} key={value} onClick={() => { setSort(value); updateFilterParam("sort", value, "newest"); setOpenShoppingTool(""); }}>{label}</button>)}
+            </div> : null}
+          </div>
+
+          <div className={`storefront-tool-menu ${openShoppingTool === "Filter" ? "open" : ""}`}>
+            <button type="button" className="storefront-tool-trigger" aria-expanded={openShoppingTool === "Filter"} onClick={() => setOpenShoppingTool((value) => value === "Filter" ? "" : "Filter")}>
+              <span>Filter{category !== "All" || condition !== "All" || verifiedOnly || inStockOnly ? " •" : ""}</span><KeyboardArrowDownOutlinedIcon />
+            </button>
+            {openShoppingTool === "Filter" ? <div className="storefront-tool-panel storefront-filter-panel">
+              <label>Category<select value={category} onChange={(event) => updateCategory(event.target.value)}>{availableCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Condition<select value={condition} onChange={(event) => { setCondition(event.target.value); updateFilterParam("condition", event.target.value, "All"); }}><option>All</option>{["New", "Like New", "Used", "Refurbished"].map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label className="storefront-filter-check"><input type="checkbox" checked={verifiedOnly} onChange={(event) => { setVerifiedOnly(event.target.checked); updateFilterParam("verified", event.target.checked ? "true" : ""); }} /><span>Verified sellers only</span></label>
+              <label className="storefront-filter-check"><input type="checkbox" checked={inStockOnly} onChange={(event) => { setInStockOnly(event.target.checked); updateFilterParam("stock", event.target.checked ? "true" : ""); }} /><span>In-stock products only</span></label>
+            </div> : null}
+          </div>
+
+          <div className={`storefront-tool-menu ${openShoppingTool === "Price" ? "open" : ""}`}>
+            <button type="button" className="storefront-tool-trigger" aria-expanded={openShoppingTool === "Price"} onClick={() => setOpenShoppingTool((value) => value === "Price" ? "" : "Price")}>
+              <span>Price{minPrice || maxPrice ? " •" : ""}</span><KeyboardArrowDownOutlinedIcon />
+            </button>
+            {openShoppingTool === "Price" ? <div className="storefront-tool-panel storefront-price-panel">
+              <label>Minimum USDT<input type="number" min="0" inputMode="decimal" value={minPrice} onChange={(event) => { setMinPrice(event.target.value); updateFilterParam("minPrice", event.target.value); }} placeholder="0" /></label>
+              <label>Maximum USDT<input type="number" min="0" inputMode="decimal" value={maxPrice} onChange={(event) => { setMaxPrice(event.target.value); updateFilterParam("maxPrice", event.target.value); }} placeholder="No maximum" /></label>
+              <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); updateFilterParam("minPrice", ""); updateFilterParam("maxPrice", ""); }}>Clear price</button>
+            </div> : null}
+          </div>
+
+          <div className={`storefront-tool-menu ${openShoppingTool === "Nearby" ? "open" : ""}`}>
+            <button type="button" className="storefront-tool-trigger" aria-expanded={openShoppingTool === "Nearby"} onClick={() => setOpenShoppingTool((value) => value === "Nearby" ? "" : "Nearby")}>
+              <span>{locationFilter === "All" ? "Nearby" : locationFilter}</span><KeyboardArrowDownOutlinedIcon />
+            </button>
+            {openShoppingTool === "Nearby" ? <div className="storefront-tool-panel storefront-location-panel">
+              {user?.country ? <button type="button" onClick={() => { setLocationFilter(user.country || "All"); updateFilterParam("location", user.country || ""); setOpenShoppingTool(""); }}>Near me ({user.country})</button> : null}
+              <label>Product location<select value={locationFilter} onChange={(event) => { setLocationFilter(event.target.value); updateFilterParam("location", event.target.value, "All"); setOpenShoppingTool(""); }}>{availableLocations.map((item) => <option key={item}>{item}</option>)}</select></label>
+            </div> : null}
+          </div>
+
+          {hasActiveFilters ? <button type="button" className="storefront-clear-tools" onClick={clearStoreFilters}>Clear all</button> : null}
         </section>
 
         <section className="storefront-promo-strip" aria-label="Store benefits">
