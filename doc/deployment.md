@@ -193,4 +193,4 @@ Keep the LibreTranslate service private when possible. An API key is optional fo
 
 ### Render Blueprint
 
-The repository includes `render.yaml`. In Render, choose **New → Blueprint**, select this repository, and apply the Blueprint. It creates the `smajpihub-translate` service and connects `TRANSLATION_API_URL` on the existing `smajpihub` backend automatically. Existing backend secrets that are not listed in the Blueprint remain unchanged.
+The repository includes `render.yaml`. In Render, choose **New → Blueprint**, select this repository, and apply the Blueprint. It creates the `smajpihub-translate` service and connects `TRANSLATION_API_URL` on the existing `smajpihub` backend automatically. The backend uses the service's HTTPS address so the connection also works when Render places the two free services in different regions. Existing backend secrets that are not listed in the Blueprint remain unchanged.
