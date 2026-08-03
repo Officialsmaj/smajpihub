@@ -9018,8 +9018,13 @@ html[data-private-theme="dark"] .storefront-tool-panel input[type="number"] { co
 html[data-private-theme="dark"] .storefront-tool-panel label { color: var(--smaj-text-secondary); }
 
 @media (max-width: 767px) {
-  .storefront-tool-trigger { min-height: 38px; padding: 0 13px; font-size: 13px; }
-  .storefront-tool-panel { position: fixed; top: auto; right: 14px !important; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); left: 14px !important; width: auto; max-height: min(65vh, 480px); overflow-y: auto; }
+  .storefront-shopping-tools { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); align-items: start; overflow: visible; }
+  .storefront-tool-menu { width: 100%; min-width: 0; }
+  .storefront-tool-trigger { width: 100%; min-width: 0; min-height: 38px; padding: 0 7px; font-size: 12px; }
+  .storefront-tool-trigger span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .storefront-tool-panel { position: absolute; top: calc(100% + 7px); bottom: auto; left: 0 !important; right: auto !important; width: min(260px,calc(100vw - 28px)); max-height: min(65vh,480px); overflow-y: auto; }
+  .storefront-tool-menu:nth-of-type(n+3) .storefront-tool-panel { right: 0 !important; left: auto !important; }
+  .storefront-clear-tools { grid-column: 1/-1; width: fit-content; justify-self: end; }
 }
 
 .storefront-tool-menu > div button {
@@ -19672,6 +19677,13 @@ svg {
 
 .storefront-tool-menu > div {
   z-index: 230;
+}
+
+@media (max-width: 767px) {
+  .storefront-shopping-tools {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .storefront-promo-strip,
