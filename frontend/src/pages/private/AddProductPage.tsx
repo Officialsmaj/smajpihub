@@ -440,7 +440,7 @@ const AddProductPage = () => {
             <label>$ price (USDT)<input required type="number" min="0.01" step="any" value={form.priceUsdt} onChange={(event) => setUsdtPrice(event.target.value)} /></label>
             <label>π price<input required type="number" min="0.00000001" step="any" value={form.pricePi} onChange={(event) => setPiPrice(event.target.value)} /></label>
           </div>
-          <div className="private-alert success">This listing will show {formatUsdAmount(priceUsdt || 0)} USDT and {formatPiAmount(pricePi || 0)}.</div>
+          {priceUsdt > 0 && pricePi > 0 ? <small className="product-price-preview">Listing price: {formatUsdAmount(priceUsdt)} USDT · {formatPiAmount(pricePi)}</small> : null}
         </details>
 
         <details className="product-accordion" open>

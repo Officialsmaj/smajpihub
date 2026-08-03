@@ -9,6 +9,8 @@ import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import StarHalfRoundedIcon from "@mui/icons-material/StarHalfRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { isAxiosError } from "axios";
 import MarketplaceProductCard from "../../components/MarketplaceProductCard";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
@@ -263,9 +265,12 @@ const ProductDetailPage = () => {
       ) : null}
 
       {imageViewerOpen && selectedImage ? createPortal((
-        <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product image" onClick={() => setImageViewerOpen(false)}>
+        <div className="product-image-viewer" role="dialog" aria-modal="true" aria-label="Full screen product gallery" onClick={(event) => { if (event.target === event.currentTarget) setImageViewerOpen(false); }}>
           <button type="button" className="product-image-viewer-close" onClick={() => setImageViewerOpen(false)} aria-label="Close full screen image"><CloseOutlinedIcon /></button>
-          <img src={selectedImage} alt={product.title} onClick={(event) => event.stopPropagation()} />
+          {images.length > 1 ? <button type="button" className="product-image-viewer-arrow previous" onClick={() => selectAdjacentImage(-1)} aria-label="Previous product image"><ChevronLeftRoundedIcon /></button> : null}
+          <img src={selectedImage} alt={`${product.title} ${selectedImageIndex + 1} of ${images.length}`} onTouchStart={(event) => { galleryTouchStart.current = event.touches[0]?.clientX ?? null; }} onTouchEnd={(event) => { if (galleryTouchStart.current === null) return; const distance = event.changedTouches[0]?.clientX - galleryTouchStart.current; if (Math.abs(distance) > 45) selectAdjacentImage(distance < 0 ? 1 : -1); galleryTouchStart.current = null; }} />
+          {images.length > 1 ? <button type="button" className="product-image-viewer-arrow next" onClick={() => selectAdjacentImage(1)} aria-label="Next product image"><ChevronRightRoundedIcon /></button> : null}
+          {images.length > 1 ? <div className="product-image-viewer-thumbnails" aria-label="Product images">{images.map((image, index) => <button type="button" className={image === selectedImage ? "active" : ""} onClick={() => setSelectedImage(image)} aria-label={`Show image ${index + 1}`} key={`${image.slice(-30)}-${index}`}><img src={image} alt="" /></button>)}</div> : null}
         </div>
       ), document.body) : null}
 

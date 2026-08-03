@@ -320,7 +320,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     setShowProfileReminder(false);
     navigate("/profile");
   };
-  const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(conversation.unreadBy?.length));
+  const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)));
   const isStreamShell = location.pathname.startsWith("/app/services/stream");
   const streamDownloadBadgeLabel = streamDownloadCount > 99 ? "99+" : streamDownloadCount;
   useEffect(() => {
@@ -342,7 +342,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       window.removeEventListener(STREAM_DOWNLOADS_CHANGED_EVENT, loadDownloadCount);
     };
   }, [isStreamShell]);
-  const liveMessageCount = unreadLiveConversations.reduce((total, conversation) => total + (conversation.unreadBy?.length || 0), 0);
+  const liveMessageCount = unreadLiveConversations.length;
   const liveBadgeLabel = liveMessageCount > 99 ? "99+" : liveMessageCount;
   const liveActivityItems = (unreadLiveConversations.length ? unreadLiveConversations : liveConversations).slice(0, 3);
   const liveConversationName = (conversation: LiveConversation) => conversation.participantName || (conversation.sellerId === user?.uid ? conversation.buyerName : conversation.sellerName) || "SMAJ user";
@@ -470,7 +470,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
                   <button type="button" key={conversation._id} onClick={() => openLiveConversation(conversation._id)}>
                     <span className="live-activity-message-icon"><ChatOutlinedIcon /></span>
                     <span><strong>{liveConversationName(conversation)}</strong><small>{conversation.lastMessage || `Message about ${conversation.productTitle || "your listing"}`}</small></span>
-                    {conversation.unreadBy?.length ? <b>{conversation.unreadBy.length}</b> : null}
+                    {user?.uid && conversation.unreadBy?.includes(user.uid) ? <b>1</b> : null}
                   </button>
                 )) : <div className="live-activity-empty">You are all caught up.</div>}
               </div>
