@@ -11,7 +11,6 @@ import { LocationFields } from "../../components/LocationFields";
 
 const MAX_PRODUCT_IMAGES = 12;
 const MAX_SOURCE_IMAGE_BYTES = 10 * 1024 * 1024;
-const PRODUCT_FORM_STEPS = 10;
 const PRODUCT_DRAFT_KEY = "smaj_add_product_draft";
 const categoryNames = ["Fashion & Clothing", "Electronics", "Cars & Vehicles", "Home & Living", "Beauty & Health", "Sports & Outdoors", "Books & Education", "Digital Products", "Services"] as const;
 type CategoryName = (typeof categoryNames)[number];
@@ -152,7 +151,6 @@ const AddProductPage = () => {
   const [activatingSeller, setActivatingSeller] = useState(false);
   const [sellerActivatedHere, setSellerActivatedHere] = useState(false);
   const [profileLocationLocked, setProfileLocationLocked] = useState(true);
-  const [mobileStep, setMobileStep] = useState(0);
   const sellerActive = Boolean(sellerActivatedHere || user?.sellerActive || user?.role === "seller");
   const titleInsight = useMemo(() => {
     const title = form.title.toLowerCase();
@@ -382,21 +380,6 @@ const AddProductPage = () => {
     }
   };
 
-  const continueToNextSection = (button: HTMLButtonElement) => {
-    const sections = Array.from(document.querySelectorAll<HTMLDetailsElement>(".smart-product-form .product-accordion"));
-    const currentIndex = Math.max(0, sections.findIndex((section) => section.open));
-    if (currentIndex >= sections.length - 1) {
-      button.closest("form")?.requestSubmit();
-      return;
-    }
-    const next = sections[Math.min(currentIndex + 1, sections.length - 1)];
-    if (!next) return;
-    sections.forEach((section) => { if (section !== next) section.open = false; });
-    next.open = true;
-    setMobileStep(Math.min(currentIndex + 1, PRODUCT_FORM_STEPS - 1));
-    next.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <main className="private-page add-product-page">
       <section className="private-page-head">
@@ -495,7 +478,7 @@ const AddProductPage = () => {
         <button className="private-primary-button" disabled={publishDisabled}>{submitting ? "Publishing..." : form.sellerAgreementAccepted ? "Publish for Review" : "Accept Agreement to Publish"}</button>
         <div className="product-form-mobile-actions" aria-label="Listing form actions">
           <button type="button" onClick={() => setSuccess("Draft saved on this device.")}>Save draft</button>
-          <button type="button" onClick={(event) => continueToNextSection(event.currentTarget)}>{mobileStep >= PRODUCT_FORM_STEPS - 1 ? "Publish for Review" : "Continue"}</button>
+          <button type="submit" disabled={publishDisabled}>{submitting ? "Publishing..." : "Publish for Review"}</button>
         </div>
       </form>
     </main>

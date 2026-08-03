@@ -318,7 +318,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   const completeProfileFromReminder = () => {
     window.localStorage.setItem(profileReminderStorageKey, "true");
     setShowProfileReminder(false);
-    navigate("/profile");
+    navigate("/profile?edit=1");
   };
   const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)));
   const isStreamShell = location.pathname.startsWith("/app/services/stream");

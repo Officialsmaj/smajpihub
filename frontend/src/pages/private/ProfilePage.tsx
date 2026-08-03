@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
@@ -123,6 +123,7 @@ const uploadProfileImage = async (image: string, purpose: string) => {
 
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthContext();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [editing, setEditing] = useState(false);
   const [alert, setAlert] = useState<AlertState | null>(null);
   const [stats, setStats] = useState({ totalProducts: 0, successfulOrders: 0 });
@@ -161,6 +162,17 @@ const ProfilePage = () => {
       sellerActive: Boolean(user.sellerActive || user.role === "seller"),
     });
   }, [user]);
+
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1") return;
+    setEditing(true);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("edit");
+      return next;
+    }, { replace: true });
+    window.requestAnimationFrame(() => document.querySelector(".real-profile-form")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     axiosClient.get("/user/stats").then(({ data }) => setStats(data.stats)).catch(() => undefined);

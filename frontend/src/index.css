@@ -8536,6 +8536,26 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   text-decoration: none;
 }
 
+.dashboard-sports-card.score-card,
+.dashboard-sports-card.team-card {
+  color: #ffffff;
+  background-color: #111827;
+  background-position: center;
+  background-size: cover;
+  border-color: rgb(255 255 255 / .18);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .04);
+}
+.dashboard-sports-card.score-card { background-image: linear-gradient(135deg, rgb(17 24 39 / .9), rgb(76 29 149 / .72)), url("https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=900&q=82"); }
+.dashboard-sports-card.team-card { background-image: linear-gradient(135deg, rgb(17 24 39 / .9), rgb(88 28 135 / .72)), url("https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=900&q=82"); }
+.dashboard-sports-card.score-card > small,
+.dashboard-sports-card.score-card p,
+.dashboard-sports-card.team-card small,
+.dashboard-sports-card.team-card .dashboard-team-stats span { color: rgb(255 255 255 / .82); }
+.dashboard-sports-card.score-card .dashboard-sports-card-head > span,
+.dashboard-sports-card.team-card .dashboard-sports-card-head > span { color: #ddd6fe; }
+.dashboard-sports-card.team-card .dashboard-team-stats { border-color: rgb(255 255 255 / .22); }
+.dashboard-sports-card.team-card .dashboard-team-stats b { color: #ffffff; }
+
 .dashboard-sports-card-head,
 .dashboard-score-row,
 .dashboard-top-team,
