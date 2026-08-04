@@ -160,7 +160,7 @@
   line-height: 1.6;
 }
 .jobs-hero form {
-  max-width: 1023px;
+  max-width: 820px;
   margin: 30px 0 12px;
   padding: 8px;
   display: grid;
@@ -585,7 +585,7 @@
   font-size: 11px;
 }
 .job-form {
-  max-width: 1023px;
+  max-width: 760px;
   display: grid;
   gap: 18px;
 }
