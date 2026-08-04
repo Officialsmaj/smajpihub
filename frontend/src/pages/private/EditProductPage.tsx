@@ -181,7 +181,7 @@ const EditProductPage = () => {
     finally { setSaving(false); }
   };
 
-  return <main className="private-page"><Link className="private-back-link" to="/seller">Back to Seller Dashboard</Link><section className="private-page-head"><div><p className="private-kicker">PRODUCT MANAGEMENT</p><h1>Edit Product</h1><p>Update listing details, price, image, and contact information.</p></div></section>
+  return <main className="private-page edit-product-page"><Link className="private-back-link" to="/seller">Back to Seller Dashboard</Link><section className="private-page-head"><div><p className="private-kicker">PRODUCT MANAGEMENT</p><h1>Edit Product</h1><p>Update listing details, price, image, and contact information.</p></div></section>
     <form className="private-form" onSubmit={(event) => void submit(event)}>
       <div className="product-form-section-title"><h2>Basic Information</h2><p>Core listing details.</p></div>
       <label>Product title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
