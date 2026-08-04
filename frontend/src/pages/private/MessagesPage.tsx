@@ -13,12 +13,12 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
 import TrustBadge from "../../components/TrustBadge";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
-import PullToRefresh from "../../components/PullToRefresh";
 import { uploadImage } from "../../lib/uploadImage";
 
 type RichConversation = Conversation & {
@@ -32,6 +32,17 @@ type VoicePreview = {
   url: string;
   mimeType: string;
   durationSeconds: number;
+};
+
+type PendingPhoto = {
+  file: File;
+  url: string;
+  dataUrl: string;
+};
+
+type ImagePreview = {
+  src: string;
+  caption?: string;
 };
 
 const getConversationName = (conversation: RichConversation, currentUserId?: string) =>
@@ -91,6 +102,9 @@ const MessagesPage = () => {
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [voicePreview, setVoicePreview] = useState<VoicePreview | null>(null);
+  const [pendingPhoto, setPendingPhoto] = useState<PendingPhoto | null>(null);
+  const [pendingPhotoCaption, setPendingPhotoCaption] = useState("");
+  const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [voiceError, setVoiceError] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -211,10 +225,8 @@ const MessagesPage = () => {
 
   useEffect(() => {
     const initial = window.setTimeout(() => void loadMessages(), 0);
-    const timer = window.setInterval(() => void loadMessages(), 2500);
     return () => {
       window.clearTimeout(initial);
-      window.clearInterval(timer);
     };
   }, [loadMessages]);
 
@@ -526,6 +538,68 @@ const MessagesPage = () => {
     });
   }, []);
 
+  const clearPendingPhoto = useCallback(() => {
+    setPendingPhoto((current) => {
+      if (current) URL.revokeObjectURL(current.url);
+      return null;
+    });
+    setPendingPhotoCaption("");
+  }, []);
+
+  useEffect(() => () => {
+    clearPendingPhoto();
+  }, [clearPendingPhoto]);
+
+  useEffect(() => {
+    if (!imagePreview) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setImagePreview(null);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [imagePreview]);
+
+  const preparePhotoAttachment = async (file: File | undefined) => {
+    setAttachOpen(false);
+    setVoiceError("");
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > MAX_CHAT_IMAGE_BYTES) {
+      setVoiceError("Choose a JPG, PNG, WebP, or GIF photo that is 2 MB or smaller.");
+      return;
+    }
+    try {
+      const dataUrl = await blobToDataUrl(file);
+      clearPendingPhoto();
+      setPendingPhoto({ file, dataUrl, url: URL.createObjectURL(file) });
+    } catch {
+      setVoiceError("Photo could not be opened. Try another image.");
+    }
+  };
+
+  const sendPendingPhoto = async () => {
+    if (!activeId || !pendingPhoto || sendingAttachment) return;
+    setSendingAttachment(true);
+    setVoiceError("");
+    nearBottomRef.current = true;
+    try {
+      const attachmentUrl = await uploadImage(pendingPhoto.dataUrl, "message-photos");
+      await axiosClient.post(`/messages/${activeId}`, {
+        messageType: "image",
+        message: pendingPhotoCaption.trim(),
+        attachmentUrl,
+        attachmentName: pendingPhoto.file.name,
+        attachmentMimeType: pendingPhoto.file.type,
+        attachmentSize: pendingPhoto.file.size,
+      });
+      clearPendingPhoto();
+      await Promise.all([loadMessages(), loadConversations()]);
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : "Photo could not be sent. Try a smaller file.");
+    } finally {
+      setSendingAttachment(false);
+    }
+  };
+
   const stopRecordingTimer = () => {
     if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
     recordingTimerRef.current = null;
@@ -636,41 +710,25 @@ const MessagesPage = () => {
     }
   };
 
-  const sendAttachment = async (file: File | undefined, messageType: "image" | "document") => {
+  const sendAttachment = async (file: File | undefined, messageType: "document") => {
     if (!activeId || !file || sendingAttachment) return;
     setAttachOpen(false);
     setVoiceError("");
     setSendingAttachment(true);
     nearBottomRef.current = true;
     try {
-      if (messageType === "image") {
-        if (!file.type.startsWith("image/") || file.size > MAX_CHAT_IMAGE_BYTES) {
-          setVoiceError("Choose a JPG, PNG, WebP, or GIF photo that is 2 MB or smaller.");
-          return;
-        }
-        const imageDataUrl = await blobToDataUrl(file);
-        const attachmentUrl = await uploadImage(imageDataUrl, "message-photos");
-        await axiosClient.post(`/messages/${activeId}`, {
-          messageType,
-          attachmentUrl,
-          attachmentName: file.name,
-          attachmentMimeType: file.type,
-          attachmentSize: file.size,
-        });
-      } else {
-        if (file.size > MAX_CHAT_DOCUMENT_BYTES) {
-          setVoiceError("Choose a document that is 3 MB or smaller.");
-          return;
-        }
-        const attachmentDataUrl = await blobToDataUrl(file);
-        await axiosClient.post(`/messages/${activeId}`, {
-          messageType,
-          attachmentDataUrl,
-          attachmentName: file.name,
-          attachmentMimeType: file.type || "application/octet-stream",
-          attachmentSize: file.size,
-        });
+      if (file.size > MAX_CHAT_DOCUMENT_BYTES) {
+        setVoiceError("Choose a document that is 3 MB or smaller.");
+        return;
       }
+      const attachmentDataUrl = await blobToDataUrl(file);
+      await axiosClient.post(`/messages/${activeId}`, {
+        messageType,
+        attachmentDataUrl,
+        attachmentName: file.name,
+        attachmentMimeType: file.type || "application/octet-stream",
+        attachmentSize: file.size,
+      });
       await Promise.all([loadMessages(), loadConversations()]);
     } catch (err) {
       setVoiceError(err instanceof Error ? err.message : "Attachment could not be sent. Try a smaller file.");
@@ -681,7 +739,6 @@ const MessagesPage = () => {
 
   return (
     <main className={`private-page messages-page ${selectedId ? "conversation-selected" : ""}`}>
-      <PullToRefresh onRefresh={() => Promise.all([loadConversations(), loadMessages()]).then(() => undefined)} />
       <header className="mobile-messages-heading">
         <h1>Messages</h1>
       </header>
@@ -803,8 +860,10 @@ const MessagesPage = () => {
                       </div>
                     ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
                       <figure className="chat-attachment chat-photo-message">
-                        <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || "Shared photo"} />
-                        <figcaption>{item.attachmentName || "Photo"}</figcaption>
+                        <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message })} aria-label="Open photo">
+                          <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
+                        </button>
+                        <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
                       </figure>
                     ) : item.messageType === "document" && item.attachmentDataUrl ? (
                       <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
@@ -853,7 +912,7 @@ const MessagesPage = () => {
                 </div>
               ) : (
                 <form onSubmit={send}>
-                  <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void sendAttachment(event.target.files?.[0], "image"); event.currentTarget.value = ""; }} />
+                  <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void preparePhotoAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} />
                   <input ref={documentInputRef} className="chat-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { void sendAttachment(event.target.files?.[0], "document"); event.currentTarget.value = ""; }} />
                   <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
                     <SentimentSatisfiedAltOutlinedIcon />
@@ -873,6 +932,7 @@ const MessagesPage = () => {
                 </form>
               )}
               {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
+              {pendingPhoto ? <div className="chat-photo-composer" role="dialog" aria-modal="true" aria-label="Photo preview"><header><strong>Send photo</strong><button type="button" onClick={clearPendingPhoto} aria-label="Close photo preview"><CloseOutlinedIcon /></button></header><img src={pendingPhoto.url} alt="Selected photo preview" /><div><input value={pendingPhotoCaption} maxLength={1000} onChange={(event) => setPendingPhotoCaption(event.target.value)} placeholder="Write a message..." /><button type="button" className="chat-send-button" disabled={sendingAttachment} onClick={() => void sendPendingPhoto()} aria-label="Send photo"><SendOutlinedIcon /></button></div></div> : null}
               {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
               {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
               {selectedMessages.length ? <div className="chat-action-sheet chat-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected messages"><strong>{selectedMessages.length} selected</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("me")}>Delete for me</button>{canDeleteSelectedForEveryone ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setSelectedMessageIds(new Set())}>Cancel</button></div> : null}
@@ -884,6 +944,7 @@ const MessagesPage = () => {
           )}
         </div>
       </section>
+      {imagePreview ? <div className="chat-image-viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setImagePreview(null)}><button type="button" onClick={(event) => { event.stopPropagation(); setImagePreview(null); }} aria-label="Close photo"><CloseOutlinedIcon /></button><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div> : null}
     </main>
   );
 };

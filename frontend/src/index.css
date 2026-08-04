@@ -17515,6 +17515,17 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   gap: 7px;
 }
 
+.chat-photo-message button {
+  width: 100%;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
 .chat-photo-message img {
   width: 100%;
   max-height: 260px;
@@ -17567,6 +17578,104 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
 .chat-messages article.mine .chat-photo-message figcaption,
 .chat-messages article.mine .chat-document-message small {
   color: rgba(255, 255, 255, .82) !important;
+}
+
+.chat-photo-composer {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  z-index: 18;
+  max-height: min(620px, calc(100vh - 120px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-card);
+  border: 1px solid var(--smaj-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(2,6,23,.3);
+}
+
+.chat-photo-composer header,
+.chat-photo-composer > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-photo-composer header {
+  justify-content: space-between;
+}
+
+.chat-photo-composer header button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--smaj-text-secondary);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 50%;
+}
+
+.chat-photo-composer > img {
+  width: 100%;
+  min-height: 0;
+  max-height: min(420px, 58vh);
+  object-fit: contain;
+  border-radius: 12px;
+  background: #050505;
+}
+
+.chat-photo-composer input {
+  min-width: 0;
+  flex: 1;
+  padding: 11px 12px;
+  color: var(--smaj-text);
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 11px;
+}
+
+.chat-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483100;
+  display: grid;
+  place-items: center;
+  padding: 56px 14px 24px;
+  background: rgba(0,0,0,.92);
+}
+
+.chat-image-viewer > button {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.chat-image-viewer img {
+  max-width: 100%;
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.chat-image-viewer p {
+  max-width: min(720px, calc(100vw - 28px));
+  margin: 14px 0 0;
+  color: #ffffff;
+  text-align: center;
 }
 
 .voice-recorder-bar {

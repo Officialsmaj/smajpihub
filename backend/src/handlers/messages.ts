@@ -244,7 +244,8 @@ export default function mountMessageEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Document must be a valid file under 3.5MB." });
     }
     const receiverId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
-    const displayMessage = messageType === "voice" ? "Voice note" : messageType === "image" ? "Photo" : messageType === "document" ? `Document: ${attachmentName}` : message;
+    const imageCaption = messageType === "image" && message ? message.slice(0, 1000) : "";
+    const displayMessage = messageType === "voice" ? "Voice note" : messageType === "image" ? imageCaption || "Photo" : messageType === "document" ? `Document: ${attachmentName}` : message;
     const document = {
       conversationId: req.params.id,
       productId: conversation.productId || "",
