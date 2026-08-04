@@ -27,6 +27,7 @@ const marketplaceCards = [
 const accountRows = [
   ["Help center", "Support and marketplace guidance", "/help"],
   ["Legal", "Terms, privacy, and platform rules", "/terms"],
+  ["White Paper", "Vision, ecosystem, utility, and roadmap", "/whitepaper"],
 ] as const;
 
 const AccountDashboardPage = () => {
