@@ -17649,10 +17649,16 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   background: rgba(0,0,0,.92);
 }
 
-.chat-image-viewer > button {
+.chat-image-viewer-actions {
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
   right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-image-viewer-actions button {
   width: 42px;
   height: 42px;
   display: grid;
@@ -17662,6 +17668,16 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   border: 1px solid rgba(255,255,255,.2);
   border-radius: 50%;
   cursor: pointer;
+}
+
+.chat-image-viewer-actions .chat-image-viewer-delete {
+  width: auto;
+  padding: 0 14px;
+  background: #dc2626;
+  border-color: #ef4444;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .chat-image-viewer img {

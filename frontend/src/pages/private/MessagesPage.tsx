@@ -43,6 +43,7 @@ type PendingPhoto = {
 type ImagePreview = {
   src: string;
   caption?: string;
+  message: ChatMessage;
 };
 
 const getConversationName = (conversation: RichConversation, currentUserId?: string) =>
@@ -860,7 +861,7 @@ const MessagesPage = () => {
                       </div>
                     ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
                       <figure className="chat-attachment chat-photo-message">
-                        <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message })} aria-label="Open photo">
+                        <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
                           <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
                         </button>
                         <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
@@ -944,7 +945,7 @@ const MessagesPage = () => {
           )}
         </div>
       </section>
-      {imagePreview ? <div className="chat-image-viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setImagePreview(null)}><button type="button" onClick={(event) => { event.stopPropagation(); setImagePreview(null); }} aria-label="Close photo"><CloseOutlinedIcon /></button><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div> : null}
+      {imagePreview ? <div className="chat-image-viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setImagePreview(null)}><div className="chat-image-viewer-actions" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setImagePreview(null)} aria-label="Close photo"><CloseOutlinedIcon /></button><button type="button" className="chat-image-viewer-delete" onClick={() => { setDeleteTarget(imagePreview.message); setImagePreview(null); }}>Delete</button></div><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div> : null}
     </main>
   );
 };
