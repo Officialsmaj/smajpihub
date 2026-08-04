@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { isAxiosError } from "axios";
 import { axiosClient } from "../../lib/axiosClient";
 import { uploadImage } from "../../lib/uploadImage";
 import type { HeroBanner } from "../../lib/heroBanners";
@@ -14,11 +15,25 @@ const AdminHeroBannersPage = () => {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await axiosClient.get<{ banners: HeroBanner[] }>("/admin/hero-banners");
-    setBanners(data.banners);
+    setError("");
+    try {
+      const { data } = await axiosClient.get<{ banners: HeroBanner[] }>("/admin/hero-banners");
+      setBanners(data.banners);
+    } catch (reason: unknown) {
+      const status = isAxiosError(reason) ? reason.response?.status : 0;
+      setError(status === 404
+        ? "Hero Manager API is not deployed on the backend yet. Deploy the latest backend, then retry."
+        : status === 401
+          ? "Your admin session expired. Sign in again, then retry."
+          : status === 403
+            ? "This account does not have backend admin permission."
+            : status === 503
+              ? "Hero banner storage is starting. Wait a moment, then retry."
+              : "Could not reach the Hero Manager API. Check the backend and retry.");
+    }
   }, []);
 
-  useEffect(() => { void load().catch(() => setError("Could not load hero banners.")); }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const chooseImage = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,7 +83,7 @@ const AdminHeroBannersPage = () => {
   return <main className="private-page admin-hero-page">
     <section className="private-page-head"><div><p className="private-kicker">ADMIN PANEL</p><h1>Hero Banners</h1><p>Manage Dashboard and Store carousel images.</p></div></section>
     {message ? <div className="private-alert success">{message}</div> : null}
-    {error ? <div className="private-alert error">{error}</div> : null}
+    {error ? <div className="private-alert error admin-hero-load-error"><span>{error}</span><button type="button" onClick={() => void load()}>Retry</button></div> : null}
     <form className="admin-hero-form" onSubmit={submit}>
       <div className="admin-hero-preview">{form.image ? <img src={form.image} alt="Banner preview" /> : <span>Choose an image to preview it</span>}</div>
       <div className="admin-hero-fields">

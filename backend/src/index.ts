@@ -276,6 +276,7 @@ app.get("/health", async (_, res) => {
     app.locals.productCollection &&
     app.locals.marketplaceOrderCollection &&
     app.locals.notificationCollection &&
+    app.locals.heroBannerCollection &&
     app.locals.transportBookingCollection &&
     app.locals.transportDriverCollection,
   );
@@ -286,6 +287,7 @@ app.get("/health", async (_, res) => {
     database: env.use_memory_db ? "memory" : "mongodb",
     uptimeSeconds: Math.round(process.uptime()),
     startedAt: serviceStartedAt.toISOString(),
+    features: { heroBanners: Boolean(app.locals.heroBannerCollection) },
   });
 });
 

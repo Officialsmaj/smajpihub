@@ -19908,6 +19908,7 @@ svg {
 .admin-attention-panel small{color:var(--smaj-text-secondary)}
 .admin-mobile-bottom-nav{display:none}
 .admin-hero-color{display:grid;grid-template-columns:46px 1fr;gap:8px}.admin-hero-color input[type="color"]{height:40px;padding:3px;cursor:pointer}
+.admin-hero-load-error{display:flex;align-items:center;justify-content:space-between;gap:12px}.admin-hero-load-error button{flex:0 0 auto;padding:7px 12px;color:inherit;background:transparent;border:1px solid currentColor;border-radius:8px;font-weight:800;cursor:pointer}
 .admin-hero-form{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(300px,1.15fr);gap:20px;padding:20px;background:var(--smaj-card);border:1px solid var(--smaj-border);border-radius:16px}
 .admin-hero-preview{min-height:260px;display:grid;place-items:center;overflow:hidden;color:var(--smaj-text-secondary);background:var(--smaj-secondary-bg);border:1px dashed var(--smaj-border);border-radius:13px;text-align:center}
 .admin-hero-preview img{width:100%;height:100%;min-height:260px;object-fit:cover}

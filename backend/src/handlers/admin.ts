@@ -108,7 +108,9 @@ export default function mountAdminEndpoints(router: Router) {
   };
 
   router.get("/hero-banners", async (req, res) => {
-    const banners = await req.app.locals.heroBannerCollection.find({}).sort({ order: 1 }).toArray();
+    const collection = req.app.locals.heroBannerCollection;
+    if (!collection) return res.status(503).json({ error: "service_unavailable", message: "Hero banner storage is still starting." });
+    const banners = await collection.find({}).sort({ order: 1 }).toArray();
     return res.status(200).json({ banners: banners.map(serialize) });
   });
 
