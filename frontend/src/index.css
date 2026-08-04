@@ -20085,3 +20085,61 @@ svg {
     line-height: 1.6;
   }
 }
+/* Tablet-only private app refinements. Phone layouts remain unchanged. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobile-search-page > .mobile-search-box {
+    display: grid;
+  }
+
+  .mobile-search-page > .mobile-search-section,
+  .mobile-search-page > .mobile-search-results {
+    display: block;
+  }
+
+  .search-desktop-fallback {
+    display: none;
+  }
+
+  .mobile-services-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobile-services-grid > a,
+  .mobile-services-grid > .service-in-progress-card {
+    min-height: 150px;
+    aspect-ratio: auto;
+    justify-content: center;
+  }
+
+  .messages-layout.rich {
+    grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .messages-page .conversation-list,
+  .messages-page.conversation-selected .conversation-list {
+    display: block;
+    max-height: none;
+    border-right: 1px solid var(--smaj-border);
+    border-bottom: 0;
+  }
+
+  .messages-page .chat-panel,
+  .messages-page.conversation-selected .chat-panel {
+    display: flex;
+    min-width: 0;
+    min-height: calc(100dvh - 170px);
+  }
+
+  .messages-page .chat-panel > header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .messages-page .chat-mobile-back {
+    display: none;
+  }
+
+  .messages-page .chat-header-actions {
+    display: flex;
+  }
+}
