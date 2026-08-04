@@ -164,7 +164,8 @@ export default function mountMessageEndpoints(router: Router) {
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     await req.app.locals.messageCollection.updateMany({ conversationId: req.params.id, senderId: { $ne: uid }, readAt: { $exists: false } }, { $set: { readAt: new Date() } });
-    const messages = await req.app.locals.messageCollection.find({ conversationId: req.params.id }).sort({ createdAt: 1 }).toArray();
+    const messages = (await req.app.locals.messageCollection.find({ conversationId: req.params.id }).sort({ createdAt: 1 }).toArray())
+      .filter((message: Record<string, any>) => !Array.isArray(message.hiddenFor) || !message.hiddenFor.includes(uid));
     await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $pull: { unreadBy: uid } });
     const [enrichedConversation] = await enrichConversations(req, currentUser, [conversation]);
     return res.status(200).json({ conversation: enrichedConversation, messages: messages.map(serialize) });
@@ -245,8 +246,33 @@ export default function mountMessageEndpoints(router: Router) {
       createdAt: new Date(),
     };
     const result = await req.app.locals.messageCollection.insertOne(document);
-    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: document.message, updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
+    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: document.message, lastMessageId: result.insertedId.toString(), updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
     await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${document.message.slice(0, 100)}`, relatedId: req.params.id, image: user.avatar || "" });
     return res.status(201).json({ message: serialize({ ...document, _id: result.insertedId }) });
+  });
+
+  router.delete("/:id/messages/:messageId", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id) || !ObjectId.isValid(req.params.messageId)) return res.status(400).json({ error: "bad_request", message: "Invalid message id" });
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
+    if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    const message = await req.app.locals.messageCollection.findOne({ _id: new ObjectId(req.params.messageId), conversationId: req.params.id });
+    if (!message) return res.status(404).json({ error: "not_found", message: "Message not found" });
+    const scope = req.body?.scope === "everyone" ? "everyone" : "me";
+    if (scope === "everyone") {
+      if (message.senderId !== user.uid) return res.status(403).json({ error: "forbidden", message: "Only the sender can delete this message for everyone." });
+      if (Date.now() - new Date(message.createdAt).getTime() > 15 * 60 * 1000) return res.status(400).json({ error: "delete_window_expired", message: "Delete for everyone is available for 15 minutes." });
+      const deletedMessage = "This message was deleted.";
+      const deletedAt = new Date();
+      const deletedFields = { message: deletedMessage, messageType: "text", deletedForEveryone: true, deletedAt, audioDataUrl: "", attachmentUrl: "", attachmentDataUrl: "", attachmentName: "" };
+      await req.app.locals.messageCollection.updateOne({ _id: message._id }, { $set: deletedFields });
+      if (conversation.lastMessageId === req.params.messageId || conversation.lastMessage === message.message) {
+        await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: deletedMessage, updatedAt: deletedAt } });
+      }
+      return res.status(200).json({ message: serialize({ ...message, ...deletedFields }) });
+    }
+    await req.app.locals.messageCollection.updateOne({ _id: message._id }, { $addToSet: { hiddenFor: user.uid } });
+    return res.status(200).json({ hidden: true, messageId: req.params.messageId });
   });
 }

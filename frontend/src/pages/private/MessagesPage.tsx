@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { isAxiosError } from "axios";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import AttachFileOutlinedIcon from "@mui/icons-material/AttachFileOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
@@ -11,6 +12,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
 import type { ChatMessage, Conversation } from "../../types/marketplace";
@@ -98,6 +100,8 @@ const MessagesPage = () => {
   const [inboxFilter, setInboxFilter] = useState<"inbox" | "archived">("inbox");
   const [sendingVoice, setSendingVoice] = useState(false);
   const [sendingAttachment, setSendingAttachment] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatMessage | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
@@ -258,6 +262,23 @@ const MessagesPage = () => {
       await Promise.all([loadMessages(), loadConversations()]);
     } catch {
       setText(message);
+    }
+  };
+
+  const deleteMessage = async (scope: "me" | "everyone") => {
+    if (!activeId || !deleteTarget) return;
+    setDeletingMessage(true);
+    setVoiceError("");
+    try {
+      const { data } = await axiosClient.delete<{ hidden?: boolean; message?: ChatMessage }>(`/messages/${activeId}/messages/${deleteTarget._id}`, { data: { scope } });
+      if (scope === "me" || data.hidden) setMessages((current) => current.filter((item) => item._id !== deleteTarget._id));
+      else if (data.message) setMessages((current) => current.map((item) => item._id === data.message?._id ? data.message : item));
+      setDeleteTarget(null);
+      await loadConversations();
+    } catch (err: unknown) {
+      setVoiceError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Message could not be deleted." : "Message could not be deleted.");
+    } finally {
+      setDeletingMessage(false);
     }
   };
 
@@ -508,11 +529,11 @@ const MessagesPage = () => {
                 </div>
                 {messages.map((item, index) => (
                   <article className={item.senderId === user?.uid ? "mine" : ""} key={item._id}>
-                    {item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                    {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
                       {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
                       <span><small>About this product</small><strong>{item.productTitle}</strong></span>
                     </Link> : null}
-                    {item.messageType === "voice" && item.audioDataUrl ? (
+                    {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
                       <div className="voice-message">
                         <MicNoneOutlinedIcon />
                         <audio controls src={item.audioDataUrl}>
@@ -540,6 +561,7 @@ const MessagesPage = () => {
                       <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
                       {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
                     </small>
+                    {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
                   </article>
                 ))}
                 {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
@@ -593,6 +615,7 @@ const MessagesPage = () => {
               {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
               {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
               {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
+              {deleteTarget ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
               {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
             </>
           ) : (
