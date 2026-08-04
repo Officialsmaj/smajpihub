@@ -20060,8 +20060,35 @@ svg {
     right: 12px;
     bottom: calc(78px + env(safe-area-inset-bottom, 0px));
     z-index: 40;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr repeat(3, auto);
+    align-items: center;
+    gap: 8px;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(2,6,23,.24);
   }
-  .conversation-selection-sheet strong { color: var(--smaj-primary); }
+  .conversation-selection-sheet strong { min-width: 0; color: var(--smaj-primary); font-size: 13px; }
+  .conversation-selection-sheet button {
+    min-height: 34px;
+    padding: 0 10px;
+    color: var(--smaj-text);
+    background: var(--smaj-secondary-bg);
+    border: 1px solid var(--smaj-border);
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .conversation-selection-sheet .conversation-delete-button {
+    color: #ffffff;
+    background: #dc2626;
+    border-color: #dc2626;
+  }
 }
 
 @media (min-width: 1024px) {

@@ -482,12 +482,15 @@ const MessagesPage = () => {
   const finishConversationPress = (conversation: RichConversation, event: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>) => {
     if (!touchSelectionEnabled) return;
     clearConversationLongPressTimer();
+    if (conversationLongPressTriggeredRef.current) {
+      event.preventDefault();
+      return;
+    }
     if (selectedConversationIds.size > 0) {
       event.preventDefault();
       toggleSelectedConversation(conversation);
       return;
     }
-    if (conversationLongPressTriggeredRef.current) event.preventDefault();
   };
 
   const handleConversationMouseDown = (conversation: RichConversation) => {
@@ -731,7 +734,7 @@ const MessagesPage = () => {
               <Link className="private-secondary-button messages-empty-browse" to="/store">Browse Products</Link>
             </div>
           )}
-          {selectedConversations.length ? <div className="chat-action-sheet conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="chat-delete-everyone" onClick={() => void deleteSelectedConversations()}>Delete chat</button><button type="button" onClick={() => setSelectedConversationIds(new Set())}>Cancel</button></div> : null}
+          {selectedConversations.length ? <div className="conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="conversation-delete-button" onClick={() => void deleteSelectedConversations()}>Delete</button><button type="button" onClick={() => setSelectedConversationIds(new Set())}>Cancel</button></div> : null}
         </aside>
         <div className="chat-panel">
           {active ? (
