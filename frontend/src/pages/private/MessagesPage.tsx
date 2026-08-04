@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type TouchEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
@@ -101,6 +101,8 @@ const MessagesPage = () => {
   const [sendingVoice, setSendingVoice] = useState(false);
   const [sendingAttachment, setSendingAttachment] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatMessage | null>(null);
+  const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(() => new Set());
+  const [touchSelectionEnabled, setTouchSelectionEnabled] = useState(false);
   const [deletingMessage, setDeletingMessage] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +115,9 @@ const MessagesPage = () => {
   const recordingTimerRef = useRef<number | null>(null);
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const keepRecordingRef = useRef(true);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressTriggeredRef = useRef(false);
+  const ignoreMousePressRef = useRef(false);
   const selectedId = params.get("conversation");
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
@@ -127,6 +132,13 @@ const MessagesPage = () => {
   }, [conversationSearch, conversations, inboxFilter, user?.uid]);
   const activeId = selectedId || filteredConversations[0]?._id;
   const active = useMemo(() => conversations.find((item) => item._id === activeId), [activeId, conversations]);
+  const selectedMessages = useMemo(
+    () => messages.filter((item) => selectedMessageIds.has(item._id) && !item.deletedForEveryone),
+    [messages, selectedMessageIds]
+  );
+  const canDeleteSelectedForEveryone = selectedMessages.length > 0 && selectedMessages.every(
+    (item) => item.senderId === user?.uid && Date.now() - new Date(item.createdAt).getTime() <= 15 * 60 * 1000
+  );
 
   const archiveConversation = async (conversationId: string, archive: boolean) => {
     setMoreOpen(false);
@@ -201,8 +213,29 @@ const MessagesPage = () => {
   useEffect(() => () => {
     if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
     if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
     recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 1023px)");
+    const update = () => setTouchSelectionEnabled(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    setSelectedMessageIds(new Set());
+  }, [activeId]);
+
+  useEffect(() => {
+    setSelectedMessageIds((current) => {
+      const availableIds = new Set(messages.filter((item) => !item.deletedForEveryone).map((item) => item._id));
+      const next = new Set([...current].filter((id) => availableIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [messages]);
 
   const setTyping = useCallback((typing: boolean) => {
     if (!activeId) return;
@@ -280,6 +313,99 @@ const MessagesPage = () => {
     } finally {
       setDeletingMessage(false);
     }
+  };
+
+  const deleteSelectedMessages = async (scope: "me" | "everyone") => {
+    if (!activeId || selectedMessages.length === 0) return;
+    setDeletingMessage(true);
+    setVoiceError("");
+    try {
+      const results = await Promise.all(selectedMessages.map((message) =>
+        axiosClient.delete<{ hidden?: boolean; message?: ChatMessage }>(`/messages/${activeId}/messages/${message._id}`, { data: { scope } })
+      ));
+      const selectedIds = new Set(selectedMessages.map((message) => message._id));
+      setMessages((current) => {
+        let next = scope === "me"
+          ? current.filter((item) => !selectedIds.has(item._id))
+          : current;
+        results.forEach(({ data }) => {
+          if (data.hidden) next = next.filter((item) => !selectedIds.has(item._id));
+          else if (data.message) next = next.map((item) => item._id === data.message?._id ? data.message : item);
+        });
+        return next;
+      });
+      setSelectedMessageIds(new Set());
+      await loadConversations();
+    } catch (err: unknown) {
+      setVoiceError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Messages could not be deleted." : "Messages could not be deleted.");
+    } finally {
+      setDeletingMessage(false);
+    }
+  };
+
+  const toggleSelectedMessage = (message: ChatMessage) => {
+    if (message.deletedForEveryone) return;
+    setSelectedMessageIds((current) => {
+      const next = new Set(current);
+      if (next.has(message._id)) next.delete(message._id);
+      else next.add(message._id);
+      return next;
+    });
+  };
+
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  };
+
+  const startMessageLongPress = (message: ChatMessage) => {
+    if (!touchSelectionEnabled || message.deletedForEveryone) return;
+    longPressTriggeredRef.current = false;
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setAttachOpen(false);
+      setEmojiOpen(false);
+      setReportOpen(false);
+      setDeleteTarget(null);
+      setSelectedMessageIds((current) => {
+        if (current.has(message._id)) return current;
+        return new Set([...current, message._id]);
+      });
+    }, 550);
+  };
+
+  const finishMessagePress = (message: ChatMessage, event: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>) => {
+    if (!touchSelectionEnabled) return;
+    clearLongPressTimer();
+    if (selectedMessageIds.size > 0 && !message.deletedForEveryone) {
+      event.preventDefault();
+      toggleSelectedMessage(message);
+      return;
+    }
+    if (longPressTriggeredRef.current) event.preventDefault();
+  };
+
+  const handleMessageMouseDown = (message: ChatMessage) => {
+    if (ignoreMousePressRef.current) return;
+    startMessageLongPress(message);
+  };
+
+  const handleMessageMouseUp = (message: ChatMessage, event: MouseEvent<HTMLElement>) => {
+    if (ignoreMousePressRef.current) return;
+    finishMessagePress(message, event);
+  };
+
+  const handleMessageTouchStart = (message: ChatMessage) => {
+    ignoreMousePressRef.current = true;
+    startMessageLongPress(message);
+  };
+
+  const handleMessageTouchEnd = (message: ChatMessage, event: TouchEvent<HTMLElement>) => {
+    finishMessagePress(message, event);
+    window.setTimeout(() => {
+      ignoreMousePressRef.current = false;
+    }, 700);
   };
 
   const clearVoicePreview = useCallback(() => {
@@ -528,7 +654,16 @@ const MessagesPage = () => {
                   </div>
                 </div>
                 {messages.map((item, index) => (
-                  <article className={item.senderId === user?.uid ? "mine" : ""} key={item._id}>
+                  <article
+                    className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
+                    key={item._id}
+                    onMouseDown={() => handleMessageMouseDown(item)}
+                    onMouseLeave={clearLongPressTimer}
+                    onMouseUp={(event) => handleMessageMouseUp(item, event)}
+                    onTouchStart={() => handleMessageTouchStart(item)}
+                    onTouchCancel={clearLongPressTimer}
+                    onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
+                  >
                     {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
                       {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
                       <span><small>About this product</small><strong>{item.productTitle}</strong></span>
@@ -615,7 +750,8 @@ const MessagesPage = () => {
               {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
               {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
               {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
-              {deleteTarget ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
+              {selectedMessages.length ? <div className="chat-action-sheet chat-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected messages"><strong>{selectedMessages.length} selected</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("me")}>Delete for me</button>{canDeleteSelectedForEveryone ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setSelectedMessageIds(new Set())}>Cancel</button></div> : null}
+              {deleteTarget && !selectedMessages.length ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
               {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
             </>
           ) : (

@@ -20041,6 +20041,15 @@ svg {
 .chat-deleted-message { opacity: .7; font-style: italic; }
 .chat-action-sheet .chat-delete-everyone { color: #ffffff; background: #dc2626; border-color: #dc2626; }
 @media (hover: none) { .chat-message-delete { opacity: 1; } }
+@media (max-width: 1023px) {
+  .chat-message-delete { display: none; }
+  .chat-messages article.selected {
+    outline: 2px solid var(--smaj-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--smaj-primary) 16%, transparent);
+  }
+  .chat-selection-sheet strong { color: var(--smaj-primary); }
+}
 
 @media (min-width: 1024px) {
   html,
