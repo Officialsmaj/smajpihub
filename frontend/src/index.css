@@ -20049,6 +20049,19 @@ svg {
     box-shadow: 0 0 0 5px color-mix(in srgb, var(--smaj-primary) 16%, transparent);
   }
   .chat-selection-sheet strong { color: var(--smaj-primary); }
+  .conversation-list button.selected {
+    background: color-mix(in srgb, var(--smaj-primary) 14%, var(--smaj-card)) !important;
+    outline: 2px solid var(--smaj-primary);
+    outline-offset: -2px;
+  }
+  .conversation-selection-sheet {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+  }
+  .conversation-selection-sheet strong { color: var(--smaj-primary); }
 }
 
 @media (min-width: 1024px) {

@@ -35,6 +35,7 @@ const mergePairConversations = async (req: any, conversations: Array<Record<stri
   const pairKey = pairKeyFor(primary.buyerId, primary.sellerId);
   const unreadBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.unreadBy) ? item.unreadBy : []))];
   const archivedBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.archivedBy) ? item.archivedBy : []))];
+  const deletedBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.deletedBy) ? item.deletedBy : []))];
 
   if (duplicates.length || primary.pairKey !== pairKey) {
     for (const conversation of sorted) {
@@ -52,7 +53,7 @@ const mergePairConversations = async (req: any, conversations: Array<Record<stri
   }
   await req.app.locals.conversationCollection.updateOne(
     { _id: primary._id },
-    { $set: { pairKey, unreadBy, archivedBy } },
+    { $set: { pairKey, unreadBy, archivedBy, deletedBy } },
   );
   for (const duplicate of duplicates) {
     await req.app.locals.conversationCollection.deleteOne({ _id: duplicate._id });
@@ -97,7 +98,7 @@ export default function mountMessageEndpoints(router: Router) {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ conversations: [] });
     const uid = currentUser.uid;
-    const conversations = await req.app.locals.conversationCollection.find({ participants: uid }).sort({ updatedAt: -1 }).toArray();
+    const conversations = await req.app.locals.conversationCollection.find({ participants: uid, deletedBy: { $ne: uid } }).sort({ updatedAt: -1 }).toArray();
     const grouped = new Map<string, Array<Record<string, any>>>();
     conversations.forEach((conversation: Record<string, any>) => {
       const key = conversation.pairKey || pairKeyFor(conversation.buyerId, conversation.sellerId);
@@ -150,7 +151,7 @@ export default function mountMessageEndpoints(router: Router) {
       }
     } else {
       const productContext = { productId, productTitle: product.title, productImage: product.image, updatedAt: new Date() };
-      await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: productContext });
+      await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: productContext, $pull: { deletedBy: user.uid } });
       conversation = { ...conversation, ...productContext };
     }
     return res.status(200).json({ conversation: serialize(conversation) });
@@ -161,7 +162,7 @@ export default function mountMessageEndpoints(router: Router) {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ conversation: null, messages: [] });
     const uid = currentUser.uid;
-    const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid });
+    const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid, deletedBy: { $ne: uid } });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
     await req.app.locals.messageCollection.updateMany({ conversationId: req.params.id, senderId: { $ne: uid }, readAt: { $exists: false } }, { $set: { readAt: new Date() } });
     const messages = (await req.app.locals.messageCollection.find({ conversationId: req.params.id }).sort({ createdAt: 1 }).toArray())
@@ -198,6 +199,19 @@ export default function mountMessageEndpoints(router: Router) {
     const updated = await req.app.locals.conversationCollection.findOne({ _id: conversation._id });
     const [enrichedConversation] = await enrichConversations(req, user, updated ? [updated] : []);
     return res.status(200).json({ conversation: enrichedConversation });
+  });
+
+  router.delete("/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid conversation id" });
+    const user = await resolveCurrentUser(req);
+    if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
+    const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
+    if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    await req.app.locals.conversationCollection.updateOne(
+      { _id: conversation._id },
+      { $addToSet: { deletedBy: user.uid }, $pull: { unreadBy: user.uid, archivedBy: user.uid }, $set: { updatedAt: new Date() } },
+    );
+    return res.status(200).json({ deleted: true, conversationId: req.params.id });
   });
 
   router.post("/:id", async (req, res) => {
@@ -246,7 +260,7 @@ export default function mountMessageEndpoints(router: Router) {
       createdAt: new Date(),
     };
     const result = await req.app.locals.messageCollection.insertOne(document);
-    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: document.message, lastMessageId: result.insertedId.toString(), updatedAt: new Date() }, $addToSet: { unreadBy: receiverId } });
+    await req.app.locals.conversationCollection.updateOne({ _id: conversation._id }, { $set: { lastMessage: document.message, lastMessageId: result.insertedId.toString(), updatedAt: new Date() }, $addToSet: { unreadBy: receiverId }, $pull: { deletedBy: receiverId } });
     await createNotification(req.app, { userId: receiverId, type: "new_message", title: "New message", message: `${document.senderName}: ${document.message.slice(0, 100)}`, relatedId: req.params.id, image: user.avatar || "" });
     return res.status(201).json({ message: serialize({ ...document, _id: result.insertedId }) });
   });

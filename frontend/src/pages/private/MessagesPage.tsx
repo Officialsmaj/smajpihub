@@ -102,6 +102,7 @@ const MessagesPage = () => {
   const [sendingAttachment, setSendingAttachment] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatMessage | null>(null);
   const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(() => new Set());
+  const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(() => new Set());
   const [touchSelectionEnabled, setTouchSelectionEnabled] = useState(false);
   const [deletingMessage, setDeletingMessage] = useState(false);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -116,8 +117,11 @@ const MessagesPage = () => {
   const recordingStreamRef = useRef<MediaStream | null>(null);
   const keepRecordingRef = useRef(true);
   const longPressTimerRef = useRef<number | null>(null);
+  const conversationLongPressTimerRef = useRef<number | null>(null);
   const longPressTriggeredRef = useRef(false);
+  const conversationLongPressTriggeredRef = useRef(false);
   const ignoreMousePressRef = useRef(false);
+  const ignoreConversationMousePressRef = useRef(false);
   const selectedId = params.get("conversation");
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
@@ -138,6 +142,10 @@ const MessagesPage = () => {
   );
   const canDeleteSelectedForEveryone = selectedMessages.length > 0 && selectedMessages.every(
     (item) => item.senderId === user?.uid && Date.now() - new Date(item.createdAt).getTime() <= 15 * 60 * 1000
+  );
+  const selectedConversations = useMemo(
+    () => conversations.filter((item) => selectedConversationIds.has(item._id)),
+    [conversations, selectedConversationIds]
   );
 
   const archiveConversation = async (conversationId: string, archive: boolean) => {
@@ -214,6 +222,7 @@ const MessagesPage = () => {
     if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
     if (recordingTimerRef.current) window.clearInterval(recordingTimerRef.current);
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+    if (conversationLongPressTimerRef.current) window.clearTimeout(conversationLongPressTimerRef.current);
     recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
 
@@ -227,6 +236,7 @@ const MessagesPage = () => {
 
   useEffect(() => {
     setSelectedMessageIds(new Set());
+    setSelectedConversationIds(new Set());
   }, [activeId]);
 
   useEffect(() => {
@@ -236,6 +246,14 @@ const MessagesPage = () => {
       return next.size === current.size ? current : next;
     });
   }, [messages]);
+
+  useEffect(() => {
+    setSelectedConversationIds((current) => {
+      const availableIds = new Set(filteredConversations.map((item) => item._id));
+      const next = new Set([...current].filter((id) => availableIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [filteredConversations]);
 
   const setTyping = useCallback((typing: boolean) => {
     if (!activeId) return;
@@ -312,6 +330,34 @@ const MessagesPage = () => {
       setVoiceError(isAxiosError<{ message?: string }>(err) ? err.response?.data?.message || "Message could not be deleted." : "Message could not be deleted.");
     } finally {
       setDeletingMessage(false);
+    }
+  };
+
+  const archiveSelectedConversations = async (archive: boolean) => {
+    if (!selectedConversations.length) return;
+    setVoiceError("");
+    try {
+      await Promise.all(selectedConversations.map((conversation) => axiosClient.patch(`/messages/${conversation._id}/archive`, { archive })));
+      setSelectedConversationIds(new Set());
+      setParams({});
+      await loadConversations();
+    } catch {
+      setVoiceError("Could not update selected chats. Try again.");
+    }
+  };
+
+  const deleteSelectedConversations = async () => {
+    if (!selectedConversations.length) return;
+    setVoiceError("");
+    try {
+      await Promise.all(selectedConversations.map((conversation) => axiosClient.delete(`/messages/${conversation._id}`)));
+      const selectedIds = new Set(selectedConversations.map((conversation) => conversation._id));
+      setConversations((current) => current.filter((conversation) => !selectedIds.has(conversation._id)));
+      setSelectedConversationIds(new Set());
+      setParams({});
+      setMessages([]);
+    } catch {
+      setVoiceError("Could not delete selected chats. Try again.");
     }
   };
 
@@ -405,6 +451,68 @@ const MessagesPage = () => {
     finishMessagePress(message, event);
     window.setTimeout(() => {
       ignoreMousePressRef.current = false;
+    }, 700);
+  };
+
+  const toggleSelectedConversation = (conversation: RichConversation) => {
+    setSelectedConversationIds((current) => {
+      const next = new Set(current);
+      if (next.has(conversation._id)) next.delete(conversation._id);
+      else next.add(conversation._id);
+      return next;
+    });
+  };
+
+  const clearConversationLongPressTimer = () => {
+    if (conversationLongPressTimerRef.current) window.clearTimeout(conversationLongPressTimerRef.current);
+    conversationLongPressTimerRef.current = null;
+  };
+
+  const startConversationLongPress = (conversation: RichConversation) => {
+    if (!touchSelectionEnabled) return;
+    conversationLongPressTriggeredRef.current = false;
+    clearConversationLongPressTimer();
+    conversationLongPressTimerRef.current = window.setTimeout(() => {
+      conversationLongPressTriggeredRef.current = true;
+      setSelectedMessageIds(new Set());
+      setSelectedConversationIds((current) => current.has(conversation._id) ? current : new Set([...current, conversation._id]));
+    }, 550);
+  };
+
+  const finishConversationPress = (conversation: RichConversation, event: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>) => {
+    if (!touchSelectionEnabled) return;
+    clearConversationLongPressTimer();
+    if (selectedConversationIds.size > 0) {
+      event.preventDefault();
+      toggleSelectedConversation(conversation);
+      return;
+    }
+    if (conversationLongPressTriggeredRef.current) event.preventDefault();
+  };
+
+  const handleConversationMouseDown = (conversation: RichConversation) => {
+    if (ignoreConversationMousePressRef.current) return;
+    startConversationLongPress(conversation);
+  };
+
+  const handleConversationMouseUp = (conversation: RichConversation, event: MouseEvent<HTMLElement>) => {
+    if (ignoreConversationMousePressRef.current) return;
+    finishConversationPress(conversation, event);
+    window.setTimeout(() => {
+      conversationLongPressTriggeredRef.current = false;
+    }, 700);
+  };
+
+  const handleConversationTouchStart = (conversation: RichConversation) => {
+    ignoreConversationMousePressRef.current = true;
+    startConversationLongPress(conversation);
+  };
+
+  const handleConversationTouchEnd = (conversation: RichConversation, event: TouchEvent<HTMLElement>) => {
+    finishConversationPress(conversation, event);
+    window.setTimeout(() => {
+      conversationLongPressTriggeredRef.current = false;
+      ignoreConversationMousePressRef.current = false;
     }, 700);
   };
 
@@ -590,7 +698,20 @@ const MessagesPage = () => {
           <div className="conversation-filters"><button type="button" className={inboxFilter === "inbox" ? "active" : ""} onClick={() => setInboxFilter("inbox")}>Inbox</button><button type="button" className={inboxFilter === "archived" ? "active" : ""} onClick={() => setInboxFilter("archived")}>Archived</button></div>
           {loadingConversations ? <PrivateSkeleton variant="messages" count={6} /> : filteredConversations.length ? (
             filteredConversations.map((item) => (
-              <button className={item._id === activeId ? "active" : ""} key={item._id} onClick={() => setParams({ conversation: item._id })}>
+              <button
+                className={`${item._id === activeId ? "active" : ""}${selectedConversationIds.has(item._id) ? " selected" : ""}`}
+                key={item._id}
+                onClick={() => {
+                  if (selectedConversationIds.size > 0 || conversationLongPressTriggeredRef.current) return;
+                  setParams({ conversation: item._id });
+                }}
+                onMouseDown={() => handleConversationMouseDown(item)}
+                onMouseLeave={clearConversationLongPressTimer}
+                onMouseUp={(event) => handleConversationMouseUp(item, event)}
+                onTouchStart={() => handleConversationTouchStart(item)}
+                onTouchCancel={clearConversationLongPressTimer}
+                onTouchEnd={(event) => handleConversationTouchEnd(item, event)}
+              >
                 <span className="conversation-avatar">
                   {item.profileImage ? <img src={item.profileImage} alt="" /> : getConversationInitial(item, user?.uid)}
                   <i className={item.online ? "online" : "offline"} />
@@ -610,6 +731,7 @@ const MessagesPage = () => {
               <Link className="private-secondary-button messages-empty-browse" to="/store">Browse Products</Link>
             </div>
           )}
+          {selectedConversations.length ? <div className="chat-action-sheet conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="chat-delete-everyone" onClick={() => void deleteSelectedConversations()}>Delete chat</button><button type="button" onClick={() => setSelectedConversationIds(new Set())}>Cancel</button></div> : null}
         </aside>
         <div className="chat-panel">
           {active ? (
