@@ -5,6 +5,7 @@ import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import ServiceArt from "../../components/ServiceArt";
 import { serviceAppPath, serviceCatalog } from "../../content/serviceCatalog";
 import { formatPiRate } from "../../lib/piPricing";
+import AmbassadorServicesPanel from "../../components/AmbassadorServicesPanel";
 
 const serviceHints: Record<string, string> = {
   store: "Shopping • Deals",
@@ -51,6 +52,7 @@ const ServicesHubPage = () => {
 
     <section className="services-mobile-view">
       <header><h1>Services</h1><p>Access multiple digital services from anywhere you are. {formatPiRate()}.</p></header>
+      <AmbassadorServicesPanel />
       <div className="mobile-services-grid">{orderedServices.map((service) => isInProgress(service.slug) ? <article className="service-in-progress-card" key={service.slug}><ServiceArt index={service.atlasIndex} /><em className="service-in-progress-badge">IN PROGRESS</em><strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></article> : <Link key={service.slug} to={servicePath(service.slug, service.live)}><ServiceArt index={service.atlasIndex} />{service.live ? <em className="live-card-badge">LIVE</em> : null}<strong>{service.name.replace("SMAJ ", "")}</strong><span>{serviceHints[service.slug]}</span></Link>)}</div>
     </section>
   </main>;

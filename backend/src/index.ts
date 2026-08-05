@@ -29,6 +29,7 @@ import mountJobsEndpoints from "./handlers/jobs";
 import mountTransportEndpoints from "./handlers/transport";
 import mountTranslationEndpoints from "./handlers/translations";
 import mountHeroBannerEndpoints from "./handlers/heroBanners";
+import mountAmbassadorEndpoints from "./handlers/ambassadors";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -270,6 +271,10 @@ const translationRouter = express.Router();
 mountTranslationEndpoints(translationRouter);
 app.use("/translations", translationRouter);
 
+const ambassadorRouter = express.Router();
+mountAmbassadorEndpoints(ambassadorRouter);
+app.use("/ambassadors", ambassadorRouter);
+
 app.get("/health", async (_, res) => {
   const ready = Boolean(
     app.locals.userCollection &&
@@ -324,6 +329,7 @@ const start = async () => {
       );
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.heroBannerCollection = db.collection("hero_banners");
+      app.locals.ambassadorCollection = db.collection("ambassador_applications");
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
 app.locals.jobCollection = db.collection("jobs");
@@ -385,6 +391,8 @@ app.locals.jobCollection = db.collection("jobs");
         app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
         app.locals.heroBannerCollection.createIndex({ placement: 1, active: 1, order: 1 }),
         app.locals.heroBannerCollection.createIndex({ sourceKey: 1 }, { unique: true, sparse: true }),
+        app.locals.ambassadorCollection.createIndex({ userId: 1 }, { unique: true }),
+        app.locals.ambassadorCollection.createIndex({ status: 1, countryCode: 1, services: 1 }),
         app.locals.streamContentCollection.createIndex({
           creatorId: 1,
           createdAt: -1,

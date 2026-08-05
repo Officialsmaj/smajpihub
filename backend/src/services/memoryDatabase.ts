@@ -185,6 +185,7 @@ export const createMemoryCollections = () => ({
   onboardingCollection: new MemoryCollection(),
   supportCollection: new MemoryCollection(),
   heroBannerCollection: new MemoryCollection(),
+  ambassadorCollection: new MemoryCollection(),
   streamContentCollection: new MemoryCollection(),
   streamSettingsCollection: new MemoryCollection(),
   jobCollection: new MemoryCollection(),
