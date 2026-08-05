@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { isAxiosError } from "axios";
 import { Country, State } from "country-state-city";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
@@ -44,6 +44,8 @@ const readImage = (file: File) => new Promise<string>((resolve, reject) => {
 
 const AmbassadorServicesPanel = () => {
   const { user } = useAuthContext();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const selfieStreamRef = useRef<MediaStream | null>(null);
   const [mode, setMode] = useState<"apply" | "find" | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
   const [ambassadors, setAmbassadors] = useState<PublicAmbassador[]>([]);
@@ -51,6 +53,8 @@ const AmbassadorServicesPanel = () => {
   const [countryFilter, setCountryFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("all");
   const [submitting, setSubmitting] = useState(false);
+  const [selfieCameraOpen, setSelfieCameraOpen] = useState(false);
+  const [selfieCameraReady, setSelfieCameraReady] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState<FormState>({
     displayName: user?.displayName || user?.username || "",
@@ -92,7 +96,41 @@ const AmbassadorServicesPanel = () => {
       .finally(() => setDirectoryLoading(false));
   }, [countryFilter, mode, serviceFilter]);
 
-  const close = () => { setMode(null); setError(""); };
+  useEffect(() => {
+    if (!selfieCameraOpen) return;
+    let cancelled = false;
+
+    const startCamera = async () => {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) throw new Error("camera_unavailable");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        selfieStreamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => undefined);
+        }
+        setSelfieCameraReady(true);
+        setError("");
+      } catch {
+        setError("Camera access is needed for the live selfie. Allow camera permission or try another browser.");
+        setSelfieCameraOpen(false);
+      }
+    };
+
+    void startCamera();
+    return () => {
+      cancelled = true;
+      selfieStreamRef.current?.getTracks().forEach((track) => track.stop());
+      selfieStreamRef.current = null;
+      setSelfieCameraReady(false);
+    };
+  }, [selfieCameraOpen]);
+
+  const close = () => { setMode(null); setSelfieCameraOpen(false); setError(""); };
   const chooseService = (slug: string) => {
     setForm((current) => {
       if (slug === "all") return { ...current, services: ["all"] };
@@ -113,10 +151,38 @@ const AmbassadorServicesPanel = () => {
     }
     event.target.value = "";
   };
+  const captureSelfie = () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setError("Camera is still starting. Try capture again in a moment.");
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setError("The selfie could not be captured.");
+      return;
+    }
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setForm((current) => ({ ...current, selfie: canvas.toDataURL("image/jpeg", 0.9) }));
+    setSelfieCameraOpen(false);
+    setError("");
+  };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!selectedCountry || !selectedRegionName || !form.services.length || !form.idFront || !form.idBack || !form.selfie) {
-      setError("Choose a country and region, select services, and add all three identity images.");
+    if (!selectedCountry || !selectedRegionName || !form.services.length) {
+      setError("Choose a country, region, and at least one service.");
+      return;
+    }
+    const missingIdentity = [
+      { value: form.idFront, label: "ID front" },
+      { value: form.idBack, label: "ID back" },
+      { value: form.selfie, label: "live selfie" },
+    ].find((item) => !item.value);
+    if (missingIdentity) {
+      setError(`Add ${missingIdentity.label} before submitting.`);
       return;
     }
     setSubmitting(true);
@@ -172,12 +238,23 @@ const AmbassadorServicesPanel = () => {
           <div className="ambassador-form-row"><label>Country<select required value={form.countryCode} onChange={(event) => setForm({ ...form, countryCode: event.target.value, regionCode: "", customRegion: "" })}><option value="">🌍 Select country</option>{countries.map((country) => <option key={country.isoCode} value={country.isoCode}>{country.flag} {country.name}</option>)}</select></label><label>Region{form.countryCode && !regions.length ? <input required value={form.customRegion} onChange={(event) => setForm({ ...form, customRegion: event.target.value })} placeholder={`${selectedCountry?.flag || "📍"} Region or local area`} /> : <select required disabled={!form.countryCode} value={form.regionCode} onChange={(event) => setForm({ ...form, regionCode: event.target.value })}><option value="">{form.countryCode ? `${selectedCountry?.flag || "📍"} Select region` : "Select country first"}</option>{regions.map((region) => <option key={`${region.countryCode}-${region.isoCode}`} value={region.isoCode}>{selectedCountry?.flag} {region.name}</option>)}</select>}</label></div>
           <label>Services<details className="ambassador-service-multiselect"><summary>{form.services.includes("all") ? "All SMAJ services" : `${form.services.length} services selected`}<span>⌄</span></summary><div className="ambassador-service-options" role="group" aria-label="Choose one or more services">{serviceOptions.map((service) => <label key={service.slug} className={form.services.includes(service.slug) ? "selected" : ""}><input type="checkbox" checked={form.services.includes(service.slug)} onChange={() => chooseService(service.slug)} /><span>{service.name}</span></label>)}</div></details></label>
           <label>Why do you want to become an ambassador?<textarea required minLength={20} maxLength={1500} value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} placeholder="Tell us about your local community and experience." /></label>
-          <fieldset><legend>Private identity verification</legend><div className="ambassador-identity-grid">{([['idFront', 'ID front', 'environment'], ['idBack', 'ID back', 'environment'], ['selfie', 'Live selfie', 'user']] as const).map(([field, label, capture]) => <label className={form[field] ? "uploaded" : ""} key={field}>{form[field] ? <img src={form[field]} alt={`${label} preview`} /> : field === "selfie" ? <PhotoCameraOutlinedIcon /> : <BadgeOutlinedIcon />}<strong>{form[field] ? `${label} added` : label}</strong><span>{form[field] ? "Tap to replace" : "JPG, PNG or WebP · max 5 MB"}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture={capture} onChange={(event) => void selectImage(field, event)} /></label>)}</div></fieldset>
+          <fieldset><legend>Private identity verification</legend><div className="ambassador-identity-grid">{([['idFront', 'ID front', 'environment'], ['idBack', 'ID back', 'environment']] as const).map(([field, label, capture]) => <label className={form[field] ? "uploaded" : ""} key={field}>{form[field] ? <img src={form[field]} alt={`${label} preview`} /> : <BadgeOutlinedIcon />}<strong>{form[field] ? `${label} added` : label}</strong><span>{form[field] ? "Tap to replace" : "JPG, PNG or WebP · max 5 MB"}</span><input type="file" accept="image/jpeg,image/png,image/webp" capture={capture} onChange={(event) => void selectImage(field, event)} /></label>)}<button type="button" className={`ambassador-selfie-tile${form.selfie ? " uploaded" : ""}`} onClick={() => setSelfieCameraOpen(true)}>{form.selfie ? <img src={form.selfie} alt="Live selfie preview" /> : <PhotoCameraOutlinedIcon />}<strong>{form.selfie ? "Live selfie added" : "Live selfie"}</strong><span>{form.selfie ? "Tap to retake" : "Open camera to capture"}</span></button></div></fieldset>
           <label className="ambassador-consent"><input required type="checkbox" />I confirm these details are mine and consent to private identity review.</label>
           {error ? <p className="ambassador-form-error" role="alert">{error}</p> : null}
           <button className="ambassador-submit" disabled={submitting}>{submitting ? "Uploading and submitting…" : "Submit private application"}</button>
         </form>}
       </section>
+      {selfieCameraOpen ? (
+        <div className="ambassador-selfie-camera" role="dialog" aria-modal="true" aria-label="Capture live selfie" onMouseDown={(event) => event.stopPropagation()}>
+          <video ref={videoRef} autoPlay playsInline muted />
+          <div>
+            <button type="button" onClick={() => setSelfieCameraOpen(false)}>Cancel</button>
+            <button type="button" className="primary" disabled={!selfieCameraReady} onClick={captureSelfie}>
+              {selfieCameraReady ? "Capture" : "Starting camera"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div> : null}
   </>;
 };
