@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { axiosClient } from "../lib/axiosClient";
-import type { PaymentDTO } from "../types/pi";
+import { requestPiBrowserHandoff } from "../lib/piBrowserHandoff";
 
 type PaymentCallbacks = {
   onReady?: () => void;
@@ -9,7 +9,7 @@ type PaymentCallbacks = {
   onError?: (message: string) => void;
 };
 
-const onIncompletePaymentFound = (_payment: PaymentDTO) => {
+const onIncompletePaymentFound = () => {
   console.info("Pi incomplete payment found before checkout.");
 };
 
@@ -18,7 +18,8 @@ export const usePiPayment = () => {
 
   const payOrder = useCallback(async (orderId: string, amount: number, callbacks?: PaymentCallbacks) => {
     if (!window.Pi) {
-      throw new Error("Open SMAJ PI HUB in Pi Browser to pay with Pi.");
+      requestPiBrowserHandoff("Pi payment required");
+      return;
     }
 
     setIsPaying(true);

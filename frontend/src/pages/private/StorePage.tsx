@@ -201,6 +201,11 @@ const StorePage = () => {
       ...categoryGroups.map((section) => ({ title: section.name, products: section.products.slice(0, 12), category: section.name, collection: "", sort: "newest" })),
     ].filter((section) => section.products.length);
   }, [products]);
+  const scrollStoreRail = (railId: string, direction: -1 | 1) => {
+    const rail = document.getElementById(railId);
+    rail?.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.85, 240), behavior: "smooth" });
+  };
+
   const updateSearch = (value: string) => {
     setSearch(value);
     setParams((current) => {
@@ -509,8 +514,14 @@ const StorePage = () => {
               );
             })}
             <section className="storefront-search-results storefront-discovery-section">
-              <div className="storefront-section-head"><div><h2>More to explore</h2><p>Keep discovering all {products.length} live products</p></div></div>
-              <div className="storefront-product-grid storefront-discovery-grid">
+              <div className="storefront-section-head">
+                <div><h2>More to explore</h2></div>
+                <div className="storefront-section-actions">
+                  <button type="button" className="storefront-rail-arrow previous" onClick={() => scrollStoreRail("storefront-explore-rail", -1)} aria-label="Scroll more products left"><ArrowBackIosNewOutlinedIcon /></button>
+                  <button type="button" className="storefront-rail-arrow next" onClick={() => scrollStoreRail("storefront-explore-rail", 1)} aria-label="Scroll more products right"><ArrowForwardIosOutlinedIcon /></button>
+                </div>
+              </div>
+              <div className="storefront-product-grid storefront-section-rail" id="storefront-explore-rail">
                 {products.map((product) => <MarketplaceProductCard key={`explore-${product._id}`} product={product} variant="compact" saved={savedIds.includes(product._id)} onFavorite={(item) => void toggleFavorite(item)} onAddToCart={addProductToCart} onBuy={goToCheckout} />)}
               </div>
             </section>

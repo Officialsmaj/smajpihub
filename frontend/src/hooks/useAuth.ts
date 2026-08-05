@@ -2,6 +2,7 @@ import { AxiosError, isAxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { axiosClient, getBaseURL } from "../lib/axiosClient";
 import type { AuthResult, User } from "../types/pi";
+import { requestPiBrowserHandoff } from "../lib/piBrowserHandoff";
 
 type AuthFeedback = { type: "success" | "error"; message: string };
 type BackendErrorBody = { error?: string; message?: string };
@@ -263,8 +264,8 @@ export const useAuth = () => {
           setIsLoading(false);
         }
       }
-      const message = "Login with Pi works inside Pi Browser. Please open SMAJ PI HUB in Pi Browser and try again.";
-      setAuthFeedback({ type: "error", message });
+      requestPiBrowserHandoff("Pi login required");
+      setAuthFeedback(null);
       return false;
     }
     setIsLoading(true);

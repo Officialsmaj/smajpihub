@@ -20560,3 +20560,31 @@ svg {
   .storefront-page .storefront-section-rail { grid-auto-columns: calc((100% - 28px) / 3); gap: 14px !important; }
   .storefront-page .storefront-discovery-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; }
 }
+
+/* External browser handoff for protected Pi actions. */
+.pi-handoff-backdrop { position: fixed; inset: 0; z-index: 2200; display: grid; place-items: center; padding: 24px; background: rgba(15, 23, 42, .64); backdrop-filter: blur(7px); }
+.pi-handoff-modal { position: relative; width: min(620px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 30px; color: #111827; background: #ffffff; border: 1px solid rgba(109, 40, 217, .16); border-radius: 24px; box-shadow: 0 28px 90px rgba(15, 23, 42, .3); text-align: center; }
+.pi-handoff-close { position: absolute; top: 15px; right: 15px; width: 38px; height: 38px; display: grid; place-items: center; color: #475569; background: #f8fafc; border: 0; border-radius: 50%; cursor: pointer; }
+.pi-handoff-logo { width: 58px; height: 58px; object-fit: contain; }
+.pi-handoff-kicker { display: block; margin-top: 10px; color: #6d28d9; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.pi-handoff-modal h2 { margin: 9px 0; font-size: clamp(25px, 4vw, 34px); line-height: 1.08; }
+.pi-handoff-modal > p { max-width: 470px; margin: 0 auto 18px; color: #64748b; line-height: 1.55; }
+.pi-handoff-qr { width: 240px; height: 240px; margin: 0 auto 18px; display: grid; place-items: center; overflow: hidden; background: #fff; border: 1px solid #ede9fe; border-radius: 18px; }
+.pi-handoff-qr img { width: 100%; height: 100%; }
+.pi-handoff-qr > svg { width: 90px; height: 90px; color: #6d28d9; }
+.pi-handoff-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pi-handoff-actions a, .pi-handoff-actions button, .pi-handoff-continue { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 15px; border-radius: 12px; font: inherit; font-size: 13px; font-weight: 850; cursor: pointer; text-decoration: none; }
+.pi-handoff-actions svg { width: 18px; height: 18px; }
+.pi-handoff-primary { color: #fff; background: #6d28d9; border: 1px solid #6d28d9; }
+.pi-handoff-actions button { color: #5b2781; background: #f5f3ff; border: 1px solid #ddd6fe; }
+.pi-handoff-downloads { margin: 16px 0 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 13px; color: #64748b; font-size: 12px; }
+.pi-handoff-downloads span { width: 100%; font-weight: 750; }
+.pi-handoff-downloads a { color: #6d28d9; font-weight: 850; }
+.pi-handoff-continue { width: 100%; color: #475569; background: transparent; border: 1px solid #cbd5e1; }
+@media (max-width: 600px) {
+  .pi-handoff-backdrop { align-items: end; padding: 12px; }
+  .pi-handoff-modal { width: 100%; max-height: calc(100dvh - 24px); padding: 28px 18px 18px; border-radius: 22px; }
+  .pi-handoff-modal h2 { font-size: 25px; }
+  .pi-handoff-modal > p { margin-bottom: 20px; }
+  .pi-handoff-actions { grid-template-columns: 1fr; }
+}

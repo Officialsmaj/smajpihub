@@ -343,7 +343,7 @@ const CommerceFlowPage = ({ mode }: { mode: "cart" | "checkout" | "payment-metho
                       <button
                         type="button"
                         className="private-primary-button"
-                        disabled={!hasPi || isPaying}
+                        disabled={isPaying}
                         onClick={() => void payOrder(order._id, order.pricePi, {
                           onReady: () => setMessage("Pi payment approved. Waiting confirmation..."),
                           onComplete: () => {

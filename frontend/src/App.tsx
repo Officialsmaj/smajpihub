@@ -6,6 +6,7 @@ import useSliceReveal from "./hooks/useSliceReveal";
 import { FoodCartProvider } from "./contexts/FoodCartContext";
 import { HealthBookingProvider } from "./contexts/HealthBookingContext";
 import AutomaticPageTranslator from "./components/AutomaticPageTranslator";
+import PiBrowserHandoff from "./components/PiBrowserHandoff";
 
 function App() {
   useSliceReveal();
@@ -29,6 +30,7 @@ function App() {
         <GlobalFeedbackCenter />
         <AutomaticPageTranslator />
       </div>
+      <PiBrowserHandoff />
     </>
   );
 }
