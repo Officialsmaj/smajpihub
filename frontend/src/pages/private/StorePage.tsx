@@ -53,6 +53,7 @@ const StorePage = () => {
   const [loading, setLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
+  const collection = params.get("collection") || "";
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchSuggestionIndex, setSearchSuggestionIndex] = useState(0);
   const [category, setCategory] = useState(params.get("category") || "All");
@@ -182,7 +183,7 @@ const StorePage = () => {
     });
   }, [category, condition, inStockOnly, locationFilter, maxPrice, minPrice, products, search, sort, verifiedOnly]);
 
-  const hasActiveFilters = category !== "All" || condition !== "All" || verifiedOnly || inStockOnly || minPrice !== "" || maxPrice !== "" || locationFilter !== "All" || sort !== "newest";
+  const hasActiveFilters = Boolean(collection) || category !== "All" || condition !== "All" || verifiedOnly || inStockOnly || minPrice !== "" || maxPrice !== "" || locationFilter !== "All" || sort !== "newest";
   const showSearchResults = Boolean(search.trim()) || hasActiveFilters;
   const activeProducts = showSearchResults ? visibleProducts : products;
   const storefrontSections = useMemo(() => {
@@ -195,20 +196,16 @@ const StorePage = () => {
       .slice(0, 6);
 
     return [
-      { title: "Recommended for you", subtitle: "Products selected from across the marketplace", products: popular.slice(0, 12), category: "All" },
-      { title: "New arrivals", subtitle: "Fresh products from marketplace sellers", products: newest.slice(0, 12), category: "All" },
-      ...categoryGroups.map((section) => ({ title: section.name, subtitle: "Explore more in " + section.name, products: section.products.slice(0, 12), category: section.name })),
+      { title: "Recommended for you", products: popular.slice(0, 12), category: "All", collection: "recommended", sort: "popular" },
+      { title: "New arrivals", products: newest.slice(0, 12), category: "All", collection: "new-arrivals", sort: "newest" },
+      ...categoryGroups.map((section) => ({ title: section.name, products: section.products.slice(0, 12), category: section.name, collection: "", sort: "newest" })),
     ].filter((section) => section.products.length);
   }, [products]);
-
-  const scrollStoreRail = (railId: string, direction: -1 | 1) => {
-    const rail = document.getElementById(railId);
-    rail?.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.85, 240), behavior: "smooth" });
-  };
   const updateSearch = (value: string) => {
     setSearch(value);
     setParams((current) => {
       const next = new URLSearchParams(current);
+      next.delete("collection");
       if (value.trim()) next.set("search", value);
       else next.delete("search");
       return next;
@@ -248,7 +245,7 @@ const StorePage = () => {
     setMinPrice(""); setMaxPrice(""); setLocationFilter("All"); updateCategory("All");
     setParams((current) => {
       const next = new URLSearchParams(current);
-      ["sort", "condition", "verified", "stock", "minPrice", "maxPrice", "location", "category"].forEach((key) => next.delete(key));
+      ["sort", "condition", "verified", "stock", "minPrice", "maxPrice", "location", "category", "collection"].forEach((key) => next.delete(key));
       return next;
     }, { replace: true });
     setOpenShoppingTool("");
@@ -278,8 +275,26 @@ const StorePage = () => {
     setCategory(value);
     setParams((current) => {
       const next = new URLSearchParams(current);
+      next.delete("collection");
       if (value === "All") next.delete("category");
       else next.set("category", value);
+      return next;
+    });
+  };
+
+  const openStorefrontSection = (section: (typeof storefrontSections)[number]) => {
+    setSearch("");
+    setCategory(section.category);
+    setSort(section.sort);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("search");
+      if (section.category === "All") next.delete("category");
+      else next.set("category", section.category);
+      if (section.sort === "newest") next.delete("sort");
+      else next.set("sort", section.sort);
+      if (section.collection) next.set("collection", section.collection);
+      else next.delete("collection");
       return next;
     });
   };
@@ -479,18 +494,15 @@ const StorePage = () => {
         {!loading && products.length && !showSearchResults ? (
           <div className="storefront-home-sections">
             {storefrontSections.map((section, sectionIndex) => {
-              const railId = `storefront-rail-${sectionIndex}`;
               return (
                 <section className="storefront-search-results storefront-home-section" key={`${section.title}-${sectionIndex}`}>
                   <div className="storefront-section-head">
-                    <div><h2>{section.title}</h2><p>{section.subtitle}</p></div>
+                    <h2>{section.title}</h2>
                     <div className="storefront-section-actions">
-                      {section.category !== "All" ? <button type="button" className="storefront-see-all" onClick={() => updateCategory(section.category)}>See all</button> : null}
-                      <button type="button" className="storefront-rail-arrow previous" onClick={() => scrollStoreRail(railId, -1)} aria-label={`Scroll ${section.title} left`}><ArrowBackIosNewOutlinedIcon /></button>
-                      <button type="button" className="storefront-rail-arrow next" onClick={() => scrollStoreRail(railId, 1)} aria-label={`Scroll ${section.title} right`}><ArrowForwardIosOutlinedIcon /></button>
+                      <button type="button" className="storefront-see-all" onClick={() => openStorefrontSection(section)}>See all <span aria-hidden="true">→</span></button>
                     </div>
                   </div>
-                  <div className="storefront-product-grid storefront-section-rail" id={railId}>
+                  <div className="storefront-product-grid storefront-section-rail">
                     {section.products.map((product) => <MarketplaceProductCard key={`${sectionIndex}-${product._id}`} product={product} variant="compact" saved={savedIds.includes(product._id)} onFavorite={(item) => void toggleFavorite(item)} onAddToCart={addProductToCart} onBuy={goToCheckout} />)}
                   </div>
                 </section>
@@ -508,7 +520,7 @@ const StorePage = () => {
         {showSearchResults ? (
           <section className="storefront-search-results">
             <div className="storefront-section-head">
-              <div><h2>{search ? `Results for "${search}"` : `${category} products`}</h2><p>{visibleProducts.length} products found</p></div>
+              <div><h2>{search ? `Results for "${search}"` : collection === "recommended" ? "Recommended for you" : collection === "new-arrivals" ? "New arrivals" : `${category} products`}</h2><p>{visibleProducts.length} products found</p></div>
             </div>
             {visibleProducts.length ? <>
               <div className="storefront-product-grid search-grid">
