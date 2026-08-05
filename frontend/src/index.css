@@ -20398,3 +20398,42 @@ svg {
     display: flex;
   }
 }
+
+/* Mobile and tablet storefront catalog: one continuous horizontal row. */
+@media (max-width: 1023px) {
+  .storefront-page .storefront-product-grid,
+  .storefront-page .storefront-product-grid.search-grid {
+    display: grid !important;
+    grid-auto-columns: calc((100% - 10px) / 2);
+    grid-auto-flow: column;
+    grid-template-columns: none !important;
+    gap: 10px !important;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-bottom: 8px;
+    scroll-behavior: smooth;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    touch-action: pan-x pan-y;
+  }
+
+  .storefront-page .storefront-product-grid::-webkit-scrollbar,
+  .storefront-page .storefront-product-grid.search-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .storefront-page .storefront-product-grid > *,
+  .storefront-page .storefront-product-grid.search-grid > * {
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .storefront-page .storefront-product-grid,
+  .storefront-page .storefront-product-grid.search-grid {
+    grid-auto-columns: calc((100% - 28px) / 3);
+    gap: 14px !important;
+  }
+}

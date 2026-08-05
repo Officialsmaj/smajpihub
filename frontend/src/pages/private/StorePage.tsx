@@ -38,9 +38,6 @@ const sortOptions = [
   ["newest", "Newest"], ["oldest", "Oldest"], ["price-low", "Price: Low to High"],
   ["price-high", "Price: High to Low"], ["popular", "Most Popular"], ["rated", "Best Rated"],
 ] as const;
-const PRODUCT_BATCH_SIZE = 10;
-const STORE_PRODUCT_LIMIT_KEY = "smaj_store_product_limit";
-
 const StorePage = () => {
   const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
@@ -65,7 +62,6 @@ const StorePage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenuPanel, setMobileMenuPanel] = useState<"categories" | "subcategories">("categories");
   const [mobileMenuCategory, setMobileMenuCategory] = useState(mobileMenuCategories[0]);
-  const [productLimit, setProductLimit] = useState(() => Math.max(PRODUCT_BATCH_SIZE, Number(window.sessionStorage.getItem(STORE_PRODUCT_LIMIT_KEY) || PRODUCT_BATCH_SIZE)));
   const [cartQuantity, setCartQuantity] = useState(() => getCartQuantity());
   const { addProductToCart, cartToast } = useAddToCartToast();
   const profileName = user?.displayName || user?.username || "Pi User";
@@ -78,7 +74,7 @@ const StorePage = () => {
         axiosClient.get<{ products: Product[] }>("/marketplace/products"),
         axiosClient.get<{ products: Product[] }>("/marketplace/saved").catch(() => null),
       ]);
-      const live = feed?.data?.latest?.length ? [...(feed.data.recommended || []), ...(feed.data.latest || [])] : all?.data?.products || [];
+      const live = [...(feed.data.recommended || []), ...(feed.data.latest || []), ...(all.data.products || [])];
       const unique = Array.from(new Map(live.map((item) => [item._id, item])).values());
       setProducts(unique);
       setSavedIds(feed?.data?.savedIds || saved?.data?.products.map((item) => item._id) || []);
@@ -165,14 +161,6 @@ const StorePage = () => {
   const hasActiveFilters = category !== "All" || condition !== "All" || verifiedOnly || inStockOnly || minPrice !== "" || maxPrice !== "" || locationFilter !== "All" || sort !== "newest";
   const showSearchResults = Boolean(search.trim()) || hasActiveFilters;
   const activeProducts = showSearchResults ? visibleProducts : products;
-  const displayedProducts = activeProducts.slice(0, productLimit);
-  const hiddenProductCount = Math.max(activeProducts.length - displayedProducts.length, 0);
-
-  useEffect(() => {
-    setProductLimit(PRODUCT_BATCH_SIZE);
-    window.sessionStorage.setItem(STORE_PRODUCT_LIMIT_KEY, String(PRODUCT_BATCH_SIZE));
-  }, [category, search]);
-
   const updateSearch = (value: string) => {
     setSearch(value);
     setParams((current) => {
@@ -212,14 +200,6 @@ const StorePage = () => {
     window.addEventListener("keydown", closeOnEscape);
     return () => { document.removeEventListener("pointerdown", closeMenus); window.removeEventListener("keydown", closeOnEscape); };
   }, []);
-
-  const showMoreProducts = () => {
-    setProductLimit((value) => {
-      const next = value + PRODUCT_BATCH_SIZE;
-      window.sessionStorage.setItem(STORE_PRODUCT_LIMIT_KEY, String(next));
-      return next;
-    });
-  };
 
   const toggleFavorite = async (product: Product) => {
     const { data } = await axiosClient.post<{ saved: boolean }>(`/marketplace/products/${product._id}/favorite`);
@@ -445,7 +425,7 @@ const StorePage = () => {
               <div><h2>Live products</h2><p>{products.length} real seller products available</p></div>
             </div>
             <div className="storefront-product-grid search-grid">
-              {displayedProducts.map((product) => (
+              {activeProducts.map((product) => (
                 <MarketplaceProductCard
                   key={`live-${product._id}`}
                   product={product}
@@ -457,11 +437,6 @@ const StorePage = () => {
                 />
               ))}
             </div>
-            {hiddenProductCount ? (
-              <button type="button" className="storefront-load-more" onClick={showMoreProducts}>
-                Show more products
-              </button>
-            ) : null}
           </section>
         ) : null}
 
@@ -472,7 +447,7 @@ const StorePage = () => {
             </div>
             {visibleProducts.length ? <>
               <div className="storefront-product-grid search-grid">
-              {displayedProducts.map((product) => (
+              {activeProducts.map((product) => (
                 <MarketplaceProductCard
                   key={`search-${product._id}`}
                   product={product}
@@ -484,11 +459,6 @@ const StorePage = () => {
                 />
               ))}
             </div>
-            {hiddenProductCount ? (
-              <button type="button" className="storefront-load-more" onClick={showMoreProducts}>
-                Show more products
-              </button>
-            ) : null}
             </> : <div className="private-state"><h2>No real products found</h2><p>Try another search or add a seller product.</p></div>}
           </section>
         ) : null}
