@@ -20442,3 +20442,69 @@ svg {
     gap: 14px !important;
   }
 }
+
+/* Marketplace home sections and swipe controls. */
+.storefront-home-sections {
+  display: grid;
+  gap: 30px;
+}
+
+.storefront-home-section {
+  min-width: 0;
+}
+
+.storefront-section-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.storefront-see-all,
+.storefront-rail-arrow {
+  display: inline-grid;
+  place-items: center;
+  min-height: 34px;
+  color: #6d28d9;
+  background: #ffffff;
+  border: 1px solid #ddd6fe;
+  border-radius: 999px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.storefront-see-all { padding: 0 11px; font-size: 12px; }
+.storefront-rail-arrow { width: 34px; padding: 0; }
+.storefront-rail-arrow svg { width: 16px; height: 16px; }
+
+.storefront-page .storefront-section-rail {
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 280px);
+  grid-template-columns: none !important;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 2px 2px 9px;
+  scroll-behavior: smooth;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+.storefront-page .storefront-section-rail::-webkit-scrollbar { display: none; }
+.storefront-page .storefront-section-rail > * { min-width: 0; scroll-snap-align: start; }
+
+@media (max-width: 767px) {
+  .storefront-home-sections { gap: 24px; }
+  .storefront-page .storefront-section-rail { grid-auto-columns: calc((100% - 10px) / 2); gap: 10px !important; }
+  .storefront-page .storefront-discovery-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; }
+  .storefront-section-actions { gap: 5px; }
+  .storefront-see-all { padding-inline: 9px; }
+  .storefront-rail-arrow { width: 32px; min-height: 32px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .storefront-page .storefront-section-rail { grid-auto-columns: calc((100% - 28px) / 3); gap: 14px !important; }
+  .storefront-page .storefront-discovery-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; }
+}

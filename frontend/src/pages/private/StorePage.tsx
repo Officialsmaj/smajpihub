@@ -161,6 +161,26 @@ const StorePage = () => {
   const hasActiveFilters = category !== "All" || condition !== "All" || verifiedOnly || inStockOnly || minPrice !== "" || maxPrice !== "" || locationFilter !== "All" || sort !== "newest";
   const showSearchResults = Boolean(search.trim()) || hasActiveFilters;
   const activeProducts = showSearchResults ? visibleProducts : products;
+  const storefrontSections = useMemo(() => {
+    const newest = [...products].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    const popular = [...products].sort((left, right) => ((right.viewCount || 0) + (right.rating || 0) * 10 + (right.reviewCount || 0) * 3) - ((left.viewCount || 0) + (left.rating || 0) * 10 + (left.reviewCount || 0) * 3));
+    const categoryGroups = Array.from(new Set(products.map((product) => product.category).filter(Boolean)))
+      .map((name) => ({ name, products: products.filter((product) => product.category === name) }))
+      .filter((section) => section.products.length >= 2)
+      .sort((left, right) => right.products.length - left.products.length)
+      .slice(0, 6);
+
+    return [
+      { title: "Recommended for you", subtitle: "Products selected from across the marketplace", products: popular.slice(0, 12), category: "All" },
+      { title: "New arrivals", subtitle: "Fresh products from marketplace sellers", products: newest.slice(0, 12), category: "All" },
+      ...categoryGroups.map((section) => ({ title: section.name, subtitle: "Explore more in " + section.name, products: section.products.slice(0, 12), category: section.name })),
+    ].filter((section) => section.products.length);
+  }, [products]);
+
+  const scrollStoreRail = (railId: string, direction: -1 | 1) => {
+    const rail = document.getElementById(railId);
+    rail?.scrollBy({ left: direction * Math.max(rail.clientWidth * 0.85, 240), behavior: "smooth" });
+  };
   const updateSearch = (value: string) => {
     setSearch(value);
     setParams((current) => {
@@ -420,24 +440,32 @@ const StorePage = () => {
         {catalogError ? <div className="private-alert error">{catalogError}</div> : null}
         {loading ? <PrivateSkeleton variant="grid" count={6} /> : null}
         {!loading && products.length && !showSearchResults ? (
-          <section className="storefront-search-results">
-            <div className="storefront-section-head">
-              <div><h2>Live products</h2><p>{products.length} real seller products available</p></div>
-            </div>
-            <div className="storefront-product-grid search-grid">
-              {activeProducts.map((product) => (
-                <MarketplaceProductCard
-                  key={`live-${product._id}`}
-                  product={product}
-                  variant="compact"
-                  saved={savedIds.includes(product._id)}
-                  onFavorite={(item) => void toggleFavorite(item)}
-                  onAddToCart={addProductToCart}
-                  onBuy={goToCheckout}
-                />
-              ))}
-            </div>
-          </section>
+          <div className="storefront-home-sections">
+            {storefrontSections.map((section, sectionIndex) => {
+              const railId = `storefront-rail-${sectionIndex}`;
+              return (
+                <section className="storefront-search-results storefront-home-section" key={`${section.title}-${sectionIndex}`}>
+                  <div className="storefront-section-head">
+                    <div><h2>{section.title}</h2><p>{section.subtitle}</p></div>
+                    <div className="storefront-section-actions">
+                      {section.category !== "All" ? <button type="button" className="storefront-see-all" onClick={() => updateCategory(section.category)}>See all</button> : null}
+                      <button type="button" className="storefront-rail-arrow previous" onClick={() => scrollStoreRail(railId, -1)} aria-label={`Scroll ${section.title} left`}><ArrowBackIosNewOutlinedIcon /></button>
+                      <button type="button" className="storefront-rail-arrow next" onClick={() => scrollStoreRail(railId, 1)} aria-label={`Scroll ${section.title} right`}><ArrowForwardIosOutlinedIcon /></button>
+                    </div>
+                  </div>
+                  <div className="storefront-product-grid storefront-section-rail" id={railId}>
+                    {section.products.map((product) => <MarketplaceProductCard key={`${sectionIndex}-${product._id}`} product={product} variant="compact" saved={savedIds.includes(product._id)} onFavorite={(item) => void toggleFavorite(item)} onAddToCart={addProductToCart} onBuy={goToCheckout} />)}
+                  </div>
+                </section>
+              );
+            })}
+            <section className="storefront-search-results storefront-discovery-section">
+              <div className="storefront-section-head"><div><h2>More to explore</h2><p>Keep discovering all {products.length} live products</p></div></div>
+              <div className="storefront-product-grid storefront-discovery-grid">
+                {products.map((product) => <MarketplaceProductCard key={`explore-${product._id}`} product={product} variant="compact" saved={savedIds.includes(product._id)} onFavorite={(item) => void toggleFavorite(item)} onAddToCart={addProductToCart} onBuy={goToCheckout} />)}
+              </div>
+            </section>
+          </div>
         ) : null}
 
         {showSearchResults ? (
