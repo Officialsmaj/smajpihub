@@ -2,6 +2,7 @@ import { axiosClient } from "./axiosClient";
 
 export type HeroBanner = {
   _id: string;
+  sourceKey?: string;
   placement: "dashboard" | "store";
   image: string;
   title: string;

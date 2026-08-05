@@ -384,6 +384,7 @@ app.locals.jobCollection = db.collection("jobs");
         app.locals.pushSubscriptionCollection.createIndex({ endpoint: 1 }, { unique: true }),
         app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
         app.locals.heroBannerCollection.createIndex({ placement: 1, active: 1, order: 1 }),
+        app.locals.heroBannerCollection.createIndex({ sourceKey: 1 }, { unique: true, sparse: true }),
         app.locals.streamContentCollection.createIndex({
           creatorId: 1,
           createdAt: -1,

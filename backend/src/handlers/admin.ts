@@ -22,6 +22,16 @@ const serializeActivity = (item: { type: string; label: string; description: str
   createdAt: item.createdAt.toISOString(),
 });
 
+const defaultHeroBanners = [
+  { sourceKey: "dashboard-welcome", placement: "dashboard", image: "/assets/smaj-mobile-hero-v2.png", title: "Welcome to SMAJ PI HUB", subtitle: "Everything you need. One place.", search: "", textColor: "#ffffff", order: 0 },
+  { sourceKey: "dashboard-business", placement: "dashboard", image: "/assets/smaj-mobile-hero-business.jpg", title: "Build your business", subtitle: "Discover connected tools, sellers, and services.", search: "", textColor: "#ffffff", order: 1 },
+  { sourceKey: "dashboard-work", placement: "dashboard", image: "/assets/smaj-mobile-hero-work.jpg", title: "Work and grow", subtitle: "Access opportunities across the SMAJ ecosystem.", search: "", textColor: "#ffffff", order: 2 },
+  { sourceKey: "store-big-pi-deals", placement: "store", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=85", title: "Big Pi Deals", subtitle: "Shop trusted products across the SMAJ ecosystem with Pi-powered checkout.", search: "Deals", textColor: "#ffffff", order: 0 },
+  { sourceKey: "store-electronics-week", placement: "store", image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1600&q=85", title: "Electronics Week", subtitle: "Phones, gaming, headphones, and laptops from verified SMAJ sellers.", search: "Electronics", textColor: "#ffffff", order: 1 },
+  { sourceKey: "store-fashion-deals", placement: "store", image: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1600&q=85", title: "Fashion Deals", subtitle: "Discover premium looks, everyday essentials, and Pi-exclusive savings.", search: "Fashion", textColor: "#ffffff", order: 2 },
+  { sourceKey: "store-home-essentials", placement: "store", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=85", title: "Home Essentials", subtitle: "Refresh your space with furniture, decor, kitchen picks, and appliances.", search: "Home", textColor: "#ffffff", order: 3 },
+] as const;
+
 const safeCount = async (collection: { countDocuments?: (query?: Record<string, any>) => Promise<number> } | undefined, query: Record<string, any> = {}): Promise<number> => {
   if (!collection || typeof collection.countDocuments !== "function") return 0;
   try {
@@ -112,6 +122,20 @@ export default function mountAdminEndpoints(router: Router) {
     if (!collection) return res.status(503).json({ error: "service_unavailable", message: "Hero banner storage is still starting." });
     const banners = await collection.find({}).sort({ order: 1 }).toArray();
     return res.status(200).json({ banners: banners.map(serialize) });
+  });
+
+  router.post("/hero-banners/import-defaults", async (req, res) => {
+    const collection = req.app.locals.heroBannerCollection;
+    if (!collection) return res.status(503).json({ error: "service_unavailable", message: "Hero banner storage is still starting." });
+    const now = new Date();
+    const results = await Promise.all(defaultHeroBanners.map((banner) => collection.updateOne(
+      { sourceKey: banner.sourceKey },
+      { $setOnInsert: { ...banner, active: true, createdAt: now, updatedAt: now } },
+      { upsert: true },
+    )));
+    const imported = results.filter((result: Record<string, any>) => result.upsertedId).length;
+    const banners = await collection.find({}).sort({ order: 1 }).toArray();
+    return res.status(200).json({ message: imported ? `Imported ${imported} existing banner${imported === 1 ? "" : "s"}.` : "Existing banners are already imported.", imported, banners: banners.map(serialize) });
   });
 
   router.post("/hero-banners", async (req, res) => {
