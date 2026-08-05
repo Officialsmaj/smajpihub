@@ -3826,6 +3826,9 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
   outline-offset: 3px;
 }
 .settings-verification-badge { display: inline-flex !important; align-items: center; gap: 8px; }
+.settings-verification-row { justify-content: flex-start; }
+.seller-verification-title { display: inline-flex; align-items: center; gap: 7px; }
+.seller-verification-title .trust-badge { flex: 0 0 auto; }
 .account-verification-badge { display: inline-flex; align-items: center; width: fit-content; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 850; text-transform: uppercase; color: #14532d; background: #dcfce7; }
 .account-verification-badge.pi_verified { color: #5b21b6; background: #ede9fe; }
 .account-verification-badge.seller_verified { color: #713f12; background: #fef3c7; }
@@ -4625,6 +4628,7 @@ html[data-private-theme="dark"] .private-alert.success {
 
 @media (max-width: 1023px) { .services-hub-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.home-activity-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.continue-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .global-search { grid-template-columns: 1fr; }.global-search button { min-height: 44px; justify-content: center; }.services-hub-grid,.recommended-services,.updates-list,.help-grid { grid-template-columns: 1fr; }.home-activity-grid { grid-template-columns: 1fr 1fr; }.settings-info-row { align-items: flex-start; flex-direction: column; }.appearance-options { flex-wrap: wrap; } }
+@media (max-width: 600px) { .settings-info-row.settings-verification-row { align-items: center; flex-direction: row; justify-content: flex-start; } }
 
 /* Approved private app completion */
 .service-art { display: block; background-image: url('/assets/smaj-service-atlas.png'); background-size: 500% 300%; background-repeat: no-repeat; background-color: var(--smaj-secondary-bg); }

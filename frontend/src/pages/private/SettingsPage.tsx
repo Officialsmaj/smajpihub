@@ -266,7 +266,7 @@ const SettingsPage = () => {
         <section>
           <h2>Account Settings</h2>
           <label>Account type<select value={form.accountType} onChange={(event) => setField("accountType", event.target.value as SavedSettings["accountType"])}><option>Buyer</option><option>Seller</option><option>Both</option></select></label>
-          <div className="settings-info-row"><span>Verification status</span><strong className="settings-verification-badge"><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
+          <div className="settings-info-row settings-verification-row"><span>Verification status</span><strong className="settings-verification-badge"><TrustBadge level={verificationLevel} status={user?.verificationStatus} /></strong></div>
           <div className="settings-verification-card">
             <div>
               <strong>{verificationButtonLabel}</strong>

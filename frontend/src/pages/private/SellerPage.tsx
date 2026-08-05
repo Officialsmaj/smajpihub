@@ -221,9 +221,8 @@ const SellerPage = () => {
           <section className="seller-verification-card">
             <div>
               <p className="private-kicker">SELLER TRUST</p>
-              <h2>Verification Status</h2>
+              <div className="seller-verification-title"><h2>Verification Status</h2><TrustBadge level={user?.verificationLevel} status={user?.verificationStatus} /></div>
               <p>{verificationText}</p>
-              <TrustBadge level={user?.verificationLevel} status={user?.verificationStatus} />
             </div>
             {sellerActive && !isTrustedSeller ? <Link className="private-primary-button" to="/settings">Open Verification Settings</Link> : null}
           </section>
