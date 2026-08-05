@@ -120,6 +120,8 @@ const MessagesPage = () => {
   const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(() => new Set());
   const [touchSelectionEnabled, setTouchSelectionEnabled] = useState(false);
   const [deletingMessage, setDeletingMessage] = useState(false);
+  const [deletingConversations, setDeletingConversations] = useState(false);
+  const [conversationActionError, setConversationActionError] = useState("");
   const chatMessagesRef = useRef<HTMLDivElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
@@ -361,7 +363,11 @@ const MessagesPage = () => {
 
   const deleteSelectedConversations = async () => {
     if (!selectedConversations.length) return;
+    const count = selectedConversations.length;
+    if (!window.confirm(`Delete ${count === 1 ? "this conversation" : `these ${count} conversations`}? It will be removed from your inbox.`)) return;
     setVoiceError("");
+    setConversationActionError("");
+    setDeletingConversations(true);
     try {
       await Promise.all(selectedConversations.map((conversation) => axiosClient.delete(`/messages/${conversation._id}`)));
       const selectedIds = new Set(selectedConversations.map((conversation) => conversation._id));
@@ -370,7 +376,9 @@ const MessagesPage = () => {
       setParams({});
       setMessages([]);
     } catch {
-      setVoiceError("Could not delete selected chats. Try again.");
+      setConversationActionError("Could not delete. Please try again.");
+    } finally {
+      setDeletingConversations(false);
     }
   };
 
@@ -782,7 +790,7 @@ const MessagesPage = () => {
                   <p className="conversation-meta-line">{getConversationMeta(item, user?.uid)}</p>
                   <small>{formatLastSeen(item)}</small>
                 </div>
-                {item.unreadBy?.length ? <b>{item.unreadBy.length}</b> : null}
+                {user?.uid && item.unreadBy?.includes(user.uid) ? <b>1</b> : null}
               </button>
             ))
           ) : (
@@ -792,7 +800,7 @@ const MessagesPage = () => {
               <Link className="private-secondary-button messages-empty-browse" to="/store">Browse Products</Link>
             </div>
           )}
-          {selectedConversations.length ? <div className="conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="conversation-delete-button" onClick={() => void deleteSelectedConversations()}>Delete</button><button type="button" onClick={() => setSelectedConversationIds(new Set())}>Cancel</button></div> : null}
+          {selectedConversations.length ? <div className="conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" disabled={deletingConversations} onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="conversation-delete-button" disabled={deletingConversations} onClick={() => void deleteSelectedConversations()}>{deletingConversations ? "Deleting…" : "Delete"}</button><button type="button" disabled={deletingConversations} onClick={() => { setSelectedConversationIds(new Set()); setConversationActionError(""); }}>Cancel</button>{conversationActionError ? <span className="conversation-selection-error" role="alert">{conversationActionError}</span> : null}</div> : null}
         </aside>
         <div className="chat-panel">
           {active ? (
