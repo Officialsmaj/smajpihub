@@ -20583,9 +20583,9 @@ svg {
   .services-ambassador-card::after { content: ""; position: absolute; width: 120px; height: 120px; right: -48px; top: -56px; border: 22px solid rgba(255,255,255,.1); border-radius: 50%; }
   .services-ambassador-icon { width: 44px; height: 44px; display: grid; place-items: center; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); border-radius: 13px; }
   .services-ambassador-icon svg { font-size: 25px; }
-  .services-ambassador-card small { display: block; color: #ddd6fe; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
-  .services-ambassador-card h2 { margin: 3px 0 4px; color: #fff; font-size: 16px; line-height: 1.15; }
-  .services-ambassador-card p { max-width: none; margin: 0; color: #ede9fe; font-size: 10px; line-height: 1.4; }
+  .services-ambassador-card small { display: block; color: #fff !important; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
+  .services-ambassador-card h2 { margin: 3px 0 4px; color: #fff !important; font-size: 16px; line-height: 1.15; }
+  .services-ambassador-card p { max-width: none; margin: 0; color: #fff !important; font-size: 10px; line-height: 1.4; opacity: .92; }
   .services-ambassador-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
   .services-ambassador-actions button { min-height: 36px; padding: 0 9px; color: #fff; background: rgba(255,255,255,.11); border: 1px solid rgba(255,255,255,.3); border-radius: 10px; font-size: 10px; font-weight: 900; }
   .services-ambassador-actions button.primary { color: #5b21b6; background: #fff; border-color: #fff; }
@@ -20610,9 +20610,16 @@ svg {
   .ambassador-form legend { padding: 0 5px; color: var(--smaj-text); font-size: 11px; font-weight: 900; }
   .ambassador-privacy-note { max-width: none !important; margin: 0 !important; padding: 10px; display: flex; align-items: flex-start; gap: 7px; color: #5b21b6 !important; background: #f5f3ff; border-radius: 10px; font-size: 10px !important; }
   .ambassador-privacy-note svg { flex: 0 0 auto; font-size: 17px; }
-  .ambassador-service-options { display: flex; flex-wrap: wrap; gap: 6px; }
-  .ambassador-service-options button { padding: 7px 9px; color: var(--smaj-text-secondary); background: var(--smaj-secondary-bg); border: 1px solid var(--smaj-border); border-radius: 999px; font-size: 9px; font-weight: 800; }
-  .ambassador-service-options button.selected { color: #fff; background: var(--smaj-primary); border-color: var(--smaj-primary); }
+  .ambassador-service-multiselect { position: relative; }
+  .ambassador-service-multiselect summary { min-height: 42px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; color: var(--smaj-text); background: var(--smaj-input); border: 1px solid var(--smaj-border); border-radius: 10px; font-size: 13px; font-weight: 700; list-style: none; cursor: pointer; }
+  .ambassador-service-multiselect summary::-webkit-details-marker { display: none; }
+  .ambassador-service-multiselect[open] summary { border-color: var(--smaj-primary); border-radius: 10px 10px 0 0; }
+  .ambassador-service-multiselect summary span { font-size: 16px; transition: transform .18s ease; }
+  .ambassador-service-multiselect[open] summary span { transform: rotate(180deg); }
+  .ambassador-service-options { max-height: 230px; padding: 7px; display: grid; gap: 3px; overflow-y: auto; background: var(--smaj-card); border: 1px solid var(--smaj-primary); border-top: 0; border-radius: 0 0 10px 10px; }
+  .ambassador-service-options label { min-height: 36px; padding: 7px 8px; display: grid; grid-template-columns: 18px 1fr; align-items: center; gap: 8px; color: var(--smaj-text); background: transparent; border-radius: 7px; font-size: 11px; font-weight: 750; cursor: pointer; }
+  .ambassador-service-options label.selected { color: var(--smaj-primary); background: color-mix(in srgb, var(--smaj-primary) 10%, var(--smaj-card)); }
+  .ambassador-service-options input { width: 16px; height: 16px; padding: 0; accent-color: var(--smaj-primary); }
   .ambassador-identity-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
   .ambassador-identity-grid label { min-width: 0; min-height: 116px; padding: 8px; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; color: var(--smaj-text-secondary); background: var(--smaj-secondary-bg); border: 1px dashed var(--smaj-border); border-radius: 11px; text-align: center; }
   .ambassador-identity-grid label.uploaded { color: #047857; border-color: #10b981; }
