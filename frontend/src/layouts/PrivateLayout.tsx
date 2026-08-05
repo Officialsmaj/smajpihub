@@ -35,6 +35,7 @@ import WelcomeTour from "../components/WelcomeTour";
 import logoImage from "/logo.png";
 import { serviceAppPath, serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
+import CommunityFollowPrompt from "../components/CommunityFollowPrompt";
 import { getStreamMyList, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
 
 type PrivateLayoutProps = { children: ReactNode };
@@ -456,6 +457,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </NavLink>
         ))}
       </nav>
+      <CommunityFollowPrompt />
       {location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
         <aside className={`live-activity-float ${liveFeedOpen ? "open" : ""}`} aria-label="Live activity">
           {liveFeedOpen ? (

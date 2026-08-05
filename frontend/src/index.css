@@ -20651,6 +20651,50 @@ svg {
   .ambassador-modal { max-height: 92dvh; border-radius: 22px 22px 0 0; }
 }
 
+.community-follow-prompt { display: none; }
+
+@media (max-width: 1023px) {
+  .community-follow-prompt {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    z-index: 1175;
+    width: min(500px, calc(100% - 24px));
+    margin: 0 auto;
+    padding: 15px 14px 10px;
+    display: grid;
+    gap: 9px;
+    overflow: hidden;
+    color: #fff;
+    background: linear-gradient(135deg, #4c1d95, #7c3aed 58%, #2563eb);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 17px;
+    box-shadow: 0 18px 42px rgba(30,20,70,.34);
+    animation: community-follow-rise .3s ease-out both;
+  }
+  .community-follow-prompt::after { content: ""; position: absolute; z-index: -1; width: 120px; height: 120px; right: -48px; top: -55px; border: 22px solid rgba(255,255,255,.09); border-radius: 50%; }
+  .community-follow-prompt small { display: block; color: #fff; font-size: 8px; font-weight: 900; letter-spacing: .09em; opacity: .8; }
+  .community-follow-prompt strong { display: block; margin-top: 2px; color: #fff; font-size: 16px; }
+  .community-follow-prompt p { margin: 3px 30px 0 0; color: #fff; font-size: 10px; line-height: 1.4; opacity: .9; }
+  .community-follow-close { position: absolute; top: 8px; right: 8px; width: 29px; height: 29px; padding: 0; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; }
+  .community-follow-close svg { font-size: 18px; }
+  .community-follow-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .community-follow-actions a { min-height: 37px; padding: 0 8px; display: flex; align-items: center; justify-content: center; gap: 6px; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); border-radius: 10px; font-size: 10px; font-weight: 900; text-decoration: none; }
+  .community-follow-actions a:last-child { color: #4c1d95; background: #fff; border-color: #fff; }
+  .community-follow-actions svg { font-size: 17px; }
+  .community-follow-later { justify-self: center; padding: 1px 9px; color: #fff; background: transparent; border: 0; font-size: 9px; font-weight: 800; opacity: .82; }
+  @keyframes community-follow-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+}
+
+@media (max-width: 360px) {
+  .community-follow-actions { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-follow-prompt { animation: none; }
+}
+
 /* External browser handoff for protected Pi actions. */
 .pi-handoff-backdrop { position: fixed; inset: 0; z-index: 2200; display: grid; place-items: center; padding: 24px; background: rgba(15, 23, 42, .64); backdrop-filter: blur(7px); }
 .pi-handoff-modal { position: relative; width: min(620px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 30px; color: #111827; background: #ffffff; border: 1px solid rgba(109, 40, 217, .16); border-radius: 24px; box-shadow: 0 28px 90px rgba(15, 23, 42, .3); text-align: center; }
