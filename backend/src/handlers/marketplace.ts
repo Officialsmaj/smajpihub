@@ -525,11 +525,18 @@ export default function mountMarketplaceEndpoints(router: Router) {
   router.post("/orders/:id/review", async (req, res) => {
     const user = await requireUser(req, res); if (!user) return;
     if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid order id" });
-    const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id), buyerId: user.uid, status: "completed" });
-    if (!order) return res.status(404).json({ error: "not_found", message: "Completed order not found" });
+    const order = await req.app.locals.marketplaceOrderCollection.findOne({ _id: new ObjectId(req.params.id), buyerId: user.uid, status: { $in: ["delivered", "completed"] } });
+    if (!order) return res.status(404).json({ error: "not_found", message: "Delivered or completed order not found" });
     const rating = Number(req.body?.rating); const review = String(req.body?.message || req.body?.review || "").trim();
     if (!Number.isInteger(rating) || rating < 1 || rating > 5 || review.length > 300) return res.status(400).json({ error: "bad_request", message: "Rating must be 1-5 stars" });
-    await req.app.locals.reviewCollection.updateOne({ orderId: req.params.id }, { $setOnInsert: { orderId: req.params.id, sellerId: order.sellerId, buyerId: user.uid, buyerName: user.displayName || user.username, rating, message: review, createdAt: new Date() } }, { upsert: true });
+    await req.app.locals.reviewCollection.updateOne(
+      { orderId: req.params.id },
+      {
+        $set: { rating, message: review, updatedAt: new Date() },
+        $setOnInsert: { orderId: req.params.id, sellerId: order.sellerId, buyerId: user.uid, buyerName: user.displayName || user.username, createdAt: new Date() },
+      },
+      { upsert: true }
+    );
     return res.status(201).json({ message: "Seller review saved" });
   });
 

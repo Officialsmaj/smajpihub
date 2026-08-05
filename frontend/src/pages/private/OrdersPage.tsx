@@ -70,10 +70,18 @@ const OrdersPage = () => {
 
   const submitReview = async () => {
     if (!reviewOrder) return;
-    await axiosClient.post(`/marketplace/orders/${reviewOrder._id}/review`, { rating: reviewRating, message: reviewMessage });
-    setMessage("Thanks. Your seller review was saved.");
-    setReviewOrder(null);
-    setReviewMessage("");
+    try {
+      await axiosClient.post(`/marketplace/orders/${reviewOrder._id}/review`, { rating: reviewRating, message: reviewMessage });
+      setMessage("Thanks. Your seller review was saved.");
+      setReviewOrder(null);
+      setReviewMessage("");
+    } catch (err: unknown) {
+      setMessage(
+        isAxiosError<{ message?: string }>(err)
+          ? err.response?.data?.message || "Could not save your review."
+          : "Could not save your review."
+      );
+    }
   };
 
   const openReview = (order: Order) => {
@@ -141,7 +149,7 @@ const OrdersPage = () => {
               Confirm Received
             </button>
           ) : null}
-          {mode === "buyer" && order.status === "completed" ? (
+          {mode === "buyer" && ["delivered", "completed"].includes(order.status) ? (
             <button onClick={() => openReview(order)}>Rate Seller</button>
           ) : null}
         </div>
