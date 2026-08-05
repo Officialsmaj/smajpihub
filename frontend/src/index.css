@@ -8916,13 +8916,48 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 
 .storefront-search input {
   flex: 1 1 auto;
-  width: 0;
+  width: 100%;
   min-width: 0;
   color: #111827;
-  background: transparent;
+  background: transparent !important;
   border: 0;
   outline: 0;
   font-size: 16px;
+}
+
+.storefront-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.storefront-search-suggestion {
+  position: absolute;
+  inset-inline: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.25;
+  overflow: hidden;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: storefront-search-suggestion-cycle 3s ease-in-out both;
+}
+
+@keyframes storefront-search-suggestion-cycle {
+  0% { opacity: 0; transform: translateY(100%); }
+  12%, 82% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-search-suggestion {
+    animation: none;
+  }
 }
 
 .storefront-quick-links,
@@ -14604,6 +14639,10 @@ html[data-private-theme="dark"] .storefront-category-nav button {
 
 html[data-private-theme="dark"] .storefront-search input {
   color: var(--smaj-text) !important;
+}
+
+html[data-private-theme="dark"] .storefront-search-suggestion {
+  color: var(--smaj-text-secondary);
 }
 
 html[data-private-theme="dark"] .storefront-search input::placeholder {

@@ -22,6 +22,12 @@ import logoImage from "/logo.png";
 import { PI_USDT_RATE } from "../../lib/piPricing";
 
 const STORE_CATEGORIES = ["Deals", "Grocery", "Electronics", "Mobiles", "Laptops", "Fashion", "Beauty", "Home", "Vehicles", "Accessories"];
+const STORE_SEARCH_FALLBACKS = [
+  "iPhone", "Samsung phones", "laptops", "wireless headphones", "smart watches",
+  "gaming consoles", "cameras", "men's shoes", "women's dresses", "handbags",
+  "perfume", "skin care", "home furniture", "kitchen appliances", "televisions",
+  "car accessories", "baby products", "fitness equipment", "jewelry", "daily deals",
+];
 const mobileMenuCategories = ["Electronics", "Women's Fashion", "Men's Fashion", "Kids Fashion", "Home, Kitchen & Appliances", "Beauty & Fragrance", "Toys", "Baby", "Health & Nutrition"];
 const mobileMenuSubcategories: Record<string, string[]> = {
   Electronics: ["Mobiles & Accessories", "iPhone 17 Series", "Laptops & Accessories", "Gaming Essentials", "TVs & Home Entertainment", "Cameras", "All Electronics"],
@@ -47,6 +53,8 @@ const StorePage = () => {
   const [loading, setLoading] = useState(true);
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchSuggestionIndex, setSearchSuggestionIndex] = useState(0);
   const [category, setCategory] = useState(params.get("category") || "All");
   const [openShoppingTool, setOpenShoppingTool] = useState("");
   const [sort, setSort] = useState(params.get("sort") || "newest");
@@ -127,6 +135,22 @@ const StorePage = () => {
 
   const availableCategories = useMemo(() => ["All", ...new Set(products.map((product) => product.category).filter(Boolean))], [products]);
   const availableLocations = useMemo(() => ["All", ...new Set(products.flatMap((product) => [product.country, product.stateRegion, product.city]).filter((value): value is string => Boolean(value?.trim())).map((value) => value.trim()))], [products]);
+  const searchSuggestions = useMemo(() => {
+    const productTitles = products.map((product) => product.title?.trim()).filter((title): title is string => Boolean(title));
+    return Array.from(new Set([...productTitles, ...STORE_SEARCH_FALLBACKS])).slice(0, 20);
+  }, [products]);
+
+  useEffect(() => {
+    if (searchFocused || search.trim() || searchSuggestions.length < 2) return;
+    const timer = window.setInterval(() => {
+      setSearchSuggestionIndex((current) => (current + 1) % searchSuggestions.length);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [search, searchFocused, searchSuggestions.length]);
+
+  useEffect(() => {
+    setSearchSuggestionIndex((current) => current % Math.max(searchSuggestions.length, 1));
+  }, [searchSuggestions.length]);
 
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -190,6 +214,25 @@ const StorePage = () => {
       return next;
     }, { replace: true });
   };
+  const searchField = (mobile = false) => (
+    <label className={`storefront-search${mobile ? " storefront-mobile-search" : ""}`}>
+      <SearchOutlinedIcon />
+      <span className="storefront-search-field">
+        <input
+          value={search}
+          onChange={(event) => updateSearch(event.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+          aria-label="Search products"
+        />
+        {!search && !searchFocused ? (
+          <span key={searchSuggestionIndex} className="storefront-search-suggestion" aria-hidden="true">
+            Search {searchSuggestions[searchSuggestionIndex] || "products"}
+          </span>
+        ) : null}
+      </span>
+    </label>
+  );
 
   const updateFilterParam = (key: string, value: string, defaultValue = "") => {
     setParams((current) => {
@@ -288,10 +331,7 @@ const StorePage = () => {
               <span>Location</span>
               <KeyboardArrowDownOutlinedIcon className="storefront-location-chevron" />
             </button>
-            <label className="storefront-search">
-              <SearchOutlinedIcon />
-              <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
-            </label>
+            {searchField()}
             <nav className="storefront-quick-links">
               <Link to="/orders"><span>Orders</span></Link>
               <Link to="/saved"><span>Wishlist</span></Link>
@@ -322,10 +362,7 @@ const StorePage = () => {
             </div>
           </div>
 
-          <label className="storefront-search storefront-mobile-search">
-            <SearchOutlinedIcon />
-            <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Search in SMAJ Store..." />
-          </label>
+          {searchField(true)}
 
           {mobileMenuOpen ? (
             <div className="storefront-mobile-drawer-wrap">
