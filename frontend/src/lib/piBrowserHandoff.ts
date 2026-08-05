@@ -3,6 +3,7 @@ export const PI_BROWSER_HANDOFF_EVENT = "smaj:pi-browser-handoff";
 export type PiBrowserHandoffDetail = {
   reason?: string;
   path?: string;
+  automatic?: boolean;
 };
 
 export const requestPiBrowserHandoff = (reason = "Continue with Pi", path?: string) => {

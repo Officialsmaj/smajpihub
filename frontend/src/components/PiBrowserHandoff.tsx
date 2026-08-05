@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
@@ -10,6 +10,7 @@ import logoImage from "/logo.png";
 const ANDROID_URL = "https://play.google.com/store/apps/details?id=pi.browser";
 const IOS_URL = "https://apps.apple.com/us/app/pi-browser/id1560911608";
 
+const AUTO_HANDOFF_DISMISSED_KEY = "smaj_pi_handoff_dismissed";
 const PiBrowserHandoff = () => {
   const [detail, setDetail] = useState<PiBrowserHandoffDetail | null>(null);
   const [qrCode, setQrCode] = useState("");
@@ -27,6 +28,29 @@ const PiBrowserHandoff = () => {
         : "",
     [detail, publicUrl]
   );
+  useEffect(() => {
+    const isMobileOrTablet = window.matchMedia("(max-width: 1023px)").matches;
+    const isPiBrowser = /PiBrowser|Pi Browser/i.test(navigator.userAgent || "");
+    const isMinePiSandbox =
+      window.location.hostname === "sandbox.minepi.com" || document.referrer.includes("sandbox.minepi.com");
+    const dismissed = window.sessionStorage.getItem(AUTO_HANDOFF_DISMISSED_KEY) === "true";
+    if (!isMobileOrTablet || isPiBrowser || isMinePiSandbox || dismissed) return;
+
+    const timer = window.setTimeout(() => {
+      setDetail({
+        reason: "Open SMAJ PI HUB in Pi Browser",
+        path: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+        automatic: true,
+      });
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  const closeHandoff = useCallback(() => {
+    if (detail?.automatic) window.sessionStorage.setItem(AUTO_HANDOFF_DISMISSED_KEY, "true");
+    setDetail(null);
+  }, [detail?.automatic]);
+
 
   useEffect(() => {
     const open = (event: Event) => setDetail((event as CustomEvent<PiBrowserHandoffDetail>).detail || {});
@@ -58,14 +82,14 @@ const PiBrowserHandoff = () => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDetail(null);
+      if (event.key === "Escape") closeHandoff();
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [detail]);
+  }, [closeHandoff, detail]);
 
   if (!detail) return null;
 
@@ -84,7 +108,7 @@ const PiBrowserHandoff = () => {
       className="pi-handoff-backdrop"
       role="presentation"
       onMouseDown={event => {
-        if (event.target === event.currentTarget) setDetail(null);
+        if (event.target === event.currentTarget) closeHandoff();
       }}
     >
       <section
@@ -96,7 +120,7 @@ const PiBrowserHandoff = () => {
         <button
           type="button"
           className="pi-handoff-close"
-          onClick={() => setDetail(null)}
+          onClick={closeHandoff}
           aria-label="Close and continue browsing"
         >
           <CloseOutlinedIcon />
@@ -131,7 +155,7 @@ const PiBrowserHandoff = () => {
             App Store
           </a>
         </div>
-        <button type="button" className="pi-handoff-continue" onClick={() => setDetail(null)}>
+        <button type="button" className="pi-handoff-continue" onClick={closeHandoff}>
           Continue browsing
         </button>
       </section>
