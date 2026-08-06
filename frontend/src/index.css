@@ -20301,7 +20301,7 @@ svg {
   }
 
   body {
-    overflow: hidden;
+    overflow-x: hidden;
   }
 
   .mobile-tablet-app {
