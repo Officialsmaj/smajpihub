@@ -5554,6 +5554,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   #root {
     max-width: 100%;
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .private-shell {
@@ -20293,7 +20294,7 @@ svg {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   html,
   body,
   #root {
