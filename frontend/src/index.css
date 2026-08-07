@@ -5311,7 +5311,9 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 }
 
 /* Private sidebar structure and independent desktop scrolling */
-@media (min-width: 768px) {
+/* Only use the desktop fixed-height private layout on fine-pointer devices.
+   Touch/tablet devices should fall back to the mobile-friendly stacked scroll layout. */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
   .private-shell { height: 100vh; overflow: hidden; }
   .private-body { height: calc(100vh - 68px); min-height: 0; overflow: hidden; }
   .private-sidebar { position: sticky; top: 0; height: 100%; min-height: 0; overflow: hidden; }
@@ -6437,6 +6439,33 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+/* Ensure touch/coatse-pointer devices always allow vertical scrolling inside the private shell.
+   This avoids cases where JS or inherited desktop rules lock scrolling on tablets/touch devices. */
+@media (hover: none), (pointer: coarse) {
+  html, body, #root {
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .private-shell,
+  .private-body {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .private-content {
+    height: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .private-sidebar.private-sidebar-open {
+    position: fixed !important;
   }
 }
 
