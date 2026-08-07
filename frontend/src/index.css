@@ -5313,12 +5313,20 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 /* Private sidebar structure and independent desktop scrolling */
 /* Only use the desktop fixed-height private layout on fine-pointer devices.
    Touch/tablet devices should fall back to the mobile-friendly stacked scroll layout. */
-@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .private-shell { height: 100vh; overflow: hidden; }
   .private-body { height: calc(100vh - 68px); min-height: 0; overflow: hidden; }
   .private-sidebar { position: sticky; top: 0; height: 100%; min-height: 0; overflow: hidden; }
-  .private-sidebar nav { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
-  .private-content { height: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+  .private-sidebar nav { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+  .private-content { height: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .private-shell { min-height: 100vh; overflow-x: hidden; }
+  .private-body { height: auto; min-height: calc(100vh - 68px); overflow: visible; }
+  .private-sidebar, .private-sidebar.private-sidebar-collapsed { position: fixed; top: 68px; height: calc(100vh - 68px); overflow: hidden; }
+  .private-sidebar nav { min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .private-content { height: auto; overflow: visible; }
 }
 .private-sidebar-top { justify-content: space-between; }
 .private-sidebar-brand { flex: 0 0 auto; }
