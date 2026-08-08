@@ -20448,21 +20448,21 @@ svg {
 /* Tablet chat pane keeps the mobile messaging presentation inside the split view. */
 @media (min-width: 768px) and (max-width: 1023px) {
   .messages-page .chat-panel > header {
-    min-height: 68px;
-    padding: 7px 8px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 74px;
+    padding: 9px 10px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    background: color-mix(in srgb, var(--smaj-secondary-bg) 82%, transparent);
+    justify-content: space-between;
+    gap: 10px;
+    background: color-mix(in srgb, var(--smaj-secondary-bg) 84%, transparent);
     border-bottom: 1px solid var(--smaj-border);
   }
 
   .messages-page.conversation-selected .chat-person {
-    width: 100%;
+    flex: 1 1 auto;
     min-width: 0;
     min-height: 54px;
-    padding: 5px 10px 5px 6px;
+    padding: 6px 10px 6px 6px;
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
     align-items: center;
@@ -20479,12 +20479,21 @@ svg {
     gap: 2px;
   }
 
+  .messages-page.conversation-selected .chat-person strong,
+  .messages-page.conversation-selected .chat-person small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .messages-page .chat-header-actions {
+    flex: 0 0 auto;
     min-height: 54px;
     padding: 0 3px;
     display: flex;
     align-items: center;
-    flex: 0 0 auto;
+    gap: 2px;
     background: var(--smaj-card);
     border: 1px solid var(--smaj-border);
     border-radius: 999px;
