@@ -41,6 +41,12 @@ const serviceRatings: Record<string, string> = { store: "4.8", food: "4.6", jobs
 const serviceHints: Record<string, string> = { store: "Shopping - Deals", food: "Eat - Delivery", jobs: "Work - Hire", education: "Learn - Skills", health: "Care - Doctors", transport: "Ride - Move", agro: "Farm - Trade", energy: "Power - Bills", charity: "Give - Help", housing: "Rent - Buy", events: "Tickets - Fun", swap: "Trade - Exchange", stream: "Watch - Videos", sports: "Play - Scores", token: "Rewards - Utility" };
 const lifestyleSlugs = ["food", "health", "housing", "transport", "education", "charity", "events", "agro"];
 const trendingSlugs = ["store", "stream", "sports", "events", "food", "jobs", "education", "health", "housing", "transport"];
+const categoryGroups = [
+  { title: "Entertainment & Shopping", slugs: ["store", "stream", "sports", "events"] },
+  { title: "Food & Daily Needs", slugs: ["food", "health", "transport", "education"] },
+  { title: "Home & Community", slugs: ["housing", "agro", "energy", "charity"] },
+  { title: "Finance & Rewards", slugs: ["jobs", "swap", "token"] },
+] as const;
 const serviceGroups = Array.from({ length: 5 }, (_, index) => serviceCatalog.slice(index * 3, index * 3 + 3));
 const popularSearches = ["Electronics", "Phones", "Food", "Cars", "Jobs", "Housing", "Health", "Education", "Transport"];
 const trustedFallbackSellers = [
@@ -268,6 +274,34 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
   )
 );
 
+
+const TrendingMobileContent = ({ products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading, sportsCatalog, sportsLoading }: { products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean; sportsCatalog: SportsCatalog; sportsLoading: boolean }) => (
+  <>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Trending services</h2><Link to="/app/services">See all</Link></div><ServiceList services={trendingSlugs.map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[]} mode="mobile" /></section>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Popular searches</h2></div><div className="mobile-suggestion-grid">{popularSearches.map((item) => <Link to={`/store?search=${encodeURIComponent(item)}`} key={item}><span>{item}</span><SearchOutlinedIcon /></Link>)}</div></section>
+    <DashboardStreamSections rows={streamRows.filter((row) => row.title === "Trending now")} loading={streamLoading} compact />
+    <DashboardSportsSection catalog={sportsCatalog} loading={sportsLoading} compact />
+    <RecentlyAddedSection compact products={products.slice(0, 3)} loading={productsLoading} error={productsError} />
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Events happening now</h2><Link to="/app/services/events">See all</Link></div><div className="mobile-media-strip">{mediaSections.filter((section) => section.slug === "events").map((section) => section.items.slice(0, 3).map((item, index) => <Link to={`/app/services/${section.slug}`} className="mobile-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>SMAJ Events</small></div></Link>))}</div></section>
+  </>
+);
+
+const LifestyleMobileContent = ({ products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading, sportsCatalog, sportsLoading }: { products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean; sportsCatalog: SportsCatalog; sportsLoading: boolean }) => (
+  <>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Lifestyle services</h2><Link to="/app/services">See all</Link></div><ServiceList services={lifestyleSlugs.map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[]} mode="mobile" /></section>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Pick up where you left off</h2></div><div className="mobile-recent-strip">{recentItems.filter((item) => lifestyleSlugs.some((slug) => item.to.includes(slug))).slice(0, 3).map((item) => <Link className="mobile-recent-card" to={item.to} key={`${item.to}-${item.label}`}><span className="mobile-recent-icon">{recentItemIcon(item.to)}</span><ChevronRightOutlinedIcon className="mobile-recent-arrow" /><strong>{item.label}</strong><small>{item.meta && item.meta !== "Recent page" ? item.meta : "Recently viewed"}</small></Link>)}</div></section>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Featured providers</h2></div><div className="mobile-services-grid">{sellers.slice(0, 3).map((seller) => <Link to={`/seller/${seller.id}`} key={seller.id}><div><strong>{seller.name}</strong><small>{seller.location}</small></div><small>{seller.rating} star • {seller.listings} listings</small></Link>)}</div></section>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Health & education</h2></div><div className="mobile-feature-strip">{featureCards.filter((card) => card.slug === "health" || card.slug === "education").map((card) => <Link className="mobile-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" /><div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
+  </>
+);
+
+const CategoriesMobileContent = ({ products, productsLoading, productsError, sellers, recentItems, recommendedServices, streamRows, streamLoading, sportsCatalog, sportsLoading }: { products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; recommendedServices: ServiceDefinition[]; streamRows: DashboardStreamRow[]; streamLoading: boolean; sportsCatalog: SportsCatalog; sportsLoading: boolean }) => (
+  <>
+    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>All services</h2><Link to="/app/services">See all</Link></div><ServiceList services={serviceCatalog} mode="mobile" /></section>
+    {categoryGroups.map((group) => <section className="mobile-feed-section" key={group.title}><div className="mobile-section-heading"><h2>{group.title}</h2></div><div className="mobile-services-grid">{group.slugs.map((slug) => { const service = serviceCatalog.find((s) => s.slug === slug); if (!service) return null; return <Link key={service.slug} to={servicePath(service)} className="mobile-service-app"><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span><small className={service.live ? "live-rating-badge" : undefined}>{service.live ? "LIVE" : `${serviceRatings[service.slug]} star`}</small></div></Link>; })}</div></section>)}
+  </>
+);
+
 const DashboardStreamSections = ({ rows, loading, compact }: { rows: DashboardStreamRow[]; loading: boolean; compact: boolean }) => {
   if (loading) return <section className={compact ? "mobile-feed-section" : "desktop-feed-section"}><div className={compact ? "mobile-section-heading" : "desktop-feed-section-head"}><div><h2>Watch anytime</h2><p>Loading movies and series...</p></div></div><PrivateSkeleton variant="grid" count={4} /></section>;
   if (!rows.length) return <section className={compact ? "mobile-feed-section" : "desktop-feed-section"}><div className={compact ? "mobile-section-heading" : "desktop-feed-section-head"}><div><h2>Watch anytime</h2><p>The live entertainment catalogue is temporarily unavailable.</p></div><Link to="/app/services/stream">Open Stream</Link></div></section>;
@@ -360,7 +394,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
       <DashboardSportsSection catalog={sportsCatalog} loading={sportsLoading} compact />
       {mediaSections.filter((section) => section.slug !== "sports").map((section) => <section className="mobile-feed-section" key={section.slug}><div className="mobile-section-heading"><h2>{section.title}</h2></div><div className="mobile-media-strip">{section.items.map((item, index) => <Link to={`/app/services/${section.slug}`} className="mobile-media-card" key={item}><img src={section.image} alt="" /><div>{section.badges ? <b>{section.badges[index]}</b> : null}<span>{item}</span><small>SMAJ Events</small></div></Link>)}</div></section>)}
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Need help?</h2></div><div className="mobile-help-grid">{support.map(([Icon, title, , items, to]) => <Link to={to} key={title}><Icon /><div><strong>{title}</strong><span>{items.slice(0, 3).join(" - ")}</span></div><ArrowForwardOutlinedIcon /></Link>)}</div></section>
-    </> : <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>{tabTitle(activeTab)}</h2><Link to="/app/services">See all</Link></div><ServiceList services={tabServices(activeTab)} mode="mobile" /></section>}
+    </> : activeTab === "trending" ? <TrendingMobileContent products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /> : activeTab === "lifestyle" ? <LifestyleMobileContent products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /> : <CategoriesMobileContent products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} />}
     <footer className="mobile-private-footer"><small>Part of the SMAJ Ecosystem</small><small>© 2026 SMAJ PI HUB. All rights reserved.</small></footer>
   </div>;
 };
@@ -496,3 +530,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
