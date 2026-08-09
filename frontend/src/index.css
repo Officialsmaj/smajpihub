@@ -7835,6 +7835,34 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 }
 
 /* Private discovery routes for Trending, Lifestyle, and Categories. */
+.discovery-tab-intro {
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  background: linear-gradient(135deg, #16213e 0%, #263a73 58%, var(--smaj-primary) 140%);
+  border: 0 !important;
+}
+
+.discovery-tab-intro::after {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  right: -70px;
+  bottom: -110px;
+  border: 34px solid rgba(255, 255, 255, .08);
+  border-radius: 50%;
+}
+
+.discovery-tab-intro > * { position: relative; z-index: 1; }
+.discovery-tab-intro > span { color: #f6bd60; font-size: .72rem; font-weight: 850; letter-spacing: .12em; }
+.discovery-tab-intro h1 { margin: 8px 0 6px; color: #fff; font-size: clamp(1.45rem, 3vw, 2rem); line-height: 1.12; }
+.discovery-tab-intro p { max-width: 620px; margin: 0; color: rgba(255, 255, 255, .82); line-height: 1.55; }
+.discovery-section-note { margin: -4px 0 14px; color: var(--smaj-text-secondary); font-size: .84rem; }
+.discovery-service-group .mobile-section-heading p { margin: 4px 0 0; color: var(--smaj-text-secondary); font-size: .84rem; line-height: 1.4; }
+.desktop-discovery-content { display: grid; gap: 18px; margin-top: 18px; }
+.desktop-discovery-content .discovery-tab-intro { padding: 32px; border-radius: 20px; }
+
 .service-discovery-page {
   max-width: 760px;
   margin: 0 auto;
@@ -8009,6 +8037,9 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .service-categories-page a small { color: var(--smaj-text-secondary); }
 
 @media (max-width: 1023px) {
+  .mobile-home-shell .discovery-tab-intro { margin-top: 14px; padding: 24px 18px; border-radius: 0; }
+  .mobile-home-shell .discovery-service-group .mobile-services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
   .service-discovery-page {
     max-width: none;
     padding: 0 0 22px !important;
