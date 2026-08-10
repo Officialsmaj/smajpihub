@@ -2061,3 +2061,23 @@
 .sw-page :is(.sw-page-content,.sw-management,.sw-profile,.sw-watch,.sw-detail-info,.sw-related,.sw-seasons,.sw-public-channel) :is(p,small){color:#b8afc0 !important}
 .sw-page :is(input,textarea,select){color:#fff}
 .sw-page :is(input,textarea)::placeholder{color:#8f8795}
+
+.sw-creators-directory{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.sw-creators-directory>article{min-width:0;padding:14px;border:1px solid var(--stream-border);border-radius:14px;background:var(--stream-surface)}
+.sw-creator-banner{height:135px;display:flex;align-items:flex-end;padding:12px;border-radius:12px;background:#21152d center/cover no-repeat;text-decoration:none}
+.sw-creator-avatar{width:62px;height:62px;display:grid;place-items:center;overflow:hidden;border:4px solid var(--stream-surface);border-radius:50%;color:#fff;background:#7133c5;font-size:19px;font-weight:900}
+.sw-creator-avatar img{width:100%;height:100%;object-fit:cover}
+.sw-creator-card-body{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:12px}
+.sw-creator-card-body h2{margin:0 0 3px;font-size:18px}
+.sw-creator-card-body p,.sw-creators-directory>article>p{margin:0;color:var(--stream-muted);font-size:12px}
+.sw-creator-card-body>a{flex:0 0 auto;padding:8px 11px;border-radius:9px;color:#fff;background:#2a2130;text-decoration:none;font-size:11px;font-weight:900}
+.sw-creators-directory>article>p{margin-top:10px;min-height:34px}
+.sw-creator-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.sw-creator-stats span{padding:5px 8px;border-radius:999px;color:#ded5e8;background:#24202b;font-size:10px;font-weight:900}
+.sw-creator-latest{display:grid;gap:8px;margin-top:13px}
+.sw-creator-latest a{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:9px;color:#fff;text-decoration:none}
+.sw-creator-latest span{aspect-ratio:16/9;display:grid;place-items:center;border-radius:8px;background:#21152d center/cover no-repeat}
+.sw-creator-latest svg{width:24px;height:24px;padding:5px;border-radius:50%;background:#08050ca8}
+.sw-creator-latest b{min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){.sw-creators-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.sw-creators-directory{grid-template-columns:1fr}.sw-creator-banner{height:118px}}

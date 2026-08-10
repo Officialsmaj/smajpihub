@@ -1,5 +1,6 @@
 import type { Request, Response, Router } from "express";
 import axios from "axios";
+import { ObjectId } from "mongodb";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
 
@@ -327,6 +328,51 @@ const mountStreamEndpoints = (router: Router) => {
     if (!req.app.locals.streamContentCollection) return res.json({ videos: [] });
     const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(20).toArray();
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, creatorName: video.creatorName, category: video.category, thumbnailUrl: video.thumbnailUrl, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })) });
+  });
+
+  router.get("/creators", async (req, res) => {
+    if (!req.app.locals.streamContentCollection) return res.json({ creators: [] });
+    const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(500).toArray();
+    const grouped = new Map<string, { videos: Record<string, unknown>[]; liveCount: number }>();
+    videos.forEach((video: Record<string, unknown>) => {
+      const creatorId = String(video.creatorId || "");
+      if (!creatorId) return;
+      const current = grouped.get(creatorId) || { videos: [], liveCount: 0 };
+      current.videos.push(video);
+      if (video.contentType === "live") current.liveCount += 1;
+      grouped.set(creatorId, current);
+    });
+    const creatorObjectIds = [...grouped.keys()].filter(ObjectId.isValid).map(id => new ObjectId(id));
+    const users = creatorObjectIds.length
+      ? await req.app.locals.userCollection.find({ _id: { $in: creatorObjectIds } }).toArray()
+      : [];
+    const usersById = new Map(users.map((user: Record<string, unknown>) => [String(user._id), user]));
+    const creators = [...grouped.entries()]
+      .map(([creatorId, data]) => {
+        const user = usersById.get(creatorId) as Record<string, unknown> | undefined;
+        const profile = (user?.streamProfile || {}) as Record<string, unknown>;
+        const handle = String(profile.channelHandle || "").trim();
+        if (!handle) return null;
+        const publicVideos = data.videos.filter(video => video.contentType !== "live");
+        return {
+          creatorId,
+          channel: {
+            name: profile.channelName || user?.displayName || user?.username || "SMAJ Creator",
+            handle,
+            description: profile.channelDescription || "",
+            avatarUrl: profile.avatarUrl || user?.avatarUrl || "",
+            bannerUrl: profile.channelBannerUrl || "",
+          },
+          stats: {
+            videos: publicVideos.length,
+            live: data.liveCount,
+            latestAt: data.videos[0]?.createdAt || null,
+          },
+          latestVideos: publicVideos.slice(0, 3).map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, createdAt: video.createdAt })),
+        };
+      })
+      .filter(Boolean);
+    return res.json({ creators });
   });
 
   router.get("/channels/:handle", async (req, res) => {

@@ -23,6 +23,7 @@ import StreamLiveDirectory from "./StreamLiveDirectory";
 import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
+import StreamCreatorsDirectory from "./StreamCreatorsDirectory";
 import {
   getStreamAdminOverview,
   getStreamAdminSettings,
@@ -57,6 +58,7 @@ export type StreamPageKind =
   | "downloads"
   | "history"
   | "subscriptions"
+  | "creator-directory"
   | "movie-detail"
   | "series-detail"
   | "player"
@@ -111,6 +113,7 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   downloads: ["Downloads", "Everything you downloaded, ready when you are."],
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
+  "creator-directory": ["Creators", "Channels publishing approved videos and live broadcasts."],
   profile: ["Stream profile", "Your viewing identity and playback preferences."],
   plans: ["Plans & payments", "Choose how you watch and support creators with Pi."],
   parental: ["Parental controls", "Create a safe entertainment experience for every profile."],
@@ -1125,6 +1128,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "live-player") return <Player live />;
     if (kind === "history") return <StreamWatchHistory />;
     if (kind === "subscriptions") return <StreamSubscriptions />;
+    if (kind === "creator-directory") return <StreamCreatorsDirectory />;
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
     if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;

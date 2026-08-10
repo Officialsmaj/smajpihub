@@ -28,9 +28,17 @@ export type StreamSubscription = {
   channel: { name: string; handle: string; avatarUrl: string };
   videos: Array<PublicChannelVideo & { contentType?: string; liveInputUid?: string; processingStatus?: string }>;
 };
+export type StreamCreatorDirectoryItem = {
+  creatorId: string;
+  channel: { name: string; handle: string; description: string; avatarUrl: string; bannerUrl: string };
+  stats: { videos: number; live: number; latestAt: string | null };
+  latestVideos: PublicChannelVideo[];
+};
 
 export const getPublicStreamChannel = async (handle: string) =>
   (await axiosClient.get<PublicStreamChannel>(`/stream/channels/${encodeURIComponent(handle)}`)).data;
+export const getStreamCreators = async () =>
+  (await axiosClient.get<{ creators: StreamCreatorDirectoryItem[] }>("/stream/creators")).data.creators;
 export const getStreamSubscriptions = async () =>
   (await axiosClient.get<{ channels: StreamSubscription[] }>("/stream/subscriptions")).data.channels;
 export const getStreamSubscriptionStatus = async (handle: string) =>

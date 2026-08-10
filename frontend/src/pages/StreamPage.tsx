@@ -7,7 +7,7 @@ import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
 import { getStreamCatalog, getStreamCategory, getStreamDownloads, saveStreamDownload, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
-import { getPublishedCreatorVideos, type CreatorVideo } from "../lib/streamCreator";
+import { getStreamCreators, type StreamCreatorDirectoryItem } from "../lib/streamChannel";
 
 type StreamItem = {
   id: number;
@@ -73,7 +73,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [featureIndex, setFeatureIndex] = useState(0);
   const [rankingTab, setRankingTab] = useState("Popular");
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [creatorVideos, setCreatorVideos] = useState<Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }>>([]);
+  const [creators, setCreators] = useState<StreamCreatorDirectoryItem[]>([]);
   const [anime, setAnime] = useState<StreamCatalogTitle[]>([]);
   const [downloadingId, setDownloadingId] = useState("");
   const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => new Set());
@@ -102,7 +102,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
     return () => { active = false; };
   }, [activeSlug]);
 
-  useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getPublishedCreatorVideos().then(setCreatorVideos).catch(() => setCreatorVideos([])); }, []);
+  useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getStreamCreators().then(setCreators).catch(() => setCreators([])); }, []);
   useEffect(() => {
     void getStreamDownloads()
       .then((items) => setDownloadedIds(new Set(items.map(catalogKey))))
@@ -218,7 +218,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
           ))}
         </section>
 
-        {creatorVideos.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/studio">Creator Studio →</Link></div><div>{creatorVideos.map((video) => <Link to={`/app/services/stream/watch/${video.youtubeVideoId ? `yt-${video.youtubeVideoId}` : video.cloudflareUid}`} key={video._id}><img loading="lazy" src={video.thumbnailUrl || ""} alt=""/><b>{video.title}</b><small>{video.creatorName || "SMAJ Creator"} · {video.category || "Video"}</small></Link>)}</div></section> : null}
+        {creators.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/creators">See all →</Link></div><div>{creators.slice(0, 10).map((creator) => <Link to={`/app/services/stream/channel/${creator.channel.handle}`} key={creator.creatorId}><img loading="lazy" src={creator.channel.avatarUrl || creator.latestVideos[0]?.thumbnailUrl || ""} alt=""/><b>{creator.channel.name}</b><small>@{creator.channel.handle} · {creator.stats.videos} videos</small></Link>)}</div></section> : null}
 
         <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a><p>Watch different. Create freely.</p><div><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Help</a></div></footer>
       </main>
