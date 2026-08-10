@@ -16,6 +16,7 @@ import CreatorContentList from "./CreatorContentList";
 import StreamProfilePanel from "./StreamProfilePanel";
 import StreamVideoPlayer from "./StreamVideoPlayer";
 import StreamWatchHistory from "./StreamWatchHistory";
+import StreamSubscriptions from "./StreamSubscriptions";
 import StreamModerationPanel from "./StreamModerationPanel";
 import StreamLiveSetup from "./StreamLiveSetup";
 import StreamLivePlayer from "./StreamLivePlayer";
@@ -1051,6 +1052,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "player") return <Player />;
     if (kind === "live-player") return <Player live />;
     if (kind === "history") return <StreamWatchHistory />;
+    if (kind === "subscriptions") return <StreamSubscriptions />;
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
     if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;

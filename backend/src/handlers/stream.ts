@@ -319,6 +319,54 @@ const mountStreamEndpoints = (router: Router) => {
     });
   });
 
+  router.get("/subscriptions", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const subscriptions = Array.isArray(stored?.streamSubscriptions) ? stored.streamSubscriptions.slice(0, 200) : [];
+    const channels = (await Promise.all(subscriptions.map(async (subscription: { creatorId?: string; handle?: string; subscribedAt?: Date }) => {
+      const handle = String(subscription.handle || "");
+      const creator = handle ? await req.app.locals.userCollection.findOne({ "streamProfile.channelHandle": handle }) : null;
+      if (!creator) return null;
+      const creatorId = String(creator._id);
+      const profile = creator.streamProfile || {};
+      const videos = await req.app.locals.streamContentCollection.find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(12).toArray();
+      return {
+        creatorId,
+        subscribedAt: subscription.subscribedAt || null,
+        channel: { name: profile.channelName || creator.displayName || creator.username || "SMAJ Creator", handle, avatarUrl: profile.avatarUrl || creator.avatarUrl || "" },
+        videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentType: video.contentType, liveInputUid: video.liveInputUid, processingStatus: video.processingStatus, createdAt: video.createdAt })),
+      };
+    }))).filter(Boolean);
+    return res.json({ channels });
+  });
+
+  router.get("/subscriptions/:handle/status", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const handle = String(req.params.handle || "").trim().replace(/^@/, "").slice(0, 40);
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const subscribed = (Array.isArray(stored?.streamSubscriptions) ? stored.streamSubscriptions : []).some((item: { handle?: string }) => String(item.handle || "").toLowerCase() === handle.toLowerCase());
+    return res.json({ subscribed });
+  });
+
+  router.post("/subscriptions/:handle", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const handle = String(req.params.handle || "").trim().replace(/^@/, "").slice(0, 40);
+    if (!handle) return res.status(400).json({ error: "invalid_handle", message: "A channel handle is required." });
+    const creator = await req.app.locals.userCollection.findOne({ "streamProfile.channelHandle": handle });
+    if (!creator) return res.status(404).json({ error: "channel_not_found", message: "This creator channel does not exist." });
+    if (String(creator._id) === String(user._id)) return res.status(400).json({ error: "self_subscription", message: "You cannot subscribe to your own channel." });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamSubscriptions: { handle } } });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $addToSet: { streamSubscriptions: { creatorId: String(creator._id), handle, subscribedAt: new Date() } } });
+    return res.status(201).json({ subscribed: true });
+  });
+
+  router.delete("/subscriptions/:handle", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const handle = String(req.params.handle || "").trim().replace(/^@/, "").slice(0, 40);
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamSubscriptions: { handle } } });
+    return res.json({ subscribed: false });
+  });
+
   router.get("/live-content", async (_req, res) => {
     if (!_req.app.locals.streamContentCollection) return res.json({ live: [] });
     const items = await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray();
