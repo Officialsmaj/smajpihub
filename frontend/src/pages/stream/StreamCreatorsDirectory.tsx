@@ -109,7 +109,7 @@ const StreamCreatorsDirectory = () => {
         <div className="sw-list-empty">
           <GroupsRoundedIcon />
           <h2>No creator channels yet</h2>
-          <p>Approved creator channels will appear here after their first public video or live broadcast.</p>
+          <p>Creator channels appear here after the creator saves a channel name and handle.</p>
           <Link to="/app/services/stream/studio">Open Creator Studio</Link>
         </div>
       ) : null}

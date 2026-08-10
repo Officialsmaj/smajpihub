@@ -443,7 +443,6 @@ const mountStreamEndpoints = (router: Router) => {
   });
 
   router.get("/creators", async (req, res) => {
-    if (!req.app.locals.streamContentCollection) return res.json({ creators: [] });
     const users = await req.app.locals.userCollection
       .find({ "streamProfile.channelHandle": { $regex: ".+" } })
       .sort({ updatedAt: -1, createdAt: -1 })
@@ -455,11 +454,13 @@ const mountStreamEndpoints = (router: Router) => {
         const profile = (user?.streamProfile || {}) as Record<string, unknown>;
         const handle = String(profile.channelHandle || "").trim();
         if (!handle) return null;
-        const videos = await req.app.locals.streamContentCollection
-          .find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true })
-          .sort({ createdAt: -1 })
-          .limit(12)
-          .toArray();
+        const videos = req.app.locals.streamContentCollection
+          ? await req.app.locals.streamContentCollection
+              .find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true })
+              .sort({ createdAt: -1 })
+              .limit(12)
+              .toArray()
+          : [];
         const publicVideos = videos.filter((video: Record<string, unknown>) => video.contentType !== "live");
         return {
           creatorId,
