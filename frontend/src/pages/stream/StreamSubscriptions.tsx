@@ -24,7 +24,7 @@ const StreamSubscriptions = () => {
         <h1>Subscriptions</h1>
         <p>New videos and live broadcasts from creators you follow.</p>
       </header>
-      {channels === null ? <div className="sw-catalog-status">Loading subscriptions…</div> : null}
+      {channels === null ? <div className="sw-catalog-status">Loading subscriptions...</div> : null}
       {error ? <div className="sw-catalog-status warning">{error}</div> : null}
       {channels?.length ? (
         <section className="sw-subscriptions-list">
@@ -77,7 +77,7 @@ const StreamSubscriptions = () => {
                           <h2>{video.title}</h2>
                           <p>
                             {video.contentType === "live" && video.processingStatus === "live"
-                              ? "● Live now"
+                              ? "Live now"
                               : video.category || "Entertainment"}
                           </p>
                         </Link>

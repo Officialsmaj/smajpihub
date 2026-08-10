@@ -41,7 +41,7 @@ const StreamPublicChannel = () => {
     }
   };
 
-  if (state === "loading") return <div className="sw-catalog-status">Loading creator channel…</div>;
+  if (state === "loading") return <div className="sw-catalog-status">Loading creator channel...</div>;
   if (state === "error" || !data)
     return (
       <section className="sw-detail-error">
@@ -69,8 +69,8 @@ const StreamPublicChannel = () => {
         <div>
           <h1>{data.channel.name}</h1>
           <p>
-            @{data.channel.handle} · {data.videos.length} videos
-            {followState === "error" ? " · Subscription could not update" : ""}
+            @{data.channel.handle}  -  {data.videos.length} videos
+            {followState === "error" ? "  -  Subscription could not update" : ""}
           </p>
         </div>
         <button
@@ -79,7 +79,7 @@ const StreamPublicChannel = () => {
           className={following ? "following" : ""}
           onClick={() => void toggleFollow()}
         >
-          {followState === "saving" ? "Saving…" : following ? "Following" : "Follow"}
+          {followState === "saving" ? "Saving..." : following ? "Following" : "Follow"}
         </button>
       </header>
       <nav aria-label="Channel sections">
@@ -135,7 +135,7 @@ const StreamPublicChannel = () => {
                   <PlayArrowRoundedIcon />
                 </div>
                 <h2>{item.title}</h2>
-                <p>{item.processingStatus === "live" ? "● Live now" : "Scheduled"}</p>
+                <p>{item.processingStatus === "live" ? "Live now" : "Scheduled"}</p>
               </Link>
             ))}
           </div>

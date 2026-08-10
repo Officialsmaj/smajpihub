@@ -2147,3 +2147,33 @@
 .sw-search-channels strong{grid-area:name;min-width:0;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sw-search-channels small{grid-area:handle;color:var(--stream-muted)}
 @media(max-width:900px){.sw-creators-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.sw-creators-directory,.sw-search-channels>div{grid-template-columns:1fr}.sw-channel-search{align-items:stretch;flex-direction:column}.sw-creator-banner{height:118px}}
+
+/* Stream MVP color lock: keep every Stream surface in the same cinema theme. */
+.sw-page{
+  background:var(--stream-bg) !important;
+  color:var(--stream-text) !important;
+}
+.sw-page-content,
+.sw-page :is(.sw-settings-card,.sw-profile-card,.sw-panel,.sw-form,.sw-table,.sw-list-empty,.sw-live-created,.sw-live-history,.sw-moderation-toolbar,.sw-moderation-list>article,.sw-attach-panel,.sw-public-channel-about,.sw-creators-directory>article,.sw-search-channels>div>a){
+  color:var(--stream-text) !important;
+  background:var(--stream-surface) !important;
+  border-color:var(--stream-border) !important;
+}
+.sw-page :is(input,textarea,select,.sw-youtube-field,.sw-rights-confirm,.sw-source-tabs button,.sw-attach-panel input,.sw-live-created code){
+  color:var(--stream-text) !important;
+  background:var(--stream-elevated) !important;
+  border-color:var(--stream-border) !important;
+}
+.sw-page :is(button,.sw-profile-save,.sw-admin-save,.sw-moderation-actions button,.sw-live-created label button,.sw-live-created-actions button,.sw-live-history button){
+  border-color:transparent;
+}
+.sw-page :is(.sw-profile-save,.sw-admin-save,.sw-moderation-actions button,.sw-live-created label button,.sw-live-created-actions button,.sw-live-history button,.sw-channel-post-composer button,.sw-subscriptions-list>article>header>a:last-child,.sw-public-channel>header button){
+  color:#fff !important;
+  background:var(--stream-accent) !important;
+}
+.sw-page :is(.sw-page-head>span,.sw-manage-head span,.sw-live-created>header span,.sw-moderation-copy b,.sw-admin-health strong){
+  color:var(--stream-accent) !important;
+}
+.sw-page :is(.sw-live-created ol,.sw-moderation-copy p,.sw-moderation-copy small,.sw-moderation-copy em,.sw-moderation-copy b,.sw-live-history small,.sw-attach-panel small){
+  color:var(--stream-muted) !important;
+}

@@ -172,7 +172,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     return (
       <section className="sw-player-state">
         <i />
-        <h1>Preparing your video…</h1>
+        <h1>Preparing your video...</h1>
         <p>Checking playback rights and loading the stream.</p>
       </section>
     );
@@ -194,7 +194,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
         <div className="sw-watch-info">
           <div>
             <h1>{video.title}</h1>
-            <p>{video.creatorName || "SMAJ Creator"} · Progress saves automatically</p>
+            <p>{video.creatorName || "SMAJ Creator"}  -  Progress saves automatically</p>
           </div>
         </div>
       </section>
@@ -219,7 +219,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       <div className="sw-watch-info">
         <div>
           <h1>{video.title}</h1>
-          <p>{video.creatorName || "SMAJ Stream"} · Progress saves automatically</p>
+          <p>{video.creatorName || "SMAJ Stream"}  -  Progress saves automatically</p>
         </div>
         <button type="button">
           <BookmarkRoundedIcon /> Save

@@ -105,14 +105,14 @@ type Title = {
 };
 
 const titles: Title[] = [
-  { id: "last-horizon", name: "The Last Horizon", meta: "Movie · 2h 08m", tone: "purple", progress: 64 },
-  { id: "city-lights", name: "City of Lights", meta: "Series · 8 episodes", tone: "amber", progress: 31 },
-  { id: "wild-roads", name: "Wild Roads", meta: "Documentary · 1h 32m", tone: "green" },
-  { id: "frequency", name: "Frequency", meta: "Movie · 1h 54m", tone: "blue" },
-  { id: "after-rain", name: "After the Rain", meta: "Series · 2 seasons", tone: "coral" },
-  { id: "deep-space", name: "Deep Space", meta: "Movie · 2h 21m", tone: "indigo" },
-  { id: "home-table", name: "The Home Table", meta: "Lifestyle · 12 episodes", tone: "rose" },
-  { id: "champions", name: "Champions Live", meta: "Live · Starts 20:00", tone: "teal" },
+  { id: "last-horizon", name: "The Last Horizon", meta: "Movie  -  2h 08m", tone: "purple", progress: 64 },
+  { id: "city-lights", name: "City of Lights", meta: "Series  -  8 episodes", tone: "amber", progress: 31 },
+  { id: "wild-roads", name: "Wild Roads", meta: "Documentary  -  1h 32m", tone: "green" },
+  { id: "frequency", name: "Frequency", meta: "Movie  -  1h 54m", tone: "blue" },
+  { id: "after-rain", name: "After the Rain", meta: "Series  -  2 seasons", tone: "coral" },
+  { id: "deep-space", name: "Deep Space", meta: "Movie  -  2h 21m", tone: "indigo" },
+  { id: "home-table", name: "The Home Table", meta: "Lifestyle  -  12 episodes", tone: "rose" },
+  { id: "champions", name: "Champions Live", meta: "Live  -  Starts 20:00", tone: "teal" },
 ];
 
 const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
@@ -202,7 +202,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
       ? [categoryName, `Popular, new and top-rated ${categoryName} entertainment.`]
       : kind === "search"
         ? [
-            query.trim() ? `Results for “${query.trim()}”` : "Search",
+            query.trim() ? `Results for "${query.trim()}"` : "Search",
             query.trim()
               ? "Movies and series matching your search."
               : "Search for movies, series and creators from the header.",
@@ -242,7 +242,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
                 items.map((item, index) => ({
                   id: item.id,
                   name: item.title,
-                  meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`,
+                  meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` - ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` - Rating ${item.rating}` : ""}`,
                   tone: ["purple", "amber", "green", "blue", "coral", "indigo", "rose", "teal"][index % 8],
                   posterUrl: item.posterUrl,
                   mediaType: item.mediaType,
@@ -259,7 +259,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         }
         if (page > 1) setLoadingMore(true);
         const sortParam =
-          sort === "Newest" ? "primary_release_date.desc" : sort === "A–Z" ? "original_title.asc" : "popularity.desc";
+          sort === "Newest" ? "primary_release_date.desc" : sort === "A-Z" ? "original_title.asc" : "popularity.desc";
         const request =
           kind === "search"
             ? searchStreamCatalog(query, page)
@@ -273,7 +273,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
                 data.results.map((item: StreamCatalogTitle, index) => ({
                   id: item.id,
                   name: item.title,
-                  meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` · ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` · ★ ${item.rating}` : ""}`,
+                  meta: `${item.mediaType === "tv" ? "Series" : "Movie"}${item.releaseDate ? ` - ${item.releaseDate.slice(0, 4)}` : ""}${item.rating ? ` - Rating ${item.rating}` : ""}`,
                   tone: ["purple", "amber", "green", "blue", "coral", "indigo", "rose", "teal"][index % 8] || "purple",
                   posterUrl: item.posterUrl,
                   mediaType: item.mediaType,
@@ -287,7 +287,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
               const next = data.results.map((item: StreamCatalogTitle, index) => ({
                 id: item.id,
                 name: item.title,
-                meta: `${item.mediaType === "tv" ? "Series" : "Movie"} · ${item.releaseDate?.slice(0, 4) || "New"}${item.rating ? ` · ★ ${item.rating}` : ""}`,
+                meta: `${item.mediaType === "tv" ? "Series" : "Movie"} - ${item.releaseDate?.slice(0, 4) || "New"}${item.rating ? ` - Rating ${item.rating}` : ""}`,
                 tone: ["purple", "amber", "green", "blue", "coral", "indigo", "rose", "teal"][index % 8] || "purple",
                 posterUrl: item.posterUrl,
                 mediaType: item.mediaType,
@@ -382,12 +382,12 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           >
             <option>Popular</option>
             <option>Newest</option>
-            <option>A–Z</option>
+            <option>A-Z</option>
           </select>
         </div>
       ) : null}
       {catalogState === "loading" ? (
-        <div className="sw-catalog-status">Loading the entertainment catalogue…</div>
+        <div className="sw-catalog-status">Loading the entertainment catalogue...</div>
       ) : null}
       {catalogState === "fallback" && ["movies", "series", "search", "category"].includes(kind) ? (
         <div className="sw-catalog-status warning">
@@ -439,7 +439,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <div className="sw-load-more" ref={loadMoreRef}>
           {page < totalPages ? (
             <button type="button" disabled={loadingMore} onClick={() => setPage(value => value + 1)}>
-              {loadingMore ? "Loading more…" : "Load more titles"}
+              {loadingMore ? "Loading more..." : "Load more titles"}
             </button>
           ) : (
             <span>You reached the end of this catalogue.</span>
@@ -451,7 +451,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
           TMDB
         </a>{" "}
-        · This product uses the TMDB API but is not endorsed or certified by TMDB.
+         -  This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </>
   );
@@ -508,7 +508,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const recommendations: Title[] = (raw.recommendations?.results || []).slice(0, 8).map((item, index) => ({
     id: String(item.id),
     name: item.title || item.name || "Untitled",
-    meta: `${item.media_type === "tv" || series ? "Series" : "Movie"}${item.vote_average ? ` · ★ ${item.vote_average.toFixed(1)}` : ""}`,
+    meta: `${item.media_type === "tv" || series ? "Series" : "Movie"}${item.vote_average ? ` - Rating ${item.vote_average.toFixed(1)}` : ""}`,
     tone: ["purple", "amber", "green", "blue", "coral", "indigo", "rose", "teal"][index],
     posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
     mediaType: item.media_type || (series ? "tv" : "movie"),
@@ -548,12 +548,12 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             <img className="sw-detail-poster" src={detail.posterUrl} alt={`${detail.title} poster`} />
           ) : null}
           <div className="sw-detail-copy">
-            <span>TMDB · {series ? "SERIES" : "FEATURE FILM"}</span>
+            <span>TMDB  -  {series ? "SERIES" : "FEATURE FILM"}</span>
             <h1>{detail.title}</h1>
             {raw.tagline ? <p className="sw-detail-tagline">{raw.tagline}</p> : null}
             <p className="sw-match">
-              {detail.rating ? `★ ${detail.rating}` : "New"} · {detail.releaseDate?.slice(0, 4) || "Coming soon"}
-              {detail.runtime ? ` · ${Math.floor(detail.runtime / 60)}h ${detail.runtime % 60}m` : ""}
+              {detail.rating ? `Rating ${detail.rating}` : "New"} - {detail.releaseDate?.slice(0, 4) || "Coming soon"}
+              {detail.runtime ? ` - ${Math.floor(detail.runtime / 60)}h ${detail.runtime % 60}m` : ""}
             </p>
             <div className="sw-detail-genres">
               {detail.genres.map(genre => (
@@ -573,7 +573,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 </Link>
               ) : null}
               <button type="button" disabled={saving} onClick={() => void toggleSaved()}>
-                <BookmarkRoundedIcon /> {saving ? "Saving…" : saved ? "Saved" : "My List"}
+                <BookmarkRoundedIcon /> {saving ? "Saving..." : saved ? "Saved" : "My List"}
               </button>
               <button type="button" disabled={downloading} onClick={() => void toggleDownloaded()}>
                 <DownloadRoundedIcon /> {downloading ? "Downloading..." : downloaded ? "Downloaded" : "Download"}
@@ -612,7 +612,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           <dl className="sw-title-facts">
             <div>
               <dt>Original language</dt>
-              <dd>{raw.original_language?.toUpperCase() || "—"}</dd>
+              <dd>{raw.original_language?.toUpperCase() || "-"}</dd>
             </div>
             <div>
               <dt>Release</dt>
@@ -666,7 +666,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
           TMDB
         </a>{" "}
-        · This product uses the TMDB API but is not endorsed or certified by TMDB.
+         -  This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </>
   );
@@ -721,7 +721,7 @@ const Player = ({ live = false }: { live?: boolean }) => {
         <div className="sw-watch-info">
           <div>
             <h1>Creator video</h1>
-            <p>Played through YouTube · Downloads are not provided by SMAJ</p>
+            <p>Played through YouTube  -  Downloads are not provided by SMAJ</p>
           </div>
           <button type="button">
             <BookmarkRoundedIcon /> Save
@@ -732,7 +732,7 @@ const Player = ({ live = false }: { live?: boolean }) => {
   return (
     <section className="sw-watch">
       <div className={`sw-video-stage ${title.tone}`}>
-        <span className="sw-now">{live ? "● LIVE" : "NOW PLAYING"}</span>
+        <span className="sw-now">{live ? "LIVE" : "NOW PLAYING"}</span>
         <button type="button" className="sw-center-play">
           <PlayArrowRoundedIcon />
         </button>
@@ -750,7 +750,7 @@ const Player = ({ live = false }: { live?: boolean }) => {
       <div className="sw-watch-info">
         <div>
           <h1>{title.name}</h1>
-          <p>{live ? "18.4K watching now" : "SMAJ Original · 2026"}</p>
+          <p>{live ? "18.4K watching now" : "SMAJ Original  -  2026"}</p>
         </div>
         <button type="button">
           <BookmarkRoundedIcon /> Save
@@ -761,7 +761,7 @@ const Player = ({ live = false }: { live?: boolean }) => {
           <header>
             Live chat <span>18.4K</span>
           </header>
-          {["This is incredible! 🔥", "Watching from Lagos", "Supporting with π 5", "What a moment!"].map(
+          {["This is incredible! hot", "Watching from Lagos", "Supporting with Pi 5", "What a moment!"].map(
             (message, index) => (
               <p key={message}>
                 <b>{["Maya", "Joel", "Amara", "Sam"][index]}</b>
@@ -869,7 +869,7 @@ const StreamPlansPanel = () => {
                     {formatServicePrice(plan.priceUsd)}
                     <small>/30 days</small>
                   </strong>
-                  <p>{plan.features.join(" · ")}</p>
+                  <p>{plan.features.join("  -  ")}</p>
                   <small>{formatPiRate()}</small>
                   <button type="button" disabled={current || state === "saving"} onClick={() => void choosePlan(plan.id)}>
                     {busyPlan === plan.id ? "Activating..." : current ? "Current plan" : plan.priceUsd > 0 ? `Subscribe ${plan.name}` : "Choose Free"}
@@ -1114,7 +1114,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
             Stream admin data could not load. Check the backend connection and retry.
           </div>
         ) : null}
-        {status === "loading" ? <div className="sw-catalog-status">Loading Stream operations…</div> : null}
+        {status === "loading" ? <div className="sw-catalog-status">Loading Stream operations...</div> : null}
         {kind === "admin" || kind === "admin-analytics" ? (
           <>
             <div className="sw-metrics">
@@ -1161,7 +1161,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                 <div>
                   <b>{creator.name}</b>
                   <p>
-                    {creator.videos} uploads · {creator.approved} approved · {creator.live} live
+                    {creator.videos} uploads  -  {creator.approved} approved  -  {creator.live} live
                   </p>
                 </div>
                 <Link to="/admin/stream/moderation">View content</Link>
@@ -1222,7 +1222,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
               </label>
             ))}
             <button className="sw-admin-save" type="button" disabled={saving} onClick={() => void saveSettings()}>
-              {saving ? "Saving…" : "Save settings"}
+              {saving ? "Saving..." : "Save settings"}
             </button>
             {message ? <p className="sw-profile-message">{message}</p> : null}
           </div>

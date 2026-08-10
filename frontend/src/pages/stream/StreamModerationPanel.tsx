@@ -36,15 +36,15 @@ const StreamModerationPanel = () => {
       setMessageType("success");
       setMessage(
         action === "approve"
-          ? `“${video.title}” is approved.`
+          ? `"${video.title}" is approved.`
           : action === "reject"
-            ? `“${video.title}” was rejected.`
+            ? `"${video.title}" was rejected.`
             : action === "playback"
-              ? `Playback ${body.enabled ? "enabled" : "disabled"} for “${video.title}”.`
+              ? `Playback ${body.enabled ? "enabled" : "disabled"} for "${video.title}".`
               : action === "visibility"
                 ? `Visibility changed to ${body.visibility}.`
                 : action === "attach"
-                  ? `“${video.title}” is attached to the selected TMDB title.`
+                  ? `"${video.title}" is attached to the selected TMDB title.`
                   : "Video updated."
       );
     } catch (error) {
@@ -72,7 +72,7 @@ const StreamModerationPanel = () => {
       setMessage("TMDB search is unavailable.");
     }
   };
-  if (!videos) return <div className="sw-catalog-status">Loading moderation queue…</div>;
+  if (!videos) return <div className="sw-catalog-status">Loading moderation queue...</div>;
   return (
     <>
       <div className="sw-moderation-toolbar">
@@ -102,7 +102,7 @@ const StreamModerationPanel = () => {
               </span>
               <h2>{video.title}</h2>
               <p>
-                {video.creatorName || "Creator"} ·{" "}
+                {video.creatorName || "Creator"}  - {" "}
                 {video.contentSource === "youtube" ? "YouTube" : video.processingStatus}
               </p>
               <small>Rights declaration: {video.rightsConfirmed ? "Confirmed" : "Missing"}</small>
@@ -118,7 +118,7 @@ const StreamModerationPanel = () => {
                 onClick={() => void act(video, { action: "approve" })}
               >
                 {busy === video.cloudflareUid
-                  ? "Saving…"
+                  ? "Saving..."
                   : video.moderationStatus === "approved"
                     ? "Approved"
                     : "Approve"}
@@ -184,7 +184,7 @@ const StreamModerationPanel = () => {
                     <span>{title.posterUrl ? <img src={title.posterUrl} alt="" /> : null}</span>
                     <b>{title.title}</b>
                     <small>
-                      {title.mediaType === "tv" ? "Series" : "Movie"} · {title.releaseDate?.slice(0, 4) || "New"}
+                      {title.mediaType === "tv" ? "Series" : "Movie"}  -  {title.releaseDate?.slice(0, 4) || "New"}
                     </small>
                   </button>
                 ))}
@@ -195,7 +195,7 @@ const StreamModerationPanel = () => {
       </div>
       <ActionDialog
         open={Boolean(rejectVideo)}
-        title={`Reject “${rejectVideo?.title || "video"}”?`}
+        title={`Reject "${rejectVideo?.title || "video"}"?`}
         description="The creator will see this reason. Playback will be disabled automatically."
         confirmLabel="Reject video"
         danger
