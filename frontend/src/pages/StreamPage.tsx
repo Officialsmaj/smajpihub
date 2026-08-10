@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import "./StreamPage.css";
@@ -75,9 +75,9 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [creatorVideos, setCreatorVideos] = useState<Array<Pick<CreatorVideo, "_id" | "title" | "thumbnailUrl" | "youtubeVideoId" | "cloudflareUid" | "contentSource"> & { creatorName?: string; category?: string }>>([]);
   const [anime, setAnime] = useState<StreamCatalogTitle[]>([]);
-  const [downloadingId, setDownloadingId] = useState("");
-  const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => new Set());
-  const [downloadError, setDownloadError] = useState("");
+  const [savingId, setSavingId] = useState("");
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set());
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => { setFeatureIndex(0); setRankingTab("Popular"); }, [activeSlug]);
 
@@ -105,7 +105,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getPublishedCreatorVideos().then(setCreatorVideos).catch(() => setCreatorVideos([])); }, []);
   useEffect(() => {
     void getStreamMyList()
-      .then((items) => setDownloadedIds(new Set(items.map(catalogKey))))
+      .then((items) => setSavedIds(new Set(items.map(catalogKey))))
       .catch(() => undefined);
   }, []);
 
@@ -123,18 +123,18 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   useEffect(() => { if (featuredTitles.length < 2) return; const timer = window.setInterval(() => setFeatureIndex((index) => (index + 1) % featuredTitles.length), 7000); return () => window.clearInterval(timer); }, [featuredTitles.length]);
 
   const featured = featuredTitles[featureIndex] ?? catalog.movies.find((item) => item.backdropUrl);
-  const downloadFeatured = async () => {
-    if (!featured || downloadedIds.has(catalogKey(featured))) return;
+  const saveFeatured = async () => {
+    if (!featured || savedIds.has(catalogKey(featured))) return;
     const key = catalogKey(featured);
-    setDownloadingId(key);
-    setDownloadError("");
+    setSavingId(key);
+    setSaveError("");
     try {
       await saveStreamTitle(featured);
-      setDownloadedIds((current) => new Set(current).add(key));
+      setSavedIds((current) => new Set(current).add(key));
     } catch {
-      setDownloadError("Download could not be saved. Please try again.");
+      setSaveError("This title could not be saved. Please try again.");
     } finally {
-      setDownloadingId("");
+      setSavingId("");
     }
   };
   const rankedSeries = useMemo(() => {
@@ -180,9 +180,9 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
             <p>{featured?.overview || (catalogLoading ? "Finding the best titles for this category." : "We could not load this category right now. Please try again shortly.")}</p>
             <div className="stream-hero-actions">
               {featured ? <Link className="stream-primary-action" to={`/app/services/stream/${featured.mediaType === "tv" ? "series" : "title"}/${featured.id}`}><PlayArrowRoundedIcon /> View details</Link> : null}
-              {featured ? <button type="button" disabled={downloadingId === catalogKey(featured) || downloadedIds.has(catalogKey(featured))} onClick={() => void downloadFeatured()}><DownloadRoundedIcon /> {downloadingId === catalogKey(featured) ? "Downloading…" : downloadedIds.has(catalogKey(featured)) ? "Downloaded" : "Download"}</button> : null}
+              {featured ? <button type="button" disabled={savingId === catalogKey(featured) || savedIds.has(catalogKey(featured))} onClick={() => void saveFeatured()}><BookmarkBorderRoundedIcon /> {savingId === catalogKey(featured) ? "Saving…" : savedIds.has(catalogKey(featured)) ? "In My List" : "Save to My List"}</button> : null}
             </div>
-            {downloadError ? <small className="stream-download-error" role="alert">{downloadError}</small> : null}
+            {saveError ? <small className="stream-download-error" role="alert">{saveError}</small> : null}
             <div className="stream-hero-meta"><span><b>{featured?.rating ? `${Math.round(featured.rating * 10)}% rating` : "Featured"}</b></span><span>{featured?.releaseDate?.slice(0, 4) || "New"}</span><span>{featured?.mediaType === "tv" ? "Series" : "Movie"}</span><span>TMDB</span></div>
           </div>
           <div className="stream-hero-dots" aria-label="Featured titles">{featuredTitles.map((item, index) => <button key={item.id} type="button" className={index === featureIndex ? "active" : ""} onClick={() => setFeatureIndex(index)} aria-label={`Show ${item.title}`} />)}</div>
