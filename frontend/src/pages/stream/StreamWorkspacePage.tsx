@@ -105,7 +105,7 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   movies: ["Movies", "Blockbusters, originals and stories from around the world."],
   series: ["Series", "Binge-worthy stories and new episodes every week."],
   live: ["Live", "Events, creators, music and sport happening right now."],
-  "my-list": ["My List", "Titles you saved so you can find them again quickly."],
+  "my-list": ["Downloads", "Everything you downloaded, ready when you are."],
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
   profile: ["Stream profile", "Your viewing identity and playback preferences."],
@@ -362,14 +362,14 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
       ) : null}
       {catalogState === "fallback" && kind === "my-list" ? (
         <div className="sw-catalog-status warning">
-          My List could not synchronize. Please sign in again or retry shortly.
+          Downloads could not synchronize. Please sign in again or retry shortly.
         </div>
       ) : null}
       {catalogState === "ready" && kind === "my-list" && !filtered.length ? (
         <div className="sw-list-empty">
           <BookmarkRoundedIcon />
-          <h2>Your list is empty</h2>
-          <p>Save a movie or series and it will appear here on every signed-in device.</p>
+          <h2>No downloads yet</h2>
+          <p>Download a movie or series and it will appear here on every device.</p>
           <Link to="/app/services/stream/movies">Explore movies</Link>
         </div>
       ) : null}
@@ -721,7 +721,7 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
           <div className="sw-plans">
             {[
               ["Free", 0, "Standard video and creator channels"],
-              ["Plus", 8, "HD streaming, My List sync and no advertising"],
+              ["Plus", 8, "HD, downloads and no advertising"],
               ["Family", 14, "4K and up to five profiles"],
             ].map(([name, price, text], index) => (
               <article className={index === 1 ? "featured" : ""} key={name}>
