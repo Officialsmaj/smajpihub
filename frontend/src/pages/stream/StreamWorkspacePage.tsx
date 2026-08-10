@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -37,11 +38,14 @@ import { formatPiRate } from "../../lib/piPricing";
 import {
   getStreamCatalog,
   getStreamCategory,
+  getStreamDownloadStatus,
   getStreamDownloads,
   getStreamMyList,
   getStreamMyListStatus,
   getStreamTitle,
+  removeStreamDownload,
   removeStreamTitle,
+  saveStreamDownload,
   saveStreamTitle,
   searchStreamCatalog,
   type StreamCatalogTitle,
@@ -377,7 +381,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           <h2>{kind === "downloads" ? "No downloads yet" : "Your list is empty"}</h2>
           <p>
             {kind === "downloads"
-              ? "Download a movie or series and it will appear here on every signed-in device."
+              ? "Downloads are saved to your account. Offline file storage is coming later."
               : "Save a movie or series to My List and it will appear here on every signed-in device."}
           </p>
           <Link to="/app/services/stream/movies">Explore movies</Link>
@@ -420,6 +424,8 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
   useEffect(() => {
     if (!id) return;
@@ -427,11 +433,13 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     void Promise.all([
       getStreamTitle(type, id),
       getStreamMyListStatus(type, id).catch(() => false),
+      getStreamDownloadStatus(type, id).catch(() => false),
       getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string } => ({ available: false })),
     ])
-      .then(([titleData, savedStatus, availability]) => {
+      .then(([titleData, savedStatus, downloadStatus, availability]) => {
         setDetail(titleData as typeof detail);
         setSaved(savedStatus);
+        setDownloaded(downloadStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
         setState("ready");
       })
@@ -475,6 +483,17 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       setSaving(false);
     }
   };
+  const toggleDownloaded = async () => {
+    if (!id) return;
+    setDownloading(true);
+    try {
+      if (downloaded) await removeStreamDownload(type, id);
+      else await saveStreamDownload(detail);
+      setDownloaded(!downloaded);
+    } finally {
+      setDownloading(false);
+    }
+  };
   return (
     <>
       <section
@@ -512,6 +531,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               ) : null}
               <button type="button" disabled={saving} onClick={() => void toggleSaved()}>
                 <BookmarkRoundedIcon /> {saving ? "Saving…" : saved ? "Saved" : "My List"}
+              </button>
+              <button type="button" disabled={downloading} onClick={() => void toggleDownloaded()}>
+                <DownloadRoundedIcon /> {downloading ? "Downloading..." : downloaded ? "Downloaded" : "Download"}
               </button>
             </div>
             {!playbackId ? (
@@ -731,7 +753,7 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
           <div className="sw-plans">
             {[
               ["Free", 0, "Standard video and creator channels"],
-              ["Plus", 8, "HD, downloads and no advertising"],
+              ["Plus", 8, "HD streaming, downloads list and no advertising"],
               ["Family", 14, "4K and up to five profiles"],
             ].map(([name, price, text], index) => (
               <article className={index === 1 ? "featured" : ""} key={name}>
