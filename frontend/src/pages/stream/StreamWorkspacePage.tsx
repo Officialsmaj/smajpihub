@@ -24,6 +24,7 @@ import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
 import StreamCreatorsDirectory from "./StreamCreatorsDirectory";
+import { getStreamCreators, type StreamCreatorDirectoryItem } from "../../lib/streamChannel";
 import {
   getStreamAdminOverview,
   getStreamAdminSettings,
@@ -171,6 +172,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
   const [remoteCatalog, setRemoteCatalog] = useState<StreamCatalogTitle[]>([]);
+  const [channelResults, setChannelResults] = useState<StreamCreatorDirectoryItem[]>([]);
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() =>
     ["movies", "series", "search", "category", "my-list", "downloads"].includes(kind) ? "loading" : "fallback"
   );
@@ -311,6 +313,24 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     );
     return () => window.clearTimeout(timer);
   }, [kind, page, query, slug, sort]);
+  useEffect(() => {
+    if (kind !== "search" || !query.trim()) {
+      setChannelResults([]);
+      return;
+    }
+    void getStreamCreators()
+      .then(creators => {
+        const needle = query.trim().toLowerCase();
+        setChannelResults(
+          creators
+            .filter(creator =>
+              [creator.channel.name, creator.channel.handle, creator.channel.description].join(" ").toLowerCase().includes(needle)
+            )
+            .slice(0, 6)
+        );
+      })
+      .catch(() => setChannelResults([]));
+  }, [kind, query]);
   const localList = kind === "history" ? titles.filter(item => item.progress) : kind === "my-list" || kind === "downloads" ? [] : titles;
   const list = remoteTitles ?? localList;
   const genreIds: Record<string, number[]> = {
@@ -390,6 +410,25 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           </p>
           <Link to="/app/services/stream/movies">Explore movies</Link>
         </div>
+      ) : null}
+      {kind === "search" && channelResults.length ? (
+        <section className="sw-search-channels">
+          <header>
+            <h2>Channels</h2>
+            <Link to="/app/services/stream/creators">See all</Link>
+          </header>
+          <div>
+            {channelResults.map(creator => (
+              <Link to={`/app/services/stream/channel/${creator.channel.handle}`} key={creator.creatorId}>
+                <span>
+                  {creator.channel.avatarUrl ? <img src={creator.channel.avatarUrl} alt="" /> : creator.channel.name.slice(0, 2).toUpperCase()}
+                </span>
+                <strong>{creator.channel.name}</strong>
+                <small>@{creator.channel.handle}</small>
+              </Link>
+            ))}
+          </div>
+        </section>
       ) : null}
       <div className="sw-title-grid">
         {filtered.map(item => (

@@ -13,7 +13,7 @@ const StreamPublicChannel = () => {
   const { handle = "" } = useParams();
   const [data, setData] = useState<PublicStreamChannel | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const [tab, setTab] = useState<"videos" | "live" | "about">("videos");
+  const [tab, setTab] = useState<"posts" | "videos" | "live" | "about">("posts");
   const [following, setFollowing] = useState(false);
   const [followState, setFollowState] = useState<"loading" | "ready" | "saving" | "error">("loading");
 
@@ -83,12 +83,29 @@ const StreamPublicChannel = () => {
         </button>
       </header>
       <nav aria-label="Channel sections">
-        {(["videos", "live", "about"] as const).map(item => (
+        {(["posts", "videos", "live", "about"] as const).map(item => (
           <button type="button" className={tab === item ? "active" : ""} onClick={() => setTab(item)} key={item}>
             {item === "live" ? "Live" : item[0].toUpperCase() + item.slice(1)}
           </button>
         ))}
       </nav>
+      {tab === "posts" ? (
+        data.posts.length ? (
+          <div className="sw-public-post-feed">
+            {data.posts.map(post => (
+              <article key={post._id}>
+                <header>
+                  <strong>{data.channel.name}</strong>
+                  <small>{post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}</small>
+                </header>
+                <p>{post.body}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="sw-channel-empty">No channel posts yet.</p>
+        )
+      ) : null}
       {tab === "videos" ? (
         data.videos.length ? (
           <div className="sw-public-channel-grid">

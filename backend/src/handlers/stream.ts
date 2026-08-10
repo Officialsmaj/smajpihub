@@ -120,6 +120,14 @@ const mountStreamEndpoints = (router: Router) => {
     return user;
   };
 
+  const publicPost = (post: Record<string, unknown>) => ({
+    _id: String(post._id),
+    body: post.body,
+    visibility: post.visibility || "public",
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+  });
+
   router.get("/my-list", async (req, res) => {
     const user = await requireViewer(req, res); if (!user) return;
     const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
@@ -397,6 +405,37 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ stats: { totalVideos: videos.length, publishedVideos: count(video => video.visibility === "public" && video.moderationStatus === "approved" && video.playbackAllowed === true), pendingVideos: count(video => !video.moderationStatus || video.moderationStatus === "pending"), rejectedVideos: count(video => video.moderationStatus === "rejected"), liveStreams: count(video => video.contentType === "live"), totalViews, watchSeconds, averageViewSeconds: totalViews > 0 ? Math.round(watchSeconds / totalViews) : 0, latestUploadAt: videos[0]?.createdAt || null }, monetization: { enabled: false, reason: "Creator monetization and Pi payouts are not enabled yet." } });
   });
 
+  router.post("/creator/posts", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    if (!req.app.locals.streamPostCollection) return res.status(503).json({ error: "service_unavailable", message: "Stream posts storage is not ready." });
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const profile = stored?.streamProfile || {};
+    const handle = String(profile.channelHandle || "").trim();
+    const body = String(req.body?.body || "").trim().slice(0, 800);
+    const visibility = req.body?.visibility === "followers" ? "followers" : "public";
+    if (!handle) return res.status(400).json({ error: "channel_required", message: "Set your channel handle before posting." });
+    if (body.length < 2) return res.status(400).json({ error: "post_required", message: "Write something before posting." });
+    const now = new Date();
+    const post = {
+      creatorId: String(user._id),
+      creatorName: profile.channelName || user.displayName || user.username || "SMAJ Creator",
+      channelHandle: handle,
+      body,
+      visibility,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const result = await req.app.locals.streamPostCollection.insertOne(post);
+    return res.status(201).json({ post: publicPost({ ...post, _id: result.insertedId }) });
+  });
+
+  router.get("/creator/posts", async (req, res) => {
+    const user = await requireCreator(req, res); if (!user) return;
+    if (!req.app.locals.streamPostCollection) return res.json({ posts: [] });
+    const posts = await req.app.locals.streamPostCollection.find({ creatorId: String(user._id) }).sort({ createdAt: -1 }).limit(20).toArray();
+    return res.json({ posts: posts.map(publicPost) });
+  });
+
   router.get("/creator-content", async (req, res) => {
     if (!req.app.locals.streamContentCollection) return res.json({ videos: [] });
     const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(20).toArray();
@@ -451,6 +490,9 @@ const mountStreamEndpoints = (router: Router) => {
     if (!creator) return res.status(404).json({ error: "channel_not_found", message: "This creator channel does not exist." });
     const creatorId = String(creator._id);
     const videos = await req.app.locals.streamContentCollection.find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(60).toArray();
+    const posts = req.app.locals.streamPostCollection
+      ? await req.app.locals.streamPostCollection.find({ creatorId, visibility: "public" }).sort({ createdAt: -1 }).limit(40).toArray()
+      : [];
     const profile = creator.streamProfile || {};
     return res.json({
       channel: {
@@ -460,6 +502,7 @@ const mountStreamEndpoints = (router: Router) => {
         avatarUrl: profile.avatarUrl || creator.avatarUrl || "",
         bannerUrl: profile.channelBannerUrl || "",
       },
+      posts: posts.map(publicPost),
       videos: videos.filter((video: Record<string, unknown>) => video.contentType !== "live").map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, description: video.description, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })),
       live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").map((video: Record<string, unknown>) => ({ liveInputUid: video.liveInputUid, title: video.title, thumbnailUrl: video.thumbnailUrl || null, processingStatus: video.processingStatus })),
     });
@@ -476,10 +519,14 @@ const mountStreamEndpoints = (router: Router) => {
       const creatorId = String(creator._id);
       const profile = creator.streamProfile || {};
       const videos = await req.app.locals.streamContentCollection.find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(12).toArray();
+      const posts = req.app.locals.streamPostCollection
+        ? await req.app.locals.streamPostCollection.find({ creatorId, visibility: "public" }).sort({ createdAt: -1 }).limit(6).toArray()
+        : [];
       return {
         creatorId,
         subscribedAt: subscription.subscribedAt || null,
         channel: { name: profile.channelName || creator.displayName || creator.username || "SMAJ Creator", handle, avatarUrl: profile.avatarUrl || creator.avatarUrl || "" },
+        posts: posts.map(publicPost),
         videos: videos.map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentType: video.contentType, liveInputUid: video.liveInputUid, processingStatus: video.processingStatus, createdAt: video.createdAt })),
       };
     }))).filter(Boolean);

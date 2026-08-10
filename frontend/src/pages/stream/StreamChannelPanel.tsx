@@ -1,6 +1,7 @@
 import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent } from "react";
 import { Link } from "react-router-dom";
+import { createStreamChannelPost, getMyStreamChannelPosts, type PublicChannelPost } from "../../lib/streamChannel";
 import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
 import { uploadImage } from "../../lib/uploadImage";
 
@@ -63,6 +64,9 @@ const StreamChannelPanel = () => {
   const [profile, setProfile] = useState<StreamProfile | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "saving" | "error">("loading");
   const [message, setMessage] = useState("");
+  const [posts, setPosts] = useState<PublicChannelPost[]>([]);
+  const [postBody, setPostBody] = useState("");
+  const [posting, setPosting] = useState(false);
   const [crop, setCrop] = useState<CropState | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
@@ -70,9 +74,10 @@ const StreamChannelPanel = () => {
   const cropDragRef = useRef<{ handle: CropHandle; startX: number; startY: number; startFrame: CropFrame } | null>(null);
 
   useEffect(() => {
-    void getStreamProfile()
-      .then(({ profile: next }) => {
+    void Promise.all([getStreamProfile(), getMyStreamChannelPosts().catch(() => [])])
+      .then(([{ profile: next }, nextPosts]) => {
         setProfile(next);
+        setPosts(nextPosts);
         setStatus("ready");
       })
       .catch(() => {
@@ -199,6 +204,25 @@ const StreamChannelPanel = () => {
     }
   };
 
+  const publishPost = async () => {
+    const body = postBody.trim();
+    if (!body) return;
+    try {
+      setPosting(true);
+      setMessage("");
+      const post = await createStreamChannelPost(body);
+      setPosts(current => [post, ...current].slice(0, 20));
+      setPostBody("");
+      setStatus("ready");
+      setMessage("Post published to your channel feed.");
+    } catch (error: unknown) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Post could not be published.");
+    } finally {
+      setPosting(false);
+    }
+  };
+
   if (!profile) return <div className="sw-catalog-status">{status === "loading" ? "Loading your channel..." : message}</div>;
   const initials = (profile.channelName || profile.displayName || "SC").split(/\s+/).map(word => word[0]).join("").slice(0, 2).toUpperCase();
 
@@ -221,6 +245,30 @@ const StreamChannelPanel = () => {
       <label>Channel handle<div className="sw-handle-input"><span>@</span><input required maxLength={40} value={profile.channelHandle} onChange={event => change("channelHandle", event.target.value.replace(/[^a-zA-Z0-9_.-]/g, ""))} /></div></label>
       <label className="wide">Description<textarea maxLength={500} rows={4} value={profile.channelDescription} onChange={event => change("channelDescription", event.target.value)} /></label>
     </div>
+    <section className="sw-channel-post-composer">
+      <header>
+        <div>
+          <h3>Channel feed</h3>
+          <p>Post updates for followers, like a Facebook page for your Stream channel.</p>
+        </div>
+        <span>{posts.length} posts</span>
+      </header>
+      <textarea maxLength={800} rows={3} placeholder="Share an update with your followers..." value={postBody} onChange={event => setPostBody(event.target.value)} />
+      <div>
+        <small>{800 - postBody.length} characters left</small>
+        <button type="button" disabled={posting || !postBody.trim()} onClick={() => void publishPost()}>{posting ? "Posting..." : "Post update"}</button>
+      </div>
+      {posts.length ? (
+        <div className="sw-channel-post-list">
+          {posts.slice(0, 3).map(post => (
+            <article key={post._id}>
+              <p>{post.body}</p>
+              <small>{post.createdAt ? new Date(post.createdAt).toLocaleString() : "Just now"}</small>
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </section>
     {message ? <p className={`sw-profile-message ${status === "error" ? "error" : "success"}`}>{message}</p> : null}
     <div className="sw-channel-editor-actions"><button className="sw-profile-save" type="submit" disabled={status === "saving"}>{status === "saving" ? "Saving..." : "Save channel"}</button>{profile.channelHandle ? <Link to={`/app/services/stream/channel/${profile.channelHandle}`}>View public channel</Link> : null}</div>
     {crop ? (

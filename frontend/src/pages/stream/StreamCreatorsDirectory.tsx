@@ -14,6 +14,7 @@ const initialsFor = (name: string) =>
 
 const StreamCreatorsDirectory = () => {
   const [creators, setCreators] = useState<StreamCreatorDirectoryItem[] | null>(null);
+  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -24,6 +25,15 @@ const StreamCreatorsDirectory = () => {
         setError("Creator channels could not load. Check your connection and retry.");
       });
   }, []);
+
+  const filteredCreators = (creators || []).filter(creator => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return true;
+    return [creator.channel.name, creator.channel.handle, creator.channel.description]
+      .join(" ")
+      .toLowerCase()
+      .includes(needle);
+  });
 
   return (
     <>
@@ -37,8 +47,14 @@ const StreamCreatorsDirectory = () => {
       {creators === null ? <div className="sw-catalog-status">Loading creator channels...</div> : null}
       {error ? <div className="sw-catalog-status warning">{error}</div> : null}
       {creators?.length ? (
+        <div className="sw-channel-search">
+          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search channels, creators, handles..." />
+          <span>{filteredCreators.length} channels</span>
+        </div>
+      ) : null}
+      {creators?.length && filteredCreators.length ? (
         <section className="sw-creators-directory">
-          {creators.map(creator => (
+          {filteredCreators.map(creator => (
             <article key={creator.creatorId}>
               <Link
                 className="sw-creator-banner"
@@ -80,6 +96,14 @@ const StreamCreatorsDirectory = () => {
             </article>
           ))}
         </section>
+      ) : null}
+      {creators?.length && !filteredCreators.length ? (
+        <div className="sw-list-empty">
+          <GroupsRoundedIcon />
+          <h2>No channels found</h2>
+          <p>Try a creator name, channel handle, or topic.</p>
+          <Link to="/app/services/stream/creators">Show all creators</Link>
+        </div>
       ) : null}
       {creators && !creators.length && !error ? (
         <div className="sw-list-empty">

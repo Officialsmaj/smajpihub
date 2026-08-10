@@ -331,6 +331,7 @@ const start = async () => {
       app.locals.heroBannerCollection = db.collection("hero_banners");
       app.locals.ambassadorCollection = db.collection("ambassador_applications");
       app.locals.streamContentCollection = db.collection("stream_content");
+      app.locals.streamPostCollection = db.collection("stream_posts");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
 app.locals.jobCollection = db.collection("jobs");
        app.locals.jobCompanyCollection = db.collection("job_companies");
@@ -395,6 +396,14 @@ app.locals.jobCollection = db.collection("jobs");
         app.locals.ambassadorCollection.createIndex({ status: 1, countryCode: 1, services: 1 }),
         app.locals.streamContentCollection.createIndex({
           creatorId: 1,
+          createdAt: -1,
+        }),
+        app.locals.streamPostCollection.createIndex({
+          creatorId: 1,
+          createdAt: -1,
+        }),
+        app.locals.streamPostCollection.createIndex({
+          visibility: 1,
           createdAt: -1,
         }),
         app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),

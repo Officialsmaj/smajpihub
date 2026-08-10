@@ -17,8 +17,16 @@ export type PublicChannelLive = {
   thumbnailUrl?: string | null;
   processingStatus?: string;
 };
+export type PublicChannelPost = {
+  _id: string;
+  body: string;
+  visibility?: "public" | "followers";
+  createdAt?: string;
+  updatedAt?: string;
+};
 export type PublicStreamChannel = {
   channel: { name: string; handle: string; description: string; avatarUrl: string; bannerUrl: string };
+  posts: PublicChannelPost[];
   videos: PublicChannelVideo[];
   live: PublicChannelLive[];
 };
@@ -26,6 +34,7 @@ export type StreamSubscription = {
   creatorId: string;
   subscribedAt: string | null;
   channel: { name: string; handle: string; avatarUrl: string };
+  posts: PublicChannelPost[];
   videos: Array<PublicChannelVideo & { contentType?: string; liveInputUid?: string; processingStatus?: string }>;
 };
 export type StreamCreatorDirectoryItem = {
@@ -41,6 +50,10 @@ export const getStreamCreators = async () =>
   (await axiosClient.get<{ creators: StreamCreatorDirectoryItem[] }>("/stream/creators")).data.creators;
 export const getStreamSubscriptions = async () =>
   (await axiosClient.get<{ channels: StreamSubscription[] }>("/stream/subscriptions")).data.channels;
+export const createStreamChannelPost = async (body: string, visibility: "public" | "followers" = "public") =>
+  (await axiosClient.post<{ post: PublicChannelPost }>("/stream/creator/posts", { body, visibility })).data.post;
+export const getMyStreamChannelPosts = async () =>
+  (await axiosClient.get<{ posts: PublicChannelPost[] }>("/stream/creator/posts")).data.posts;
 export const getStreamSubscriptionStatus = async (handle: string) =>
   (await axiosClient.get<{ subscribed: boolean }>(`/stream/subscriptions/${encodeURIComponent(handle)}/status`)).data
     .subscribed;

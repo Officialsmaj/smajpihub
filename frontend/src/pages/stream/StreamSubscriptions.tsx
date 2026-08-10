@@ -50,6 +50,16 @@ const StreamSubscriptions = () => {
                   </div>
                   <Link to={`/app/services/stream/channel/${subscription.channel.handle}`}>View channel</Link>
                 </header>
+                {subscription.posts.length ? (
+                  <div className="sw-subscription-posts">
+                    {subscription.posts.map(post => (
+                      <article key={post._id}>
+                        <p>{post.body}</p>
+                        <small>{post.createdAt ? new Date(post.createdAt).toLocaleString() : "Channel update"}</small>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
                 {subscription.videos.length ? (
                   <div className="sw-public-channel-grid">
                     {subscription.videos.map(video => {
