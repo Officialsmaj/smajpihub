@@ -258,7 +258,7 @@ export const router = createBrowserRouter([
       platform.routeSegment === "transport" ? (
         <TransportPage />
       ) : platform.routeSegment === "stream" ? (
-        <StreamPage />
+        <Navigate to="/app/services/stream" replace />
       ) : platform.routeSegment === "sports" ? (
         <SportsPage />
       ) : platform.routeSegment === "jobs" ? (
@@ -346,7 +346,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/smaj-pi-stream",
-    element: <Navigate to="/services/stream" replace />,
+    element: <Navigate to="/app/services/stream" replace />,
   },
   {
     path: "/smaj-pi-sports",
