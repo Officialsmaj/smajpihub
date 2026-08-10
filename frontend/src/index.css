@@ -5958,7 +5958,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     top: 60px;
     z-index: 30;
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(4, max-content);
     justify-content: space-around;
     overflow-x: auto;
     color: var(--smaj-text-secondary);
@@ -7874,7 +7874,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   top: 0;
   z-index: 50;
   display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--smaj-card);
   border-bottom: 1px solid var(--smaj-border);
 }
