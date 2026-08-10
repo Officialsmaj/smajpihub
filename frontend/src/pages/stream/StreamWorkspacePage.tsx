@@ -266,7 +266,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
               );
             setCatalogState("ready");
             if (page === 1) setRemoteCatalog(data.results);
-            setTotalPages(Math.min(data.total_pages || 1, 100));
+            setTotalPages(Math.min(data.total_pages || 1, kind === "search" ? 500 : 100));
             if (page > 1) {
               const next = data.results.map((item: StreamCatalogTitle, index) => ({
                 id: item.id,
@@ -306,12 +306,15 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     Documentary: [99],
     Family: [10751],
   };
-  const filtered = list.filter(
-    item =>
-      item.name.toLowerCase().includes(query.toLowerCase()) &&
-      (genre === "All" ||
-        remoteCatalog.find(entry => entry.id === item.id)?.genreIds.some(id => genreIds[genre]?.includes(id)))
-  );
+  const filtered =
+    kind === "search"
+      ? list
+      : list.filter(
+          item =>
+            item.name.toLowerCase().includes(query.toLowerCase()) &&
+            (genre === "All" ||
+              remoteCatalog.find(entry => entry.id === item.id)?.genreIds.some(id => genreIds[genre]?.includes(id)))
+        );
   return (
     <>
       <header className="sw-page-head">
@@ -379,7 +382,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <div className="sw-load-more" ref={loadMoreRef}>
           {page < totalPages ? (
             <button type="button" disabled={loadingMore} onClick={() => setPage(value => value + 1)}>
-              {loadingMore ? "Loading more…" : "Load more movies"}
+              {loadingMore ? "Loading more…" : "Load more titles"}
             </button>
           ) : (
             <span>You reached the end of this catalogue.</span>

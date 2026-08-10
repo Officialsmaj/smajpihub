@@ -567,7 +567,7 @@ const mountStreamEndpoints = (router: Router) => {
     const query = String(req.query.q || "").trim().slice(0, 120);
     if (!query) return res.json({ page: 1, total_pages: 0, total_results: 0, results: [], source: "TMDB" });
     try {
-      const page = Math.max(1, Math.min(100, Number(req.query.page) || 1));
+      const page = Math.max(1, Math.min(500, Number(req.query.page) || 1));
       const data = await tmdbGet<{ page: number; total_pages: number; total_results: number; results: TmdbMedia[] }>("/search/multi", { query, page, language: String(req.query.language || "en-US"), include_adult: false });
       return res.json({ ...data, results: data.results.filter((item) => item.media_type !== "person").map((item) => normalizeMedia(item)), source: "TMDB" });
     } catch (error) {
