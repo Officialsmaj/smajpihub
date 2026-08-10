@@ -2,10 +2,61 @@ import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Link } from "react-router-dom";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
-import { getStreamPlayback, getStreamProgress, saveStreamProgress, type StreamPlaybackVideo } from "../../lib/streamPlayback";
+import {
+  getStreamPlayback,
+  getStreamProgress,
+  saveStreamProgress,
+  type StreamPlaybackVideo,
+} from "../../lib/streamPlayback";
+
+type YouTubePlayer = {
+  destroy: () => void;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+};
+type YouTubePlayerEvent = { target: YouTubePlayer; data: number };
+type YouTubeApi = {
+  Player: new (
+    element: HTMLElement,
+    options: {
+      videoId: string;
+      playerVars: Record<string, number>;
+      events: { onReady: (event: YouTubePlayerEvent) => void; onStateChange: (event: YouTubePlayerEvent) => void };
+    }
+  ) => YouTubePlayer;
+  PlayerState: { ENDED: number; PLAYING: number; PAUSED: number };
+};
+
+let youtubeApiPromise: Promise<YouTubeApi> | null = null;
+const loadYouTubeApi = () => {
+  if (youtubeApiPromise) return youtubeApiPromise;
+  youtubeApiPromise = new Promise<YouTubeApi>((resolve, reject) => {
+    const youtubeWindow = window as typeof window & { YT?: YouTubeApi; onYouTubeIframeAPIReady?: () => void };
+    if (youtubeWindow.YT?.Player) {
+      resolve(youtubeWindow.YT);
+      return;
+    }
+    const previousReady = youtubeWindow.onYouTubeIframeAPIReady;
+    youtubeWindow.onYouTubeIframeAPIReady = () => {
+      previousReady?.();
+      if (youtubeWindow.YT?.Player) resolve(youtubeWindow.YT);
+      else reject(new Error("YouTube player API did not initialize."));
+    };
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      script.onerror = () => reject(new Error("YouTube player API could not load."));
+      document.head.appendChild(script);
+    }
+  });
+  return youtubeApiPromise;
+};
 
 const StreamVideoPlayer = ({ id }: { id: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const youtubeRef = useRef<HTMLDivElement>(null);
   const lastSavedRef = useRef(0);
   const [video, setVideo] = useState<StreamPlaybackVideo | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -29,17 +80,78 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     const element = videoRef.current;
     if (!element || !video?.playbackUrl || video.sourceType !== "hls") return;
     let hls: Hls | null = null;
-    const resume = () => { if (lastSavedRef.current > 0 && lastSavedRef.current < element.duration - 15) element.currentTime = lastSavedRef.current; };
+    const resume = () => {
+      if (lastSavedRef.current > 0 && lastSavedRef.current < element.duration - 15)
+        element.currentTime = lastSavedRef.current;
+    };
     element.addEventListener("loadedmetadata", resume, { once: true });
     if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
     else if (Hls.isSupported()) {
       hls = new Hls({ enableWorker: true, lowLatencyMode: true });
       hls.loadSource(video.playbackUrl);
       hls.attachMedia(element);
-      hls.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) setMessage("Playback was interrupted. Check your connection and retry."); });
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) setMessage("Playback was interrupted. Check your connection and retry.");
+      });
     } else setMessage("This browser cannot play HLS video.");
-    return () => { element.removeEventListener("loadedmetadata", resume); hls?.destroy(); };
+    return () => {
+      element.removeEventListener("loadedmetadata", resume);
+      hls?.destroy();
+    };
   }, [video]);
+
+  useEffect(() => {
+    const target = youtubeRef.current;
+    if (!target || video?.sourceType !== "youtube" || !video.youtubeVideoId) return;
+    let active = true;
+    let player: YouTubePlayer | null = null;
+    let timer: number | null = null;
+    let lastPosition = lastSavedRef.current;
+    const save = (force = false, completed = false) => {
+      if (!player) return;
+      const position = Math.max(0, Number(player.getCurrentTime()) || 0);
+      const duration = Math.max(0, Number(player.getDuration()) || 0);
+      if (!duration || (!force && Math.abs(position - lastPosition) < 10)) return;
+      lastPosition = position;
+      lastSavedRef.current = position;
+      void saveStreamProgress(id, {
+        title: video.title,
+        thumbnailUrl: video.thumbnailUrl || null,
+        position,
+        duration,
+        completed,
+      }).catch(() => active && setMessage("Watch progress could not synchronize. Check your connection and sign-in."));
+    };
+    void loadYouTubeApi()
+      .then(YT => {
+        if (!active) return;
+        player = new YT.Player(target, {
+          videoId: video.youtubeVideoId!,
+          playerVars: { rel: 0, playsinline: 1 },
+          events: {
+            onReady: event => {
+              player = event.target;
+              const duration = player.getDuration();
+              if (lastSavedRef.current > 0 && lastSavedRef.current < duration - 15)
+                player.seekTo(lastSavedRef.current, true);
+              timer = window.setInterval(() => save(), 10_000);
+            },
+            onStateChange: event => {
+              player = event.target;
+              if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED) save(true);
+              if (event.data === YT.PlayerState.ENDED) save(true, true);
+            },
+          },
+        });
+      })
+      .catch(() => active && setMessage("The YouTube player could not initialize."));
+    return () => {
+      save(true);
+      active = false;
+      if (timer !== null) window.clearInterval(timer);
+      player?.destroy();
+    };
+  }, [id, video]);
 
   const persist = (completed = false) => {
     const element = videoRef.current;
@@ -47,14 +159,75 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     const position = element.currentTime;
     if (!completed && Math.abs(position - lastSavedRef.current) < 10) return;
     lastSavedRef.current = position;
-    void saveStreamProgress(id, { title: video.title, thumbnailUrl: video.thumbnailUrl || null, position, duration: element.duration, completed }).catch(() => undefined);
+    void saveStreamProgress(id, {
+      title: video.title,
+      thumbnailUrl: video.thumbnailUrl || null,
+      position,
+      duration: element.duration,
+      completed,
+    }).catch(() => setMessage("Watch progress could not synchronize. Check your connection and sign-in."));
   };
 
-  if (state === "loading") return <section className="sw-player-state"><i /><h1>Preparing your video…</h1><p>Checking playback rights and loading the stream.</p></section>;
-  if (state === "error" || !video) return <section className="sw-player-state error"><h1>Video unavailable</h1><p>{message}</p><Link to="/app/services/stream">Browse available entertainment</Link></section>;
-  if (video.sourceType === "youtube" && video.youtubeVideoId) return <section className="sw-watch real"><div className="sw-youtube-player"><iframe src={`https://www.youtube-nocookie.com/embed/${video.youtubeVideoId}?rel=0`} title={video.title} allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen /></div><div className="sw-watch-info"><div><h1>{video.title}</h1><p>{video.creatorName || "SMAJ Creator"} · Played through YouTube</p></div></div></section>;
+  if (state === "loading")
+    return (
+      <section className="sw-player-state">
+        <i />
+        <h1>Preparing your video…</h1>
+        <p>Checking playback rights and loading the stream.</p>
+      </section>
+    );
+  if (state === "error" || !video)
+    return (
+      <section className="sw-player-state error">
+        <h1>Video unavailable</h1>
+        <p>{message}</p>
+        <Link to="/app/services/stream">Browse available entertainment</Link>
+      </section>
+    );
+  if (video.sourceType === "youtube" && video.youtubeVideoId)
+    return (
+      <section className="sw-watch real">
+        <div className="sw-youtube-player">
+          <div ref={youtubeRef} title={video.title} />
+        </div>
+        {message ? <p className="sw-player-warning">{message}</p> : null}
+        <div className="sw-watch-info">
+          <div>
+            <h1>{video.title}</h1>
+            <p>{video.creatorName || "SMAJ Creator"} · Progress saves automatically</p>
+          </div>
+        </div>
+      </section>
+    );
 
-  return <section className="sw-watch real"><div className="sw-real-player"><video ref={videoRef} controls playsInline preload="metadata" poster={video.thumbnailUrl || undefined} onTimeUpdate={() => persist()} onPause={() => persist()} onEnded={() => persist(true)} /><span className="sw-licensed-badge">AUTHORIZED STREAM</span>{message ? <p className="sw-player-warning">{message}</p> : null}</div><div className="sw-watch-info"><div><h1>{video.title}</h1><p>{video.creatorName || "SMAJ Stream"} · Progress saves automatically</p></div><button type="button"><BookmarkRoundedIcon /> Save</button></div>{video.description ? <p className="sw-watch-description">{video.description}</p> : null}</section>;
+  return (
+    <section className="sw-watch real">
+      <div className="sw-real-player">
+        <video
+          ref={videoRef}
+          controls
+          playsInline
+          preload="metadata"
+          poster={video.thumbnailUrl || undefined}
+          onTimeUpdate={() => persist()}
+          onPause={() => persist()}
+          onEnded={() => persist(true)}
+        />
+        <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
+        {message ? <p className="sw-player-warning">{message}</p> : null}
+      </div>
+      <div className="sw-watch-info">
+        <div>
+          <h1>{video.title}</h1>
+          <p>{video.creatorName || "SMAJ Stream"} · Progress saves automatically</p>
+        </div>
+        <button type="button">
+          <BookmarkRoundedIcon /> Save
+        </button>
+      </div>
+      {video.description ? <p className="sw-watch-description">{video.description}</p> : null}
+    </section>
+  );
 };
 
 export default StreamVideoPlayer;
