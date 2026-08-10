@@ -36,6 +36,7 @@ import { formatPiRate } from "../../lib/piPricing";
 import {
   getStreamCatalog,
   getStreamCategory,
+  getStreamDownloads,
   getStreamMyList,
   getStreamMyListStatus,
   getStreamTitle,
@@ -53,6 +54,7 @@ export type StreamPageKind =
   | "search"
   | "category"
   | "my-list"
+  | "downloads"
   | "history"
   | "subscriptions"
   | "movie-detail"
@@ -105,7 +107,8 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   movies: ["Movies", "Blockbusters, originals and stories from around the world."],
   series: ["Series", "Binge-worthy stories and new episodes every week."],
   live: ["Live", "Events, creators, music and sport happening right now."],
-  "my-list": ["Downloads", "Everything you downloaded, ready when you are."],
+  "my-list": ["My List", "Titles you saved so you can find them again quickly."],
+  downloads: ["Downloads", "Everything you downloaded, ready when you are."],
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
   profile: ["Stream profile", "Your viewing identity and playback preferences."],
@@ -158,7 +161,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
   const [remoteCatalog, setRemoteCatalog] = useState<StreamCatalogTitle[]>([]);
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() =>
-    ["movies", "series", "search", "category", "my-list"].includes(kind) ? "loading" : "fallback"
+    ["movies", "series", "search", "category", "my-list", "downloads"].includes(kind) ? "loading" : "fallback"
   );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -204,7 +207,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   }, [slug]);
   useEffect(() => {
     const node = loadMoreRef.current;
-    if (!node || kind === "my-list") return;
+    if (!node || kind === "my-list" || kind === "downloads") return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting && catalogState === "ready" && !loadingMore && page < totalPages)
@@ -216,11 +219,11 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     return () => observer.disconnect();
   }, [catalogState, kind, loadingMore, page, totalPages]);
   useEffect(() => {
-    if (!["movies", "series", "search", "category", "my-list"].includes(kind)) return;
+    if (!["movies", "series", "search", "category", "my-list", "downloads"].includes(kind)) return;
     const timer = window.setTimeout(
       () => {
-        if (kind === "my-list") {
-          void getStreamMyList()
+        if (kind === "my-list" || kind === "downloads") {
+          void (kind === "downloads" ? getStreamDownloads() : getStreamMyList())
             .then(items => {
               setRemoteTitles(
                 items.map((item, index) => ({
@@ -297,7 +300,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     );
     return () => window.clearTimeout(timer);
   }, [kind, page, query, slug, sort]);
-  const localList = kind === "history" ? titles.filter(item => item.progress) : kind === "my-list" ? [] : titles;
+  const localList = kind === "history" ? titles.filter(item => item.progress) : kind === "my-list" || kind === "downloads" ? [] : titles;
   const list = remoteTitles ?? localList;
   const genreIds: Record<string, number[]> = {
     Action: [28, 10759],
@@ -360,16 +363,20 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           This catalogue is unavailable. Check the TMDB backend configuration and retry.
         </div>
       ) : null}
-      {catalogState === "fallback" && kind === "my-list" ? (
+      {catalogState === "fallback" && (kind === "my-list" || kind === "downloads") ? (
         <div className="sw-catalog-status warning">
-          Downloads could not synchronize. Please sign in again or retry shortly.
+          {kind === "downloads" ? "Downloads" : "My List"} could not synchronize. Please sign in again or retry shortly.
         </div>
       ) : null}
-      {catalogState === "ready" && kind === "my-list" && !filtered.length ? (
+      {catalogState === "ready" && (kind === "my-list" || kind === "downloads") && !filtered.length ? (
         <div className="sw-list-empty">
           <BookmarkRoundedIcon />
-          <h2>No downloads yet</h2>
-          <p>Download a movie or series and it will appear here on every device.</p>
+          <h2>{kind === "downloads" ? "No downloads yet" : "Your list is empty"}</h2>
+          <p>
+            {kind === "downloads"
+              ? "Download a movie or series and it will appear here on every signed-in device."
+              : "Save a movie or series to My List and it will appear here on every signed-in device."}
+          </p>
           <Link to="/app/services/stream/movies">Explore movies</Link>
         </div>
       ) : null}
@@ -378,7 +385,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           <Tile title={item} key={`${item.mediaType || "local"}-${item.id}`} />
         ))}
       </div>
-      {catalogState === "ready" && kind !== "my-list" ? (
+      {catalogState === "ready" && kind !== "my-list" && kind !== "downloads" ? (
         <div className="sw-load-more" ref={loadMoreRef}>
           {page < totalPages ? (
             <button type="button" disabled={loadingMore} onClick={() => setPage(value => value + 1)}>

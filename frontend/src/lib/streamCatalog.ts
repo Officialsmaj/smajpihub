@@ -20,6 +20,11 @@ export type StreamCatalogTitle = {
   genreIds: number[];
 };
 
+export type StreamDownloadTitle = StreamCatalogTitle & {
+  downloadStatus?: "pending" | "downloading" | "ready" | "failed";
+  downloadedAt?: string;
+};
+
 type CatalogResponse = {
   page: number;
   total_pages: number;
@@ -60,12 +65,32 @@ export const getStreamMyListStatus = async (type: "movie" | "tv", id: string) =>
 
 export const saveStreamTitle = async (title: StreamCatalogTitle) => {
   const response = await axiosClient.post<{ saved: true }>("/stream/my-list", title);
-  notifyDownloadsChanged();
   return response.data;
 };
 
 export const removeStreamTitle = async (type: "movie" | "tv", id: string) => {
   const response = await axiosClient.delete<{ saved: false }>(`/stream/my-list/${type}/${id}`);
+  return response.data;
+};
+
+export const getStreamDownloads = async () => {
+  const response = await axiosClient.get<{ items: StreamDownloadTitle[] }>("/stream/downloads");
+  return response.data.items;
+};
+
+export const getStreamDownloadStatus = async (type: "movie" | "tv", id: string) => {
+  const response = await axiosClient.get<{ downloaded: boolean }>(`/stream/downloads/${type}/${id}`);
+  return response.data.downloaded;
+};
+
+export const saveStreamDownload = async (title: StreamCatalogTitle) => {
+  const response = await axiosClient.post<{ downloaded: true; item: StreamDownloadTitle }>("/stream/downloads", title);
+  notifyDownloadsChanged();
+  return response.data;
+};
+
+export const removeStreamDownload = async (type: "movie" | "tv", id: string) => {
+  const response = await axiosClient.delete<{ downloaded: false }>(`/stream/downloads/${type}/${id}`);
   notifyDownloadsChanged();
   return response.data;
 };

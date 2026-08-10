@@ -121,6 +121,37 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ saved: false });
   });
 
+  router.get("/downloads", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    return res.json({ items: Array.isArray(stored?.streamDownloads) ? stored.streamDownloads : [] });
+  });
+
+  router.get("/downloads/:type(movie|tv)/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const tmdbId = Number(req.params.id);
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id, streamDownloads: { $elemMatch: { tmdbId, mediaType: req.params.type } } });
+    return res.json({ downloaded: Boolean(stored) });
+  });
+
+  router.post("/downloads", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const tmdbId = Number(req.body?.tmdbId);
+    const mediaType = req.body?.mediaType === "tv" ? "tv" : req.body?.mediaType === "movie" ? "movie" : null;
+    const title = String(req.body?.title || "").trim().slice(0, 180);
+    if (!Number.isInteger(tmdbId) || tmdbId <= 0 || !mediaType || !title) return res.status(400).json({ error: "bad_request", message: "A valid TMDB title is required." });
+    const item = { tmdbId, id: String(tmdbId), mediaType, title, overview: String(req.body?.overview || "").slice(0, 1200), posterUrl: req.body?.posterUrl ? String(req.body.posterUrl).slice(0, 500) : null, backdropUrl: req.body?.backdropUrl ? String(req.body.backdropUrl).slice(0, 500) : null, releaseDate: req.body?.releaseDate ? String(req.body.releaseDate).slice(0, 20) : null, rating: Number.isFinite(Number(req.body?.rating)) ? Number(req.body.rating) : null, downloadStatus: "ready", downloadedAt: new Date() };
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamDownloads: { tmdbId, mediaType } } });
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $addToSet: { streamDownloads: item } });
+    return res.status(201).json({ downloaded: true, item });
+  });
+
+  router.delete("/downloads/:type(movie|tv)/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamDownloads: { tmdbId: Number(req.params.id), mediaType: req.params.type } } });
+    return res.json({ downloaded: false });
+  });
+
   const streamProfileCompletion = (profile: Record<string, unknown>) => {
     let value = 0;
     if (profile.avatarUrl) value += 15;

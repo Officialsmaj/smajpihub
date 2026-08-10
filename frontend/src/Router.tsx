@@ -111,6 +111,7 @@ const streamRoutes: Array<[string, StreamPageKind]> = [
   ["live", "live"],
   ["search", "search"],
   ["my-list", "my-list"],
+  ["downloads", "downloads"],
   ["history", "history"],
   ["subscriptions", "subscriptions"],
   ["profile", "profile"],

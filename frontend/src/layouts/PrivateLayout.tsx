@@ -36,7 +36,7 @@ import logoImage from "/logo.png";
 import { serviceAppPath, serviceCatalog } from "../content/serviceCatalog";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
 import CommunityFollowPrompt from "../components/CommunityFollowPrompt";
-import { getStreamMyList, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
+import { getStreamDownloads, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
 
 type PrivateLayoutProps = { children: ReactNode };
 type LiveConversation = {
@@ -328,7 +328,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
     if (!isStreamShell) return;
     let active = true;
     const loadDownloadCount = () => {
-      void getStreamMyList()
+      void getStreamDownloads()
         .then((items) => {
           if (active) setStreamDownloadCount(items.length);
         })
@@ -444,7 +444,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
           { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
           { to: "/app/services/stream/live", label: "Live", icon: <LiveTvOutlinedIcon /> },
-          { to: "/app/services/stream/my-list", label: "Download", icon: <DownloadOutlinedIcon /> },
+          { to: "/app/services/stream/downloads", label: "Download", icon: <DownloadOutlinedIcon /> },
           { to: "/app/services/stream/profile", label: "Profile", icon: <PersonOutlineIcon /> },
         ] : mainTabs).map((tab) => (
           <NavLink
@@ -453,7 +453,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           >
             {tab.icon}
             <span>{tab.label}</span>
-            {tab.to === "/app/services/stream/my-list" && streamDownloadCount ? <b className="mobile-bottom-nav-badge">{streamDownloadBadgeLabel}</b> : null}
+            {tab.to === "/app/services/stream/downloads" && streamDownloadCount ? <b className="mobile-bottom-nav-badge">{streamDownloadBadgeLabel}</b> : null}
           </NavLink>
         ))}
       </nav>

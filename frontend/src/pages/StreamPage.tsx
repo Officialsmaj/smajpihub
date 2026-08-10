@@ -6,7 +6,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
-import { getStreamCatalog, getStreamCategory, getStreamMyList, saveStreamTitle, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
+import { getStreamCatalog, getStreamCategory, getStreamDownloads, saveStreamDownload, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
 import { getPublishedCreatorVideos, type CreatorVideo } from "../lib/streamCreator";
 
 type StreamItem = {
@@ -104,7 +104,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
 
   useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getPublishedCreatorVideos().then(setCreatorVideos).catch(() => setCreatorVideos([])); }, []);
   useEffect(() => {
-    void getStreamMyList()
+    void getStreamDownloads()
       .then((items) => setDownloadedIds(new Set(items.map(catalogKey))))
       .catch(() => undefined);
   }, []);
@@ -129,7 +129,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
     setDownloadingId(key);
     setDownloadError("");
     try {
-      await saveStreamTitle(featured);
+      await saveStreamDownload(featured);
       setDownloadedIds((current) => new Set(current).add(key));
     } catch {
       setDownloadError("Download could not be saved. Please try again.");
