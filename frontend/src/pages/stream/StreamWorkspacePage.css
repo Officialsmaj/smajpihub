@@ -1223,6 +1223,28 @@
   background: #25152f;
   color: #fff;
 }
+.sw-plan-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--stream-border);
+}
+.sw-plan-current span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #ded5e8;
+  background: #24202b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.sw-plan-current strong {
+  font-size: 20px;
+}
+.sw-plan-current small {
+  margin-left: auto;
+}
 .sw-notice {
   display: flex;
   align-items: center;

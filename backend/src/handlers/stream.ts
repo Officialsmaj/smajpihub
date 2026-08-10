@@ -7,6 +7,35 @@ import { resolveCurrentUser } from "../services/auth";
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map<string, { expiresAt: number; value: unknown }>();
+const STREAM_PI_RATE = 314159;
+const streamPlans = {
+  free: { id: "free", name: "Free", priceUsd: 0, features: ["Standard creator videos", "Basic My List", "Community channels"] },
+  plus: { id: "plus", name: "Plus", priceUsd: 8, features: ["HD streaming", "Downloads list", "No advertising"] },
+  family: { id: "family", name: "Family", priceUsd: 14, features: ["4K ready", "Up to five profiles", "Family controls"] },
+} as const;
+type StreamPlanId = keyof typeof streamPlans;
+
+const streamPlanPrice = (priceUsd: number) => ({
+  priceUsd,
+  pricePi: Number.isFinite(priceUsd) && priceUsd > 0 ? priceUsd / STREAM_PI_RATE : 0,
+  piRateUsed: STREAM_PI_RATE,
+});
+
+const normalizeStreamSubscription = (subscription: Record<string, any> | null | undefined) => {
+  const plan = subscription?.plan && subscription.plan in streamPlans ? subscription.plan as StreamPlanId : "free";
+  const expiresAt = subscription?.expiresAt ? new Date(subscription.expiresAt) : null;
+  const expired = expiresAt ? expiresAt.getTime() < Date.now() : false;
+  const status = expired ? "expired" : subscription?.status || "active";
+  return {
+    plan,
+    status,
+    startedAt: subscription?.startedAt || null,
+    expiresAt: subscription?.expiresAt || null,
+    priceUsd: Number(subscription?.priceUsd) || streamPlans[plan].priceUsd,
+    pricePi: Number(subscription?.pricePi) || streamPlanPrice(streamPlans[plan].priceUsd).pricePi,
+    piRateUsed: Number(subscription?.piRateUsed) || STREAM_PI_RATE,
+  };
+};
 
 const youtubeVideoId = (input: string) => {
   try {
@@ -151,6 +180,50 @@ const mountStreamEndpoints = (router: Router) => {
     const user = await requireViewer(req, res); if (!user) return;
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamDownloads: { tmdbId: Number(req.params.id), mediaType: req.params.type } } });
     return res.json({ downloaded: false });
+  });
+
+  router.get("/subscription", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    return res.json({
+      plans: Object.values(streamPlans).map(plan => ({ ...plan, ...streamPlanPrice(plan.priceUsd) })),
+      subscription: normalizeStreamSubscription(stored?.streamSubscription),
+    });
+  });
+
+  router.post("/subscription/checkout", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const plan = String(req.body?.plan || "free") as StreamPlanId;
+    if (!(plan in streamPlans)) return res.status(400).json({ error: "invalid_plan", message: "Choose a valid Stream plan." });
+    const selected = streamPlans[plan];
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const pricing = streamPlanPrice(selected.priceUsd);
+    const subscription = {
+      plan,
+      status: "active",
+      startedAt: now,
+      expiresAt,
+      priceUsd: pricing.priceUsd,
+      pricePi: pricing.pricePi,
+      piRateUsed: pricing.piRateUsed,
+      paymentStatus: selected.priceUsd > 0 ? "pending_pi_integration" : "free",
+      updatedAt: now,
+    };
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription } });
+    return res.status(201).json({
+      subscription: normalizeStreamSubscription(subscription),
+      message: selected.priceUsd > 0 ? "Stream pass activated for 30 days. Pi checkout can be connected here next." : "Free Stream plan activated.",
+    });
+  });
+
+  router.post("/subscription/cancel", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const current = normalizeStreamSubscription(stored?.streamSubscription);
+    const subscription = { ...current, status: "cancelled", updatedAt: new Date() };
+    await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription } });
+    return res.json({ subscription, message: "Stream subscription cancelled." });
   });
 
   const streamProfileCompletion = (profile: Record<string, unknown>) => {

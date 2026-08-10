@@ -51,6 +51,13 @@ import {
   type StreamCatalogTitle,
 } from "../../lib/streamCatalog";
 import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
+import {
+  getStreamSubscription,
+  startStreamSubscriptionCheckout,
+  type StreamPlan,
+  type StreamPlanId,
+  type StreamSubscription,
+} from "../../lib/streamSubscription";
 
 export type StreamPageKind =
   | "movies"
@@ -740,6 +747,7 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
   if (kind === "profile") return <StreamProfilePanel />;
   if (kind === "notifications") return <Navigate to="/notifications" replace />;
   if (kind === "parental") return <StreamParentalControls />;
+  if (kind === "plans") return <StreamPlansPanel />;
   const [heading, description] = pageMeta[kind] ?? ["Account", "Manage your Stream experience."];
   return (
     <>
@@ -749,30 +757,97 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
         <p>{description}</p>
       </header>
       <section className="sw-settings-card">
-        {kind === "plans" ? (
-          <div className="sw-plans">
-            {[
-              ["Free", 0, "Standard video and creator channels"],
-              ["Plus", 8, "HD streaming, downloads list and no advertising"],
-              ["Family", 14, "4K and up to five profiles"],
-            ].map(([name, price, text], index) => (
-              <article className={index === 1 ? "featured" : ""} key={name}>
-                <span>{index === 1 ? "POPULAR" : "PLAN"}</span>
-                <h2>{name}</h2>
-                <strong>
-                  {formatServicePrice(Number(price))}
-                  <small>/month</small>
-                </strong>
-                <p>{text}</p>
-                <small>{formatPiRate()}</small>
-                <button type="button">Choose {name}</button>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="sw-catalog-status">This Stream account page is not available.</div>
-        )}
+        <div className="sw-catalog-status">This Stream account page is not available.</div>
       </section>
+    </>
+  );
+};
+
+const StreamPlansPanel = () => {
+  const [plans, setPlans] = useState<StreamPlan[]>([]);
+  const [subscription, setSubscription] = useState<StreamSubscription | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "saving" | "error">("loading");
+  const [busyPlan, setBusyPlan] = useState<StreamPlanId | "">("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    void getStreamSubscription()
+      .then(data => {
+        setPlans(data.plans);
+        setSubscription(data.subscription);
+        setState("ready");
+      })
+      .catch(() => {
+        setState("error");
+        setMessage("Stream plans could not be loaded.");
+      });
+  }, []);
+
+  const choosePlan = async (plan: StreamPlanId) => {
+    try {
+      setState("saving");
+      setBusyPlan(plan);
+      setMessage("");
+      const result = await startStreamSubscriptionCheckout(plan);
+      setSubscription(result.subscription);
+      setMessage(result.message);
+      setState("ready");
+    } catch (error) {
+      setState("error");
+      setMessage(
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          "Stream subscription could not be updated."
+      );
+    } finally {
+      setBusyPlan("");
+    }
+  };
+
+  return (
+    <>
+      <header className="sw-page-head">
+        <span>YOUR ACCOUNT</span>
+        <h1>Plans & payments</h1>
+        <p>Choose a 30-day Stream pass and see the active price in USD and Pi.</p>
+      </header>
+      {state === "loading" ? <div className="sw-catalog-status">Loading Stream plans...</div> : null}
+      {plans.length ? (
+        <section className="sw-settings-card">
+          {subscription ? (
+            <div className="sw-plan-current">
+              <span>Current plan</span>
+              <strong>{plans.find(plan => plan.id === subscription.plan)?.name || subscription.plan}</strong>
+              <small>
+                {subscription.status}
+                {subscription.expiresAt ? ` until ${new Date(subscription.expiresAt).toLocaleDateString()}` : ""}
+              </small>
+            </div>
+          ) : null}
+          <div className="sw-plans">
+            {plans.map((plan, index) => {
+              const current = subscription?.plan === plan.id && subscription.status === "active";
+              return (
+                <article className={index === 1 ? "featured" : ""} key={plan.id}>
+                  <span>{current ? "CURRENT" : index === 1 ? "POPULAR" : "PLAN"}</span>
+                  <h2>{plan.name}</h2>
+                  <strong>
+                    {formatServicePrice(plan.priceUsd)}
+                    <small>/30 days</small>
+                  </strong>
+                  <p>{plan.features.join(" · ")}</p>
+                  <small>{formatPiRate()}</small>
+                  <button type="button" disabled={current || state === "saving"} onClick={() => void choosePlan(plan.id)}>
+                    {busyPlan === plan.id ? "Activating..." : current ? "Current plan" : plan.priceUsd > 0 ? `Subscribe ${plan.name}` : "Choose Free"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+          {message ? <p className={`sw-profile-message ${state === "error" ? "error" : ""}`}>{message}</p> : null}
+        </section>
+      ) : state === "error" ? (
+        <div className="sw-catalog-status warning">{message}</div>
+      ) : null}
     </>
   );
 };
