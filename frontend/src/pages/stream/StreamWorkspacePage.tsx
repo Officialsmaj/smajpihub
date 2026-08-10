@@ -23,7 +23,14 @@ import StreamLiveDirectory from "./StreamLiveDirectory";
 import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
-import { getStreamAdminOverview, getStreamAdminSettings, getTitleAvailability, saveStreamAdminSettings, type StreamAdminOverview, type StreamAdminSettings } from "../../lib/streamAdmin";
+import {
+  getStreamAdminOverview,
+  getStreamAdminSettings,
+  getTitleAvailability,
+  saveStreamAdminSettings,
+  type StreamAdminOverview,
+  type StreamAdminSettings,
+} from "../../lib/streamAdmin";
 import { formatServicePrice } from "../../lib/piPricing";
 import { formatPiRate } from "../../lib/piPricing";
 import {
@@ -177,7 +184,14 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const [heading, description] =
     kind === "category"
       ? [categoryName, `Popular, new and top-rated ${categoryName} entertainment.`]
-      : (pageMeta[kind] ?? ["Browse", "Entertainment selected for you."]);
+      : kind === "search"
+        ? [
+            query.trim() ? `Results for “${query.trim()}”` : "Search",
+            query.trim()
+              ? "Movies and series matching your search."
+              : "Search for movies, series and creators from the header.",
+          ]
+        : (pageMeta[kind] ?? ["Browse", "Entertainment selected for you."]);
   useEffect(() => {
     if (kind === "search") {
       setQuery(searchParams.get("q") || "");
@@ -304,35 +318,37 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <h1>{heading}</h1>
         <p>{description}</p>
       </header>
-      <div className="sw-toolbar">
-        <div>
-          {filterLabels.map(item => (
-            <button
-              className={genre === item ? "active" : ""}
-              onClick={() => {
-                setGenre(item);
-                setPage(1);
-              }}
-              type="button"
-              key={item}
-            >
-              {item}
-            </button>
-          ))}
+      {kind !== "search" ? (
+        <div className="sw-toolbar">
+          <div>
+            {filterLabels.map(item => (
+              <button
+                className={genre === item ? "active" : ""}
+                onClick={() => {
+                  setGenre(item);
+                  setPage(1);
+                }}
+                type="button"
+                key={item}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <select
+            value={sort}
+            onChange={event => {
+              setSort(event.target.value);
+              setPage(1);
+            }}
+            aria-label="Sort titles"
+          >
+            <option>Popular</option>
+            <option>Newest</option>
+            <option>A–Z</option>
+          </select>
         </div>
-        <select
-          value={sort}
-          onChange={event => {
-            setSort(event.target.value);
-            setPage(1);
-          }}
-          aria-label="Sort titles"
-        >
-          <option>Popular</option>
-          <option>Newest</option>
-          <option>A–Z</option>
-        </select>
-      </div>
+      ) : null}
       {catalogState === "loading" ? (
         <div className="sw-catalog-status">Loading the entertainment catalogue…</div>
       ) : null}
@@ -475,13 +491,19 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 <b>{series ? "Created by" : "Directed by"}</b> {creators.map(person => person.name).join(", ")}
               </p>
             ) : null}
-          <div className="sw-detail-actions">
-            {playbackId ? <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}><PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}</Link> : null}
+            <div className="sw-detail-actions">
+              {playbackId ? (
+                <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}>
+                  <PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}
+                </Link>
+              ) : null}
               <button type="button" disabled={saving} onClick={() => void toggleSaved()}>
                 <BookmarkRoundedIcon /> {saving ? "Saving…" : saved ? "Saved" : "My List"}
               </button>
             </div>
-            {!playbackId ? <small className="sw-detail-watch-note unavailable">Not available yet on SMAJ Stream.</small> : null}
+            {!playbackId ? (
+              <small className="sw-detail-watch-note unavailable">Not available yet on SMAJ Stream.</small>
+            ) : null}
           </div>
         </div>
       </section>
@@ -504,7 +526,11 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         </div>
         <aside>
           <h2>{playbackId ? "Available on SMAJ" : "SMAJ availability"}</h2>
-          {playbackId ? <p>This title is published and ready to play on SMAJ Stream.</p> : <p>This title is not available yet. Save it to My List and check again later.</p>}
+          {playbackId ? (
+            <p>This title is published and ready to play on SMAJ Stream.</p>
+          ) : (
+            <p>This title is not available yet. Save it to My List and check again later.</p>
+          )}
           <dl className="sw-title-facts">
             <div>
               <dt>Original language</dt>
@@ -849,9 +875,12 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
     }
   };
   const videos = overview?.recent || [];
-  const rows = kind === "reports"
-    ? videos.filter(video => video.moderationStatus === "rejected" || video.moderationReason)
-    : kind === "catalog-admin" ? videos : [];
+  const rows =
+    kind === "reports"
+      ? videos.filter(video => video.moderationStatus === "rejected" || video.moderationReason)
+      : kind === "catalog-admin"
+        ? videos
+        : [];
   return (
     <div className="sw-admin-unified">
       <section>
@@ -859,11 +888,21 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
           <div>
             <span>PLATFORM CONTROL</span>
             <h1>{title}</h1>
-            <small>{overview ? `Live data updated ${new Date(overview.updatedAt).toLocaleTimeString()}` : "Loading live Stream data"}</small>
+            <small>
+              {overview
+                ? `Live data updated ${new Date(overview.updatedAt).toLocaleTimeString()}`
+                : "Loading live Stream data"}
+            </small>
           </div>
-          <Link to="/admin/stream/moderation"><ShieldRoundedIcon /> Moderation queue</Link>
+          <Link to="/admin/stream/moderation">
+            <ShieldRoundedIcon /> Moderation queue
+          </Link>
         </header>
-        {status === "error" ? <div className="sw-catalog-status warning">Stream admin data could not load. Check the backend connection and retry.</div> : null}
+        {status === "error" ? (
+          <div className="sw-catalog-status warning">
+            Stream admin data could not load. Check the backend connection and retry.
+          </div>
+        ) : null}
         {status === "loading" ? <div className="sw-catalog-status">Loading Stream operations…</div> : null}
         {kind === "admin" || kind === "admin-analytics" ? (
           <>
@@ -890,7 +929,12 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                   ["Approved", overview?.stats.approvedVideos || 0],
                   ["Rejected", overview?.stats.rejectedVideos || 0],
                   ["Catalogue attached", overview?.stats.attachedTitles || 0],
-                ].map(([label, value]) => <Link to="/admin/stream/moderation" key={label}><span>{label}</span><strong>{value}</strong></Link>)}
+                ].map(([label, value]) => (
+                  <Link to="/admin/stream/moderation" key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </Link>
+                ))}
               </div>
             </div>
           </>
@@ -898,30 +942,49 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
         {kind === "moderation" ? <StreamModerationPanel /> : null}
         {kind === "creators" ? (
           <div className="sw-admin-list">
-            {(overview?.creators || []).map(creator => <article key={creator.id}><span><PeopleAltRoundedIcon /></span><div><b>{creator.name}</b><p>{creator.videos} uploads · {creator.approved} approved · {creator.live} live</p></div><Link to="/admin/stream/moderation">View content</Link></article>)}
-            {overview && !overview.creators.length ? <div className="sw-catalog-status">No creators have uploaded content yet.</div> : null}
+            {(overview?.creators || []).map(creator => (
+              <article key={creator.id}>
+                <span>
+                  <PeopleAltRoundedIcon />
+                </span>
+                <div>
+                  <b>{creator.name}</b>
+                  <p>
+                    {creator.videos} uploads · {creator.approved} approved · {creator.live} live
+                  </p>
+                </div>
+                <Link to="/admin/stream/moderation">View content</Link>
+              </article>
+            ))}
+            {overview && !overview.creators.length ? (
+              <div className="sw-catalog-status">No creators have uploaded content yet.</div>
+            ) : null}
           </div>
         ) : null}
-        {(kind === "reports" || kind === "catalog-admin") ? (
+        {kind === "reports" || kind === "catalog-admin" ? (
           <div className="sw-admin-list">
             {rows.map(video => (
               <article key={video.cloudflareUid}>
-                <span>
-                  {kind === "catalog-admin" ? (
-                    <PlayArrowRoundedIcon />
-                  ) : (
-                    <ShieldRoundedIcon />
-                  )}
-                </span>
+                <span>{kind === "catalog-admin" ? <PlayArrowRoundedIcon /> : <ShieldRoundedIcon />}</span>
                 <div>
                   <b>{video.title}</b>
-                  <p>{kind === "catalog-admin" ? (video.catalogAttachment ? `Attached to ${video.catalogAttachment.title || `TMDB #${video.catalogAttachment.tmdbId}`}` : "Not attached to the catalogue") : video.moderationReason || "Moderation record"}</p>
+                  <p>
+                    {kind === "catalog-admin"
+                      ? video.catalogAttachment
+                        ? `Attached to ${video.catalogAttachment.title || `TMDB #${video.catalogAttachment.tmdbId}`}`
+                        : "Not attached to the catalogue"
+                      : video.moderationReason || "Moderation record"}
+                  </p>
                 </div>
                 <em>{video.moderationStatus || "pending"}</em>
                 <Link to="/admin/stream/moderation">Review</Link>
               </article>
             ))}
-            {overview && !rows.length ? <div className="sw-catalog-status">{kind === "reports" ? "No rejected or reported Stream content." : "No Stream content is available."}</div> : null}
+            {overview && !rows.length ? (
+              <div className="sw-catalog-status">
+                {kind === "reports" ? "No rejected or reported Stream content." : "No Stream content is available."}
+              </div>
+            ) : null}
           </div>
         ) : null}
         {kind === "stream-settings" && settings ? (
@@ -937,11 +1000,19 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                   <b>{label}</b>
                   <small>{description}</small>
                 </span>
-                <input type="checkbox" checked={settings[key as keyof StreamAdminSettings]} onChange={event => setSettings(current => current ? { ...current, [key]: event.target.checked } : current)} />
+                <input
+                  type="checkbox"
+                  checked={settings[key as keyof StreamAdminSettings]}
+                  onChange={event =>
+                    setSettings(current => (current ? { ...current, [key]: event.target.checked } : current))
+                  }
+                />
                 <i />
               </label>
             ))}
-            <button className="sw-admin-save" type="button" disabled={saving} onClick={() => void saveSettings()}>{saving ? "Saving…" : "Save settings"}</button>
+            <button className="sw-admin-save" type="button" disabled={saving} onClick={() => void saveSettings()}>
+              {saving ? "Saving…" : "Save settings"}
+            </button>
             {message ? <p className="sw-profile-message">{message}</p> : null}
           </div>
         ) : null}
