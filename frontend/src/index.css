@@ -7858,6 +7858,21 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .discovery-tab-intro > span { color: #f6bd60 !important; font-size: .72rem; font-weight: 850; letter-spacing: .12em; }
 .discovery-tab-intro h1 { margin: 8px 0 6px; color: #fff !important; font-size: clamp(1.45rem, 3vw, 2rem); line-height: 1.12; }
 .discovery-tab-intro p { max-width: 620px; margin: 0; color: rgba(255, 255, 255, .82) !important; line-height: 1.55; }
+.private-home .discovery-tab-intro > span {
+  color: #f6bd60 !important;
+  -webkit-text-fill-color: #f6bd60 !important;
+  opacity: 1 !important;
+}
+.private-home .discovery-tab-intro > h1 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+.private-home .discovery-tab-intro > p {
+  color: #e6e9f5 !important;
+  -webkit-text-fill-color: #e6e9f5 !important;
+  opacity: 1 !important;
+}
 .discovery-section-note { margin: -4px 0 14px; color: var(--smaj-text-secondary); font-size: .84rem; }
 .discovery-service-group .mobile-section-heading p { margin: 4px 0 0; color: var(--smaj-text-secondary); font-size: .84rem; line-height: 1.4; }
 .desktop-discovery-content { display: grid; gap: 18px; margin-top: 18px; }

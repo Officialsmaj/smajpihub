@@ -390,6 +390,12 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     setHeroSlide((current) => (current + (distance < 0 ? 1 : heroImages.length - 1)) % heroImages.length);
   };
 
+  const handleTabChange = (tab: DiscoveryTab) => {
+    setTabsPinned(false);
+    onTabChange(tab);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  };
+
   return <div className="mobile-super-home">
     {activeTab === "for-you" ? <section className="mobile-home-hero" onTouchStart={handleHeroTouchStart} onTouchEnd={handleHeroTouchEnd}>
       <div className="mobile-home-hero-track" style={{ transform: `translateX(-${heroSlide * 100}%)`, transition: heroReducedMotion ? "none" : undefined }} aria-hidden="true">
@@ -398,7 +404,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
       <div className="mobile-home-hero-copy"><span>WELCOME TO</span><h1>SMAJ PI HUB</h1><p>Everything you need. One place.</p><div className="mobile-hero-icons">{serviceCatalog.slice(0, 3).map((service) => <ServiceArt key={service.slug} index={service.atlasIndex} />)}<b>+12</b></div><Link to="/app/services">Explore <ArrowForwardOutlinedIcon /></Link></div>
       <div className="mobile-home-hero-dots" aria-label="Hero slides">{heroImages.map((_, index) => <button type="button" className={index === heroSlide ? "active" : ""} aria-label={`Show hero image ${index + 1}`} aria-current={index === heroSlide ? "true" : undefined} onClick={() => setHeroSlide(index)} key={index} />)}</div>
     </section> : null}
-    <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={onTabChange} /></div>
+    <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={handleTabChange} /></div>
     {activeTab === "for-you" ? <>
       <ContinueSection compact items={recentItems} />
       <RecentlyAddedSection compact products={products} loading={productsLoading} error={productsError} />
