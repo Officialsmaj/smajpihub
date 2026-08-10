@@ -578,23 +578,6 @@
 .sw-title-card.compact {
   width: 100%;
 }
-.sw-big-search {
-  height: 60px;
-  margin-bottom: 24px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid #ded4e5;
-  border-radius: 15px;
-  background: #fff;
-}
-.sw-big-search input {
-  flex: 1;
-  border: 0;
-  outline: 0;
-  font-size: 16px;
-}
 .sw-detail-hero {
   min-height: 540px;
   margin: 0 -42px;
@@ -1971,9 +1954,9 @@
 .sw-page h1,.sw-page h2,.sw-page h3,.sw-title-card h3,.sw-watch-info h1{color:#f7f4fa}
 .sw-page p,.sw-page small,.sw-title-card p,.sw-watch-info p{color:#aaa1b2}
 .sw-page-head>span,.sw-manage-head span{color:#b98aff}
-.sw-toolbar button,.sw-toolbar select,.sw-big-search,.sw-profile-card,.sw-settings-card,.sw-detail-info aside,.sw-panel,.sw-list-empty{color:#f7f4fa;background:#17171d;border-color:rgba(255,255,255,.09)}
-.sw-big-search input,.sw-profile-fields input,.sw-profile-fields select,.sw-profile-quality select,.sw-setting select,.sw-setting input{color:#f7f4fa;background:#22222a;border-color:rgba(255,255,255,.1)}
-.sw-big-search input::placeholder,.sw-profile-fields input::placeholder{color:#817989}
+.sw-toolbar button,.sw-toolbar select,.sw-profile-card,.sw-settings-card,.sw-detail-info aside,.sw-panel,.sw-list-empty{color:#f7f4fa;background:#17171d;border-color:rgba(255,255,255,.09)}
+.sw-profile-fields input,.sw-profile-fields select,.sw-profile-quality select,.sw-setting select,.sw-setting input{color:#f7f4fa;background:#22222a;border-color:rgba(255,255,255,.1)}
+.sw-profile-fields input::placeholder{color:#817989}
 .sw-title-card p,.sw-cast small,.sw-history-grid p{color:#aaa1b2}
 .sw-title-card h3,.sw-history-grid>a{color:#f7f4fa}
 .sw-catalog-status{color:#d8cfdd;background:#17171d}

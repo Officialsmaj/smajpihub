@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
@@ -305,20 +304,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <h1>{heading}</h1>
         <p>{description}</p>
       </header>
-      {kind === "search" ? (
-        <label className="sw-big-search">
-          <SearchRoundedIcon />
-          <input
-            autoFocus
-            value={query}
-            onChange={event => {
-              setQuery(event.target.value);
-              setPage(1);
-            }}
-            placeholder="Search movies, series, live events and creators"
-          />
-        </label>
-      ) : null}
       <div className="sw-toolbar">
         <div>
           {filterLabels.map(item => (

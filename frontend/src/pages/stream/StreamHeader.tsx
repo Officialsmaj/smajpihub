@@ -43,12 +43,13 @@ const links = [
 ] as const;
 
 const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
-  const [localQuery, setLocalQuery] = useState("");
+  const [localSearch, setLocalSearch] = useState({ locationSearch: "", value: "" });
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const value = query ?? localQuery;
+  const urlQuery = new URLSearchParams(location.search).get("q") || "";
+  const value = query ?? (localSearch.locationSearch === location.search ? localSearch.value : urlQuery);
   useEffect(() => { setMenuOpen(false); }, [location.pathname, location.search]);
   useEffect(() => { const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]'); active?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }, [location.pathname, location.search]);
   useEffect(() => {
@@ -60,7 +61,7 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
     return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", closeOnEscape); };
   }, [menuOpen]);
   const changeQuery = (next: string) => {
-    setLocalQuery(next);
+    setLocalSearch({ locationSearch: location.search, value: next });
     onQueryChange?.(next);
   };
   const submit = (event: FormEvent) => {
