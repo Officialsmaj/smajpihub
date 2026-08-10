@@ -1151,6 +1151,15 @@
 .sw-setting input {
   display: none;
 }
+.sw-setting select {
+  min-width: 150px;
+  padding: 10px 12px;
+  border: 1px solid #ded5e6;
+  border-radius: 10px;
+  color: #23172b;
+  background: #fff;
+  font-weight: 800;
+}
 .sw-setting > i {
   width: 42px;
   height: 24px;

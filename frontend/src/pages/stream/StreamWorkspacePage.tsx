@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import ClosedCaptionRoundedIcon from "@mui/icons-material/ClosedCaptionRounded";
 import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
@@ -45,6 +44,7 @@ import {
   searchStreamCatalog,
   type StreamCatalogTitle,
 } from "../../lib/streamCatalog";
+import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
 
 export type StreamPageKind =
   | "movies"
@@ -109,7 +109,6 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
   profile: ["Stream profile", "Your viewing identity and playback preferences."],
-  notifications: ["Notifications", "Live alerts, new episodes and creator updates."],
   plans: ["Plans & payments", "Choose how you watch and support creators with Pi."],
   parental: ["Parental controls", "Create a safe entertainment experience for every profile."],
 };
@@ -707,6 +706,8 @@ const Player = ({ live = false }: { live?: boolean }) => {
 
 const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
   if (kind === "profile") return <StreamProfilePanel />;
+  if (kind === "notifications") return <Navigate to="/notifications" replace />;
+  if (kind === "parental") return <StreamParentalControls />;
   const [heading, description] = pageMeta[kind] ?? ["Account", "Manage your Stream experience."];
   return (
     <>
@@ -736,40 +737,104 @@ const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
               </article>
             ))}
           </div>
-        ) : kind === "notifications" ? (
-          [
-            "A new episode of City of Lights is available",
-            "Champions Live starts in 30 minutes",
-            "Maya Live published a new session",
-          ].map((text, i) => (
-            <div className="sw-notice" key={text}>
-              <NotificationsRoundedIcon />
-              <div>
-                <b>{text}</b>
-                <p>{i + 1} hour ago</p>
-              </div>
-              <i />
-            </div>
-          ))
         ) : (
-          [
-            ["Autoplay next episode", "Start the next episode automatically"],
-            ["Data saver", "Use less mobile data while streaming"],
-            ["Mature content PIN", "Require a PIN for content rated 16+"],
-            ["Email notifications", "Receive weekly entertainment highlights"],
-          ].map(([label, text], i) => (
-            <label className="sw-setting" key={label}>
-              <span>
-                <b>{label}</b>
-                <small>{text}</small>
-              </span>
-              <input type="checkbox" defaultChecked={i < 2} />
-              <i />
-            </label>
-          ))
+          <div className="sw-catalog-status">This Stream account page is not available.</div>
         )}
       </section>
     </>
+  );
+};
+
+const StreamParentalControls = () => {
+  const [profile, setProfile] = useState<StreamProfile | null>(null);
+  const [state, setState] = useState<"loading" | "ready" | "saving" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    void getStreamProfile()
+      .then(data => {
+        setProfile(data.profile);
+        setState("ready");
+      })
+      .catch(() => {
+        setState("error");
+        setMessage("Parental controls could not be loaded.");
+      });
+  }, []);
+
+  const change = <K extends keyof StreamProfile>(key: K, value: StreamProfile[K]) =>
+    setProfile(current => (current ? { ...current, [key]: value } : current));
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!profile) return;
+    try {
+      setState("saving");
+      setMessage("");
+      const data = await saveStreamProfile(profile);
+      setProfile(data.profile);
+      setState("ready");
+      setMessage("Parental controls saved for this Stream profile.");
+    } catch (error) {
+      setState("error");
+      setMessage(
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          "Parental controls could not be saved."
+      );
+    }
+  };
+
+  if (state === "loading") return <div className="sw-catalog-status">Loading parental controls...</div>;
+  if (!profile) return <div className="sw-catalog-status warning">{message}</div>;
+
+  return (
+    <form className="sw-parental-controls" onSubmit={event => void submit(event)}>
+      <header className="sw-page-head">
+        <span>YOUR ACCOUNT</span>
+        <h1>Parental controls</h1>
+        <p>Set rating, playback and privacy rules for this Stream profile.</p>
+      </header>
+      <section className="sw-settings-card">
+        <label className="sw-setting select">
+          <span>
+            <b>Maximum maturity rating</b>
+            <small>Limit browsing and playback recommendations for this profile.</small>
+          </span>
+          <select
+            value={profile.maturityLevel}
+            onChange={event => change("maturityLevel", event.target.value as StreamProfile["maturityLevel"])}
+          >
+            <option value="kids">Kids</option>
+            <option value="13">13+</option>
+            <option value="16">16+</option>
+            <option value="18">18+</option>
+          </select>
+        </label>
+        {[
+          ["autoplay", "Autoplay next episode", "Start the next episode automatically."],
+          ["dataSaver", "Data saver", "Use less mobile data while streaming."],
+          ["showActivity", "Show viewing activity", "Allow this profile activity to appear in Stream surfaces."],
+          ["emailNotifications", "Email entertainment updates", "Receive Stream highlights through the shared notification system."],
+        ].map(([key, label, text]) => (
+          <label className="sw-setting" key={key}>
+            <span>
+              <b>{label}</b>
+              <small>{text}</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={Boolean(profile[key as keyof StreamProfile])}
+              onChange={event => change(key as "autoplay", event.target.checked)}
+            />
+            <i />
+          </label>
+        ))}
+      </section>
+      {message ? <p className={`sw-profile-message ${state === "error" ? "error" : ""}`}>{message}</p> : null}
+      <button className="sw-profile-save" type="submit" disabled={state === "saving"}>
+        {state === "saving" ? "Saving..." : "Save parental controls"}
+      </button>
+    </form>
   );
 };
 
