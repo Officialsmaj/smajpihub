@@ -13,7 +13,6 @@ import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
 import CreatorContentList from "./CreatorContentList";
-import StreamProfilePanel from "./StreamProfilePanel";
 import StreamVideoPlayer from "./StreamVideoPlayer";
 import StreamWatchHistory from "./StreamWatchHistory";
 import StreamSubscriptions from "./StreamSubscriptions";
@@ -74,7 +73,6 @@ export type StreamPageKind =
   | "series-detail"
   | "player"
   | "live-player"
-  | "profile"
   | "notifications"
   | "plans"
   | "parental"
@@ -125,7 +123,6 @@ const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
   subscriptions: ["Subscriptions", "New releases from creators and channels you follow."],
   "creator-directory": ["Creators", "Channels publishing approved videos and live broadcasts."],
-  profile: ["Stream profile", "Your viewing identity and playback preferences."],
   plans: ["Plans & payments", "Choose how you watch and support creators with Pi."],
   parental: ["Parental controls", "Create a safe entertainment experience for every profile."],
 };
@@ -744,7 +741,6 @@ const Player = ({ live = false }: { live?: boolean }) => {
 };
 
 const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
-  if (kind === "profile") return <StreamProfilePanel />;
   if (kind === "notifications") return <Navigate to="/notifications" replace />;
   if (kind === "parental") return <StreamParentalControls />;
   if (kind === "plans") return <StreamPlansPanel />;
@@ -1228,7 +1224,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "creator-directory") return <StreamCreatorsDirectory />;
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
-    if (["profile", "notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
+    if (["notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
   })();
   return (

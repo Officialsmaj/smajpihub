@@ -405,28 +405,23 @@ const mountStreamEndpoints = (router: Router) => {
 
   router.get("/creators", async (req, res) => {
     if (!req.app.locals.streamContentCollection) return res.json({ creators: [] });
-    const videos = await req.app.locals.streamContentCollection.find({ visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ createdAt: -1 }).limit(500).toArray();
-    const grouped = new Map<string, { videos: Record<string, unknown>[]; liveCount: number }>();
-    videos.forEach((video: Record<string, unknown>) => {
-      const creatorId = String(video.creatorId || "");
-      if (!creatorId) return;
-      const current = grouped.get(creatorId) || { videos: [], liveCount: 0 };
-      current.videos.push(video);
-      if (video.contentType === "live") current.liveCount += 1;
-      grouped.set(creatorId, current);
-    });
-    const creatorObjectIds = [...grouped.keys()].filter(ObjectId.isValid).map(id => new ObjectId(id));
-    const users = creatorObjectIds.length
-      ? await req.app.locals.userCollection.find({ _id: { $in: creatorObjectIds } }).toArray()
-      : [];
-    const usersById = new Map(users.map((user: Record<string, unknown>) => [String(user._id), user]));
-    const creators = [...grouped.entries()]
-      .map(([creatorId, data]) => {
-        const user = usersById.get(creatorId) as Record<string, unknown> | undefined;
+    const users = await req.app.locals.userCollection
+      .find({ "streamProfile.channelHandle": { $regex: ".+" } })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(200)
+      .toArray();
+    const creators = await Promise.all(
+      users.map(async (user: Record<string, unknown>) => {
+        const creatorId = String(user._id);
         const profile = (user?.streamProfile || {}) as Record<string, unknown>;
         const handle = String(profile.channelHandle || "").trim();
         if (!handle) return null;
-        const publicVideos = data.videos.filter(video => video.contentType !== "live");
+        const videos = await req.app.locals.streamContentCollection
+          .find({ creatorId, visibility: "public", moderationStatus: "approved", playbackAllowed: true })
+          .sort({ createdAt: -1 })
+          .limit(12)
+          .toArray();
+        const publicVideos = videos.filter((video: Record<string, unknown>) => video.contentType !== "live");
         return {
           creatorId,
           channel: {
@@ -438,14 +433,15 @@ const mountStreamEndpoints = (router: Router) => {
           },
           stats: {
             videos: publicVideos.length,
-            live: data.liveCount,
-            latestAt: data.videos[0]?.createdAt || null,
+            live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").length,
+            latestAt: videos[0]?.createdAt || null,
           },
           latestVideos: publicVideos.slice(0, 3).map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, createdAt: video.createdAt })),
         };
       })
-      .filter(Boolean);
-    return res.json({ creators });
+    );
+    const visibleCreators = creators.filter(Boolean);
+    return res.json({ creators: visibleCreators });
   });
 
   router.get("/channels/:handle", async (req, res) => {
