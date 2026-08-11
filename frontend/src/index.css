@@ -8060,7 +8060,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   /* Keep discovery headers flush with the tabs when the For You hero is absent. */
   .mobile-home-shell .discovery-tab-intro {
     margin-top: 0;
-    padding: 18px 18px 16px;
+    padding: 18px 18px 10px;
     border-radius: 0;
   }
   .mobile-home-shell .discovery-tab-intro > span {
