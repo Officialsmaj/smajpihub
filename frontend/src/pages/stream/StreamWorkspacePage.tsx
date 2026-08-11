@@ -834,7 +834,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             <div>
               <dt>Rating</dt>
               <dd>
-                {detail.rating ? `${detail.rating}/10 (${detail.voteCount.toLocaleString()} votes)` : "Not rated"}
+                {detail.rating ? `${detail.rating}/10 (${Number(detail.voteCount || 0).toLocaleString()} votes)` : "Not rated"}
               </dd>
             </div>
             {raw.number_of_seasons ? (
