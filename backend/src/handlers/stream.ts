@@ -63,37 +63,66 @@ type YouTubeLiveSearchResponse = {
 };
 
 const youtubeLiveChannels = async () => {
-  if (!env.youtube_api_key || !env.youtube_live_channel_ids.length) return [];
-  const cacheKey = `youtube-live:${env.youtube_live_channel_ids.join(",")}`;
-  const cached = cache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.value as Array<Record<string, unknown>>;
-  const results = await Promise.allSettled(env.youtube_live_channel_ids.map(async (channelId) => {
-    const response = await axios.get<YouTubeLiveSearchResponse>("https://www.googleapis.com/youtube/v3/search", {
-      params: { part: "snippet", type: "video", eventType: "live", videoEmbeddable: true, channelId, maxResults: 5, key: env.youtube_api_key },
-      timeout: 12_000,
-    });
-    return (response.data.items || []).flatMap((item) => {
-      const videoId = item.id?.videoId;
-      if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
-      const thumbnails = item.snippet?.thumbnails || {};
-      const thumbnailUrl = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-      return [{
-        liveInputUid: `youtube-${videoId}`,
-        youtubeVideoId: videoId,
-        title: String(item.snippet?.title || "Live broadcast").slice(0, 180),
-        creatorName: String(item.snippet?.channelTitle || "Official YouTube Channel").slice(0, 120),
-        youtubeChannelId: item.snippet?.channelId || channelId,
-        processingStatus: "live",
-        thumbnailUrl,
-        chatMode: "youtube",
-        contentSource: "youtube",
-        publishedAt: item.snippet?.publishedAt || null,
-      }];
-    });
+  if (!env.youtube_api_key) {
+    console.warn("[YouTube live] lookup skipped: YOUTUBE_API_KEY is not configured");
+    return [];
+  }
+  // Temporary single-channel diagnostic requested for the live-TV integration.
+  const channelIds = ["UCfiwzLy-8yKzIbsmZTzxDgw"];
+  const results = await Promise.all(channelIds.map(async (channelId) => {
+    try {
+      const response = await axios.get<YouTubeLiveSearchResponse>("https://www.googleapis.com/youtube/v3/search", {
+        params: { part: "snippet", channelId, eventType: "live", type: "video", key: env.youtube_api_key },
+        timeout: 12_000,
+      });
+      const items = response.data.items || [];
+      const firstVideoId = items[0]?.id?.videoId;
+      console.info("[YouTube live] lookup", {
+        channelId,
+        httpStatus: response.status,
+        itemsReturned: items.length,
+        videoIdExists: Boolean(firstVideoId),
+        embeddableStatus: "not_checked",
+      });
+      if (!items.length) console.info("[YouTube live] search returned items: []", { channelId });
+      return items.slice(0, 1).flatMap((item) => {
+        const videoId = item.id?.videoId;
+        if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
+        const thumbnails = item.snippet?.thumbnails || {};
+        const thumbnailUrl = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+        return [{
+          channelId: item.snippet?.channelId || channelId,
+          videoId,
+          thumbnail: thumbnailUrl,
+          isLive: true,
+          liveInputUid: `youtube-${videoId}`,
+          youtubeVideoId: videoId,
+          title: String(item.snippet?.title || "Live broadcast").slice(0, 180),
+          creatorName: String(item.snippet?.channelTitle || "Official YouTube Channel").slice(0, 120),
+          youtubeChannelId: item.snippet?.channelId || channelId,
+          processingStatus: "live",
+          thumbnailUrl,
+          chatMode: "youtube",
+          contentSource: "youtube",
+          publishedAt: item.snippet?.publishedAt || null,
+        }];
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as { error?: { message?: string; errors?: Array<{ reason?: string; message?: string }> } } | undefined;
+        const safeReason = data?.error?.errors?.[0]?.reason || data?.error?.errors?.[0]?.message || data?.error?.message || error.message;
+        console.error("[YouTube live] lookup failed", {
+          channelId,
+          httpStatus: error.response?.status || null,
+          reason: safeReason,
+        });
+      } else {
+        console.error("[YouTube live] lookup failed", { channelId, httpStatus: null, reason: error instanceof Error ? error.message : "Unknown error" });
+      }
+      return [];
+    }
   }));
-  const live = results.flatMap(result => result.status === "fulfilled" ? result.value : []);
-  cache.set(cacheKey, { expiresAt: Date.now() + 5 * 60 * 1000, value: live });
-  return live;
+  return results.flat();
 };
 
 type TmdbMedia = {
@@ -694,6 +723,11 @@ const mountStreamEndpoints = (router: Router) => {
   });
 
   router.get("/live-content", async (_req, res) => {
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
     const items = _req.app.locals.streamContentCollection
       ? await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray()
       : [];
