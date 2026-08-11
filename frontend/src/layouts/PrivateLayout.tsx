@@ -164,6 +164,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : "";
   });
   const isStoreShell = location.pathname === "/store";
+  const dashboardTab = new URLSearchParams(location.search).get("tab");
+  const isDashboardDiscovery = location.pathname === "/dashboard" && ["trending", "lifestyle", "categories"].includes(dashboardTab || "");
   const backFallback = backFallbackForPath(location.pathname);
   const profileReminderStorageKey = user?.uid ? `${PROFILE_VERIFY_REMINDER_KEY}:${user.uid}` : PROFILE_VERIFY_REMINDER_KEY;
   const profileReadyForVerification = Boolean(user?.displayName?.trim() && (user?.piUsername || user?.username) && user?.country?.trim() && user?.contactPhone?.trim() && user?.avatar && user?.bio?.trim());
@@ -353,7 +355,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
 
   return (
-    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>

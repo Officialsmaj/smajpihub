@@ -8052,6 +8052,11 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .service-categories-page a small { color: var(--smaj-text-secondary); }
 
 @media (max-width: 1023px) {
+  /* Discovery tabs do not have the For You hero, so remove its overlay header. */
+  .mobile-discovery-shell > .private-header {
+    display: none !important;
+  }
+
   /* Keep discovery headers flush with the tabs when the For You hero is absent. */
   .mobile-home-shell .discovery-tab-intro {
     margin-top: 0;
