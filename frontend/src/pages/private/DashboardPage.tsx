@@ -253,7 +253,7 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
   mode === "desktop" ? (
     <div className="desktop-suggested-grid">
       {services.map((service) => (
-        <Link to={servicePath(service)} className={`desktop-service-app ${service.inProgress ? "service-in-progress-card" : ""}`} key={service.slug} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
+        <Link to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={`desktop-service-app ${service.inProgress ? "service-in-progress-card" : ""}`} key={service.slug} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
           <div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span></div>
           <small className={service.live ? "live-rating-badge" : service.inProgress ? "status-chip in-progress" : undefined}>{service.live ? "LIVE" : service.inProgress ? "IN PROGRESS" : `${serviceRatings[service.slug]} star`}</small>
@@ -263,7 +263,7 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
   ) : (
     <div className="mobile-services-grid">
       {services.map((service) => (
-        <Link key={service.slug} to={servicePath(service)} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
+        <Link key={service.slug} to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
           {service.live ? <em className="live-card-badge">LIVE</em> : service.inProgress ? <em className="service-in-progress-badge">IN PROGRESS</em> : null}
           <strong>{service.name.replace("SMAJ ", "")}</strong>

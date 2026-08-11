@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -63,6 +63,9 @@ const uniqueCatalogTitles = (items: StreamCatalogTitle[], excluded = new Set<str
 };
 
 const StreamPage = ({ categorySlug }: StreamPageProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showEntryLoader] = useState(() => location.state?.streamEntry === true);
   const params = useParams();
   const activeSlug = categorySlug || params.slug || "trending";
   const categoryLabel = categoryLabels[activeSlug] || activeSlug.split("-").map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ");
@@ -194,9 +197,15 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
     }).filter((row) => row.items.length);
   }, [anime, catalog.movies, catalog.series, catalog.trending, categoryLabel, categoryMode, featuredTitles]);
 
+  useEffect(() => {
+    if (location.state?.streamEntry === true) {
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location.pathname, location.search, location.state, navigate]);
+
   const experience = (
     <>
-      {catalogLoading && activeSlug === "trending" ? (
+      {showEntryLoader && catalogLoading && activeSlug === "trending" ? (
         <div className="stream-opening-loader" role="status" aria-live="polite" aria-label="Opening SMAJ Stream">
           <div className="stream-opening-loader-content">
             <div className="stream-opening-mark"><i /><i /><span><PlayArrowRoundedIcon /></span></div>
