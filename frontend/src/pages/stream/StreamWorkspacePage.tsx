@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import CastConnectedRoundedIcon from "@mui/icons-material/CastConnectedRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
@@ -548,6 +549,15 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         <button className="sw-detail-back" type="button" onClick={() => navigate(-1)} aria-label="Go back">
           <ArrowBackRoundedIcon />
         </button>
+        <button
+          className="sw-detail-cast"
+          type="button"
+          onClick={() => playbackId && navigate(`/app/services/stream/watch/${playbackId}`)}
+          aria-label={playbackId ? "Open player to cast" : "Casting is available when this title can be played"}
+          aria-disabled={!playbackId}
+        >
+          <CastConnectedRoundedIcon />
+        </button>
         <div className="sw-detail-hero-layout">
           {detail.posterUrl ? (
             <img className="sw-detail-poster" src={detail.posterUrl} alt={`${detail.title} poster`} />
@@ -565,12 +575,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 <b key={genre.id}>{genre.name}</b>
               ))}
             </div>
-            <p>{detail.overview || "No overview is available for this title yet."}</p>
-            {creators.length ? (
-              <p className="sw-detail-credits">
-                <b>{series ? "Created by" : "Directed by"}</b> {creators.map(person => person.name).join(", ")}
-              </p>
-            ) : null}
             <div className={`sw-detail-actions ${playbackId ? "has-playback" : ""}`}>
               {playbackId ? (
                 <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}>
@@ -587,10 +591,21 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             {!playbackId ? (
               <small className="sw-detail-watch-note unavailable">Not available yet on SMAJ Stream.</small>
             ) : null}
+            <div className="sw-detail-description">
+              <p>{detail.overview || "No overview is available for this title yet."}</p>
+              {creators.length ? (
+                <p className="sw-detail-credits">
+                  <b>{series ? "Created by" : "Directed by"}</b> {creators.map(person => person.name).join(", ")}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
-      <section className="sw-detail-info">
+      <section
+        className="sw-detail-info"
+        style={detail.backdropUrl ? ({ "--sw-detail-art": `url(${detail.backdropUrl})` } as CSSProperties) : undefined}
+      >
         <div>
           <h2>Top cast</h2>
           <div className="sw-cast">

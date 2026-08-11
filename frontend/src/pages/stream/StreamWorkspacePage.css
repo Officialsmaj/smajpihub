@@ -36,6 +36,70 @@
   width: 31px;
   height: 31px;
 }
+.sw-detail-cast {
+  position: absolute;
+  top: 24px;
+  right: max(24px, env(safe-area-inset-right));
+  z-index: 4;
+  width: 58px;
+  height: 58px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center;
+  border: 1px solid #ffffff26 !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  background: #17131a99 !important;
+  box-shadow: 0 8px 25px #0005;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+.sw-detail-cast[aria-disabled="true"] {
+  opacity: .72;
+}
+.sw-detail-cast svg {
+  width: 29px;
+  height: 29px;
+}
+.sw-detail-page .sw-detail-hero,
+.sw-detail-page .sw-detail-hero h1,
+.sw-detail-page .sw-detail-hero h2,
+.sw-detail-page .sw-detail-hero p,
+.sw-detail-page .sw-detail-hero span,
+.sw-detail-page .sw-detail-hero b {
+  color: #fff;
+}
+.sw-detail-description {
+  margin-top: 24px;
+}
+.sw-detail-description > p {
+  margin: 0;
+}
+.sw-detail-page .sw-detail-info {
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: #18101b;
+}
+.sw-detail-page .sw-detail-info:before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: -80px;
+  background-image: var(--sw-detail-art);
+  background-position: center bottom;
+  background-size: cover;
+  filter: blur(55px) saturate(1.45);
+  opacity: .55;
+}
+.sw-detail-page .sw-detail-info:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: #09060ab8;
+}
 .sw-detail-list-action {
   color: #17131a !important;
   background: #fff !important;
@@ -2067,15 +2131,17 @@
   }
   .sw-detail-page .sw-detail-hero.tmdb:after {
     background:
-      linear-gradient(0deg, #18101b 0%, #24121ee8 28%, #160d1678 58%, #08050818 82%),
+      linear-gradient(0deg, #09060af5 0%, #0b080bc9 28%, #0906095c 58%, #08050812 82%),
       linear-gradient(90deg, #0805081f, transparent 45%, #08050826);
   }
-  .sw-detail-back {
+  .sw-detail-back,
+  .sw-detail-cast {
     top: max(18px, env(safe-area-inset-top));
-    left: 18px;
     width: 54px;
     height: 54px !important;
   }
+  .sw-detail-back { left: 18px; }
+  .sw-detail-cast { right: 18px; }
   .sw-detail-page .sw-detail-hero-layout {
     display: block;
     width: 100%;
@@ -2110,15 +2176,19 @@
   .sw-detail-page .sw-detail-genres {
     justify-content: center;
   }
-  .sw-detail-page .sw-detail-copy > p:not(.sw-match):not(.sw-detail-tagline):not(.sw-detail-credits) {
+  .sw-detail-page .sw-detail-description > p:first-child {
     display: -webkit-box;
-    margin: 16px 0 0;
+    margin: 0;
     overflow: hidden;
-    color: #eee7ef;
+    color: #fff;
     font-size: 14px;
+    line-height: 1.55;
     text-align: left;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+  }
+  .sw-detail-page .sw-detail-description {
+    margin-top: 22px;
   }
   .sw-detail-page .sw-detail-credits {
     margin: 8px 0 0;
@@ -2129,16 +2199,22 @@
     width: 100%;
     margin-top: 22px;
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
   }
   .sw-detail-page .sw-detail-actions a,
   .sw-detail-page .sw-detail-actions button {
     width: 100%;
-    height: 56px;
+    min-width: 0;
+    height: 45px;
+    padding: 0 10px;
     justify-content: center;
     border-radius: 999px;
-    font-size: 17px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .sw-detail-page .sw-detail-actions.has-playback a.primary {
+    grid-column: 1 / -1;
   }
   .sw-detail-page .sw-detail-actions a.primary {
     color: #fff;
@@ -2156,7 +2232,6 @@
     margin: 0;
     padding: 34px 24px 60px;
     color: #f7f4fa;
-    background: #18101b;
   }
   .sw-detail-page .sw-detail-info aside {
     border-color: #ffffff18;
@@ -2331,4 +2406,9 @@
 }
 .sw-page :is(.sw-live-created ol,.sw-moderation-copy p,.sw-moderation-copy small,.sw-moderation-copy em,.sw-moderation-copy b,.sw-live-history small,.sw-attach-panel small){
   color:var(--stream-muted) !important;
+}
+
+/* Detail copy stays bright over artwork-derived ambient backgrounds. */
+.sw-detail-page :is(.sw-detail-hero,.sw-detail-info) :is(h1,h2,h3,p,small,span,strong,b,dt,dd) {
+  color: #fff !important;
 }
