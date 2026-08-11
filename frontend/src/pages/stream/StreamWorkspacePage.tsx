@@ -309,7 +309,6 @@ const StreamSearchPage = () => {
 
 const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const { slug = "" } = useParams();
-  const sort = "Popular";
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
@@ -385,8 +384,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           return;
         }
         if (page > 1) setLoadingMore(true);
-        const sortParam =
-          sort === "Newest" ? "primary_release_date.desc" : sort === "A-Z" ? "original_title.asc" : "popularity.desc";
+        const sortParam = "popularity.desc";
         const request =
           kind === "search"
             ? searchStreamCatalog(query, page)
@@ -435,7 +433,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
       kind === "search" ? 350 : 0
     );
     return () => window.clearTimeout(timer);
-  }, [kind, page, query, slug, sort]);
+  }, [kind, page, query, slug]);
   useEffect(() => {
     if (kind !== "search" || !query.trim()) {
       setChannelResults([]);
