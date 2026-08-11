@@ -22,6 +22,7 @@ import StreamModerationPanel from "./StreamModerationPanel";
 import StreamLiveSetup from "./StreamLiveSetup";
 import StreamLivePlayer from "./StreamLivePlayer";
 import StreamLiveDirectory from "./StreamLiveDirectory";
+import StreamLiveNowPage from "./StreamLiveNowPage";
 import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
 import StreamCreatorOverview from "./StreamCreatorOverview";
@@ -65,6 +66,7 @@ export type StreamPageKind =
   | "movies"
   | "series"
   | "live"
+  | "live-now"
   | "search"
   | "category"
   | "my-list"
@@ -1350,13 +1352,14 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "creator-directory") return <StreamCreatorsDirectory />;
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
+    if (kind === "live-now") return <StreamLiveNowPage />;
     if (kind === "search") return <StreamSearchPage />;
     if (["notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
   })();
   return (
-    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""} ${kind === "search" ? "sw-search-page" : ""} ${["player", "live-player"].includes(kind) ? "sw-player-page" : ""}`}>
-      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail", "search", "player", "live-player"].includes(kind) ? <StreamHeader /> : null}
+    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""} ${kind === "search" ? "sw-search-page" : ""} ${["player", "live-player"].includes(kind) ? "sw-player-page" : ""} ${kind === "live-now" ? "sw-live-now-shell" : ""}`}>
+      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail", "search", "player", "live-player", "live-now"].includes(kind) ? <StreamHeader /> : null}
       <div className="sw-page-content">{content}</div>
     </main>
   );

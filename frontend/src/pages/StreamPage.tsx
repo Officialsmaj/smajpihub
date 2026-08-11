@@ -8,6 +8,7 @@ import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
 import { getStreamCatalog, getStreamCategory, getStreamDownloads, saveStreamDownload, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
 import { getStreamCreators, type StreamCreatorDirectoryItem } from "../lib/streamChannel";
+import { getPublishedLiveInputs, publishedLivePlaybackPath, type PublishedLiveInput } from "../lib/streamLive";
 
 type StreamItem = {
   id: number;
@@ -78,6 +79,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [downloadingId, setDownloadingId] = useState("");
   const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => new Set());
   const [downloadError, setDownloadError] = useState("");
+  const [liveNow, setLiveNow] = useState<PublishedLiveInput[]>([]);
 
   useEffect(() => { setFeatureIndex(0); setRankingTab("Popular"); }, [activeSlug]);
 
@@ -103,6 +105,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   }, [activeSlug]);
 
   useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getStreamCreators().then(setCreators).catch(() => setCreators([])); }, []);
+  useEffect(() => { void getPublishedLiveInputs().then(items => setLiveNow(items.filter(item => item.processingStatus === "live"))).catch(() => setLiveNow([])); }, []);
   useEffect(() => {
     void getStreamDownloads()
       .then((items) => setDownloadedIds(new Set(items.map(catalogKey))))
@@ -189,6 +192,8 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
         </section>
 
         <section className="stream-rankings"><div className="stream-row-heading"><h2>{categoryMode ? `${categoryLabel} Rankings` : "Series Rankings"}</h2><Link to={categoryMode ? `/app/services/stream/category/${activeSlug}` : "/app/services/stream/series"}>See all →</Link></div><div className="stream-ranking-tabs">{(categoryMode ? ["Popular","New","Top 100","Returning"] : ["Popular","Top 100","New","Returning","Anime"]).map((tab) => <button type="button" className={rankingTab === tab ? "active" : ""} onClick={() => setRankingTab(tab)} key={tab}>{tab}</button>)}</div><div className="stream-ranking-rail">{rankedSeries.slice(0, 10).map((item, index) => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} key={`${item.mediaType}-${item.id}`}><b>{index + 1}</b><img loading="lazy" src={item.posterUrl || ""} alt=""/><span>{item.title}</span><small>{item.rating ? `★ ${item.rating}` : item.releaseDate?.slice(0,4) || "New"}</small></Link>)}</div></section>
+
+        {!categoryMode ? <section className="stream-live-now-row"><div className="stream-row-heading"><div><h2>What's On Now</h2><p>Live TV</p></div><Link to="/app/services/stream/live/now">See more ›</Link></div>{liveNow.length ? <div className="stream-live-now-rail">{liveNow.slice(0, 12).map(item => <Link to={publishedLivePlaybackPath(item)} key={item.liveInputUid}><div style={item.thumbnailUrl ? { backgroundImage: `url(${item.thumbnailUrl})` } : undefined}><PlayArrowRoundedIcon/><b>LIVE</b><span><i/></span></div><h3>{item.title}</h3><p>{item.creatorName || "SMAJ Live"} · Live now</p></Link>)}</div> : <div className="stream-live-now-empty">No channels are live right now. Official broadcasts will appear here automatically.</div>}</section> : null}
 
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
           {catalogLoading ? <div className="stream-catalog-loading" aria-label="Loading entertainment"><i/><i/><i/><i/></div> : null}

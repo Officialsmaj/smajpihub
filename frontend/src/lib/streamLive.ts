@@ -3,6 +3,10 @@ import { axiosClient } from "./axiosClient";
 export type CreatorLiveInput = { liveInputUid: string; title: string; chatMode: string; visibility: string; moderationStatus: string; playbackAllowed: boolean; processingStatus: string; createdAt: string };
 export type LiveCredentials = { rtmpsUrl: string; streamKey: string; srtUrl?: string | null; srtStreamId?: string | null };
 export type PublishedLiveInput = Pick<CreatorLiveInput, "liveInputUid" | "title" | "processingStatus" | "chatMode"> & { creatorName?: string; thumbnailUrl?: string | null; contentSource?: "cloudflare" | "youtube"; youtubeVideoId?: string; youtubeChannelId?: string; publishedAt?: string | null };
+export const publishedLivePlaybackPath = (item: PublishedLiveInput) =>
+  item.contentSource === "youtube" && item.youtubeVideoId
+    ? `/app/services/stream/watch/yt-${item.youtubeVideoId}`
+    : `/app/services/stream/live/${item.liveInputUid}`;
 
 export const createLiveInput = async (body: { title: string; chatMode: string }) => (await axiosClient.post<{ live: CreatorLiveInput & { credentials: LiveCredentials } }>("/stream/creator/live-inputs", body)).data.live;
 export const getCreatorLiveInputs = async () => (await axiosClient.get<{ live: CreatorLiveInput[] }>("/stream/creator/live-inputs")).data.live;
