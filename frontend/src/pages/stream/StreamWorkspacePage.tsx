@@ -309,12 +309,10 @@ const StreamSearchPage = () => {
 
 const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const { slug = "" } = useParams();
-  const [genre, setGenre] = useState("All");
-  const [sort, setSort] = useState("Popular");
+  const sort = "Popular";
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [remoteTitles, setRemoteTitles] = useState<Title[] | null>(null);
-  const [remoteCatalog, setRemoteCatalog] = useState<StreamCatalogTitle[]>([]);
   const [channelResults, setChannelResults] = useState<StreamCreatorDirectoryItem[]>([]);
   const [catalogState, setCatalogState] = useState<"loading" | "ready" | "fallback">(() =>
     ["movies", "series", "search", "category", "my-list", "downloads"].includes(kind) ? "loading" : "fallback"
@@ -327,19 +325,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     .split("-")
     .map(part => (part ? part[0].toUpperCase() + part.slice(1) : part))
     .join(" ");
-  const categoryFilterLabels: Record<string, string[]> = {
-    anime: ["All", "Action", "Drama", "Comedy", "Family"],
-    documentaries: ["All", "Documentary"],
-    kids: ["All", "Comedy", "Family"],
-    action: ["All", "Drama", "Comedy"],
-    comedy: ["All", "Action", "Drama", "Family"],
-    romance: ["All", "Drama", "Comedy"],
-    horror: ["All", "Drama", "Comedy"],
-  };
-  const filterLabels =
-    kind === "category"
-      ? categoryFilterLabels[slug] || ["All", "Action", "Drama", "Comedy"]
-      : ["All", "Action", "Drama", "Comedy", "Documentary", "Family"];
   const [heading, description] =
     kind === "category"
       ? [categoryName, `Popular, new and top-rated ${categoryName} entertainment.`]
@@ -358,7 +343,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
     }
   }, [kind, searchParams]);
   useEffect(() => {
-    setGenre("All");
     setPage(1);
   }, [slug]);
   useEffect(() => {
@@ -424,7 +408,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
                 }))
               );
             setCatalogState("ready");
-            if (page === 1) setRemoteCatalog(data.results);
             setTotalPages(Math.min(data.total_pages || 1, kind === "search" ? 500 : 100));
             if (page > 1) {
               const next = data.results.map((item: StreamCatalogTitle, index) => ({
@@ -438,9 +421,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
               }));
               setRemoteTitles(current => [
                 ...new Map([...(current || []), ...next].map(item => [`${item.mediaType}-${item.id}`, item])).values(),
-              ]);
-              setRemoteCatalog(current => [
-                ...new Map([...current, ...data.results].map(item => [`${item.mediaType}-${item.id}`, item])).values(),
               ]);
             }
           })
@@ -476,58 +456,17 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   }, [kind, query]);
   const localList = kind === "history" ? titles.filter(item => item.progress) : kind === "my-list" || kind === "downloads" ? [] : titles;
   const list = remoteTitles ?? localList;
-  const genreIds: Record<string, number[]> = {
-    Action: [28, 10759],
-    Drama: [18],
-    Comedy: [35],
-    Documentary: [99],
-    Family: [10751],
-  };
   const filtered =
     kind === "search"
       ? list
-      : list.filter(
-          item =>
-            item.name.toLowerCase().includes(query.toLowerCase()) &&
-            (genre === "All" ||
-              remoteCatalog.find(entry => entry.id === item.id)?.genreIds.some(id => genreIds[genre]?.includes(id)))
-        );
+      : list.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
   return (
     <>
-      <header className="sw-page-head">
-        <h1>{heading}</h1>
-        <p>{description}</p>
-      </header>
-      {!(["search", "my-list", "downloads"] as StreamPageKind[]).includes(kind) ? (
-        <div className="sw-toolbar">
-          <div>
-            {filterLabels.map(item => (
-              <button
-                className={genre === item ? "active" : ""}
-                onClick={() => {
-                  setGenre(item);
-                  setPage(1);
-                }}
-                type="button"
-                key={item}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <select
-            value={sort}
-            onChange={event => {
-              setSort(event.target.value);
-              setPage(1);
-            }}
-            aria-label="Sort titles"
-          >
-            <option>Popular</option>
-            <option>Newest</option>
-            <option>A-Z</option>
-          </select>
-        </div>
+      {kind !== "category" ? (
+        <header className="sw-page-head">
+          <h1>{heading}</h1>
+          <p>{description}</p>
+        </header>
       ) : null}
       {catalogState === "loading" ? (
         <div className="sw-catalog-status">Loading the entertainment catalogue...</div>
