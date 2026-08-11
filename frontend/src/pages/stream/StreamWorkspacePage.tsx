@@ -38,6 +38,7 @@ import {
 } from "../../lib/streamAdmin";
 import { formatServicePrice } from "../../lib/piPricing";
 import { formatPiRate } from "../../lib/piPricing";
+import { streamCategories } from "../../lib/streamCategories";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -67,6 +68,7 @@ export type StreamPageKind =
   | "series"
   | "live"
   | "live-now"
+  | "categories"
   | "search"
   | "category"
   | "my-list"
@@ -166,6 +168,22 @@ const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) =
     <h3>{title.name}</h3>
     <p>{title.meta}</p>
   </Link>
+);
+
+const CategoryDirectory = () => (
+  <section className="sw-category-directory">
+    <header>
+      <h1>Explore Categories</h1>
+      <p>Choose a genre to see all available movies and series.</p>
+    </header>
+    <div>
+      {streamCategories.map((category) => (
+        <Link className={category.tone} to={`/app/services/stream/category/${category.slug}`} key={category.slug}>
+          {category.label}
+        </Link>
+      ))}
+    </div>
+  </section>
 );
 
 type StreamSearchSettings = {
@@ -1353,6 +1371,7 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
     if (kind === "live-now") return <StreamLiveNowPage />;
+    if (kind === "categories") return <CategoryDirectory />;
     if (kind === "search") return <StreamSearchPage />;
     if (["notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;

@@ -110,6 +110,7 @@ const buildPrivatePageElement = (title: string, description: string, roles?: str
 const streamRoutes: Array<[string, StreamPageKind]> = [
   ["live", "live"],
   ["live/now", "live-now"],
+  ["categories", "categories"],
   ["search", "search"],
   ["my-list", "my-list"],
   ["downloads", "downloads"],
@@ -790,7 +791,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <PrivateLayout>
-          <StreamPage embedded />
+          <StreamWorkspacePage kind="category" />
         </PrivateLayout>
       </ProtectedRoute>
     ),
