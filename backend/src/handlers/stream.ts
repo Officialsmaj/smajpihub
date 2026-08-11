@@ -49,80 +49,156 @@ const youtubeVideoId = (input: string) => {
   } catch { return null; }
 };
 
-type YouTubeLiveSearchResponse = {
+type YouTubePlaylistItemsResponse = {
   items?: Array<{
-    id?: { videoId?: string };
+    snippet?: { resourceId?: { videoId?: string } };
+  }>;
+};
+
+type YouTubeVideosResponse = {
+  items?: Array<{
+    id?: string;
     snippet?: {
       title?: string;
       channelId?: string;
       channelTitle?: string;
       publishedAt?: string;
+      liveBroadcastContent?: "live" | "upcoming" | "none";
       thumbnails?: Record<string, { url?: string }>;
     };
+    status?: { embeddable?: boolean };
   }>;
 };
 
-const youtubeLiveChannels = async () => {
-  if (!env.youtube_api_key) {
-    console.warn("[YouTube live] lookup skipped: YOUTUBE_API_KEY is not configured");
-    return [];
-  }
-  // Temporary single-channel diagnostic requested for the live-TV integration.
-  const channelIds = ["UCfiwzLy-8yKzIbsmZTzxDgw"];
-  const results = await Promise.all(channelIds.map(async (channelId) => {
-    try {
-      const response = await axios.get<YouTubeLiveSearchResponse>("https://www.googleapis.com/youtube/v3/search", {
-        params: { part: "snippet", channelId, eventType: "live", type: "video", key: env.youtube_api_key },
-        timeout: 12_000,
-      });
-      const items = response.data.items || [];
-      const firstVideoId = items[0]?.id?.videoId;
-      console.info("[YouTube live] lookup", {
-        channelId,
-        httpStatus: response.status,
-        itemsReturned: items.length,
-        videoIdExists: Boolean(firstVideoId),
-        embeddableStatus: "not_checked",
-      });
-      if (!items.length) console.info("[YouTube live] search returned items: []", { channelId });
-      return items.slice(0, 1).flatMap((item) => {
-        const videoId = item.id?.videoId;
-        if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
-        const thumbnails = item.snippet?.thumbnails || {};
-        const thumbnailUrl = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-        return [{
-          channelId: item.snippet?.channelId || channelId,
-          videoId,
-          thumbnail: thumbnailUrl,
-          isLive: true,
-          liveInputUid: `youtube-${videoId}`,
-          youtubeVideoId: videoId,
-          title: String(item.snippet?.title || "Live broadcast").slice(0, 180),
-          creatorName: String(item.snippet?.channelTitle || "Official YouTube Channel").slice(0, 120),
-          youtubeChannelId: item.snippet?.channelId || channelId,
-          processingStatus: "live",
-          thumbnailUrl,
-          chatMode: "youtube",
-          contentSource: "youtube",
-          publishedAt: item.snippet?.publishedAt || null,
-        }];
-      });
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const data = error.response?.data as { error?: { message?: string; errors?: Array<{ reason?: string; message?: string }> } } | undefined;
-        const safeReason = data?.error?.errors?.[0]?.reason || data?.error?.errors?.[0]?.message || data?.error?.message || error.message;
-        console.error("[YouTube live] lookup failed", {
-          channelId,
-          httpStatus: error.response?.status || null,
-          reason: safeReason,
-        });
-      } else {
-        console.error("[YouTube live] lookup failed", { channelId, httpStatus: null, reason: error instanceof Error ? error.message : "Unknown error" });
-      }
-      return [];
+type YouTubeLiveCacheItem = {
+  channelId: string;
+  videoId: string | null;
+  title: string | null;
+  thumbnail: string | null;
+  channelTitle: string | null;
+  isLive: boolean;
+  lastCheckedAt: string;
+  publishedAt: string | null;
+};
+
+const youtubeLiveCache = new Map<string, YouTubeLiveCacheItem>();
+let youtubeLiveRefreshPromise: Promise<void> | null = null;
+let youtubeLiveSchedulerStarted = false;
+let lastManualYoutubeRefreshAt = 0;
+const YOUTUBE_MANUAL_REFRESH_COOLDOWN_MS = 5 * 60 * 1000;
+
+const youtubeSafeError = (error: unknown) => {
+  if (!axios.isAxiosError(error)) return { httpStatus: null, reason: error instanceof Error ? error.message : "Unknown error" };
+  const data = error.response?.data as { error?: { message?: string; errors?: Array<{ reason?: string; message?: string }> } } | undefined;
+  return {
+    httpStatus: error.response?.status || null,
+    reason: data?.error?.errors?.[0]?.reason || data?.error?.errors?.[0]?.message || data?.error?.message || error.message,
+  };
+};
+
+const refreshYoutubeLiveCache = async () => {
+  if (youtubeLiveRefreshPromise) return youtubeLiveRefreshPromise;
+  youtubeLiveRefreshPromise = (async () => {
+    if (!env.youtube_api_key || !env.youtube_live_channel_ids.length) {
+      console.warn("[YouTube live] background refresh skipped: API key or channel IDs are not configured");
+      return;
     }
-  }));
-  return results.flat();
+    const checkedAt = new Date().toISOString();
+    const channelCandidates = await Promise.all(env.youtube_live_channel_ids.map(async (channelId) => {
+      try {
+        const response = await axios.get<YouTubePlaylistItemsResponse>("https://www.googleapis.com/youtube/v3/playlistItems", {
+          params: { part: "snippet", playlistId: `UU${channelId.slice(2)}`, maxResults: 10, key: env.youtube_api_key },
+          timeout: 12_000,
+        });
+        const videoIds = (response.data.items || []).map(item => item.snippet?.resourceId?.videoId || "").filter(id => /^[A-Za-z0-9_-]{11}$/.test(id));
+        return { channelId, videoIds, failed: false };
+      } catch (error) {
+        const diagnostic = youtubeSafeError(error);
+        const message = diagnostic.httpStatus === 429 ? "[YouTube live] rate limit; preserving cached channel" : "[YouTube live] playlist refresh failed; preserving cached channel";
+        console.warn(message, { channelId, ...diagnostic });
+        const cached = youtubeLiveCache.get(channelId);
+        if (cached) youtubeLiveCache.set(channelId, { ...cached, lastCheckedAt: checkedAt });
+        return { channelId, videoIds: [] as string[], failed: true };
+      }
+    }));
+
+    const ownerByVideoId = new Map<string, string>();
+    channelCandidates.forEach(({ channelId, videoIds }) => videoIds.forEach(videoId => ownerByVideoId.set(videoId, channelId)));
+    const videoIds = [...ownerByVideoId.keys()];
+    const videosByChannel = new Map<string, NonNullable<YouTubeVideosResponse["items"]>>();
+    const failedChannels = new Set(channelCandidates.filter(item => item.failed).map(item => item.channelId));
+
+    for (let index = 0; index < videoIds.length; index += 50) {
+      const batch = videoIds.slice(index, index + 50);
+      try {
+        const response = await axios.get<YouTubeVideosResponse>("https://www.googleapis.com/youtube/v3/videos", {
+          params: { part: "snippet,status", id: batch.join(","), key: env.youtube_api_key },
+          timeout: 12_000,
+        });
+        (response.data.items || []).forEach(video => {
+          const channelId = (video.id && ownerByVideoId.get(video.id)) || video.snippet?.channelId;
+          if (!channelId) return;
+          videosByChannel.set(channelId, [...(videosByChannel.get(channelId) || []), video]);
+        });
+      } catch (error) {
+        const diagnostic = youtubeSafeError(error);
+        batch.forEach(videoId => {
+          const owner = ownerByVideoId.get(videoId);
+          if (!owner) return;
+          failedChannels.add(owner);
+          const cached = youtubeLiveCache.get(owner);
+          if (cached) youtubeLiveCache.set(owner, { ...cached, lastCheckedAt: checkedAt });
+        });
+        const message = diagnostic.httpStatus === 429 ? "[YouTube live] rate limit; preserving cached live results" : "[YouTube live] video refresh failed; preserving cached live results";
+        console.warn(message, { channelIds: [...failedChannels], ...diagnostic });
+      }
+    }
+
+    channelCandidates.forEach(({ channelId, failed }) => {
+      if (failed || failedChannels.has(channelId)) return;
+      const liveVideo = (videosByChannel.get(channelId) || []).find(video => video.snippet?.liveBroadcastContent === "live" && video.status?.embeddable !== false);
+      if (!liveVideo?.id) {
+        youtubeLiveCache.set(channelId, { channelId, videoId: null, title: null, thumbnail: null, channelTitle: null, isLive: false, lastCheckedAt: checkedAt, publishedAt: null });
+        return;
+      }
+      const thumbnails = liveVideo.snippet?.thumbnails || {};
+      const thumbnail = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || `https://i.ytimg.com/vi/${liveVideo.id}/hqdefault.jpg`;
+      youtubeLiveCache.set(channelId, {
+        channelId,
+        videoId: liveVideo.id,
+        title: String(liveVideo.snippet?.title || "Live broadcast").slice(0, 180),
+        thumbnail,
+        channelTitle: String(liveVideo.snippet?.channelTitle || "Official YouTube Channel").slice(0, 120),
+        isLive: true,
+        lastCheckedAt: checkedAt,
+        publishedAt: liveVideo.snippet?.publishedAt || null,
+      });
+    });
+    console.info("[YouTube live] background refresh complete", { channelsChecked: channelCandidates.length, liveChannels: [...youtubeLiveCache.values()].filter(item => item.isLive).length, lastCheckedAt: checkedAt });
+  })().finally(() => { youtubeLiveRefreshPromise = null; });
+  return youtubeLiveRefreshPromise;
+};
+
+const cachedYoutubeLiveChannels = () => [...youtubeLiveCache.values()].filter(item => item.isLive && item.videoId).map(item => ({
+  ...item,
+  liveInputUid: `youtube-${item.videoId}`,
+  youtubeVideoId: item.videoId,
+  creatorName: item.channelTitle,
+  youtubeChannelId: item.channelId,
+  processingStatus: "live",
+  thumbnailUrl: item.thumbnail,
+  chatMode: "youtube",
+  contentSource: "youtube",
+  publishedAt: item.publishedAt,
+}));
+
+const startYoutubeLiveScheduler = () => {
+  if (youtubeLiveSchedulerStarted) return;
+  youtubeLiveSchedulerStarted = true;
+  const runRefresh = () => void refreshYoutubeLiveCache().catch(error => console.error("[YouTube live] scheduled refresh failed", youtubeSafeError(error)));
+  runRefresh();
+  const timer = setInterval(runRefresh, env.youtube_live_refresh_minutes * 60 * 1000);
+  timer.unref();
 };
 
 type TmdbMedia = {
@@ -173,6 +249,8 @@ const tmdbGet = async <T>(path: string, params: Record<string, string | number |
 };
 
 const mountStreamEndpoints = (router: Router) => {
+  startYoutubeLiveScheduler();
+
   const requireCreator = async (req: Request, res: Response) => {
     const user = await resolveCurrentUser(req);
     if (!user) { res.status(401).json({ error: "authentication_required", message: "Sign in to use Creator Studio." }); return null; }
@@ -722,21 +800,34 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ liked: !liked, likes: Math.max(0, (review.likedBy?.length || 0) + (liked ? -1 : 1)) });
   });
 
-  router.get("/live-content", async (_req, res) => {
+  router.get("/live-content", async (req, res) => {
+    delete req.headers["if-none-match"];
+    delete req.headers["if-modified-since"];
     res.set({
       "Cache-Control": "no-store, no-cache, must-revalidate",
       Pragma: "no-cache",
       Expires: "0",
     });
-    const items = _req.app.locals.streamContentCollection
-      ? await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray()
+    const items = req.app.locals.streamContentCollection
+      ? await req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray()
       : [];
     const creatorLive = items.map((item: Record<string, unknown>) => ({ liveInputUid: item.liveInputUid, title: item.title, creatorName: item.creatorName, processingStatus: item.processingStatus, thumbnailUrl: item.thumbnailUrl || null, chatMode: item.chatMode, contentSource: "cloudflare" }));
-    const youtubeLive = await youtubeLiveChannels().catch((error) => {
-      console.error("Failed to load configured YouTube live channels:", axios.isAxiosError(error) ? error.response?.data || error.message : error);
-      return [];
-    });
+    const youtubeLive = cachedYoutubeLiveChannels();
     return res.json({ live: [...youtubeLive, ...creatorLive] });
+  });
+
+  router.post("/admin/live-content/refresh", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const now = Date.now();
+    const retryAfterMs = YOUTUBE_MANUAL_REFRESH_COOLDOWN_MS - (now - lastManualYoutubeRefreshAt);
+    if (retryAfterMs > 0) {
+      res.set("Retry-After", String(Math.ceil(retryAfterMs / 1000)));
+      return res.status(429).json({ error: "refresh_rate_limited", message: "YouTube live refresh is available once every five minutes.", retryAfterSeconds: Math.ceil(retryAfterMs / 1000) });
+    }
+    lastManualYoutubeRefreshAt = now;
+    await refreshYoutubeLiveCache();
+    const live = cachedYoutubeLiveChannels();
+    return res.json({ refreshed: true, liveChannels: live.length, lastCheckedAt: new Date().toISOString() });
   });
 
   router.get("/creator/videos/:uid/status", async (req, res) => {
@@ -882,7 +973,7 @@ const mountStreamEndpoints = (router: Router) => {
     const requestedUid = String(req.params.uid || "").slice(0, 180);
     const uid = requestedUid.replace(/^yt-/, "");
     if (requestedUid.startsWith("yt-")) {
-      const officialLive = (await youtubeLiveChannels().catch(() => [])).find(item => item.youtubeVideoId === uid);
+      const officialLive = cachedYoutubeLiveChannels().find(item => item.youtubeVideoId === uid);
       if (officialLive) return res.json({ video: { id: requestedUid, sourceType: "youtube", youtubeVideoId: uid, title: officialLive.title, creatorName: officialLive.creatorName, thumbnailUrl: officialLive.thumbnailUrl, duration: null } });
     }
     if (!req.app.locals.streamContentCollection) return res.status(503).json({ error: "service_unavailable", message: "Stream playback is not ready." });

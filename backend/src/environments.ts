@@ -44,6 +44,7 @@ interface Environment {
   cloudflare_stream_api_token: string;
   youtube_api_key: string;
   youtube_live_channel_ids: string[];
+  youtube_live_refresh_minutes: number;
   sports_provider: string;
   sports_api_key: string;
   sports_league_ids: string[];
@@ -105,6 +106,10 @@ const env: Environment = {
     .split(",")
     .map((value) => value.trim())
     .filter((value) => /^UC[A-Za-z0-9_-]{20,}$/.test(value)),
+  youtube_live_refresh_minutes: Math.max(
+    5,
+    Number(process.env.YOUTUBE_LIVE_REFRESH_MINUTES) || 30,
+  ),
   sports_provider: String(process.env.SPORTS_PROVIDER || "")
     .trim()
     .toLowerCase(),
