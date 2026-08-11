@@ -196,6 +196,18 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
 
   const experience = (
     <>
+      {catalogLoading ? (
+        <div className="stream-opening-loader" role="status" aria-live="polite" aria-label="Opening SMAJ Stream">
+          <div className="stream-opening-loader-content">
+            <div className="stream-opening-mark"><i /><i /><span><PlayArrowRoundedIcon /></span></div>
+            <h1>SMAJ STREAM</h1>
+            <strong>Watch differently. Create freely.</strong>
+            <p>Discover movies, live channels, and original creators.</p>
+            <small>Preparing your Stream…</small>
+            <div className="stream-opening-progress"><i /></div>
+          </div>
+        </div>
+      ) : null}
       <main className="stream-page">
         <StreamHeader query={query} onQueryChange={setQuery} />
 
@@ -250,7 +262,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
 
         {reviews.length ? <section className="stream-popular-reviews"><div className="stream-row-heading"><div><h2>Popular Reviews</h2><p>Discover</p></div></div><div className="stream-reviews-rail">{reviews.map(review => <article key={review._id}><div className="stream-review-main"><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.posterUrl ? <img loading="lazy" src={review.posterUrl} alt=""/> : <span/>}</Link><div><div className="stream-review-stars" aria-label={`${review.rating} out of 5 stars`}>{"★".repeat(review.rating)}<i>{"☆".repeat(5-review.rating)}</i></div><p>{review.body}</p><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.title}</Link></div></div><footer><span>{review.reviewer.avatarUrl ? <img src={review.reviewer.avatarUrl} alt=""/> : review.reviewer.name.slice(0,1).toUpperCase()}<b>{review.reviewer.name}</b></span><button type="button" onClick={() => void likeReview(review._id)} aria-label="Like review">♡ {review.likes}</button><small>💬 {review.comments}</small></footer></article>)}</div></section> : null}
 
-        <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a><p>Watch different. Create freely.</p><div><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Help</a></div></footer>
+        <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ STREAM</strong></a><p>Watch differently. Create freely.</p><small>Discover movies, live channels, and original creators.</small></footer>
       </main>
 
       {playing ? <div className="stream-player-overlay" role="dialog" aria-modal="true" aria-label={`Playing ${playing.title}`} onClick={() => setPlaying(null)}><div className={`stream-player ${playing.tone}`} onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setPlaying(null)} aria-label="Close player"><CloseRoundedIcon /></button><div className="stream-player-mark"><PlayArrowRoundedIcon /></div><span>{playing.live ? "LIVE · " : "NOW PLAYING · "}{playing.viewers}</span><h2>{playing.title}</h2><p>{playing.creator}</p><aside><FavoriteBorderRoundedIcon /> This interactive preview is ready for video API integration.</aside></div></div> : null}

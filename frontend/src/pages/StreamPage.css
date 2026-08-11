@@ -1380,3 +1380,15 @@
 .stream-page .stream-live-now-rail p {
   color: #fff !important;
 }
+.stream-opening-loader{position:fixed;z-index:1800;inset:0;display:grid;place-items:center;padding:28px;color:#fff;background:radial-gradient(circle at 50% 42%,#29143d 0,#100b17 34%,#050507 72%);text-align:center;overflow:hidden}
+.stream-opening-loader::before{content:"";position:absolute;inset:-30%;background:conic-gradient(from 90deg,transparent,#8b4de326,transparent 34%,#c99cff1f,transparent 72%);animation:stream-opening-orbit 5s linear infinite}
+.stream-opening-loader-content{position:relative;z-index:1;width:min(390px,88vw)}
+.stream-opening-mark{position:relative;width:116px;height:116px;margin:0 auto 27px;display:grid;place-items:center}.stream-opening-mark>i{position:absolute;inset:0;border:1px solid #a66cea66;border-radius:50%;animation:stream-opening-ring 1.8s ease-out infinite}.stream-opening-mark>i:nth-child(2){animation-delay:.65s}.stream-opening-mark>span{width:70px;height:70px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#a467ed,#6825c5);border-radius:22px;box-shadow:0 0 45px #8b4de38c}.stream-opening-mark svg{font-size:45px}
+.stream-opening-loader h1{margin:0;color:#fff;font-size:clamp(26px,7vw,38px);letter-spacing:.12em}.stream-opening-loader strong{display:block;margin-top:10px;color:#e6d9ed;font-size:17px}.stream-opening-loader p{max-width:330px;margin:9px auto 34px;color:#aaa1b2;font-size:13px;line-height:1.5}.stream-opening-loader small{color:#cdb7d9;font-size:11px;letter-spacing:.08em}
+.stream-opening-progress{height:4px;margin:13px auto 0;overflow:hidden;background:#ffffff1c;border-radius:99px}.stream-opening-progress i{width:45%;height:100%;display:block;background:linear-gradient(90deg,#7433c8,#d2a8ff,#7433c8);border-radius:inherit;animation:stream-opening-progress 1.25s ease-in-out infinite}
+@keyframes stream-opening-ring{0%{opacity:.85;transform:scale(.62)}100%{opacity:0;transform:scale(1.35)}}@keyframes stream-opening-progress{0%{transform:translateX(-110%)}100%{transform:translateX(245%)}}@keyframes stream-opening-orbit{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.stream-opening-loader::before,.stream-opening-mark>i,.stream-opening-progress i{animation:none}.stream-opening-progress i{width:100%}}
+.stream-page .stream-footer{flex-direction:column;justify-content:center;gap:7px;text-align:center}
+.stream-page .stream-footer p{width:auto;margin:0;color:#e0d8e5;font-size:14px;order:initial}
+.stream-page .stream-footer>small{color:#958d9d;font-size:12px}
+.stream-page .stream-footer .stream-brand{margin:0}
