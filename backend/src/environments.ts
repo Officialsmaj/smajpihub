@@ -42,6 +42,8 @@ interface Environment {
   tmdb_access_token: string;
   cloudflare_stream_account_id: string;
   cloudflare_stream_api_token: string;
+  youtube_api_key: string;
+  youtube_live_channel_ids: string[];
   sports_provider: string;
   sports_api_key: string;
   sports_league_ids: string[];
@@ -98,6 +100,11 @@ const env: Environment = {
   tmdb_access_token: process.env.TMDB_ACCESS_TOKEN || "",
   cloudflare_stream_account_id: process.env.CLOUDFLARE_STREAM_ACCOUNT_ID || "",
   cloudflare_stream_api_token: process.env.CLOUDFLARE_STREAM_API_TOKEN || "",
+  youtube_api_key: String(process.env.YOUTUBE_API_KEY || "").trim(),
+  youtube_live_channel_ids: String(process.env.YOUTUBE_LIVE_CHANNEL_IDS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => /^UC[A-Za-z0-9_-]{20,}$/.test(value)),
   sports_provider: String(process.env.SPORTS_PROVIDER || "")
     .trim()
     .toLowerCase(),

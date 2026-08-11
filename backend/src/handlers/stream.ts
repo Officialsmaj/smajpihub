@@ -49,6 +49,53 @@ const youtubeVideoId = (input: string) => {
   } catch { return null; }
 };
 
+type YouTubeLiveSearchResponse = {
+  items?: Array<{
+    id?: { videoId?: string };
+    snippet?: {
+      title?: string;
+      channelId?: string;
+      channelTitle?: string;
+      publishedAt?: string;
+      thumbnails?: Record<string, { url?: string }>;
+    };
+  }>;
+};
+
+const youtubeLiveChannels = async () => {
+  if (!env.youtube_api_key || !env.youtube_live_channel_ids.length) return [];
+  const cacheKey = `youtube-live:${env.youtube_live_channel_ids.join(",")}`;
+  const cached = cache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.value as Array<Record<string, unknown>>;
+  const results = await Promise.allSettled(env.youtube_live_channel_ids.map(async (channelId) => {
+    const response = await axios.get<YouTubeLiveSearchResponse>("https://www.googleapis.com/youtube/v3/search", {
+      params: { part: "snippet", type: "video", eventType: "live", videoEmbeddable: true, channelId, maxResults: 5, key: env.youtube_api_key },
+      timeout: 12_000,
+    });
+    return (response.data.items || []).flatMap((item) => {
+      const videoId = item.id?.videoId;
+      if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
+      const thumbnails = item.snippet?.thumbnails || {};
+      const thumbnailUrl = thumbnails.maxres?.url || thumbnails.standard?.url || thumbnails.high?.url || thumbnails.medium?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      return [{
+        liveInputUid: `youtube-${videoId}`,
+        youtubeVideoId: videoId,
+        title: String(item.snippet?.title || "Live broadcast").slice(0, 180),
+        creatorName: String(item.snippet?.channelTitle || "Official YouTube Channel").slice(0, 120),
+        youtubeChannelId: item.snippet?.channelId || channelId,
+        processingStatus: "live",
+        thumbnailUrl,
+        chatMode: "youtube",
+        contentSource: "youtube",
+        publishedAt: item.snippet?.publishedAt || null,
+      }];
+    });
+  }));
+  const live = results.flatMap(result => result.status === "fulfilled" ? result.value : []);
+  cache.set(cacheKey, { expiresAt: Date.now() + 5 * 60 * 1000, value: live });
+  return live;
+};
+
 type TmdbMedia = {
   id: number;
   title?: string;
@@ -562,9 +609,15 @@ const mountStreamEndpoints = (router: Router) => {
   });
 
   router.get("/live-content", async (_req, res) => {
-    if (!_req.app.locals.streamContentCollection) return res.json({ live: [] });
-    const items = await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray();
-    return res.json({ live: items.map((item: Record<string, unknown>) => ({ liveInputUid: item.liveInputUid, title: item.title, creatorName: item.creatorName, processingStatus: item.processingStatus, thumbnailUrl: item.thumbnailUrl || null, chatMode: item.chatMode })) });
+    const items = _req.app.locals.streamContentCollection
+      ? await _req.app.locals.streamContentCollection.find({ contentType: "live", visibility: "public", moderationStatus: "approved", playbackAllowed: true }).sort({ updatedAt: -1 }).limit(50).toArray()
+      : [];
+    const creatorLive = items.map((item: Record<string, unknown>) => ({ liveInputUid: item.liveInputUid, title: item.title, creatorName: item.creatorName, processingStatus: item.processingStatus, thumbnailUrl: item.thumbnailUrl || null, chatMode: item.chatMode, contentSource: "cloudflare" }));
+    const youtubeLive = await youtubeLiveChannels().catch((error) => {
+      console.error("Failed to load configured YouTube live channels:", axios.isAxiosError(error) ? error.response?.data || error.message : error);
+      return [];
+    });
+    return res.json({ live: [...youtubeLive, ...creatorLive] });
   });
 
   router.get("/creator/videos/:uid/status", async (req, res) => {
@@ -707,8 +760,13 @@ const mountStreamEndpoints = (router: Router) => {
 
   router.get("/playback/:uid", async (req, res) => {
     const user = await requireViewer(req, res); if (!user) return;
+    const requestedUid = String(req.params.uid || "").slice(0, 180);
+    const uid = requestedUid.replace(/^yt-/, "");
+    if (requestedUid.startsWith("yt-")) {
+      const officialLive = (await youtubeLiveChannels().catch(() => [])).find(item => item.youtubeVideoId === uid);
+      if (officialLive) return res.json({ video: { id: requestedUid, sourceType: "youtube", youtubeVideoId: uid, title: officialLive.title, creatorName: officialLive.creatorName, thumbnailUrl: officialLive.thumbnailUrl, duration: null } });
+    }
     if (!req.app.locals.streamContentCollection) return res.status(503).json({ error: "service_unavailable", message: "Stream playback is not ready." });
-    const uid = String(req.params.uid || "").replace(/^yt-/, "").slice(0, 180);
     let video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
     if (!video) video = await req.app.locals.streamContentCollection.findOne({ youtubeVideoId: uid });
     if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true) return res.status(404).json({ error: "not_available", message: "This video is not published or licensed for playback." });
