@@ -1,5 +1,5 @@
 import { AxiosError, isAxiosError } from "axios";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { axiosClient, getBaseURL } from "../lib/axiosClient";
 import type { AuthResult, User } from "../types/pi";
 import { requestPiBrowserHandoff } from "../lib/piBrowserHandoff";
@@ -19,10 +19,10 @@ type ProfileUpdate = {
   sellerActive?: boolean;
 };
 
-const PI_AUTH_TIMEOUT_MS = 30000;
+const PI_AUTH_TIMEOUT_MS = 20000;
 const MIN_SESSION_LOADING_MS = 450;
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
-const PI_AUTH_SCOPES = ["username", "payments"];
+const PI_AUTH_SCOPES = ["username"];
 const AUTH_REQUEST_CONFIG = { withCredentials: true };
 
 const getRuntimeSandboxSetting = () => {
@@ -142,6 +142,7 @@ export const useAuth = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
+  const loginInProgressRef = useRef(false);
   const showFeedback = useCallback((feedback: AuthFeedback | null) => {
     setAuthFeedback(feedback);
   }, []);
@@ -224,6 +225,8 @@ export const useAuth = () => {
   }, []);
 
   const loginWithPi = useCallback(async () => {
+    if (loginInProgressRef.current) return false;
+    loginInProgressRef.current = true;
     setAuthFeedback(null);
     if (!window.Pi) {
       if (import.meta.env.DEV && getBaseURL()) {
@@ -261,14 +264,22 @@ export const useAuth = () => {
           setAuthFeedback({ type: "error", message: "Local development login failed. Check backend DEV_AUTH and VITE_BACKEND_URL." });
           return false;
         } finally {
+          loginInProgressRef.current = false;
           setIsLoading(false);
         }
       }
       requestPiBrowserHandoff("Pi login required");
       setAuthFeedback(null);
+      loginInProgressRef.current = false;
       return false;
     }
+    try {
+      window.Pi.init({ version: "2.0", sandbox: isPiSandboxMode() });
+    } catch (err) {
+      console.warn("[auth] Pi SDK was already initialized or could not be reinitialized.", err);
+    }
     setIsLoading(true);
+    setAuthFeedback({ type: "success", message: "Connecting to Pi Browser…" });
     try {
       const authResult = await authenticateWithTimeout(PI_AUTH_SCOPES);
       console.log("[auth] Pi authenticate success", {
@@ -281,14 +292,18 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Pi login failed:", err);
+      const sdkMessage = (err as Error)?.message || "";
       const message = isAxiosError<BackendErrorBody>(err)
         ? toErrorMessage(err)
-        : (err as Error)?.message === "PI_AUTH_TIMEOUT"
-          ? "Pi login timed out. Please close Pi Browser, reopen it, and try again."
-          : "Pi login failed. In Pi Sandbox mobile preview, make sure you are signed in to a sandbox Pi account and the app is running with sandbox SDK enabled.";
+        : sdkMessage === "PI_AUTH_TIMEOUT"
+          ? "Pi login timed out. Reopen Pi Browser, confirm your sandbox account is signed in, and try again."
+          : /cancel|denied|reject/i.test(sdkMessage)
+            ? "Pi login was cancelled. Please approve the Pi Browser sign-in request and try again."
+            : "Pi login failed before reaching the server. In Pi Sandbox mobile preview, sign in to a sandbox Pi account and try again.";
       setAuthFeedback({ type: "error", message });
       return false;
     } finally {
+      loginInProgressRef.current = false;
       setIsLoading(false);
     }
   }, [signInUser]);
