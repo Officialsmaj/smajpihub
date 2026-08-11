@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
@@ -48,6 +48,8 @@ const StorePage = () => {
   const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showStoreEntrance, setShowStoreEntrance] = useState(() => Boolean((location.state as { showStoreEntrance?: boolean } | null)?.showStoreEntrance));
   const [products, setProducts] = useState<Product[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +76,13 @@ const StorePage = () => {
   const [cartQuantity, setCartQuantity] = useState(() => getCartQuantity());
   const { addProductToCart, cartToast } = useAddToCartToast();
   const profileName = user?.displayName || user?.username || "Pi User";
+
+  useEffect(() => {
+    if (!showStoreEntrance) return;
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    const timer = window.setTimeout(() => setShowStoreEntrance(false), 950);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.search, navigate, showStoreEntrance]);
 
   const loadCatalog = useCallback(async (showSkeleton = false) => {
     if (showSkeleton) setLoading(true);
@@ -333,6 +342,7 @@ const StorePage = () => {
 
   return (
     <main className="private-page storefront-page">
+      {showStoreEntrance ? <section className="store-entrance" aria-label="Opening SMAJ Store" aria-live="polite"><div className="store-entrance-glow" /><div className="store-entrance-brand"><span><img src={logoImage} alt="" /></span><small>SMAJ PI HUB</small><h1>Opening SMAJ Store</h1><p>Finding products and trusted sellers for you.</p></div><div className="store-entrance-shelves" aria-hidden="true"><i /><i /><i /></div><div className="store-entrance-progress" aria-hidden="true"><i /></div></section> : null}
       <PullToRefresh onRefresh={() => loadCatalog(false)} />
       {cartToast}
       <section className="storefront-shell">
