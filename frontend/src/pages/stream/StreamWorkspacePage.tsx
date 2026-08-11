@@ -36,8 +36,8 @@ import {
   type StreamAdminOverview,
   type StreamAdminSettings,
 } from "../../lib/streamAdmin";
-import { formatServicePrice } from "../../lib/piPricing";
 import { formatPiRate } from "../../lib/piPricing";
+import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { streamCategories } from "../../lib/streamCategories";
 import { getTitleStreamReviews, saveTitleStreamReview, type StreamReview } from "../../lib/streamReviews";
 import {
@@ -924,7 +924,7 @@ const StreamPlansPanel = () => {
       <header className="sw-page-head">
         <span>YOUR ACCOUNT</span>
         <h1>Plans & payments</h1>
-        <p>Choose a 30-day Stream pass and see the active price in USD and Pi.</p>
+        <p>Choose a monthly Stream plan and pay with Pi.</p>
       </header>
       {state === "loading" ? <div className="sw-catalog-status">Loading Stream plans...</div> : null}
       {plans.length ? (
@@ -946,14 +946,15 @@ const StreamPlansPanel = () => {
                 <article className={index === 1 ? "featured" : ""} key={plan.id}>
                   <span>{current ? "CURRENT" : index === 1 ? "POPULAR" : "PLAN"}</span>
                   <h2>{plan.name}</h2>
-                  <strong>
-                    {formatServicePrice(plan.priceUsd)}
-                    <small>/30 days</small>
+                  <strong className="sw-plan-pi-price">
+                    {formatPiAmount(plan.pricePi)}
+                    <small>{plan.priceUsd > 0 ? "/month" : " ongoing"}</small>
                   </strong>
+                  <em>{formatUsdAmount(plan.priceUsd)} USD equivalent</em>
                   <p>{plan.features.join("  -  ")}</p>
                   <small>{formatPiRate()}</small>
                   <button type="button" disabled={current || state === "saving"} onClick={() => void choosePlan(plan.id)}>
-                    {busyPlan === plan.id ? "Activating..." : current ? "Current plan" : plan.priceUsd > 0 ? `Subscribe ${plan.name}` : "Choose Free"}
+                    {busyPlan === plan.id ? "Activating..." : current ? "Current plan" : plan.priceUsd > 0 ? "Pay with Pi" : "Choose Free"}
                   </button>
                 </article>
               );

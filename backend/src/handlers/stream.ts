@@ -252,7 +252,8 @@ const mountStreamEndpoints = (router: Router) => {
     if (!(plan in streamPlans)) return res.status(400).json({ error: "invalid_plan", message: "Choose a valid Stream plan." });
     const selected = streamPlans[plan];
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = selected.priceUsd > 0 ? new Date(now) : null;
+    if (expiresAt) expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 1);
     const pricing = streamPlanPrice(selected.priceUsd);
     const subscription = {
       plan,
@@ -268,7 +269,7 @@ const mountStreamEndpoints = (router: Router) => {
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription } });
     return res.status(201).json({
       subscription: normalizeStreamSubscription(subscription),
-      message: selected.priceUsd > 0 ? "Stream pass activated for 30 days. Pi checkout can be connected here next." : "Free Stream plan activated.",
+      message: selected.priceUsd > 0 ? "Monthly Stream plan activated. Pi checkout can be connected here next." : "Free Stream plan activated.",
     });
   });
 

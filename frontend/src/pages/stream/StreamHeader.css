@@ -119,3 +119,7 @@
   .stream-cast-sheet h2{font-size:27px}
   .stream-cast-sheet p{margin-bottom:48px;font-size:19px;line-height:1.42}
 }
+.stream-side-menu .stream-payment-menu-section{margin:10px 12px;padding:15px 10px;border:1px solid rgba(201,156,255,.3);border-radius:13px;background:linear-gradient(135deg,rgba(116,55,199,.22),rgba(35,20,47,.55))}
+.stream-side-menu .stream-payment-menu-section>b{color:#d8b9ff}
+.stream-side-menu .stream-payment-menu-section>a{color:#fff}
+.stream-side-menu .stream-payment-menu-section>a svg{color:#d2a8ff}

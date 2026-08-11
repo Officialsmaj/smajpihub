@@ -1298,16 +1298,18 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   padding: 20px;
-  background: #f8f7fb;
+  background: #0b0b10;
 }
 .sw-plans article {
   padding: 24px;
-  border: 1px solid #e3dbe8;
+  border: 1px solid rgba(255,255,255,.1);
   border-radius: 14px;
-  background: #fff;
+  color:#f8f5fa;
+  background:linear-gradient(155deg,#17151d,#0f0e13);
 }
 .sw-plans article.featured {
-  border: 2px solid #7534c5;
+  border: 2px solid #9b62e8;
+  box-shadow:0 15px 40px rgba(113,51,197,.2);
 }
 .sw-plans article > span {
   font-size: 9px;
@@ -1323,14 +1325,17 @@
 }
 .sw-plans article p {
   min-height: 50px;
-  color: #756d7d;
+  color: #b8afc0;
 }
+.sw-plans article>em{display:block;margin:-7px 0 13px;color:#9d94a4;font-size:12px;font-style:normal}
+.sw-plans .sw-plan-pi-price{color:#d8b9ff;font-size:29px}
+.sw-plans .sw-plan-pi-price small{color:#aaa1b2}
 .sw-plans button {
   width: 100%;
   padding: 11px;
   border: 0;
   border-radius: 8px;
-  background: #25152f;
+  background:linear-gradient(135deg,#8b4de3,#7133c5);
   color: #fff;
 }
 .sw-plan-current {

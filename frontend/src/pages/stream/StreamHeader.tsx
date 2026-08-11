@@ -138,11 +138,14 @@ const StreamHeader = (props: StreamHeaderProps) => {
               <Link to="/app/services/stream/history">
                 <HistoryRoundedIcon /> Watch History
               </Link>
-              <Link to="/app/services/stream/subscriptions">
-                <SubscriptionsOutlinedIcon /> Subscriptions
-              </Link>
+            </section>
+            <section className="stream-payment-menu-section">
+              <b>PI PLANS &amp; PAYMENTS</b>
               <Link to="/app/services/stream/plans">
-                <PaymentsRoundedIcon /> Plans & payments
+                <PaymentsRoundedIcon /> View Stream Plans
+              </Link>
+              <Link to="/app/services/stream/subscriptions">
+                <SubscriptionsOutlinedIcon /> Manage Subscription
               </Link>
             </section>
             <section>
