@@ -18794,8 +18794,31 @@ svg {
     white-space: nowrap;
   }
 
+  .mobile-continue-section {
+    padding-top: 16px;
+  }
+
   .mobile-continue-section .mobile-section-heading {
+    min-height: auto;
+    margin-bottom: 9px;
     align-items: center;
+  }
+
+  .mobile-continue-section .mobile-recent-strip {
+    gap: 9px;
+  }
+
+  .mobile-continue-section .mobile-recent-card {
+    width: 140px;
+    min-width: 140px;
+    height: 92px;
+    padding: 10px;
+  }
+
+  .mobile-continue-section .mobile-recent-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 6px;
   }
 
   .mobile-section-link {
