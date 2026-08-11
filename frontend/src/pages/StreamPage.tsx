@@ -9,7 +9,6 @@ import StreamHeader from "./stream/StreamHeader";
 import { getStreamCatalog, getStreamCategory, getStreamDownloads, saveStreamDownload, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
 import { getStreamCreators, getStreamSubscriptionStatus, subscribeToStreamChannel, unsubscribeFromStreamChannel, type StreamCreatorDirectoryItem } from "../lib/streamChannel";
 import { getPublishedLiveInputs, publishedLivePlaybackPath, type PublishedLiveInput } from "../lib/streamLive";
-import { streamCategories } from "../lib/streamCategories";
 import { getPopularStreamReviews, toggleStreamReviewLike, type StreamReview } from "../lib/streamReviews";
 
 type StreamItem = {
@@ -74,6 +73,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState(false);
   const [featureIndex, setFeatureIndex] = useState(0);
+  const [rankingTab, setRankingTab] = useState("Popular");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [creators, setCreators] = useState<StreamCreatorDirectoryItem[]>([]);
   const [followedCreators, setFollowedCreators] = useState<Set<string>>(() => new Set());
@@ -85,7 +85,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [downloadError, setDownloadError] = useState("");
   const [liveNow, setLiveNow] = useState<PublishedLiveInput[]>([]);
 
-  useEffect(() => { setFeatureIndex(0); }, [activeSlug]);
+  useEffect(() => { setFeatureIndex(0); setRankingTab("Popular"); }, [activeSlug]);
 
   useEffect(() => {
     let active = true;
@@ -138,6 +138,13 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   useEffect(() => { if (featuredTitles.length < 2) return; const timer = window.setInterval(() => setFeatureIndex((index) => (index + 1) % featuredTitles.length), 7000); return () => window.clearInterval(timer); }, [featuredTitles.length]);
 
   const featured = featuredTitles[featureIndex] ?? catalog.movies.find((item) => item.backdropUrl);
+  const rankedSeries = useMemo(() => {
+    const base = rankingTab === "Anime" && anime.length ? anime : [...(categoryMode ? catalog.trending : catalog.series)];
+    if (rankingTab === "Top 100") return base.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (rankingTab === "New") return base.sort((a, b) => String(b.releaseDate || "").localeCompare(String(a.releaseDate || "")));
+    if (rankingTab === "Returning") return base.reverse();
+    return base;
+  }, [anime, catalog.series, catalog.trending, categoryMode, rankingTab]);
   const toggleCreatorFollow = async (handle: string) => {
     if (savingFollow) return;
     setSavingFollow(handle);
@@ -214,12 +221,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
           <div className="stream-hero-dots" aria-label="Featured titles">{featuredTitles.map((item, index) => <button key={item.id} type="button" className={index === featureIndex ? "active" : ""} onClick={() => setFeatureIndex(index)} aria-label={`Show ${item.title}`} />)}</div>
         </section>
 
-        <section className="stream-explore-categories">
-          <div className="stream-row-heading"><div><h2>Explore Categories</h2><p>Find movies and series by genre</p></div><Link to="/app/services/stream/categories">Explore all →</Link></div>
-          <div className="stream-category-rail">
-            {streamCategories.slice(0, 8).map((category) => <Link className={category.tone} to={`/app/services/stream/category/${category.slug}`} key={category.slug}>{category.label}</Link>)}
-          </div>
-        </section>
+        <section className="stream-rankings"><div className="stream-row-heading"><h2>{categoryMode ? `${categoryLabel} Rankings` : "Series Rankings"}</h2><Link to="/app/services/stream/categories">See all →</Link></div><div className="stream-ranking-tabs">{(categoryMode ? ["Popular","New","Top 100","Returning"] : ["Popular","Top 100","New","Returning","Anime"]).map((tab) => <button type="button" className={rankingTab === tab ? "active" : ""} onClick={() => setRankingTab(tab)} key={tab}>{tab}</button>)}</div><div className="stream-ranking-rail">{rankedSeries.slice(0, 10).map((item, index) => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} key={`${item.mediaType}-${item.id}`}><b>{index + 1}</b><img loading="lazy" src={item.posterUrl || ""} alt=""/><span>{item.title}</span><small>{item.rating ? `★ ${item.rating}` : item.releaseDate?.slice(0,4) || "New"}</small></Link>)}</div></section>
 
         {!categoryMode ? <section className="stream-live-now-row"><div className="stream-row-heading"><div><h2>What's On Now</h2><p>Live TV</p></div><Link to="/app/services/stream/live/now">See more ›</Link></div>{liveNow.length ? <div className="stream-live-now-rail">{liveNow.slice(0, 12).map(item => <Link to={publishedLivePlaybackPath(item)} key={item.liveInputUid}><div style={item.thumbnailUrl ? { backgroundImage: `url(${item.thumbnailUrl})` } : undefined}><PlayArrowRoundedIcon/><b>LIVE</b><span><i/></span></div><h3>{item.title}</h3><p>{item.creatorName || "SMAJ Live"} · Live now</p></Link>)}</div> : <div className="stream-live-now-empty">No channels are live right now. Official broadcasts will appear here automatically.</div>}</section> : null}
 
