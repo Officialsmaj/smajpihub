@@ -108,7 +108,11 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     let timer: number | null = null;
     let lastPosition = lastSavedRef.current;
     const save = (force = false, completed = false) => {
-      if (!player) return;
+      if (
+        !player ||
+        typeof player.getCurrentTime !== "function" ||
+        typeof player.getDuration !== "function"
+      ) return;
       const position = Math.max(0, Number(player.getCurrentTime()) || 0);
       const duration = Math.max(0, Number(player.getDuration()) || 0);
       if (!duration || (!force && Math.abs(position - lastPosition) < 10)) return;
@@ -131,8 +135,19 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
           events: {
             onReady: event => {
               player = event.target;
+              if (
+                typeof player.getCurrentTime !== "function" ||
+                typeof player.getDuration !== "function"
+              ) {
+                setMessage("The YouTube player is not ready yet. Please reload the video.");
+                return;
+              }
               const duration = player.getDuration();
-              if (lastSavedRef.current > 0 && lastSavedRef.current < duration - 15)
+              if (
+                typeof player.seekTo === "function" &&
+                lastSavedRef.current > 0 &&
+                lastSavedRef.current < duration - 15
+              )
                 player.seekTo(lastSavedRef.current, true);
               timer = window.setInterval(() => save(), 10_000);
             },
@@ -149,7 +164,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       save(true);
       active = false;
       if (timer !== null) window.clearInterval(timer);
-      player?.destroy();
+      if (player && typeof player.destroy === "function") player.destroy();
     };
   }, [id, video]);
 
