@@ -21,7 +21,6 @@ import StreamSubscriptions from "./StreamSubscriptions";
 import StreamModerationPanel from "./StreamModerationPanel";
 import StreamLiveSetup from "./StreamLiveSetup";
 import StreamLivePlayer from "./StreamLivePlayer";
-import StreamLiveDirectory from "./StreamLiveDirectory";
 import StreamLiveNowPage from "./StreamLiveNowPage";
 import StreamChannelPanel from "./StreamChannelPanel";
 import StreamPublicChannel from "./StreamPublicChannel";
@@ -67,7 +66,6 @@ import {
 export type StreamPageKind =
   | "movies"
   | "series"
-  | "live"
   | "live-now"
   | "categories"
   | "search"
@@ -125,7 +123,6 @@ const titles: Title[] = [
 const pageMeta: Partial<Record<StreamPageKind, [string, string]>> = {
   movies: ["Movies", "Blockbusters, originals and stories from around the world."],
   series: ["Series", "Binge-worthy stories and new episodes every week."],
-  live: ["Live", "Events, creators, music and sport happening right now."],
   "my-list": ["My List", "Titles you saved so you can find them again quickly."],
   downloads: ["Downloads", "Everything you downloaded, ready when you are."],
   history: ["Watch history", "Resume watching or revisit your recent entertainment."],
@@ -1344,7 +1341,6 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "subscriptions") return <StreamSubscriptions />;
     if (kind === "creator-directory") return <StreamCreatorsDirectory />;
     if (kind === "public-channel") return <StreamPublicChannel />;
-    if (kind === "live") return <StreamLiveDirectory />;
     if (kind === "live-now") return <StreamLiveNowPage />;
     if (kind === "categories") return <CategoryDirectory />;
     if (kind === "search") return <StreamSearchPage />;

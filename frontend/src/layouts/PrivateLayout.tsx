@@ -446,7 +446,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         {(isStreamShell ? [
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
           { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
-          { to: "/app/services/stream/live", label: "Live", icon: <LiveTvOutlinedIcon /> },
+          { to: "/app/services/stream/live/now", label: "Live", icon: <LiveTvOutlinedIcon /> },
           { to: "/app/services/stream/downloads", label: "Downloads", icon: <DownloadOutlinedIcon /> },
           { to: "/settings", label: "Account", icon: <PersonOutlineIcon /> },
         ] : mainTabs).map((tab) => (

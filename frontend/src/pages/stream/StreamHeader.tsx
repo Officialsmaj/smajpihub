@@ -10,7 +10,6 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import SubscriptionsOutlinedIcon from "@mui/icons-material/SubscriptionsOutlined";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import FamilyRestroomRoundedIcon from "@mui/icons-material/FamilyRestroomRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import "./StreamHeader.css";
@@ -161,9 +160,6 @@ const StreamHeader = (props: StreamHeaderProps) => {
               <b>SETTINGS & HELP</b>
               <Link to="/app/services/stream/parental">
                 <FamilyRestroomRoundedIcon /> Parental Controls
-              </Link>
-              <Link to="/settings">
-                <SettingsOutlinedIcon /> Settings
               </Link>
               <Link to="/app/help-center">
                 <HelpOutlineRoundedIcon /> Help Center

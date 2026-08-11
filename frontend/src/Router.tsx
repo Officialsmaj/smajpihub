@@ -108,7 +108,7 @@ const buildPrivatePageElement = (title: string, description: string, roles?: str
 };
 
 const streamRoutes: Array<[string, StreamPageKind]> = [
-  ["live", "live"],
+  ["live", "live-now"],
   ["live/now", "live-now"],
   ["categories", "categories"],
   ["search", "search"],
