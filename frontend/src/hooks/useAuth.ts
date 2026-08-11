@@ -50,6 +50,12 @@ const authenticateWithTimeout = (scopes: string[]) =>
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+const waitForPiSdk = async (timeoutMs = 2500) => {
+  const deadline = Date.now() + timeoutMs;
+  while (!window.Pi && Date.now() < deadline) await wait(100);
+  return Boolean(window.Pi?.authenticate);
+};
+
 const toUser = (candidate: Partial<User> | null | undefined, fallback: User): User => ({
   uid: candidate?.uid || fallback.uid,
   username: candidate?.username || fallback.username,
@@ -227,10 +233,10 @@ export const useAuth = () => {
   const loginWithPi = useCallback(async () => {
     if (loginInProgressRef.current) return false;
     loginInProgressRef.current = true;
-    setAuthFeedback(null);
+    setIsLoading(true);
+    setAuthFeedback({ type: "success", message: "Connecting to Pi Browser…" });
     if (!window.Pi) {
       if (import.meta.env.DEV && getBaseURL()) {
-        setIsLoading(true);
         try {
           const response = await axiosClient.post<SignInResponse>("/user/dev-signin", undefined, AUTH_REQUEST_CONFIG);
           const devFallback: User = {
@@ -268,9 +274,19 @@ export const useAuth = () => {
           setIsLoading(false);
         }
       }
+      await waitForPiSdk();
+    }
+    if (!window.Pi) {
+      if (isPiSandboxMode()) {
+        setAuthFeedback({ type: "error", message: "Pi SDK is unavailable in this Sandbox preview. Refresh the preview, confirm your sandbox Pi account is signed in, and try again." });
+        loginInProgressRef.current = false;
+        setIsLoading(false);
+        return false;
+      }
       requestPiBrowserHandoff("Pi login required");
       setAuthFeedback(null);
       loginInProgressRef.current = false;
+      setIsLoading(false);
       return false;
     }
     try {
@@ -278,8 +294,6 @@ export const useAuth = () => {
     } catch (err) {
       console.warn("[auth] Pi SDK was already initialized or could not be reinitialized.", err);
     }
-    setIsLoading(true);
-    setAuthFeedback({ type: "success", message: "Connecting to Pi Browser…" });
     try {
       const authResult = await authenticateWithTimeout(PI_AUTH_SCOPES);
       console.log("[auth] Pi authenticate success", {

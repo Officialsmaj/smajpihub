@@ -53,7 +53,12 @@ const PiBrowserHandoff = () => {
 
 
   useEffect(() => {
-    const open = (event: Event) => setDetail((event as CustomEvent<PiBrowserHandoffDetail>).detail || {});
+    const open = (event: Event) => {
+      const isMinePiSandbox =
+        window.location.hostname === "sandbox.minepi.com" || document.referrer.includes("sandbox.minepi.com");
+      if (isMinePiSandbox) return;
+      setDetail((event as CustomEvent<PiBrowserHandoffDetail>).detail || {});
+    };
     window.addEventListener(PI_BROWSER_HANDOFF_EVENT, open);
     return () => window.removeEventListener(PI_BROWSER_HANDOFF_EVENT, open);
   }, []);
