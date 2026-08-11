@@ -448,7 +448,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
           { to: "/app/services/stream/live/now", label: "Live", icon: <LiveTvOutlinedIcon /> },
           { to: "/app/services/stream/downloads", label: "Downloads", icon: <DownloadOutlinedIcon /> },
-          { to: "/settings", label: "Account", icon: <PersonOutlineIcon /> },
+          { to: "/app/services/stream/studio/channel", label: "Account", icon: <PersonOutlineIcon /> },
         ] : mainTabs).map((tab) => (
           <NavLink
             key={tab.to}
