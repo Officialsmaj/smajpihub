@@ -223,7 +223,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
           {!catalogLoading && catalogError ? <p className="stream-catalog-notice">Live catalogue is unavailable. Showing SMAJ previews.</p> : null}
           {catalogRows.map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
-              <div className="stream-row-heading"><h2>{row.title}</h2><a href={row.id === "series" ? "/app/services/stream/series" : "/app/services/stream/movies"}>Explore all →</a></div>
+              <div className="stream-row-heading"><h2>{row.title}</h2><Link to={categoryMode ? `/app/services/stream/category/${activeSlug}` : row.id === "series" ? "/app/services/stream/series" : row.id === "anime" ? "/app/services/stream/category/anime" : "/app/services/stream/movies"}>Explore all →</Link></div>
               <div className="stream-rail">
                 {row.items.slice(0, 20).map((item, index) => {
                   const tmdbItem = "mediaType" in item;
