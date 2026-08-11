@@ -29,6 +29,7 @@ export type PublicStreamChannel = {
   posts: PublicChannelPost[];
   videos: PublicChannelVideo[];
   live: PublicChannelLive[];
+  stats: { followers: number; videos: number; live: number; joinedAt: string | null };
 };
 export type StreamSubscription = {
   creatorId: string;

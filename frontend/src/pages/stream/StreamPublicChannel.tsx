@@ -69,7 +69,7 @@ const StreamPublicChannel = () => {
         <div>
           <h1>{data.channel.name}</h1>
           <p>
-            @{data.channel.handle}  -  {data.videos.length} videos
+            @{data.channel.handle}
             {followState === "error" ? "  -  Subscription could not update" : ""}
           </p>
         </div>
@@ -82,6 +82,7 @@ const StreamPublicChannel = () => {
           {followState === "saving" ? "Saving..." : following ? "Following" : "Follow"}
         </button>
       </header>
+      <div className="sw-public-channel-stats"><span><b>{data.stats.followers.toLocaleString()}</b> followers</span><span><b>{data.stats.videos}</b> videos</span><span><b>{data.stats.live}</b> live</span>{data.stats.joinedAt ? <span><b>{new Date(data.stats.joinedAt).getFullYear()}</b> joined</span> : null}</div>
       <nav aria-label="Channel sections">
         {(["posts", "videos", "live", "about"] as const).map(item => (
           <button type="button" className={tab === item ? "active" : ""} onClick={() => setTab(item)} key={item}>

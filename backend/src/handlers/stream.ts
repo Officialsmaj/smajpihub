@@ -545,6 +545,7 @@ const mountStreamEndpoints = (router: Router) => {
       ? await req.app.locals.streamPostCollection.find({ creatorId, visibility: "public" }).sort({ createdAt: -1 }).limit(40).toArray()
       : [];
     const profile = creator.streamProfile || {};
+    const followers = await req.app.locals.userCollection.countDocuments({ "streamSubscriptions.handle": handle });
     return res.json({
       channel: {
         name: profile.channelName || creator.displayName || creator.username || "SMAJ Creator",
@@ -556,6 +557,7 @@ const mountStreamEndpoints = (router: Router) => {
       posts: posts.map(publicPost),
       videos: videos.filter((video: Record<string, unknown>) => video.contentType !== "live").map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, description: video.description, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, contentSource: video.contentSource, createdAt: video.createdAt })),
       live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").map((video: Record<string, unknown>) => ({ liveInputUid: video.liveInputUid, title: video.title, thumbnailUrl: video.thumbnailUrl || null, processingStatus: video.processingStatus })),
+      stats: { followers, videos: videos.filter((video: Record<string, unknown>) => video.contentType !== "live").length, live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").length, joinedAt: creator.createdAt || null },
     });
   });
 
