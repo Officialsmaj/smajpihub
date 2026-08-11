@@ -325,7 +325,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
   const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)));
   const isStreamShell = location.pathname.startsWith("/app/services/stream");
-  const isStreamImmersive = location.pathname === "/app/services/stream/search" || /^\/app\/services\/stream\/(?:title|series)\/[^/]+$/.test(location.pathname);
+  const isStreamImmersive = location.pathname === "/app/services/stream/search" || /^\/app\/services\/stream\/(?:title|series|watch|live)\/[^/]+$/.test(location.pathname);
   const streamDownloadBadgeLabel = streamDownloadCount > 99 ? "99+" : streamDownloadCount;
   useEffect(() => {
     if (!isStreamShell) return;

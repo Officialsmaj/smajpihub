@@ -11,9 +11,6 @@ import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import ClosedCaptionRoundedIcon from "@mui/icons-material/ClosedCaptionRounded";
-import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
-import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import "./StreamWorkspacePage.css";
 import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
@@ -590,6 +587,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
+  const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
   useEffect(() => {
     if (!id) return;
     setState("loading");
@@ -608,6 +606,37 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       })
       .catch(() => setState("error"));
   }, [id, type]);
+  useEffect(() => {
+    if (!detail?.backdropUrl) return;
+    let active = true;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 24;
+        canvas.height = 24;
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) return;
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let red = 0, green = 0, blue = 0, weight = 0;
+        for (let index = 0; index < pixels.length; index += 16) {
+          const r = pixels[index], g = pixels[index + 1], b = pixels[index + 2], alpha = pixels[index + 3];
+          if (alpha < 180 || (r > 238 && g > 238 && b > 238) || (r < 12 && g < 12 && b < 12)) continue;
+          const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+          const pixelWeight = 1 + saturation / 90;
+          red += r * pixelWeight; green += g * pixelWeight; blue += b * pixelWeight; weight += pixelWeight;
+        }
+        if (active && weight) {
+          const tone = [red, green, blue].map(value => Math.max(18, Math.min(125, Math.round(value / weight * .58))));
+          setAmbientColor(`rgb(${tone[0]} ${tone[1]} ${tone[2]})`);
+        }
+      } catch { /* Cross-origin image restrictions fall back to the cinema color. */ }
+    };
+    image.src = detail.backdropUrl;
+    return () => { active = false; };
+  }, [detail?.backdropUrl]);
   if (state === "loading")
     return (
       <div className="sw-detail-loading">
@@ -661,7 +690,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     <>
       <section
         className="sw-detail-hero tmdb"
-        style={detail.backdropUrl ? { backgroundImage: `url(${detail.backdropUrl})` } : undefined}
+        style={{ backgroundImage: detail.backdropUrl ? `url(${detail.backdropUrl})` : undefined, "--sw-detail-ambient": ambientColor } as CSSProperties}
       >
         <button className="sw-detail-back" type="button" onClick={() => navigate(-1)} aria-label="Go back">
           <ArrowBackRoundedIcon />
@@ -720,7 +749,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       </section>
       <section
         className="sw-detail-info"
-        style={detail.backdropUrl ? ({ "--sw-detail-art": `url(${detail.backdropUrl})` } as CSSProperties) : undefined}
+        style={{ "--sw-detail-art": detail.backdropUrl ? `url(${detail.backdropUrl})` : undefined, "--sw-detail-ambient": ambientColor } as CSSProperties}
       >
         <div>
           <h2>Top cast</h2>
@@ -833,80 +862,8 @@ type TmdbDetailRaw = {
 };
 const Player = ({ live = false }: { live?: boolean }) => {
   const { id } = useParams();
-  if (live) return <StreamLivePlayer id={id || ""} />;
-  if (!live) return <StreamVideoPlayer id={id || ""} />;
-  const title = titles.find(item => item.id === id) ?? titles[0];
-  const youtubeId = id?.startsWith("yt-") ? id.slice(3) : "";
-  if (youtubeId && /^[A-Za-z0-9_-]{11}$/.test(youtubeId))
-    return (
-      <section className="sw-watch youtube">
-        <div className="sw-youtube-player">
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0`}
-            title="Creator video"
-            allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-        <div className="sw-watch-info">
-          <div>
-            <h1>Creator video</h1>
-            <p>Played through YouTube  -  Downloads are not provided by SMAJ</p>
-          </div>
-          <button type="button">
-            <BookmarkRoundedIcon /> Save
-          </button>
-        </div>
-      </section>
-    );
-  return (
-    <section className="sw-watch">
-      <div className={`sw-video-stage ${title.tone}`}>
-        <span className="sw-now">{live ? "LIVE" : "NOW PLAYING"}</span>
-        <button type="button" className="sw-center-play">
-          <PlayArrowRoundedIcon />
-        </button>
-        <div className="sw-controls">
-          <PlayArrowRoundedIcon />
-          <span>00:18</span>
-          <i>
-            <b />
-          </i>
-          <VolumeUpRoundedIcon />
-          <ClosedCaptionRoundedIcon />
-          <FullscreenRoundedIcon />
-        </div>
-      </div>
-      <div className="sw-watch-info">
-        <div>
-          <h1>{title.name}</h1>
-          <p>{live ? "18.4K watching now" : "SMAJ Original  -  2026"}</p>
-        </div>
-        <button type="button">
-          <BookmarkRoundedIcon /> Save
-        </button>
-      </div>
-      {live ? (
-        <aside className="sw-live-chat">
-          <header>
-            Live chat <span>18.4K</span>
-          </header>
-          {["This is incredible! hot", "Watching from Lagos", "Supporting with Pi 5", "What a moment!"].map(
-            (message, index) => (
-              <p key={message}>
-                <b>{["Maya", "Joel", "Amara", "Sam"][index]}</b>
-                {message}
-              </p>
-            )
-          )}
-          <label>
-            <input placeholder="Join the conversation" />
-            <button type="button">Send</button>
-          </label>
-        </aside>
-      ) : null}
-    </section>
-  );
+  const navigate = useNavigate();
+  return <div className="sw-fullscreen-player-shell"><button className="sw-player-close" type="button" onClick={() => navigate(-1)} aria-label="Close player"><CloseRoundedIcon /></button>{live ? <StreamLivePlayer id={id || ""} /> : <StreamVideoPlayer id={id || ""} />}</div>;
 };
 
 const AccountPage = ({ kind }: { kind: StreamPageKind }) => {
@@ -1398,8 +1355,8 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     return <Catalogue kind={kind} />;
   })();
   return (
-    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""} ${kind === "search" ? "sw-search-page" : ""}`}>
-      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail", "search"].includes(kind) ? <StreamHeader /> : null}
+    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""} ${kind === "search" ? "sw-search-page" : ""} ${["player", "live-player"].includes(kind) ? "sw-player-page" : ""}`}>
+      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail", "search", "player", "live-player"].includes(kind) ? <StreamHeader /> : null}
       <div className="sw-page-content">{content}</div>
     </main>
   );
