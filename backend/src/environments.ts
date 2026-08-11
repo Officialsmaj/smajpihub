@@ -108,7 +108,7 @@ const env: Environment = {
     .filter((value) => /^UC[A-Za-z0-9_-]{20,}$/.test(value)),
   youtube_live_refresh_minutes: Math.max(
     5,
-    Number(process.env.YOUTUBE_LIVE_REFRESH_MINUTES) || 30,
+    Number(process.env.YOUTUBE_LIVE_REFRESH_MINUTES) || 360,
   ),
   sports_provider: String(process.env.SPORTS_PROVIDER || "")
     .trim()

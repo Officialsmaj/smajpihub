@@ -86,6 +86,20 @@ let youtubeLiveRefreshPromise: Promise<void> | null = null;
 let youtubeLiveSchedulerStarted = false;
 let lastManualYoutubeRefreshAt = 0;
 const YOUTUBE_MANUAL_REFRESH_COOLDOWN_MS = 5 * 60 * 1000;
+const YOUTUBE_DAILY_CALL_LIMIT = 100;
+let youtubeCallBudgetDate = new Date().toISOString().slice(0, 10);
+let youtubeCallsToday = 0;
+
+const consumeYoutubeCallBudget = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  if (today !== youtubeCallBudgetDate) {
+    youtubeCallBudgetDate = today;
+    youtubeCallsToday = 0;
+  }
+  if (youtubeCallsToday >= YOUTUBE_DAILY_CALL_LIMIT) return false;
+  youtubeCallsToday += 1;
+  return true;
+};
 
 const youtubeSafeError = (error: unknown) => {
   if (!axios.isAxiosError(error)) return { httpStatus: null, reason: error instanceof Error ? error.message : "Unknown error" };
@@ -105,6 +119,12 @@ const refreshYoutubeLiveCache = async () => {
     }
     const checkedAt = new Date().toISOString();
     const channelCandidates = await Promise.all(env.youtube_live_channel_ids.map(async (channelId) => {
+      if (!consumeYoutubeCallBudget()) {
+        console.warn("[YouTube live] daily API call budget exhausted; preserving cached channel", { channelId, dailyLimit: YOUTUBE_DAILY_CALL_LIMIT });
+        const cached = youtubeLiveCache.get(channelId);
+        if (cached) youtubeLiveCache.set(channelId, { ...cached, lastCheckedAt: checkedAt });
+        return { channelId, videoIds: [] as string[], failed: true };
+      }
       try {
         const response = await axios.get<YouTubePlaylistItemsResponse>("https://www.googleapis.com/youtube/v3/playlistItems", {
           params: { part: "snippet", playlistId: `UU${channelId.slice(2)}`, maxResults: 10, key: env.youtube_api_key },
@@ -130,6 +150,11 @@ const refreshYoutubeLiveCache = async () => {
 
     for (let index = 0; index < videoIds.length; index += 50) {
       const batch = videoIds.slice(index, index + 50);
+      if (!consumeYoutubeCallBudget()) {
+        batch.forEach(videoId => { const owner = ownerByVideoId.get(videoId); if (owner) failedChannels.add(owner); });
+        console.warn("[YouTube live] daily API call budget exhausted; preserving cached live results", { dailyLimit: YOUTUBE_DAILY_CALL_LIMIT });
+        continue;
+      }
       try {
         const response = await axios.get<YouTubeVideosResponse>("https://www.googleapis.com/youtube/v3/videos", {
           params: { part: "snippet,status", id: batch.join(","), key: env.youtube_api_key },
@@ -174,7 +199,7 @@ const refreshYoutubeLiveCache = async () => {
         publishedAt: liveVideo.snippet?.publishedAt || null,
       });
     });
-    console.info("[YouTube live] background refresh complete", { channelsChecked: channelCandidates.length, liveChannels: [...youtubeLiveCache.values()].filter(item => item.isLive).length, lastCheckedAt: checkedAt });
+    console.info("[YouTube live] background refresh complete", { channelsChecked: channelCandidates.length, liveChannels: [...youtubeLiveCache.values()].filter(item => item.isLive).length, youtubeCallsToday, dailyCallLimit: YOUTUBE_DAILY_CALL_LIMIT, lastCheckedAt: checkedAt });
   })().finally(() => { youtubeLiveRefreshPromise = null; });
   return youtubeLiveRefreshPromise;
 };
