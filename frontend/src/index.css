@@ -20202,6 +20202,15 @@ svg {
   padding: 0;
 }
 
+.stream-title-immersive-shell .private-content {
+  padding: 0 !important;
+}
+
+.stream-title-immersive-shell .private-tab-page {
+  width: 100%;
+  min-height: 100dvh;
+}
+
 @media (max-width: 1023px) {
   .stream-private-shell > .private-body,
   .stream-private-shell > .private-body.private-body-collapsed {
@@ -20211,6 +20220,10 @@ svg {
 
   .stream-private-shell .private-content {
     padding: 0 0 82px;
+  }
+
+  .stream-title-immersive-shell .private-content {
+    padding: 0 !important;
   }
 }
 
