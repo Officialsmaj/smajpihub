@@ -144,7 +144,7 @@ const toErrorMessage = (err: unknown) => {
 };
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => getStoredPiUser());
   const [showSignIn, setShowSignIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);

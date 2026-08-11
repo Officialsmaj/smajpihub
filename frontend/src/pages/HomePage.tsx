@@ -5,6 +5,7 @@ import ServiceArt from "../components/ServiceArt";
 import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
+import PrivateSkeleton from "../components/PrivateSkeleton";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -74,8 +75,8 @@ const HomePage = () => {
   const [isMobileServices, setIsMobileServices] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, isLoading, navigate]);
+    if (isAuthenticated) navigate("/dashboard", { replace: true });
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1023px)");
@@ -101,7 +102,9 @@ const HomePage = () => {
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
   const getServiceStatus = (service: ServiceDefinition) => service.live || service.slug === "store";
 
-  if (isAuthenticated) return null;
+  if (isAuthenticated) {
+    return <main className="private-page private-route-loading"><PrivateSkeleton variant="home" count={6} /></main>;
+  }
 
   return (
     <AppLayout>
