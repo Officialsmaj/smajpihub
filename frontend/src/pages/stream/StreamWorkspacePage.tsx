@@ -677,7 +677,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             <img className="sw-detail-poster" src={detail.posterUrl} alt={`${detail.title} poster`} />
           ) : null}
           <div className="sw-detail-copy">
-            <span>TMDB  -  {series ? "SERIES" : "FEATURE FILM"}</span>
             <h1>{detail.title}</h1>
             {raw.tagline ? <p className="sw-detail-tagline">{raw.tagline}</p> : null}
             <p className="sw-match">
