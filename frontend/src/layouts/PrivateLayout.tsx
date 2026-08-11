@@ -325,7 +325,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
   const unreadLiveConversations = liveConversations.filter((conversation) => Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)));
   const isStreamShell = location.pathname.startsWith("/app/services/stream");
-  const isStreamTitleDetail = /^\/app\/services\/stream\/(?:title|series)\/[^/]+$/.test(location.pathname);
+  const isStreamImmersive = location.pathname === "/app/services/stream/search" || /^\/app\/services\/stream\/(?:title|series)\/[^/]+$/.test(location.pathname);
   const streamDownloadBadgeLabel = streamDownloadCount > 99 ? "99+" : streamDownloadCount;
   useEffect(() => {
     if (!isStreamShell) return;
@@ -356,7 +356,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
 
   return (
-    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamTitleDetail ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamImmersive ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
@@ -442,7 +442,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </div>
         </div>
       </div>
-      {!isStreamTitleDetail ? <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
+      {!isStreamImmersive ? <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
         {(isStreamShell ? [
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
           { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
@@ -460,8 +460,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </NavLink>
         ))}
       </nav> : null}
-      {!isStreamTitleDetail ? <CommunityFollowPrompt /> : null}
-      {!isStreamTitleDetail && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
+      {!isStreamImmersive ? <CommunityFollowPrompt /> : null}
+      {!isStreamImmersive && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
         <aside className={`live-activity-float ${liveFeedOpen ? "open" : ""}`} aria-label="Live activity">
           {liveFeedOpen ? (
             <section className="live-activity-panel" aria-live="polite">
@@ -488,7 +488,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </button>
         </aside>
       ) : null}
-      {showProfileReminder && !isStreamTitleDetail ? (
+      {showProfileReminder && !isStreamImmersive ? (
         <aside className="profile-verify-reminder" role="alert" aria-live="polite">
           <span><VerifiedUserOutlinedIcon /></span>
           <div>
@@ -498,7 +498,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <button type="button" onClick={completeProfileFromReminder}>Go Complete</button>
         </aside>
       ) : null}
-      {!isStreamTitleDetail ? <WelcomeTour /> : null}
+      {!isStreamImmersive ? <WelcomeTour /> : null}
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );

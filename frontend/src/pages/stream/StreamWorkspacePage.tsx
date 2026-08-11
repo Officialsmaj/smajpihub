@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Form
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CastConnectedRoundedIcon from "@mui/icons-material/CastConnectedRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
@@ -165,6 +168,117 @@ const Tile = ({ title, compact = false }: { title: Title; compact?: boolean }) =
     <p>{title.meta}</p>
   </Link>
 );
+
+type StreamSearchSettings = {
+  movies: boolean;
+  series: boolean;
+  postersOnly: boolean;
+  creators: boolean;
+};
+
+const defaultSearchSettings: StreamSearchSettings = { movies: true, series: true, postersOnly: true, creators: true };
+
+const StreamSearchPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
+  const [titles, setTitles] = useState<StreamCatalogTitle[]>([]);
+  const [channels, setChannels] = useState<StreamCreatorDirectoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<StreamSearchSettings>(() => {
+    try {
+      return { ...defaultSearchSettings, ...JSON.parse(window.localStorage.getItem("smaj_stream_search_settings") || "{}") };
+    } catch {
+      return defaultSearchSettings;
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("smaj_stream_search_settings", JSON.stringify(settings));
+  }, [settings]);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const close = (event: KeyboardEvent) => event.key === "Escape" && setSettingsOpen(false);
+    window.addEventListener("keydown", close);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", close);
+    };
+  }, [settingsOpen]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    const timer = window.setTimeout(() => {
+      const term = query.trim();
+      const request = term ? searchStreamCatalog(term) : getStreamCatalog("trending");
+      void request
+        .then(data => active && setTitles(data.results))
+        .catch(() => active && setTitles([]))
+        .finally(() => active && setLoading(false));
+      if (term && settings.creators) {
+        void getStreamCreators()
+          .then(items => {
+            if (!active) return;
+            const needle = term.toLowerCase();
+            setChannels(items.filter(item => [item.channel.name, item.channel.handle, item.channel.description].join(" ").toLowerCase().includes(needle)).slice(0, 6));
+          })
+          .catch(() => active && setChannels([]));
+      } else setChannels([]);
+    }, query.trim() ? 300 : 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [query, settings.creators]);
+
+  const visibleTitles = titles.filter(item => {
+    if (item.mediaType === "movie" && !settings.movies) return false;
+    if (item.mediaType === "tv" && !settings.series) return false;
+    return !settings.postersOnly || Boolean(item.posterUrl);
+  });
+  const updateSetting = (key: keyof StreamSearchSettings) =>
+    setSettings(current => ({ ...current, [key]: !current[key] }));
+
+  return (
+    <section className="sw-search-screen">
+      <header className="sw-search-screen-head">
+        <button type="button" onClick={() => navigate(-1)} aria-label="Go back"><ArrowBackRoundedIcon /></button>
+        <h1>Search</h1>
+        <i aria-hidden="true" />
+      </header>
+      <div className="sw-search-field">
+        <SearchRoundedIcon />
+        <input autoFocus type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search for titles, people, and more" aria-label="Search titles and creators" />
+        {query ? <button type="button" onClick={() => setQuery("")} aria-label="Clear search"><CloseRoundedIcon /></button> : null}
+        <button className="filter" type="button" onClick={() => setSettingsOpen(true)} aria-label="Open search settings"><TuneRoundedIcon /></button>
+      </div>
+
+      {settings.creators && channels.length ? (
+        <section className="sw-search-channel-results">
+          <h2>People & Channels</h2>
+          <div>{channels.map(channel => <Link to={`/app/services/stream/channel/${channel.channel.handle}`} key={channel.creatorId}>{channel.channel.avatarUrl ? <img src={channel.channel.avatarUrl} alt="" /> : <span>{channel.channel.name.slice(0, 1)}</span>}<b>{channel.channel.name}</b><small>@{channel.channel.handle}</small></Link>)}</div>
+        </section>
+      ) : null}
+
+      <section className="sw-search-title-results">
+        <h2>{query.trim() ? "Search Results" : "Popular Searches"}</h2>
+        {loading ? <div className="sw-search-loading"><i /><i /><i /><i /><i /><i /></div> : (
+          <div className="sw-search-poster-grid">
+            {visibleTitles.map(item => <Link to={`/app/services/stream/${item.mediaType === "tv" ? "series" : "title"}/${item.id}`} key={`${item.mediaType}-${item.id}`}><span>{item.posterUrl ? <img src={item.posterUrl} alt="" /> : <b>{item.title.slice(0, 2)}</b>}</span><strong>{item.title}</strong><small>{item.releaseDate?.slice(0, 4) || (item.mediaType === "tv" ? "Series" : "Movie")}</small></Link>)}
+          </div>
+        )}
+        {!loading && !visibleTitles.length ? <p className="sw-search-empty">No titles match these search settings.</p> : null}
+      </section>
+
+      {settingsOpen ? <div className="sw-search-settings-layer" role="presentation" onMouseDown={event => event.target === event.currentTarget && setSettingsOpen(false)}><section className="sw-search-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="search-settings-title"><i /><header><h2 id="search-settings-title">Search Settings</h2><button type="button" onClick={() => setSettingsOpen(false)} aria-label="Close search settings"><CloseRoundedIcon /></button></header><h3>Search on SMAJ</h3>{([['movies','Movies'],['series','TV Series'],['postersOnly','Titles with Posters'],['creators','People & Creator Channels']] as Array<[keyof StreamSearchSettings,string]>).map(([key,label]) => <label key={key}><span>{label}</span><input type="checkbox" checked={settings[key]} onChange={() => updateSetting(key)} /></label>)}</section></div> : null}
+    </section>
+  );
+};
 
 const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
   const { slug = "" } = useParams();
@@ -1283,12 +1397,13 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     if (kind === "creator-directory") return <StreamCreatorsDirectory />;
     if (kind === "public-channel") return <StreamPublicChannel />;
     if (kind === "live") return <StreamLiveDirectory />;
+    if (kind === "search") return <StreamSearchPage />;
     if (["notifications", "plans", "parental"].includes(kind)) return <AccountPage kind={kind} />;
     return <Catalogue kind={kind} />;
   })();
   return (
-    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""}`}>
-      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail"].includes(kind) ? <StreamHeader /> : null}
+    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""} ${kind === "search" ? "sw-search-page" : ""}`}>
+      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail", "search"].includes(kind) ? <StreamHeader /> : null}
       <div className="sw-page-content">{content}</div>
     </main>
   );
