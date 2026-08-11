@@ -39,6 +39,7 @@ import {
 import { formatServicePrice } from "../../lib/piPricing";
 import { formatPiRate } from "../../lib/piPricing";
 import { streamCategories } from "../../lib/streamCategories";
+import { getTitleStreamReviews, saveTitleStreamReview, type StreamReview } from "../../lib/streamReviews";
 import {
   getStreamCatalog,
   getStreamCategory,
@@ -608,6 +609,11 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
   const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
+  const [reviews, setReviews] = useState<StreamReview[]>([]);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
   useEffect(() => {
     if (!id) return;
     setState("loading");
@@ -625,6 +631,10 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         setState("ready");
       })
       .catch(() => setState("error"));
+  }, [id, type]);
+  useEffect(() => {
+    if (!id) return;
+    void getTitleStreamReviews(type, id).then(setReviews).catch(() => setReviews([]));
   }, [id, type]);
   useEffect(() => {
     if (!detail?.backdropUrl) return;
@@ -705,6 +715,24 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     } finally {
       setDownloading(false);
     }
+  };
+  const submitReview = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!id || reviewRating < 1 || reviewBody.trim().length < 10) {
+      setReviewMessage("Choose a star rating and write at least 10 characters.");
+      return;
+    }
+    setReviewSaving(true);
+    setReviewMessage("");
+    try {
+      const review = await saveTitleStreamReview(type, id, { title: detail.title, posterUrl: detail.posterUrl, rating: reviewRating, body: reviewBody });
+      setReviews(current => [review, ...current.filter(item => item._id !== review._id && item.reviewer.id !== review.reviewer.id)]);
+      setReviewMessage("Your review is published.");
+      setReviewBody("");
+      setReviewRating(0);
+    } catch (error) {
+      setReviewMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Your review could not be published.");
+    } finally { setReviewSaving(false); }
   };
   return (
     <>
@@ -817,6 +845,15 @@ const Detail = ({ series = false }: { series?: boolean }) => {
             ) : null}
           </dl>
         </aside>
+      </section>
+      <section className="sw-title-reviews">
+        <header><h2>Ratings & Reviews</h2><p>Share what you thought about {detail.title}.</p></header>
+        <form onSubmit={event => void submitReview(event)}>
+          <div className="sw-review-picker" aria-label="Choose rating">{[1,2,3,4,5].map(star => <button type="button" className={star <= reviewRating ? "active" : ""} onClick={() => setReviewRating(star)} aria-label={`${star} star${star === 1 ? "" : "s"}`} key={star}>★</button>)}</div>
+          <textarea value={reviewBody} onChange={event => setReviewBody(event.target.value)} maxLength={1200} rows={3} placeholder="Write your review…" />
+          <div><small className={reviewMessage.includes("published") ? "success" : ""}>{reviewMessage}</small><button type="submit" disabled={reviewSaving}>{reviewSaving ? "Publishing…" : "Publish review"}</button></div>
+        </form>
+        {reviews.length ? <div className="sw-title-review-list">{reviews.slice(0,6).map(review => <article key={review._id}><div><span>{review.reviewer.avatarUrl ? <img src={review.reviewer.avatarUrl} alt=""/> : review.reviewer.name.slice(0,1).toUpperCase()}</span><b>{review.reviewer.name}</b><small>{new Date(review.createdAt).toLocaleDateString()}</small></div><strong>{"★".repeat(review.rating)}<i>{"☆".repeat(5-review.rating)}</i></strong><p>{review.body}</p><small>♡ {review.likes} · {review.comments} comments</small></article>)}</div> : null}
       </section>
       {series && raw.seasons?.length ? (
         <section className="sw-seasons">

@@ -509,6 +509,7 @@ const mountStreamEndpoints = (router: Router) => {
               .toArray()
           : [];
         const publicVideos = videos.filter((video: Record<string, unknown>) => video.contentType !== "live");
+        const followers = await req.app.locals.userCollection.countDocuments({ "streamSubscriptions.handle": handle });
         return {
           creatorId,
           channel: {
@@ -522,6 +523,7 @@ const mountStreamEndpoints = (router: Router) => {
             videos: publicVideos.length,
             live: videos.filter((video: Record<string, unknown>) => video.contentType === "live").length,
             latestAt: videos[0]?.createdAt || null,
+            followers,
           },
           latestVideos: publicVideos.slice(0, 3).map((video: Record<string, unknown>) => ({ _id: String(video._id), title: video.title, category: video.category, thumbnailUrl: video.thumbnailUrl || null, youtubeVideoId: video.youtubeVideoId, cloudflareUid: video.cloudflareUid, createdAt: video.createdAt })),
         };
@@ -606,6 +608,86 @@ const mountStreamEndpoints = (router: Router) => {
     const handle = String(req.params.handle || "").trim().replace(/^@/, "").slice(0, 40);
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamSubscriptions: { handle } } });
     return res.json({ subscribed: false });
+  });
+
+  const publicReview = (review: Record<string, any>) => ({
+    _id: String(review._id),
+    mediaType: review.mediaType,
+    tmdbId: review.tmdbId,
+    title: review.title,
+    posterUrl: review.posterUrl || null,
+    rating: review.rating,
+    body: review.body,
+    likes: Array.isArray(review.likedBy) ? review.likedBy.length : Number(review.likes) || 0,
+    comments: Number(review.comments) || 0,
+    reviewer: review.reviewer,
+    createdAt: review.createdAt,
+    updatedAt: review.updatedAt,
+  });
+
+  router.get("/reviews/popular", async (req, res) => {
+    if (!req.app.locals.streamReviewCollection) return res.json({ reviews: [] });
+    const limit = Math.max(1, Math.min(20, Number(req.query.limit) || 10));
+    const reviews = await req.app.locals.streamReviewCollection
+      .find({ status: "approved" })
+      .sort({ popularityScore: -1, createdAt: -1 })
+      .limit(limit)
+      .toArray();
+    return res.json({ reviews: reviews.map(publicReview) });
+  });
+
+  router.get("/reviews/title/:type/:id", async (req, res) => {
+    if (!req.app.locals.streamReviewCollection) return res.json({ reviews: [] });
+    const mediaType = req.params.type === "tv" ? "tv" : "movie";
+    const tmdbId = Number(req.params.id);
+    if (!Number.isInteger(tmdbId) || tmdbId < 1) return res.status(400).json({ error: "invalid_title" });
+    const reviews = await req.app.locals.streamReviewCollection
+      .find({ mediaType, tmdbId, status: "approved" })
+      .sort({ popularityScore: -1, createdAt: -1 })
+      .limit(50)
+      .toArray();
+    return res.json({ reviews: reviews.map(publicReview) });
+  });
+
+  router.post("/reviews/title/:type/:id", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    if (!req.app.locals.streamReviewCollection) return res.status(503).json({ error: "service_unavailable" });
+    const mediaType = req.params.type === "tv" ? "tv" : "movie";
+    const tmdbId = Number(req.params.id);
+    const rating = Number(req.body?.rating);
+    const body = String(req.body?.body || "").trim().slice(0, 1200);
+    const title = String(req.body?.title || "").trim().slice(0, 180);
+    const posterUrl = String(req.body?.posterUrl || "").trim().slice(0, 800);
+    if (!Number.isInteger(tmdbId) || tmdbId < 1 || !Number.isInteger(rating) || rating < 1 || rating > 5 || body.length < 10 || !title)
+      return res.status(400).json({ error: "invalid_review", message: "Choose 1–5 stars and write at least 10 characters." });
+    const now = new Date();
+    const reviewer = {
+      id: String(user._id),
+      name: user.displayName || user.username || user.piUsername || "SMAJ viewer",
+      avatarUrl: user.avatarUrl || "",
+    };
+    await req.app.locals.streamReviewCollection.updateOne(
+      { userId: String(user._id), mediaType, tmdbId },
+      { $set: { mediaType, tmdbId, title, posterUrl, rating, body, reviewer, status: "approved", updatedAt: now }, $setOnInsert: { userId: String(user._id), likedBy: [], comments: 0, popularityScore: 0, createdAt: now } },
+      { upsert: true },
+    );
+    const review = await req.app.locals.streamReviewCollection.findOne({ userId: String(user._id), mediaType, tmdbId });
+    return res.status(201).json({ review: publicReview(review) });
+  });
+
+  router.post("/reviews/:id/like", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    if (!req.app.locals.streamReviewCollection || !ObjectId.isValid(req.params.id)) return res.status(404).json({ error: "review_not_found" });
+    const _id = new ObjectId(req.params.id);
+    const review = await req.app.locals.streamReviewCollection.findOne({ _id, status: "approved" });
+    if (!review) return res.status(404).json({ error: "review_not_found" });
+    const userId = String(user._id);
+    const liked = Array.isArray(review.likedBy) && review.likedBy.includes(userId);
+    await req.app.locals.streamReviewCollection.updateOne(
+      { _id },
+      liked ? { $pull: { likedBy: userId }, $inc: { popularityScore: -1 } } : { $addToSet: { likedBy: userId }, $inc: { popularityScore: 1 } },
+    );
+    return res.json({ liked: !liked, likes: Math.max(0, (review.likedBy?.length || 0) + (liked ? -1 : 1)) });
   });
 
   router.get("/live-content", async (_req, res) => {

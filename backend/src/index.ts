@@ -332,6 +332,7 @@ const start = async () => {
       app.locals.ambassadorCollection = db.collection("ambassador_applications");
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamPostCollection = db.collection("stream_posts");
+      app.locals.streamReviewCollection = db.collection("stream_reviews");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
 app.locals.jobCollection = db.collection("jobs");
        app.locals.jobCompanyCollection = db.collection("job_companies");
@@ -406,6 +407,8 @@ app.locals.jobCollection = db.collection("jobs");
           visibility: 1,
           createdAt: -1,
         }),
+        app.locals.streamReviewCollection.createIndex({ userId: 1, mediaType: 1, tmdbId: 1 }, { unique: true }),
+        app.locals.streamReviewCollection.createIndex({ status: 1, popularityScore: -1, createdAt: -1 }),
         app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),
         app.locals.jobCollection.createIndex({ status: 1, category: 1, createdAt: -1 }),
         app.locals.jobCompanyCollection.createIndex({ slug: 1 }, { unique: true }),

@@ -40,7 +40,7 @@ export type StreamSubscription = {
 export type StreamCreatorDirectoryItem = {
   creatorId: string;
   channel: { name: string; handle: string; description: string; avatarUrl: string; bannerUrl: string };
-  stats: { videos: number; live: number; latestAt: string | null };
+  stats: { videos: number; live: number; followers: number; latestAt: string | null };
   latestVideos: PublicChannelVideo[];
 };
 

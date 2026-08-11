@@ -7,9 +7,10 @@ import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded
 import "./StreamPage.css";
 import StreamHeader from "./stream/StreamHeader";
 import { getStreamCatalog, getStreamCategory, getStreamDownloads, saveStreamDownload, searchStreamCatalog, type StreamCatalogTitle } from "../lib/streamCatalog";
-import { getStreamCreators, type StreamCreatorDirectoryItem } from "../lib/streamChannel";
+import { getStreamCreators, getStreamSubscriptionStatus, subscribeToStreamChannel, unsubscribeFromStreamChannel, type StreamCreatorDirectoryItem } from "../lib/streamChannel";
 import { getPublishedLiveInputs, publishedLivePlaybackPath, type PublishedLiveInput } from "../lib/streamLive";
 import { streamCategories } from "../lib/streamCategories";
+import { getPopularStreamReviews, toggleStreamReviewLike, type StreamReview } from "../lib/streamReviews";
 
 type StreamItem = {
   id: number;
@@ -75,6 +76,9 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [featureIndex, setFeatureIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [creators, setCreators] = useState<StreamCreatorDirectoryItem[]>([]);
+  const [followedCreators, setFollowedCreators] = useState<Set<string>>(() => new Set());
+  const [savingFollow, setSavingFollow] = useState("");
+  const [reviews, setReviews] = useState<StreamReview[]>([]);
   const [anime, setAnime] = useState<StreamCatalogTitle[]>([]);
   const [downloadingId, setDownloadingId] = useState("");
   const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => new Set());
@@ -104,7 +108,15 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
     return () => { active = false; };
   }, [activeSlug]);
 
-  useEffect(() => { void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([])); void getStreamCreators().then(setCreators).catch(() => setCreators([])); }, []);
+  useEffect(() => {
+    void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([]));
+    void getStreamCreators().then(async (items) => {
+      setCreators(items);
+      const statuses = await Promise.all(items.slice(0, 6).map(async creator => [creator.channel.handle, await getStreamSubscriptionStatus(creator.channel.handle).catch(() => false)] as const));
+      setFollowedCreators(new Set(statuses.filter(([, followed]) => followed).map(([handle]) => handle)));
+    }).catch(() => setCreators([]));
+    void getPopularStreamReviews().then(setReviews).catch(() => setReviews([]));
+  }, []);
   useEffect(() => { void getPublishedLiveInputs().then(items => setLiveNow(items.filter(item => item.processingStatus === "live"))).catch(() => setLiveNow([])); }, []);
   useEffect(() => {
     void getStreamDownloads()
@@ -126,6 +138,25 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   useEffect(() => { if (featuredTitles.length < 2) return; const timer = window.setInterval(() => setFeatureIndex((index) => (index + 1) % featuredTitles.length), 7000); return () => window.clearInterval(timer); }, [featuredTitles.length]);
 
   const featured = featuredTitles[featureIndex] ?? catalog.movies.find((item) => item.backdropUrl);
+  const toggleCreatorFollow = async (handle: string) => {
+    if (savingFollow) return;
+    setSavingFollow(handle);
+    try {
+      if (followedCreators.has(handle)) await unsubscribeFromStreamChannel(handle);
+      else await subscribeToStreamChannel(handle);
+      setFollowedCreators(current => {
+        const next = new Set(current);
+        if (next.has(handle)) next.delete(handle); else next.add(handle);
+        return next;
+      });
+    } finally { setSavingFollow(""); }
+  };
+  const likeReview = async (reviewId: string) => {
+    try {
+      const result = await toggleStreamReviewLike(reviewId);
+      setReviews(current => current.map(review => review._id === reviewId ? { ...review, likes: result.likes } : review));
+    } catch { /* Keep the review readable if a guest cannot react. */ }
+  };
   const downloadFeatured = async () => {
     if (!featured || downloadedIds.has(catalogKey(featured))) return;
     const key = catalogKey(featured);
@@ -220,7 +251,9 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
           ))}
         </section>
 
-        {creators.length ? <section className="stream-creators-row"><div className="stream-row-heading"><h2>SMAJ Creators</h2><Link to="/app/services/stream/creators">See all →</Link></div><div>{creators.slice(0, 10).map((creator) => <Link to={`/app/services/stream/channel/${creator.channel.handle}`} key={creator.creatorId}><img loading="lazy" src={creator.channel.avatarUrl || creator.latestVideos[0]?.thumbnailUrl || ""} alt=""/><b>{creator.channel.name}</b><small>@{creator.channel.handle} · {creator.stats.videos} videos</small></Link>)}</div></section> : null}
+        {creators.length ? <section className="stream-fans-section"><div className="stream-row-heading"><div><h2>More Fans to Follow</h2><p>Discover</p></div><Link to="/app/services/stream/creators">Explore all →</Link></div><div className="stream-fans-rail">{creators.slice(0, 6).map((creator) => <article key={creator.creatorId}><Link to={`/app/services/stream/channel/${creator.channel.handle}`}><img loading="lazy" src={creator.channel.avatarUrl || creator.latestVideos[0]?.thumbnailUrl || ""} alt=""/><span><b>{creator.channel.name}</b><small>@{creator.channel.handle}</small><small>{creator.stats.followers.toLocaleString()} followers</small></span></Link><button type="button" className={followedCreators.has(creator.channel.handle) ? "following" : ""} disabled={savingFollow === creator.channel.handle} onClick={() => void toggleCreatorFollow(creator.channel.handle)}>{followedCreators.has(creator.channel.handle) ? "Following" : "+ Follow"}</button></article>)}</div></section> : null}
+
+        {reviews.length ? <section className="stream-popular-reviews"><div className="stream-row-heading"><div><h2>Popular Reviews</h2><p>Discover</p></div></div><div className="stream-reviews-rail">{reviews.map(review => <article key={review._id}><div className="stream-review-main"><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.posterUrl ? <img loading="lazy" src={review.posterUrl} alt=""/> : <span/>}</Link><div><div className="stream-review-stars" aria-label={`${review.rating} out of 5 stars`}>{"★".repeat(review.rating)}<i>{"☆".repeat(5-review.rating)}</i></div><p>{review.body}</p><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.title}</Link></div></div><footer><span>{review.reviewer.avatarUrl ? <img src={review.reviewer.avatarUrl} alt=""/> : review.reviewer.name.slice(0,1).toUpperCase()}<b>{review.reviewer.name}</b></span><button type="button" onClick={() => void likeReview(review._id)} aria-label="Like review">♡ {review.likes}</button><small>💬 {review.comments}</small></footer></article>)}</div></section> : null}
 
         <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ</strong> Stream</a><p>Watch different. Create freely.</p><div><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Help</a></div></footer>
       </main>
