@@ -8052,7 +8052,12 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 .service-categories-page a small { color: var(--smaj-text-secondary); }
 
 @media (max-width: 1023px) {
-  .mobile-home-shell .discovery-tab-intro { margin-top: 0; padding: 24px 18px; border-radius: 0; }
+  /* Keep discovery headers flush with the tabs when the For You hero is absent. */
+  .mobile-home-shell .discovery-tab-intro {
+    margin-top: 0;
+    padding: 24px 18px;
+    border-radius: 0;
+  }
   .mobile-home-shell .discovery-service-group .mobile-services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .service-discovery-page {
