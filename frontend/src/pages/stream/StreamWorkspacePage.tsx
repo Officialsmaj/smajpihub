@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
@@ -459,6 +460,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
 
 const Detail = ({ series = false }: { series?: boolean }) => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const type = series ? "tv" : "movie";
   const [detail, setDetail] = useState<
     | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: TmdbDetailRaw })
@@ -543,6 +545,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         className="sw-detail-hero tmdb"
         style={detail.backdropUrl ? { backgroundImage: `url(${detail.backdropUrl})` } : undefined}
       >
+        <button className="sw-detail-back" type="button" onClick={() => navigate(-1)} aria-label="Go back">
+          <ArrowBackRoundedIcon />
+        </button>
         <div className="sw-detail-hero-layout">
           {detail.posterUrl ? (
             <img className="sw-detail-poster" src={detail.posterUrl} alt={`${detail.title} poster`} />
@@ -566,16 +571,16 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 <b>{series ? "Created by" : "Directed by"}</b> {creators.map(person => person.name).join(", ")}
               </p>
             ) : null}
-            <div className="sw-detail-actions">
+            <div className={`sw-detail-actions ${playbackId ? "has-playback" : ""}`}>
               {playbackId ? (
                 <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}>
                   <PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}
                 </Link>
               ) : null}
-              <button type="button" disabled={saving} onClick={() => void toggleSaved()}>
-                <BookmarkRoundedIcon /> {saving ? "Saving..." : saved ? "Saved" : "My List"}
+              <button className="sw-detail-list-action" type="button" disabled={saving} onClick={() => void toggleSaved()}>
+                <BookmarkRoundedIcon /> {saving ? "Saving..." : saved ? "In My List" : "Add to List"}
               </button>
-              <button type="button" disabled={downloading} onClick={() => void toggleDownloaded()}>
+              <button className="sw-detail-download-action" type="button" disabled={downloading} onClick={() => void toggleDownloaded()}>
                 <DownloadRoundedIcon /> {downloading ? "Downloading..." : downloaded ? "Downloaded" : "Download"}
               </button>
             </div>
@@ -1267,8 +1272,8 @@ const StreamWorkspacePage = ({ kind }: { kind: StreamPageKind }) => {
     return <Catalogue kind={kind} />;
   })();
   return (
-    <main className="sw-page">
-      {!managementKinds.includes(kind) && !adminKinds.includes(kind) ? <StreamHeader /> : null}
+    <main className={`sw-page ${["movie-detail", "series-detail"].includes(kind) ? "sw-detail-page" : ""}`}>
+      {!managementKinds.includes(kind) && !adminKinds.includes(kind) && !["movie-detail", "series-detail"].includes(kind) ? <StreamHeader /> : null}
       <div className="sw-page-content">{content}</div>
     </main>
   );

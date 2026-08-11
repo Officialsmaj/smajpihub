@@ -6,6 +6,51 @@
   font-family: Arial, sans-serif;
 }
 
+/* Immersive movie and series detail */
+.sw-detail-page {
+  background: #0b0b0f;
+}
+.sw-detail-page .sw-page-content {
+  max-width: none;
+  padding-top: 0;
+}
+.sw-detail-back {
+  position: absolute;
+  top: 24px;
+  left: max(24px, env(safe-area-inset-left));
+  z-index: 4;
+  width: 58px;
+  height: 58px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center;
+  border: 1px solid #ffffff26 !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  background: #17131a99 !important;
+  box-shadow: 0 8px 25px #0005;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+.sw-detail-back svg {
+  width: 31px;
+  height: 31px;
+}
+.sw-detail-list-action {
+  color: #17131a !important;
+  background: #fff !important;
+}
+.sw-detail-download-action {
+  border: 1px solid #ffffff40 !important;
+  color: #fff !important;
+  background: #ffffff20 !important;
+  backdrop-filter: blur(8px);
+}
+.sw-detail-actions button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
 .sw-hub-back {
   padding: 8px 10px;
   border: 1px solid #e4dbea;
@@ -2007,6 +2052,116 @@
   .sw-watch,.sw-watch.youtube,.sw-watch.real{margin-left:-14px;margin-right:-14px}
   .sw-watch-info{padding:16px 15px 22px}
   .sw-detail-hero{background-position:center top}
+}
+
+@media (max-width: 700px) {
+  .sw-detail-page .sw-page-content {
+    padding: 0;
+  }
+  .sw-detail-page .sw-detail-hero.tmdb {
+    min-height: 100svh;
+    margin: 0;
+    padding: max(82px, env(safe-area-inset-top)) 24px 34px;
+    align-items: flex-end;
+    background-position: center top;
+  }
+  .sw-detail-page .sw-detail-hero.tmdb:after {
+    background:
+      linear-gradient(0deg, #18101b 0%, #24121ee8 28%, #160d1678 58%, #08050818 82%),
+      linear-gradient(90deg, #0805081f, transparent 45%, #08050826);
+  }
+  .sw-detail-back {
+    top: max(18px, env(safe-area-inset-top));
+    left: 18px;
+    width: 54px;
+    height: 54px !important;
+  }
+  .sw-detail-page .sw-detail-hero-layout {
+    display: block;
+    width: 100%;
+  }
+  .sw-detail-page .sw-detail-poster {
+    display: none;
+  }
+  .sw-detail-page .sw-detail-copy {
+    width: 100%;
+    text-align: center;
+  }
+  .sw-detail-page .sw-detail-copy > span {
+    display: inline-block;
+  }
+  .sw-detail-page .sw-detail-hero h1 {
+    max-width: 360px;
+    margin: 12px auto 8px;
+    font-size: clamp(44px, 14vw, 68px);
+    line-height: .92;
+    letter-spacing: -.055em;
+    text-wrap: balance;
+  }
+  .sw-detail-page .sw-detail-tagline {
+    margin: 0 auto 8px !important;
+    font-size: 16px;
+  }
+  .sw-detail-page .sw-match {
+    margin: 8px 0;
+    color: #f4edf5;
+    font-size: 13px;
+  }
+  .sw-detail-page .sw-detail-genres {
+    justify-content: center;
+  }
+  .sw-detail-page .sw-detail-copy > p:not(.sw-match):not(.sw-detail-tagline):not(.sw-detail-credits) {
+    display: -webkit-box;
+    margin: 16px 0 0;
+    overflow: hidden;
+    color: #eee7ef;
+    font-size: 14px;
+    text-align: left;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  .sw-detail-page .sw-detail-credits {
+    margin: 8px 0 0;
+    text-align: left;
+  }
+  .sw-detail-page .sw-detail-actions,
+  .sw-detail-page .sw-detail-actions.has-playback {
+    width: 100%;
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .sw-detail-page .sw-detail-actions a,
+  .sw-detail-page .sw-detail-actions button {
+    width: 100%;
+    height: 56px;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 17px;
+  }
+  .sw-detail-page .sw-detail-actions a.primary {
+    color: #fff;
+    background: #7a38c5;
+  }
+  .sw-detail-page .sw-detail-watch-note.unavailable {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px 15px;
+    border-style: dashed;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .sw-detail-page .sw-detail-info {
+    margin: 0;
+    padding: 34px 24px 60px;
+    color: #f7f4fa;
+    background: #18101b;
+  }
+  .sw-detail-page .sw-detail-info aside {
+    border-color: #ffffff18;
+    background: #ffffff0a;
+  }
 }
 
 /* Stream color tokens and final contrast safeguards */
