@@ -461,7 +461,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
         ))}
       </nav> : null}
       {!isStreamImmersive ? <CommunityFollowPrompt /> : null}
-      {!isStreamImmersive && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
+      {!isStreamShell && !isStreamImmersive && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
         <aside className={`live-activity-float ${liveFeedOpen ? "open" : ""}`} aria-label="Live activity">
           {liveFeedOpen ? (
             <section className="live-activity-panel" aria-live="polite">

@@ -196,7 +196,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
 
   const experience = (
     <>
-      {catalogLoading ? (
+      {catalogLoading && activeSlug === "trending" ? (
         <div className="stream-opening-loader" role="status" aria-live="polite" aria-label="Opening SMAJ Stream">
           <div className="stream-opening-loader-content">
             <div className="stream-opening-mark"><i /><i /><span><PlayArrowRoundedIcon /></span></div>
