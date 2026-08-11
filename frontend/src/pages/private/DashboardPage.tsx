@@ -279,7 +279,6 @@ const TrendingMobileContent = ({ products, productsLoading, productsError, strea
   <>
     <section className="mobile-feed-section discovery-tab-intro"><span>POPULAR NOW</span><h1>See what is happening across SMAJ</h1><p>Popular services, searches, entertainment, sports, and events in one live view.</p></section>
     <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Popular in SMAJ</h2><Link to="/app/services">See all</Link></div><p className="discovery-section-note">Beta ranking based on the services people explore most.</p><ServiceList services={trendingSlugs.slice(0, 6).map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[]} mode="mobile" /></section>
-    <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Popular searches</h2></div><div className="mobile-suggestion-grid">{popularSearches.map((item) => <Link to={`/store?search=${encodeURIComponent(item)}`} key={item}><span>{item}</span><SearchOutlinedIcon /></Link>)}</div></section>
     <DashboardStreamSections rows={streamRows.filter((row) => row.title === "Trending now")} loading={streamLoading} compact />
     <DashboardSportsSection catalog={sportsCatalog} loading={sportsLoading} compact />
     <RecentlyAddedSection compact products={products.slice(0, 3)} loading={productsLoading} error={productsError} />
@@ -308,7 +307,6 @@ const DesktopDiscoveryContent = ({ activeTab, products, productsLoading, product
   if (activeTab === "trending") return <>
     <section className="desktop-feed-section discovery-tab-intro"><span>POPULAR NOW</span><h1>See what is happening across SMAJ</h1><p>Popular services, searches, entertainment, sports, and events in one live view.</p></section>
     <section className="desktop-feed-section"><div className="desktop-feed-section-head"><div><h2>Popular in SMAJ</h2><p>Beta ranking based on the services people explore most.</p></div><Link to="/app/services">See all</Link></div><ServiceList services={trendingSlugs.slice(0, 6).map((slug) => serviceCatalog.find((service) => service.slug === slug)).filter(Boolean) as ServiceDefinition[]} mode="desktop" /></section>
-    <PopularSearchSection />
     <DashboardStreamSections rows={streamRows.filter((row) => row.title === "Trending now")} loading={streamLoading} compact={false} />
     <DashboardSportsSection catalog={sportsCatalog} loading={sportsLoading} compact={false} />
     <RecentlyAddedSection products={products.slice(0, 6)} loading={productsLoading} error={productsError} />
@@ -406,7 +404,6 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
     </section> : null}
     <div ref={tabsAnchorRef} className={`mobile-home-tabs-anchor ${tabsPinned ? "is-pinned" : ""}`}><DiscoveryTabButtons className="mobile-home-tabs" activeTab={activeTab} onTabChange={handleTabChange} /></div>
     {activeTab === "for-you" ? <>
-      <ContinueSection compact items={recentItems} />
       <RecentlyAddedSection compact products={products} loading={productsLoading} error={productsError} />
       <FeaturedSellersSection compact sellers={sellers} loading={productsLoading} error={productsError} />
       <RecommendedSection compact services={recommendedServices} />
