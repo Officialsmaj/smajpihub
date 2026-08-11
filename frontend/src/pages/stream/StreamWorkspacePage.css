@@ -1026,9 +1026,10 @@
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #e4dce9;
+  border: 1px solid rgba(255,255,255,.1);
   border-radius: 13px;
-  background: #fff;
+  color: #fff;
+  background: #17171d;
 }
 .sw-seasons img {
   width: 64px;
@@ -2550,7 +2551,7 @@
 .sw-search-settings-sheet header button { grid-column:3; width:42px; height:42px; padding:0; display:grid; place-items:center; color:#fff; background:transparent; border:0; cursor:pointer; }
 .sw-search-settings-sheet h3 { margin:28px 0 18px; color:#f2aa00; font-size:21px; }
 .sw-search-settings-sheet label { min-height:66px; display:flex; align-items:center; justify-content:space-between; gap:20px; color:#fff; font-size:20px; cursor:pointer; }
-.sw-search-settings-sheet input { width:28px; height:28px; accent-color:#eda900; cursor:pointer; }
+.sw-search-settings-sheet input { width:28px; height:28px; accent-color:#d9c4ff; cursor:pointer; }
 @keyframes sw-search-fade { from { opacity:0; } }
 @keyframes sw-search-sheet { from { transform:translateY(100%); } }
 
