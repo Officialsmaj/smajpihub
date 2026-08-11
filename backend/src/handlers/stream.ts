@@ -664,7 +664,7 @@ const mountStreamEndpoints = (router: Router) => {
     const reviewer = {
       id: String(user._id),
       name: user.displayName || user.username || user.piUsername || "SMAJ viewer",
-      avatarUrl: user.avatarUrl || "",
+      avatarUrl: user.avatar || "",
     };
     await req.app.locals.streamReviewCollection.updateOne(
       { userId: String(user._id), mediaType, tmdbId },
