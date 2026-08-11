@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
@@ -43,14 +43,10 @@ const links = [
   ["Creators", "/app/services/stream/creators"],
 ] as const;
 
-const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
-  const [localSearch, setLocalSearch] = useState({ locationSearch: "", value: "" });
+const StreamHeader = (_props: StreamHeaderProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const navigate = useNavigate();
   const location = useLocation();
-  const urlQuery = new URLSearchParams(location.search).get("q") || "";
-  const value = query ?? (localSearch.locationSearch === location.search ? localSearch.value : urlQuery);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -75,17 +71,6 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
     };
   }, [menuOpen]);
 
-  const changeQuery = (next: string) => {
-    setLocalSearch({ locationSearch: location.search, value: next });
-    onQueryChange?.(next);
-  };
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const term = value.trim();
-    navigate(`/app/services/stream/search${term ? `?q=${encodeURIComponent(term)}` : ""}`);
-  };
-
   return (
     <>
       <header className="stream-global-header">
@@ -96,17 +81,9 @@ const StreamHeader = ({ query, onQueryChange }: StreamHeaderProps) => {
           <Link className="stream-global-title" to="/app/services/stream">
             Stream
           </Link>
-          <form className="stream-global-search" role="search" onSubmit={submit}>
+          <Link className="stream-global-search-button" to="/app/services/stream/search" aria-label="Open Stream search">
             <SearchRoundedIcon />
-            <input
-              type="search"
-              enterKeyHint="search"
-              value={value}
-              onChange={event => changeQuery(event.target.value)}
-              placeholder="Search movies, series and creators"
-              aria-label="Search SMAJ Stream"
-            />
-          </form>
+          </Link>
           <button
             className="stream-global-menu-button"
             type="button"

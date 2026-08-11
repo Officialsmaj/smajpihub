@@ -43,3 +43,24 @@
   -webkit-box-shadow:0 0 0 1000px #17171d inset !important;
   caret-color:#fff;
 }
+
+.stream-global-search-button{
+  width:40px;
+  height:40px;
+  margin-left:auto;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  color:#d2cad8;
+  background:#17171d;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  text-decoration:none;
+}
+.stream-global-search-button:hover,
+.stream-global-search-button:focus-visible{
+  color:#fff;
+  border-color:#9b62e8;
+  outline:none;
+}
+.stream-global-search-button svg{font-size:22px}

@@ -563,12 +563,6 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
           <small>{remoteTitles?.length || 0} titles loaded</small>
         </div>
       ) : null}
-      <p className="sw-attribution">
-        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
-          TMDB
-        </a>{" "}
-         -  This product uses the TMDB API but is not endorsed or certified by TMDB.
-      </p>
     </>
   );
 };
@@ -795,12 +789,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           ))}
         </div>
       </section>
-      <p className="sw-attribution">
-        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
-          TMDB
-        </a>{" "}
-         -  This product uses the TMDB API but is not endorsed or certified by TMDB.
-      </p>
     </>
   );
 };
