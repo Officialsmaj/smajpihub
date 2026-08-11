@@ -177,6 +177,7 @@ type StreamSearchSettings = {
 };
 
 const defaultSearchSettings: StreamSearchSettings = { movies: true, series: true, postersOnly: true, creators: true };
+const streamSearchPrompts = ["Search Superman", "Search Spider-Man", "Search Moana", "Search movies and series", "Search people and creators"];
 
 const StreamSearchPage = () => {
   const navigate = useNavigate();
@@ -186,6 +187,7 @@ const StreamSearchPage = () => {
   const [channels, setChannels] = useState<StreamCreatorDirectoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [promptIndex, setPromptIndex] = useState(0);
   const [settings, setSettings] = useState<StreamSearchSettings>(() => {
     try {
       return { ...defaultSearchSettings, ...JSON.parse(window.localStorage.getItem("smaj_stream_search_settings") || "{}") };
@@ -197,6 +199,12 @@ const StreamSearchPage = () => {
   useEffect(() => {
     window.localStorage.setItem("smaj_stream_search_settings", JSON.stringify(settings));
   }, [settings]);
+
+  useEffect(() => {
+    if (query) return;
+    const timer = window.setInterval(() => setPromptIndex(index => (index + 1) % streamSearchPrompts.length), 3000);
+    return () => window.clearInterval(timer);
+  }, [query]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -253,7 +261,8 @@ const StreamSearchPage = () => {
       </header>
       <div className="sw-search-field">
         <SearchRoundedIcon />
-        <input autoFocus type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search for titles, people, and more" aria-label="Search titles and creators" />
+        <input autoFocus type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="" aria-label="Search titles and creators" />
+        {!query ? <span className="sw-search-rotating-prompt" key={promptIndex}>{streamSearchPrompts[promptIndex]}</span> : null}
         {query ? <button type="button" onClick={() => setQuery("")} aria-label="Clear search"><CloseRoundedIcon /></button> : null}
         <button className="filter" type="button" onClick={() => setSettingsOpen(true)} aria-label="Open search settings"><TuneRoundedIcon /></button>
       </div>

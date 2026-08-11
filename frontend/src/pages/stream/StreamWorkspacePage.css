@@ -2426,14 +2426,15 @@
 .sw-search-screen-head h1 { margin: 0; color: #fff; font-size: 26px; text-align: center; }
 .sw-search-screen-head button { width: 48px; height: 48px; padding: 0; display: grid; place-items: center; color: #fff; background: transparent; border: 0; cursor: pointer; }
 .sw-search-screen-head button svg { font-size: 35px; }
-.sw-search-field { min-height: 66px; margin-top: 36px; padding: 0 16px; display: grid; grid-template-columns:auto 1fr auto auto; gap: 11px; align-items:center; color:#d8d8d8; background:#292929; border:3px solid #f2f2f2; border-radius:7px; }
+.sw-search-field { position:relative; min-height: 72px; margin-top: 36px; padding: 0 18px; display: grid; grid-template-columns:auto 1fr auto auto; gap: 11px; align-items:center; color:#d8d8d8; background:#292929; border:3px solid #f2f2f2; border-radius:7px; overflow:hidden; }
 .sw-search-field>svg { font-size: 29px; }
 .sw-search-field input { min-width:0; height:60px; padding:0; color:#fff; background:transparent; border:0; outline:0; font:inherit; font-size:23px; }
 .sw-search-field input::placeholder { color:#a9a9ad; opacity:1; }
 .sw-search-field input::-webkit-search-cancel-button { display:none; }
+.sw-search-rotating-prompt { position:absolute; left:58px; right:72px; top:50%; overflow:hidden; color:#b2b0b4 !important; font-size:23px; line-height:1.15; white-space:nowrap; text-overflow:ellipsis; pointer-events:none; transform:translateY(-50%); animation:sw-search-prompt-up .38s ease-out; }
 .sw-search-field button { width:34px; height:42px; padding:0; display:grid; place-items:center; color:#ddd; background:transparent; border:0; cursor:pointer; }
 .sw-search-field button:not(.filter) svg { padding:2px; color:#252525; background:#f4f4f4; border-radius:50%; font-size:22px; }
-.sw-search-field button.filter { margin-left:4px; border-left:1px solid #555; }
+.sw-search-field button.filter { grid-column:4; margin-left:4px; border-left:1px solid #555; }
 .sw-search-field button.filter svg { font-size:27px; }
 .sw-search-title-results,.sw-search-channel-results { margin-top:92px; }
 .sw-search-title-results h2,.sw-search-channel-results h2 { margin:0 0 14px; color:#fff; font-size:31px; }
@@ -2447,6 +2448,7 @@
 .sw-search-loading { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; }
 .sw-search-loading i { aspect-ratio:2/3; border-radius:13px; background:linear-gradient(100deg,#202020 30%,#333 48%,#202020 68%); background-size:220% 100%; animation:sw-search-shimmer 1.2s infinite linear; }
 @keyframes sw-search-shimmer { to { background-position-x:-220%; } }
+@keyframes sw-search-prompt-up { from { opacity:0; transform:translateY(35%); } to { opacity:1; transform:translateY(-50%); } }
 .sw-search-empty { padding:50px 0; color:#bbb; text-align:center; }
 .sw-search-channel-results { margin-top:45px; }
 .sw-search-channel-results>div { display:flex; gap:18px; overflow:auto; }
@@ -2467,15 +2469,16 @@
 @keyframes sw-search-sheet { from { transform:translateY(100%); } }
 
 @media(max-width:700px){
-  .sw-search-screen { padding:18px 20px 55px; }
+  .sw-search-screen { padding:18px 14px 55px; }
   .sw-search-screen-head { grid-template-columns:44px 1fr 44px; }
   .sw-search-screen-head h1 { font-size:25px; }
-  .sw-search-field { min-height:64px; margin-top:44px; padding:0 12px; gap:8px; }
-  .sw-search-field input { height:58px; font-size:21px; }
-  .sw-search-title-results { margin-top:92px; }
+  .sw-search-field { min-height:70px; margin-top:44px; padding:0 14px; gap:9px; }
+  .sw-search-field input { height:64px; font-size:21px; }
+  .sw-search-rotating-prompt { left:48px; right:66px; font-size:20px; }
+  .sw-search-title-results { margin-top:96px; }
   .sw-search-channel-results+.sw-search-title-results { margin-top:42px; }
   .sw-search-title-results h2,.sw-search-channel-results h2 { font-size:29px; }
-  .sw-search-poster-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px 13px; }
+  .sw-search-poster-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px 10px; }
   .sw-search-poster-grid>a>span { border-radius:12px; }
   .sw-search-poster-grid strong { font-size:16px; }
   .sw-search-poster-grid small { font-size:15px; }
