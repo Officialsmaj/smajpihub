@@ -56,6 +56,7 @@ const StreamPublicChannel = () => {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const channelStats = data.stats || { followers: 0, videos: data.videos.length, live: data.live.length, joinedAt: null };
   return (
     <section className="sw-public-channel">
       <div
@@ -82,7 +83,7 @@ const StreamPublicChannel = () => {
           {followState === "saving" ? "Saving..." : following ? "Following" : "Follow"}
         </button>
       </header>
-      <div className="sw-public-channel-stats"><span><b>{data.stats.followers.toLocaleString()}</b> followers</span><span><b>{data.stats.videos}</b> videos</span><span><b>{data.stats.live}</b> live</span>{data.stats.joinedAt ? <span><b>{new Date(data.stats.joinedAt).getFullYear()}</b> joined</span> : null}</div>
+      <div className="sw-public-channel-stats"><span><b>{Number(channelStats.followers || 0).toLocaleString()}</b> followers</span><span><b>{channelStats.videos}</b> videos</span><span><b>{channelStats.live}</b> live</span>{channelStats.joinedAt ? <span><b>{new Date(channelStats.joinedAt).getFullYear()}</b> joined</span> : null}</div>
       <nav aria-label="Channel sections">
         {(["posts", "videos", "live", "about"] as const).map(item => (
           <button type="button" className={tab === item ? "active" : ""} onClick={() => setTab(item)} key={item}>

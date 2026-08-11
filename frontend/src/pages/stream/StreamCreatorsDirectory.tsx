@@ -48,15 +48,15 @@ const StreamCreatorsDirectory = () => {
       .toLowerCase()
       .includes(needle);
     if (!matchesQuery) return false;
-    if (filter === "live") return creator.stats.live > 0;
+    if (filter === "live") return (creator.stats?.live || 0) > 0;
     if (filter === "following") return following.has(creator.channel.handle);
     return true;
   }).sort((left, right) => {
-    if (filter === "new") return String(right.stats.latestAt || "").localeCompare(String(left.stats.latestAt || ""));
-    if (filter === "popular" || sort === "followers") return right.stats.followers - left.stats.followers;
-    if (sort === "videos") return right.stats.videos - left.stats.videos;
-    if (sort === "active") return String(right.stats.latestAt || "").localeCompare(String(left.stats.latestAt || ""));
-    return (right.stats.followers + right.stats.videos * 3 + right.stats.live * 8) - (left.stats.followers + left.stats.videos * 3 + left.stats.live * 8);
+    if (filter === "new") return String(right.stats?.latestAt || "").localeCompare(String(left.stats?.latestAt || ""));
+    if (filter === "popular" || sort === "followers") return (right.stats?.followers || 0) - (left.stats?.followers || 0);
+    if (sort === "videos") return (right.stats?.videos || 0) - (left.stats?.videos || 0);
+    if (sort === "active") return String(right.stats?.latestAt || "").localeCompare(String(left.stats?.latestAt || ""));
+    return ((right.stats?.followers || 0) + (right.stats?.videos || 0) * 3 + (right.stats?.live || 0) * 8) - ((left.stats?.followers || 0) + (left.stats?.videos || 0) * 3 + (left.stats?.live || 0) * 8);
   });
 
   const toggleFollow = async (creator: StreamCreatorDirectoryItem) => {
@@ -72,7 +72,7 @@ const StreamCreatorsDirectory = () => {
         if (next.has(handle)) next.delete(handle); else next.add(handle);
         return next;
       });
-      setCreators(current => current?.map(item => item.creatorId === creator.creatorId ? { ...item, stats: { ...item.stats, followers: Math.max(0, item.stats.followers + (following.has(handle) ? -1 : 1)) } } : item) || []);
+      setCreators(current => current?.map(item => item.creatorId === creator.creatorId ? { ...item, stats: { videos: item.stats?.videos || 0, live: item.stats?.live || 0, latestAt: item.stats?.latestAt || null, followers: Math.max(0, (item.stats?.followers || 0) + (following.has(handle) ? -1 : 1)) } } : item) || []);
     } catch {
       setFollowError("This channel could not be followed. You may be viewing your own channel.");
     } finally { setSavingFollow(""); }
@@ -107,7 +107,7 @@ const StreamCreatorsDirectory = () => {
                 <span className="sw-creator-avatar">
                   {creator.channel.avatarUrl ? <img src={creator.channel.avatarUrl} alt="" /> : initialsFor(creator.channel.name)}
                 </span>
-                {creator.stats.live ? <b>LIVE</b> : null}
+                {creator.stats?.live ? <b>LIVE</b> : null}
               </Link>
               <div className="sw-creator-card-body">
                 <Link to={`/app/services/stream/channel/${creator.channel.handle}`}>
@@ -118,10 +118,10 @@ const StreamCreatorsDirectory = () => {
               </div>
               <p>{creator.channel.description || "This creator has not added a channel description yet."}</p>
               <div className="sw-creator-stats">
-                <span><b>{creator.stats.followers.toLocaleString()}</b> followers</span>
-                <span><b>{creator.stats.videos}</b> videos</span>
-                <span><b>{creator.stats.live}</b> live</span>
-                {creator.stats.latestAt ? <span>Latest {new Date(creator.stats.latestAt).toLocaleDateString()}</span> : null}
+                <span><b>{Number(creator.stats?.followers || 0).toLocaleString()}</b> followers</span>
+                <span><b>{creator.stats?.videos || 0}</b> videos</span>
+                <span><b>{creator.stats?.live || 0}</b> live</span>
+                {creator.stats?.latestAt ? <span>Latest {new Date(creator.stats.latestAt).toLocaleDateString()}</span> : null}
               </div>
               {creator.latestVideos.length ? (
                 <div className="sw-creator-latest">
