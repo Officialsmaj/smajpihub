@@ -10,7 +10,6 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import SubscriptionsOutlinedIcon from "@mui/icons-material/SubscriptionsOutlined";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import VideoCallRoundedIcon from "@mui/icons-material/VideoCallRounded";
-import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import FamilyRestroomRoundedIcon from "@mui/icons-material/FamilyRestroomRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
@@ -133,9 +132,6 @@ const StreamHeader = (props: StreamHeaderProps) => {
             </header>
             <section>
               <b>YOUR STREAM</b>
-              <Link to="/app/services/stream/downloads">
-                <BookmarkBorderRoundedIcon /> Downloads
-              </Link>
               <Link to="/app/services/stream/my-list">
                 <BookmarkBorderRoundedIcon /> My List
               </Link>
@@ -155,13 +151,7 @@ const StreamHeader = (props: StreamHeaderProps) => {
                 <VideoCallRoundedIcon /> Creators
               </Link>
               <Link to="/app/services/stream/studio">
-                <VideoCallRoundedIcon /> Creator Studio
-              </Link>
-              <Link to="/app/services/stream/studio/upload">
-                <UploadRoundedIcon /> Add video
-              </Link>
-              <Link to="/app/services/stream/studio/content">
-                <PlayArrowRoundedIcon /> Content Manager
+                <VideoCallRoundedIcon /> Creator Dashboard
               </Link>
             </section>
             <section>
