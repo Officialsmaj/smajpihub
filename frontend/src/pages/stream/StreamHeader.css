@@ -44,23 +44,78 @@
   caret-color:#fff;
 }
 
-.stream-global-search-button{
+.stream-global-search-button,
+.stream-global-cast-button{
   width:40px;
   height:40px;
-  margin-left:auto;
   flex:0 0 auto;
   display:grid;
   place-items:center;
-  color:#d2cad8;
-  background:#17171d;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:10px;
-  text-decoration:none;
-}
-.stream-global-search-button:hover,
-.stream-global-search-button:focus-visible{
+  padding:0;
   color:#fff;
-  border-color:#9b62e8;
-  outline:none;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  text-decoration:none;
+  cursor:pointer;
 }
-.stream-global-search-button svg{font-size:22px}
+.stream-global-search-button{margin-left:auto}
+.stream-global-search-button:hover,
+.stream-global-search-button:focus-visible,
+.stream-global-cast-button:hover,
+.stream-global-cast-button:focus-visible{
+  color:#fff;
+  opacity:.72;
+  outline:2px solid transparent;
+}
+.stream-global-search-button svg{font-size:30px}
+.stream-global-cast-button svg{font-size:31px}
+
+.stream-cast-layer{
+  position:fixed;
+  inset:0;
+  z-index:600;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(0,0,0,.72);
+}
+
+.stream-cast-sheet{
+  position:relative;
+  width:min(620px,100%);
+  min-height:390px;
+  padding:72px 38px calc(42px + env(safe-area-inset-bottom));
+  color:#fff;
+  background:#050505;
+  border-radius:28px 28px 0 0;
+  text-align:center;
+  box-shadow:0 -18px 46px rgba(0,0,0,.45);
+}
+
+.stream-cast-close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  padding:0;
+  color:#aaa;
+  background:transparent;
+  border:0;
+  cursor:pointer;
+}
+
+.stream-cast-close svg{font-size:38px}
+.stream-cast-mark{display:none!important}
+.stream-cast-sheet h2{margin:0 0 10px;font-size:28px;line-height:1.15}
+.stream-cast-sheet p{max-width:500px;margin:0 auto 52px;color:#e2dde5;font-size:21px;line-height:1.42}
+.stream-cast-sheet>a{color:#c99cff;font-size:20px;text-decoration:none}
+
+@media(max-width:600px){
+  .stream-cast-sheet{min-height:40dvh;padding:68px 28px calc(36px + env(safe-area-inset-bottom))}
+  .stream-cast-sheet h2{font-size:27px}
+  .stream-cast-sheet p{margin-bottom:48px;font-size:19px;line-height:1.42}
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CastConnectedRoundedIcon from "@mui/icons-material/CastConnectedRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
@@ -43,13 +44,18 @@ const links = [
   ["Creators", "/app/services/stream/creators"],
 ] as const;
 
-const StreamHeader = (_props: StreamHeaderProps) => {
+const StreamHeader = (props: StreamHeaderProps) => {
+  void props;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [castOpen, setCastOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const location = useLocation();
 
   useEffect(() => {
+    // Route changes dismiss transient header layers.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(false);
+    setCastOpen(false);
   }, [location.pathname, location.search]);
 
   useEffect(() => {
@@ -58,18 +64,18 @@ const StreamHeader = (_props: StreamHeaderProps) => {
   }, [location.pathname, location.search]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !castOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") { setMenuOpen(false); setCastOpen(false); }
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [menuOpen]);
+  }, [castOpen, menuOpen]);
 
   return (
     <>
@@ -84,6 +90,9 @@ const StreamHeader = (_props: StreamHeaderProps) => {
           <Link className="stream-global-search-button" to="/app/services/stream/search" aria-label="Open Stream search">
             <SearchRoundedIcon />
           </Link>
+          <button className="stream-global-cast-button" type="button" onClick={() => setCastOpen(true)} aria-label="Find casting devices">
+            <CastConnectedRoundedIcon />
+          </button>
           <button
             className="stream-global-menu-button"
             type="button"
@@ -169,6 +178,28 @@ const StreamHeader = (_props: StreamHeaderProps) => {
               <Link to="/app/services">&lt;- Back to SMAJ Hub</Link>
             </section>
           </aside>
+        </div>
+      ) : null}
+      {castOpen ? (
+        <div
+          className="stream-cast-layer"
+          role="presentation"
+          onMouseDown={(event) => event.target === event.currentTarget && setCastOpen(false)}
+        >
+          <section className="stream-cast-sheet" role="dialog" aria-modal="true" aria-labelledby="stream-cast-title">
+            <button className="stream-cast-close" type="button" onClick={() => setCastOpen(false)} aria-label="Close casting panel">
+              <CloseRoundedIcon />
+            </button>
+            <CastConnectedRoundedIcon className="stream-cast-mark" />
+            <h2 id="stream-cast-title">No Devices Found</h2>
+            <p>
+              Make sure your smart TV, streaming device, and mobile device are all on the same WiFi network. If you need help,
+              please visit our Help Center.
+            </p>
+            <Link to="/app/help-center" onClick={() => setCastOpen(false)}>
+              Need Help?
+            </Link>
+          </section>
         </div>
       ) : null}
     </>
