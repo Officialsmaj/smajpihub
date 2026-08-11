@@ -498,7 +498,7 @@ const Catalogue = ({ kind }: { kind: StreamPageKind }) => {
         <h1>{heading}</h1>
         <p>{description}</p>
       </header>
-      {kind !== "search" ? (
+      {!(["search", "my-list", "downloads"] as StreamPageKind[]).includes(kind) ? (
         <div className="sw-toolbar">
           <div>
             {filterLabels.map(item => (
