@@ -20213,12 +20213,30 @@ svg {
 }
 
 .stream-title-immersive-shell .private-content {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 100dvh;
   padding: 0 !important;
+  overflow: visible !important;
 }
 
 .stream-title-immersive-shell .private-tab-page {
   width: 100%;
+  max-width: none;
   min-height: 100dvh;
+}
+
+.stream-title-immersive-shell > .private-body,
+.stream-title-immersive-shell > .private-body.private-body-collapsed {
+  width: 100%;
+  min-height: 100dvh;
+  display: block;
+  grid-template-columns: minmax(0, 1fr) !important;
+  padding: 0 !important;
+}
+
+.stream-title-immersive-shell :is(.private-sidebar,.private-overlay,.mobile-bottom-nav) {
+  display: none !important;
 }
 
 @media (max-width: 1023px) {
