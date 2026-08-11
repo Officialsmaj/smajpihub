@@ -20930,3 +20930,24 @@ svg {
   .pi-handoff-modal > p { margin-bottom: 20px; }
   .pi-handoff-actions { grid-template-columns: 1fr; }
 }
+.stream-private-shell .mobile-bottom-nav {
+  color: #918b98;
+  background: rgba(5, 5, 7, .98);
+  border-top-color: rgba(255, 255, 255, .09);
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, .38);
+  backdrop-filter: blur(18px);
+}
+
+.stream-private-shell .mobile-bottom-nav a.active,
+.stream-private-shell .mobile-bottom-nav button.active {
+  color: #c99cff;
+}
+
+.stream-private-shell .mobile-bottom-nav a.active svg,
+.stream-private-shell .mobile-bottom-nav button.active svg {
+  background: rgba(139, 77, 227, .22);
+}
+
+.stream-private-shell .mobile-bottom-nav-badge {
+  border-color: #050507;
+}
