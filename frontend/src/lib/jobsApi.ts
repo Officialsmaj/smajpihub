@@ -42,7 +42,9 @@ export type JobsProfile = {
   availability: string;
   portfolio: string;
   summary: string;
-};
+  updatedAt?: string;
+} & Partial<JobsPreferences>;
+export type JobsPreferences = { jobsMode: "candidate" | "employer" | "both"; minimumPayUsdt: number; payPeriod: "hour" | "day" | "week" | "month" | "year"; preferredLocations: string[]; remotePreference: "all" | "remote" | "onsite"; openToAnywhere: boolean; preferredTitles: string[]; preferredCategories: string[] };
 export type JobsMetrics = { opportunities: number; verifiedEmployers: number; remotePercent: number };
 export type JobsPagination = { page: number; pageSize: number; total: number; pages: number };
 
@@ -114,6 +116,8 @@ export const getJobsProfile = async () =>
   (await axiosClient.get<{ profile: JobsProfile | null }>("/jobs/profile")).data.profile;
 export const saveJobsProfile = async (profile: JobsProfile) =>
   (await axiosClient.put<{ profile: JobsProfile }>("/jobs/profile", profile)).data.profile;
+export const saveJobsPreferences = async (preferences: JobsPreferences) =>
+  (await axiosClient.patch<{ preferences: JobsPreferences }>("/jobs/preferences", preferences)).data.preferences;
 export const enrollEmployer = async () => (await axiosClient.post<{ role: string }>("/jobs/employer/enroll")).data;
 export const createJobCompany = async (company: { name: string; field: string }) =>
   (await axiosClient.post<{ company: JobsApiCompany }>("/jobs/companies", company)).data.company;

@@ -35,6 +35,8 @@ import "./JobsPage.css";
 import { JOB_CATEGORIES, JOB_COUNTRIES } from "../../content/jobOptions";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { PI_USDT_RATE, piFromUsdt } from "../../lib/piPricing";
+import { useAuthContext } from "../../contexts/AuthContext";
+import JobPreferencesPanel from "./JobPreferencesPanel";
 
 export type JobsPageKind =
   | "home"
@@ -171,6 +173,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
 );
 
 const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
+  const { user } = useAuthContext();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("All");
@@ -434,6 +437,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               </aside>
             </section>
+            {user && !loading ? <JobPreferencesPanel key={profile?.updatedAt || profile?.jobsMode || "new"} userName={user.displayName || user.piUsername || user.username || "Pioneer"} profile={profile} jobs={jobs} onSaved={preferences => setProfile(current => ({ ...(current || { title: "", skills: [], location: "", availability: "", portfolio: "", summary: "" }), ...preferences }))} /> : null}
             <section className="jobs-section">
               <header>
                 <div>

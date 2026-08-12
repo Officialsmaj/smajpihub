@@ -507,6 +507,26 @@ export default function mountJobsEndpoints(router: Router) {
     });
     res.json({ profile: serializeJobDocument(profile) });
   });
+  router.patch("/preferences", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const jobsMode = ["candidate", "employer", "both"].includes(req.body?.jobsMode) ? req.body.jobsMode : "candidate";
+    const preferences = {
+      jobsMode,
+      minimumPayUsdt: Math.max(0, Number(req.body?.minimumPayUsdt) || 0),
+      payPeriod: ["hour", "day", "week", "month", "year"].includes(req.body?.payPeriod) ? req.body.payPeriod : "hour",
+      preferredLocations: Array.isArray(req.body?.preferredLocations) ? req.body.preferredLocations.map((value: unknown) => String(value).trim().slice(0, 120)).filter(Boolean).slice(0, 5) : [],
+      remotePreference: ["all", "remote", "onsite"].includes(req.body?.remotePreference) ? req.body.remotePreference : "all",
+      openToAnywhere: Boolean(req.body?.openToAnywhere),
+      preferredTitles: Array.isArray(req.body?.preferredTitles) ? req.body.preferredTitles.map((value: unknown) => String(value).trim().slice(0, 120)).filter(Boolean).slice(0, 10) : [],
+      preferredCategories: Array.isArray(req.body?.preferredCategories) ? req.body.preferredCategories.map((value: unknown) => String(value).trim().slice(0, 80)).filter(Boolean).slice(0, 10) : [],
+      updatedAt: new Date().toISOString(),
+    };
+    await req.app.locals.jobProfileCollection.updateOne({ userId: userId(user) }, { $set: preferences, $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() } }, { upsert: true });
+    if (jobsMode === "employer" || jobsMode === "both") await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { jobsRole: "employer" } });
+    await audit(req, user, "preferences.updated", userId(user), { jobsMode });
+    res.json({ preferences });
+  });
   router.put("/profile", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
