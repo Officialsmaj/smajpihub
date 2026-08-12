@@ -93,6 +93,68 @@
   color: #40566d;
   background: #edf3ff;
 }
+.jobs-home-dashboard {
+  padding: 30px max(7vw, 36px) 12px;
+  background: linear-gradient(145deg, #f5f8ff, #e7efff 70%, #f7fbf9);
+}
+.jobs-home-dashboard > .jobs-preferences,
+.jobs-home-dashboard > .jobs-role-onboarding {
+  width: min(1120px, 100%);
+  margin: 22px auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.jobs-quick-search {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  border: 1px solid #d3dde4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 6px 16px #173b2920;
+}
+.jobs-quick-search label {
+  min-height: 52px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.jobs-quick-search label + label {
+  border-left: 1px solid #e1e7e4;
+}
+.jobs-quick-search svg {
+  color: #5d6f68;
+  font-size: 19px;
+}
+.jobs-quick-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+.jobs-quick-search > button {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+.jobs-recommended {
+  width: min(1120px, 100%);
+  margin: 0 auto 24px;
+}
+.jobs-recommended h2 {
+  margin: 0 0 14px;
+}
 .jobs-sheet-backdrop {
   position: fixed;
   z-index: 100;
@@ -1068,6 +1130,20 @@
     align-items: flex-start;
     flex-direction: column;
   }
+  .jobs-home-dashboard {
+    padding: 18px 14px 26px;
+  }
+  .jobs-quick-search {
+    grid-template-columns: 1fr;
+  }
+  .jobs-quick-search label + label {
+    border-top: 1px solid #e1e7e4;
+    border-left: 0;
+  }
+  .jobs-home-dashboard > .jobs-preferences,
+  .jobs-home-dashboard > .jobs-role-onboarding {
+    margin: 22px auto 16px;
+  }
   .jobs-page {
     padding-bottom: 66px;
   }
@@ -1132,11 +1208,11 @@
   }
   .jobs-hero {
     min-height: auto;
-    padding: 55px 20px;
+    padding: 38px 20px;
     display: block;
   }
   .jobs-hero h1 {
-    font-size: 45px;
+    font-size: 40px;
   }
   .jobs-hero aside {
     margin-top: 35px;

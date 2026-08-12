@@ -289,6 +289,26 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       : kind === "saved"
         ? visibleJobs.filter(job => saved.has(job.id))
         : visibleJobs;
+  const recommendedJobs = useMemo(() => {
+    const titles = profile?.preferredTitles || [];
+    const locations = profile?.preferredLocations || [];
+    const categories = profile?.preferredCategories || [];
+    if (!titles.length && !locations.length && !categories.length) return [];
+    return jobs
+      .filter(job => {
+        const titleMatch =
+          !titles.length ||
+          titles.some(title => `${job.title} ${job.skills.join(" ")}`.toLowerCase().includes(title.toLowerCase()));
+        const locationMatch =
+          profile?.openToAnywhere ||
+          !locations.length ||
+          locations.some(item => job.location.toLowerCase().includes(item.toLowerCase())) ||
+          (profile?.remotePreference !== "onsite" && job.mode === "Remote");
+        const categoryMatch = !categories.length || categories.includes(job.category);
+        return titleMatch && locationMatch && categoryMatch;
+      })
+      .slice(0, 3);
+  }, [jobs, profile]);
   const selectedJob = jobs.find(job => job.id === id);
   const selectedCompany = companies.find(company => company.id === id);
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
@@ -455,6 +475,81 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : null}
         {kind === "home" ? (
           <>
+            <section className="jobs-home-dashboard">
+              <form
+                className="jobs-quick-search"
+                role="search"
+                onSubmit={event => {
+                  event.preventDefault();
+                  const params = new URLSearchParams({
+                    ...(query ? { q: query } : {}),
+                    ...(location ? { location } : {}),
+                  });
+                  navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
+                }}
+              >
+                <label>
+                  <SearchRoundedIcon />
+                  <input
+                    value={query}
+                    onChange={event => setQuery(event.target.value)}
+                    placeholder="Job title, skill or company"
+                    aria-label="Job title, skill or company"
+                  />
+                </label>
+                <label>
+                  <LocationOnOutlinedIcon />
+                  <input
+                    value={location}
+                    onChange={event => setLocation(event.target.value)}
+                    placeholder="Country, city or remote"
+                    aria-label="Country, city or remote"
+                  />
+                </label>
+                <button type="submit">Search</button>
+              </form>
+              {user && !loading && activeWorkspaceMode === "candidate" ? (
+                <JobPreferencesPanel
+                  key={profile?.updatedAt || profile?.jobsMode || "new"}
+                  userName={user.displayName || user.piUsername || user.username || "Pioneer"}
+                  profile={profile}
+                  jobs={jobs}
+                  onSaved={preferences => {
+                    setProfile(current => ({
+                      ...(current || {
+                        title: "",
+                        skills: [],
+                        location: "",
+                        availability: "",
+                        portfolio: "",
+                        summary: "",
+                      }),
+                      ...preferences,
+                    }));
+                    if (preferences.jobsMode === "employer") {
+                      setWorkspaceMode("employer");
+                      navigate("/services/jobs/employer");
+                    }
+                  }}
+                />
+              ) : null}
+              {user && profile?.jobsMode && activeWorkspaceMode === "candidate" ? (
+                <section className="jobs-recommended">
+                  <h2>Recommended jobs</h2>
+                  {recommendedJobs.length ? (
+                    <div className="jobs-list">
+                      {recommendedJobs.map(job => (
+                        <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="jobs-recommendation-note">
+                      ⓘ We can’t find any job recommendations for you at the moment.
+                    </p>
+                  )}
+                </section>
+              ) : null}
+            </section>
             <section className="jobs-hero">
               <div>
                 <span className="jobs-kicker">VERIFIED TALENT. REAL OPPORTUNITIES.</span>
@@ -462,29 +557,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   Build your future in the <em>Pi economy.</em>
                 </h1>
                 <p>Find trusted jobs and freelance projects, connect with verified employers, and get paid in Pi.</p>
-                <form onSubmit={event => event.preventDefault()}>
-                  <label>
-                    <SearchRoundedIcon />
-                    <input
-                      value={query}
-                      onChange={event => setQuery(event.target.value)}
-                      placeholder="Job title, skill or company"
-                    />
-                  </label>
-                  <label>
-                    <LocationOnOutlinedIcon />
-                    <input
-                      value={location}
-                      onChange={event => setLocation(event.target.value)}
-                      placeholder="City or Remote"
-                    />
-                  </label>
-                  <Link
-                    to={`/services/jobs/search?${new URLSearchParams({ ...(query ? { q: query } : {}), ...(location ? { location } : {}) }).toString()}`}
-                  >
-                    Search jobs
-                  </Link>
-                </form>
                 <small>Popular: React · Design · Marketing · Customer support</small>
               </div>
               <aside>
@@ -505,31 +577,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               </aside>
             </section>
-            {user && !loading && activeWorkspaceMode === "candidate" ? (
-              <JobPreferencesPanel
-                key={profile?.updatedAt || profile?.jobsMode || "new"}
-                userName={user.displayName || user.piUsername || user.username || "Pioneer"}
-                profile={profile}
-                jobs={jobs}
-                onSaved={preferences => {
-                  setProfile(current => ({
-                    ...(current || {
-                      title: "",
-                      skills: [],
-                      location: "",
-                      availability: "",
-                      portfolio: "",
-                      summary: "",
-                    }),
-                    ...preferences,
-                  }));
-                  if (preferences.jobsMode === "employer") {
-                    setWorkspaceMode("employer");
-                    navigate("/services/jobs/employer");
-                  }
-                }}
-              />
-            ) : null}
             <section className="jobs-section">
               <header>
                 <div>
