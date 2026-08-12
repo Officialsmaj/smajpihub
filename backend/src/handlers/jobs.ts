@@ -225,7 +225,7 @@ const requireUser = async (req: Request, res: Response) => {
   if (!user)
     res.status(401).json({
       error: "unauthorized",
-      message: "Sign in to use this Jobs feature.",
+      message: "Your SMAJ PI HUB session is required for this Jobs feature.",
     });
   return user;
 };

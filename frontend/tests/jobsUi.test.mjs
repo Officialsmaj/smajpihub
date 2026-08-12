@@ -25,6 +25,8 @@ assert.match(header, /Employer: post a job/);
 assert.match(page, /SMAJ PI HUB/);
 assert.match(page, /Add another company/);
 assert.match(page, /newCompanyName/);
+assert.match(page, /no separate Jobs login is needed/);
+assert.doesNotMatch(page, /Sign in with your Pi account/);
 assert.match(preferences, /How do you want to use SMAJ PI Jobs/);
 assert.match(preferences, /Edit pay preference/);
 assert.match(preferences, /Edit location preferences/);

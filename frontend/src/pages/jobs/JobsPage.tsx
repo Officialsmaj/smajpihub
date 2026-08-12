@@ -333,7 +333,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setApplyNote("");
       setActionMessage("Application submitted successfully.");
     } catch {
-      setActionMessage("This application could not be submitted. Sign in or check whether you already applied.");
+      setActionMessage("This application could not be submitted. Check whether you already applied and try again.");
     }
   };
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
@@ -352,7 +352,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setProfileSaved(true);
       setError("");
     } catch {
-      setError("Your profile could not be saved. Please sign in and try again.");
+      setError("Your profile could not be saved. Please try again from your SMAJ account.");
     }
   };
   const createCompany = async (event: FormEvent<HTMLFormElement>) => {
@@ -368,7 +368,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("Company submitted for moderation.");
       event.currentTarget.reset();
     } catch {
-      setActionMessage("Employer enrollment or company creation failed. Please sign in and try again.");
+      setActionMessage("Employer enrollment or company creation failed. Please try again from your SMAJ account.");
     }
   };
   const changeApplicationStatus = async (applicationId: string, status: string) => {
@@ -1075,7 +1075,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <div className="workspace-empty">
                 <WorkOutlineRoundedIcon />
                 <h2>{kind === "applications" ? "No active applications yet" : "Your workspace is ready"}</h2>
-                <p>Sign in with your Pi account to securely manage this area.</p>
+                <p>Your existing SMAJ PI HUB account securely manages this area—no separate Jobs login is needed.</p>
                 <Link to="/services/jobs/search">Explore opportunities</Link>
               </div>
             )}
