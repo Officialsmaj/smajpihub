@@ -241,6 +241,16 @@ type TmdbMedia = {
   genre_ids?: number[];
 };
 
+type TmdbVideo = {
+  key?: string;
+  name?: string;
+  site?: string;
+  type?: string;
+  official?: boolean;
+  iso_639_1?: string;
+  published_at?: string;
+};
+
 const normalizeMedia = (item: TmdbMedia, fallbackType: "movie" | "tv" = "movie") => ({
   id: String(item.id),
   tmdbId: item.id,
@@ -1126,8 +1136,17 @@ const mountStreamEndpoints = (router: Router) => {
       const type = req.params.type as "movie" | "tv";
       const id = Number(req.params.id);
       if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid TMDB title ID" });
-      const data = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }>; runtime?: number; episode_run_time?: number[] }>(`/${type}/${id}`, { language: String(req.query.language || "en-US"), append_to_response: "credits,recommendations,external_ids" });
-      return res.json({ ...normalizeMedia(data, type), genres: data.genres || [], runtime: data.runtime || data.episode_run_time?.[0] || null, source: "TMDB", raw: data });
+      const language = String(req.query.language || "en-US");
+      const data = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }>; runtime?: number; episode_run_time?: number[]; videos?: { results?: TmdbVideo[] } }>(`/${type}/${id}`, { language, append_to_response: "credits,recommendations,external_ids,videos" });
+      const requestedLanguage = language.split("-")[0].toLowerCase();
+      const trailerVideo = (data.videos?.results || [])
+        .filter(video => video.site === "YouTube" && /^[A-Za-z0-9_-]{11}$/.test(String(video.key || "")) && (video.type === "Trailer" || video.type === "Teaser" || video.type === "Clip"))
+        .sort((left, right) => {
+          const score = (video: TmdbVideo) => (video.type === "Trailer" ? 100 : video.type === "Teaser" ? 50 : 10) + (video.official ? 25 : 0) + (video.iso_639_1?.toLowerCase() === requestedLanguage ? 10 : 0);
+          return score(right) - score(left) || String(right.published_at || "").localeCompare(String(left.published_at || ""));
+        })[0];
+      const trailer = trailerVideo ? { youtubeVideoId: trailerVideo.key!, name: trailerVideo.name || "Official trailer", official: Boolean(trailerVideo.official), type: trailerVideo.type || "Trailer" } : null;
+      return res.json({ ...normalizeMedia(data, type), genres: data.genres || [], runtime: data.runtime || data.episode_run_time?.[0] || null, trailer, source: "TMDB", raw: data });
     } catch (error) {
       const status = Number((error as { status?: number; response?: { status?: number } }).status || (error as { response?: { status?: number } }).response?.status || 502);
       return res.status(status).json({ error: error instanceof Error ? error.message : "Unable to load title" });

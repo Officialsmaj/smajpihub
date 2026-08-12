@@ -20,6 +20,13 @@ export type StreamCatalogTitle = {
   genreIds: number[];
 };
 
+export type StreamTrailer = {
+  youtubeVideoId: string;
+  name: string;
+  official: boolean;
+  type: string;
+};
+
 export type StreamDownloadTitle = StreamCatalogTitle & {
   downloadStatus?: "pending" | "downloading" | "ready" | "failed";
   downloadedAt?: string;
@@ -49,7 +56,7 @@ export const getStreamCategory = async (slug: string, page = 1, sort = "populari
 };
 
 export const getStreamTitle = async (type: "movie" | "tv", id: string) => {
-  const response = await axiosClient.get<StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: unknown }>(`/stream/${type}/${id}`);
+  const response = await axiosClient.get<StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; trailer: StreamTrailer | null; raw: unknown }>(`/stream/${type}/${id}`);
   return response.data;
 };
 

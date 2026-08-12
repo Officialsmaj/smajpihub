@@ -533,7 +533,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const navigate = useNavigate();
   const type = series ? "tv" : "movie";
   const [detail, setDetail] = useState<
-    | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; raw: TmdbDetailRaw })
+    | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; trailer: { youtubeVideoId: string; name: string; official: boolean; type: string } | null; raw: TmdbDetailRaw })
     | null
   >(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -543,6 +543,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
   const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const [reviews, setReviews] = useState<StreamReview[]>([]);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewBody, setReviewBody] = useState("");
@@ -601,6 +602,17 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     image.src = detail.backdropUrl;
     return () => { active = false; };
   }, [detail?.backdropUrl]);
+  useEffect(() => {
+    if (!trailerOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setTrailerOpen(false); };
+    document.addEventListener("keydown", closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [trailerOpen]);
   if (state === "loading")
     return (
       <div className="sw-detail-loading">
@@ -703,6 +715,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               ))}
             </div>
             <div className={`sw-detail-actions ${playbackId ? "has-playback" : ""}`}>
+              <button className="sw-detail-trailer-action" type="button" disabled={!detail.trailer} onClick={() => detail.trailer && setTrailerOpen(true)}>
+                <PlayArrowRoundedIcon /> {detail.trailer ? "Watch Trailer" : "Trailer unavailable"}
+              </button>
               {playbackId ? (
                 <Link className="primary" to={`/app/services/stream/watch/${playbackId}`}>
                   <PlayArrowRoundedIcon /> Play {series ? "series" : "movie"}
@@ -729,6 +744,17 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           </div>
         </div>
       </section>
+      {trailerOpen && detail.trailer ? (
+        <div className="sw-trailer" role="dialog" aria-modal="true" aria-label={`${detail.title} trailer`} onMouseDown={event => event.target === event.currentTarget && setTrailerOpen(false)}>
+          <button type="button" onClick={() => setTrailerOpen(false)} aria-label="Close trailer"><CloseRoundedIcon /></button>
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${detail.trailer.youtubeVideoId}?autoplay=1&rel=0&playsinline=1`}
+            title={detail.trailer.name}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+        </div>
+      ) : null}
       <section
         className="sw-detail-info"
         style={{ "--sw-detail-art": detail.backdropUrl ? `url(${detail.backdropUrl})` : undefined, "--sw-detail-ambient": ambientColor } as CSSProperties}

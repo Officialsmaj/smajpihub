@@ -1300,6 +1300,9 @@
   padding: 20px;
   background: #0b0b10;
 }
+.sw-trailer > button svg { font-size: 36px; }
+.sw-detail-trailer-action { color: #171219; background: #fff; cursor: pointer; }
+.sw-detail-trailer-action:disabled { color: #b5adb8; background: #ffffff24; cursor: default; }
 .sw-plans article {
   padding: 24px;
   border: 1px solid rgba(255,255,255,.1);
