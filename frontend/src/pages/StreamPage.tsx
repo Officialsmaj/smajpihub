@@ -42,6 +42,15 @@ const fallbackMovieRows = [
   { title: "Series worth watching", id: "series", items: [...onDemand.slice(2), ...onDemand.slice(0, 2)] },
 ];
 
+const StreamHomeSkeleton = () => (
+  <div className="stream-home-skeleton" role="status" aria-label="Loading Stream catalogue">
+    <section className="stream-skeleton-hero"><i /><div><b /><b /><b /><span /></div></section>
+    <section className="stream-skeleton-row"><header><b /><i /></header><div>{Array.from({ length: 5 }, (_, index) => <span key={index} />)}</div></section>
+    <section className="stream-skeleton-row live"><header><b /><i /></header><div>{Array.from({ length: 3 }, (_, index) => <span key={index} />)}</div></section>
+    <section className="stream-skeleton-row"><header><b /><i /></header><div>{Array.from({ length: 5 }, (_, index) => <span key={index} />)}</div></section>
+  </div>
+);
+
 type StreamPageProps = {
   embedded?: boolean;
   categorySlug?: string;
@@ -220,6 +229,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
       <main className="stream-page">
         <StreamHeader query={query} onQueryChange={setQuery} />
 
+        {catalogLoading ? <StreamHomeSkeleton /> : <>
         <section className="stream-hero compact" id="discover" onTouchStart={(event) => setTouchStart(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStart === null || featuredTitles.length < 2) return; const delta = (event.changedTouches[0]?.clientX || 0) - touchStart; if (Math.abs(delta) > 45) setFeatureIndex((index) => (index + (delta < 0 ? 1 : featuredTitles.length - 1)) % featuredTitles.length); setTouchStart(null); }} style={featured?.backdropUrl ? { backgroundImage: `url(${featured.backdropUrl})` } : undefined}>
           <div className="stream-hero-content">
             <span className="stream-eyebrow">{categoryLabel.toUpperCase()} FEATURED · {featured?.mediaType === "tv" ? "SERIES" : "MOVIE"}</span>
@@ -240,7 +250,6 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
         {!categoryMode ? <section className="stream-live-now-row"><div className="stream-row-heading"><div><h2>What's On Now</h2><p>Live TV</p></div><Link to="/app/services/stream/live/now">See more ›</Link></div>{liveNow.length ? <div className="stream-live-now-rail">{liveNow.slice(0, 12).map(item => <Link to={publishedLivePlaybackPath(item)} key={item.liveInputUid}><div style={item.thumbnailUrl ? { backgroundImage: `url(${item.thumbnailUrl})` } : undefined}><PlayArrowRoundedIcon/><b>LIVE</b><span><i/></span></div><h3>{item.title}</h3><p>{item.creatorName || "SMAJ Live"} · Live now</p></Link>)}</div> : <div className="stream-live-now-empty">No channels are live right now. Official broadcasts will appear here automatically.</div>}</section> : null}
 
         <section className="stream-movie-catalog" aria-label="Movie and series catalogue">
-          {catalogLoading ? <div className="stream-catalog-loading" aria-label="Loading entertainment"><i/><i/><i/><i/></div> : null}
           {!catalogLoading && catalogError ? <p className="stream-catalog-notice">Live catalogue is unavailable. Showing SMAJ previews.</p> : null}
           {catalogRows.map((row) => (
             <section className="stream-movie-row" id={row.id} key={row.title}>
@@ -272,6 +281,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
         {reviews.length ? <section className="stream-popular-reviews"><div className="stream-row-heading"><div><h2>Popular Reviews</h2><p>Discover</p></div></div><div className="stream-reviews-rail">{reviews.map(review => <article key={review._id}><div className="stream-review-main"><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.posterUrl ? <img loading="lazy" src={review.posterUrl} alt=""/> : <span/>}</Link><div><div className="stream-review-stars" aria-label={`${review.rating} out of 5 stars`}>{"★".repeat(review.rating)}<i>{"☆".repeat(5-review.rating)}</i></div><p>{review.body}</p><Link to={`/app/services/stream/${review.mediaType === "tv" ? "series" : "title"}/${review.tmdbId}`}>{review.title}</Link></div></div><footer><span>{review.reviewer.avatarUrl ? <img src={review.reviewer.avatarUrl} alt=""/> : review.reviewer.name.slice(0,1).toUpperCase()}<b>{review.reviewer.name}</b></span><button type="button" onClick={() => void likeReview(review._id)} aria-label="Like review">♡ {review.likes}</button><small>💬 {review.comments}</small></footer></article>)}</div></section> : null}
 
         <footer className="stream-footer"><a className="stream-brand" href="#discover"><span><PlayArrowRoundedIcon /></span><strong>SMAJ STREAM</strong></a><p>Watch differently. Create freely.</p><small>Discover movies, live channels, and original creators.</small></footer>
+        </>}
       </main>
 
       {playing ? <div className="stream-player-overlay" role="dialog" aria-modal="true" aria-label={`Playing ${playing.title}`} onClick={() => setPlaying(null)}><div className={`stream-player ${playing.tone}`} onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setPlaying(null)} aria-label="Close player"><CloseRoundedIcon /></button><div className="stream-player-mark"><PlayArrowRoundedIcon /></div><span>{playing.live ? "LIVE · " : "NOW PLAYING · "}{playing.viewers}</span><h2>{playing.title}</h2><p>{playing.creator}</p><aside><FavoriteBorderRoundedIcon /> This interactive preview is ready for video API integration.</aside></div></div> : null}

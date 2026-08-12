@@ -544,6 +544,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [playbackId, setPlaybackId] = useState("");
   const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [trailerLoaded, setTrailerLoaded] = useState(false);
   const [reviews, setReviews] = useState<StreamReview[]>([]);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewBody, setReviewBody] = useState("");
@@ -604,7 +605,13 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   }, [detail?.backdropUrl]);
   useEffect(() => {
     if (!trailerOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setTrailerOpen(false); };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setTrailerOpen(false);
+      setTrailerLoaded(false);
+      try { screen.orientation.unlock?.(); } catch { /* Not supported by every mobile browser. */ }
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
     document.addEventListener("keydown", closeOnEscape);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -613,6 +620,26 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       document.body.style.overflow = previousOverflow;
     };
   }, [trailerOpen]);
+  const openTrailer = () => {
+    if (!detail?.trailer) return;
+    setTrailerLoaded(false);
+    setTrailerOpen(true);
+    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+    const fullscreenRequest = root.requestFullscreen?.bind(root) || root.webkitRequestFullscreen?.bind(root);
+    try {
+      const result = fullscreenRequest?.();
+      void Promise.resolve(result).then(() => {
+        const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
+        return orientation.lock?.("landscape");
+      }).catch(() => { /* Fullscreen and orientation locking depend on the browser. */ });
+    } catch { /* Manual rotation remains available when fullscreen is blocked. */ }
+  };
+  const closeTrailer = () => {
+    setTrailerOpen(false);
+    setTrailerLoaded(false);
+    try { screen.orientation.unlock?.(); } catch { /* Not supported by every mobile browser. */ }
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+  };
   if (state === "loading")
     return (
       <div className="sw-detail-loading">
@@ -715,7 +742,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               ))}
             </div>
             <div className={`sw-detail-actions ${playbackId ? "has-playback" : ""}`}>
-              <button className="sw-detail-trailer-action" type="button" disabled={!detail.trailer} onClick={() => detail.trailer && setTrailerOpen(true)}>
+              <button className="sw-detail-trailer-action" type="button" disabled={!detail.trailer} onClick={openTrailer}>
                 <PlayArrowRoundedIcon /> {detail.trailer ? "Watch Trailer" : "Trailer unavailable"}
               </button>
               {playbackId ? (
@@ -745,13 +772,15 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         </div>
       </section>
       {trailerOpen && detail.trailer ? (
-        <div className="sw-trailer" role="dialog" aria-modal="true" aria-label={`${detail.title} trailer`} onMouseDown={event => event.target === event.currentTarget && setTrailerOpen(false)}>
-          <button type="button" onClick={() => setTrailerOpen(false)} aria-label="Close trailer"><CloseRoundedIcon /></button>
+        <div className={`sw-trailer ${trailerLoaded ? "loaded" : "loading"}`} role="dialog" aria-modal="true" aria-label={`${detail.title} trailer`} onMouseDown={event => event.target === event.currentTarget && closeTrailer()}>
+          <button type="button" onClick={closeTrailer} aria-label="Close trailer"><CloseRoundedIcon /></button>
+          {!trailerLoaded ? <span className="sw-trailer-spinner" role="status" aria-label="Loading trailer" /> : null}
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${detail.trailer.youtubeVideoId}?autoplay=1&rel=0&playsinline=1`}
             title={detail.trailer.name}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
+            onLoad={() => setTrailerLoaded(true)}
           />
         </div>
       ) : null}
