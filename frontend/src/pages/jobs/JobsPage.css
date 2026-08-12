@@ -1739,6 +1739,9 @@
   .jobs-header > nav.open {
     display: flex;
   }
+  .jobs-page:has(.jobs-header > nav.open) .jobs-mobile-nav {
+    display: none;
+  }
   .jobs-header nav a {
     padding: 8px;
   }

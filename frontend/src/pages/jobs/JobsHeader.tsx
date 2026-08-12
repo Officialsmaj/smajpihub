@@ -6,19 +6,21 @@ import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneR
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 const candidateLinks = [
-  ["", "Home"],
-  ["search", "Find jobs"],
-  ["freelance", "Freelance"],
-  ["saved", "Saved jobs"],
-  ["applications", "Applications"],
   ["activity", "Activity on profile"],
+  ["search#alerts", "Job alerts"],
+  ["companies", "Companies"],
+  ["freelance", "Freelance projects"],
+  ["profile#cv", "My CV and documents"],
+  ["profile#verification", "Verification status"],
 ] as const;
 
 const employerLinks = [
-  ["", "Home"],
   ["employer", "Employer dashboard"],
-  ["companies", "Companies"],
   ["post", "Post a job"],
+  ["employer#jobs", "Manage jobs"],
+  ["employer#candidates", "Candidates"],
+  ["companies", "Company profile"],
+  ["employer#verification", "Company verification"],
 ] as const;
 
 type WorkspaceMode = "candidate" | "employer";
