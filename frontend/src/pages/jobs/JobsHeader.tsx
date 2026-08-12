@@ -5,17 +5,35 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
-const links = [
+const candidateLinks = [
   ["", "Home"],
   ["search", "Find jobs"],
   ["freelance", "Freelance"],
-  ["companies", "Companies"],
+  ["saved", "Saved jobs"],
   ["applications", "Applications"],
-  ["profile", "Job seeker profile"],
-  ["employer", "Employer dashboard"],
+  ["profile", "My professional profile"],
 ] as const;
 
-const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => {
+const employerLinks = [
+  ["", "Home"],
+  ["employer", "Employer dashboard"],
+  ["companies", "Companies"],
+  ["post", "Post a job"],
+] as const;
+
+type WorkspaceMode = "candidate" | "employer";
+
+const JobsHeader = ({
+  query,
+  onQueryChange,
+  workspaceMode,
+  onWorkspaceModeChange,
+}: {
+  query: string;
+  onQueryChange: (value: string) => void;
+  workspaceMode: WorkspaceMode;
+  onWorkspaceModeChange: (mode: WorkspaceMode) => void;
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const headerRef = useRef<HTMLElement>(null);
@@ -52,7 +70,29 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
         Jobs
       </NavLink>
       <nav className={menuOpen ? "open" : ""} aria-label="Jobs navigation">
-        {links.map(([path, label]) => (
+        <div className="jobs-workspace-switch" aria-label="Choose Jobs workspace">
+          <button
+            className={workspaceMode === "candidate" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              onWorkspaceModeChange("candidate");
+              setMenuOpen(false);
+            }}
+          >
+            Find work
+          </button>
+          <button
+            className={workspaceMode === "employer" ? "active" : ""}
+            type="button"
+            onClick={() => {
+              onWorkspaceModeChange("employer");
+              setMenuOpen(false);
+            }}
+          >
+            Hire talent
+          </button>
+        </div>
+        {(workspaceMode === "candidate" ? candidateLinks : employerLinks).map(([path, label]) => (
           <NavLink
             key={label}
             end={!path}
@@ -62,8 +102,12 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
             {label}
           </NavLink>
         ))}
-        <NavLink className="jobs-mobile-post" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
-          Employer: post a job
+        <NavLink
+          className="jobs-mobile-post"
+          to={workspaceMode === "candidate" ? "/services/jobs/search" : "/services/jobs/post"}
+          onClick={() => setMenuOpen(false)}
+        >
+          {workspaceMode === "candidate" ? "Search jobs" : "Post a job"}
         </NavLink>
       </nav>
       <form className="jobs-header-search" role="search" onSubmit={submit}>
@@ -76,11 +120,20 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
           aria-label="Search SMAJ PI Jobs"
         />
       </form>
-      <NavLink className="jobs-notification" to="/notifications" aria-label="Notifications" onClick={() => setMenuOpen(false)}>
+      <NavLink
+        className="jobs-notification"
+        to="/notifications"
+        aria-label="Notifications"
+        onClick={() => setMenuOpen(false)}
+      >
         <NotificationsNoneRoundedIcon />
       </NavLink>
-      <NavLink className="jobs-post-button" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
-        Employer: post a job
+      <NavLink
+        className="jobs-post-button"
+        to={workspaceMode === "candidate" ? "/services/jobs/search" : "/services/jobs/post"}
+        onClick={() => setMenuOpen(false)}
+      >
+        {workspaceMode === "candidate" ? "Search jobs" : "Post a job"}
       </NavLink>
       <button
         className="jobs-menu-button"
@@ -92,7 +145,12 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
         {menuOpen ? <CloseRoundedIcon /> : <MenuRoundedIcon />}
       </button>
       {menuOpen ? (
-        <button className="jobs-menu-backdrop" type="button" aria-label="Close Jobs menu" onClick={() => setMenuOpen(false)} />
+        <button
+          className="jobs-menu-backdrop"
+          type="button"
+          aria-label="Close Jobs menu"
+          onClick={() => setMenuOpen(false)}
+        />
       ) : null}
     </header>
   );

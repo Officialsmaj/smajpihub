@@ -203,7 +203,31 @@
 }
 .jobs-header nav {
   display: flex;
+  align-items: center;
   gap: 22px;
+}
+.jobs-workspace-switch {
+  padding: 3px;
+  display: flex;
+  gap: 2px;
+  border: 1px solid #d8e3dd;
+  border-radius: 10px;
+  background: #f2f6f4;
+}
+.jobs-workspace-switch button {
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  color: #64766e;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.jobs-workspace-switch button.active {
+  color: #fff;
+  background: var(--green);
 }
 .jobs-header nav a {
   color: #687a73;
@@ -1035,6 +1059,13 @@
     background: #fff;
     box-shadow: 0 15px 30px #173b2920;
     z-index: 2;
+  }
+  .jobs-workspace-switch {
+    width: 100%;
+  }
+  .jobs-workspace-switch button {
+    min-height: 40px;
+    flex: 1;
   }
   .jobs-header > nav.open {
     display: flex;

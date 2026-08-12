@@ -202,9 +202,18 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [payMax, setPayMax] = useState("");
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
+  const [workspaceMode, setWorkspaceMode] = useState<"candidate" | "employer">(
+    kind === "employer" || kind === "post" ? "employer" : "candidate"
+  );
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
+  const activeWorkspaceMode =
+    kind === "employer" || kind === "post"
+      ? "employer"
+      : ["search", "freelance", "saved", "applications", "profile"].includes(kind)
+        ? "candidate"
+        : workspaceMode;
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -232,6 +241,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         setSaved(new Set(savedJobs.map(job => job.id)));
         setApplications(nextApplications);
         setProfile(nextProfile);
+        if (kind === "home" && nextProfile?.jobsMode === "employer") setWorkspaceMode("employer");
         if (dashboard) {
           setEmployerApplications(dashboard.applications);
           setEmployerCompanies(dashboard.companies);
@@ -424,7 +434,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="jobs-page">
-        <JobsHeader query={query} onQueryChange={setQuery} />
+        <JobsHeader
+          query={query}
+          onQueryChange={setQuery}
+          workspaceMode={activeWorkspaceMode}
+          onWorkspaceModeChange={mode => {
+            setWorkspaceMode(mode);
+            navigate(mode === "candidate" ? "/services/jobs" : "/services/jobs/employer");
+          }}
+        />
         {loading ? (
           <p className="jobs-status" role="status">
             Loading live opportunities…
@@ -487,13 +505,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               </aside>
             </section>
-            {user && !loading ? (
+            {user && !loading && activeWorkspaceMode === "candidate" ? (
               <JobPreferencesPanel
                 key={profile?.updatedAt || profile?.jobsMode || "new"}
                 userName={user.displayName || user.piUsername || user.username || "Pioneer"}
                 profile={profile}
                 jobs={jobs}
-                onSaved={preferences =>
+                onSaved={preferences => {
                   setProfile(current => ({
                     ...(current || {
                       title: "",
@@ -504,8 +522,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       summary: "",
                     }),
                     ...preferences,
-                  }))
-                }
+                  }));
+                  if (preferences.jobsMode === "employer") {
+                    setWorkspaceMode("employer");
+                    navigate("/services/jobs/employer");
+                  }
+                }}
               />
             ) : null}
             <section className="jobs-section">
@@ -1144,22 +1166,45 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <HomeRoundedIcon />
             <span>Home</span>
           </NavLink>
-          <NavLink to="/services/jobs/search">
-            <SearchRoundedIcon />
-            <span>Jobs</span>
-          </NavLink>
-          <NavLink to="/services/jobs/saved">
-            <BookmarkBorderRoundedIcon />
-            <span>Saved</span>
-          </NavLink>
-          <NavLink to="/services/jobs/applications">
-            <WorkOutlineRoundedIcon />
-            <span>Applications</span>
-          </NavLink>
-          <NavLink to="/services/jobs/companies">
-            <BusinessRoundedIcon />
-            <span>Companies</span>
-          </NavLink>
+          {activeWorkspaceMode === "candidate" ? (
+            <>
+              <NavLink to="/services/jobs/search">
+                <SearchRoundedIcon />
+                <span>Jobs</span>
+              </NavLink>
+              <NavLink to="/services/jobs/saved">
+                <BookmarkBorderRoundedIcon />
+                <span>Saved</span>
+              </NavLink>
+              <NavLink to="/services/jobs/applications">
+                <WorkOutlineRoundedIcon />
+                <span>Applications</span>
+              </NavLink>
+              <NavLink to="/services/jobs/profile">
+                <BusinessRoundedIcon />
+                <span>Profile</span>
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink to="/services/jobs/employer">
+                <BusinessRoundedIcon />
+                <span>Dashboard</span>
+              </NavLink>
+              <NavLink to="/services/jobs/companies">
+                <BusinessRoundedIcon />
+                <span>Companies</span>
+              </NavLink>
+              <NavLink to="/services/jobs/post">
+                <WorkOutlineRoundedIcon />
+                <span>Post job</span>
+              </NavLink>
+              <NavLink to="/services/jobs/employer">
+                <SearchRoundedIcon />
+                <span>Candidates</span>
+              </NavLink>
+            </>
+          )}
         </nav>
       </main>
     </AppLayout>
