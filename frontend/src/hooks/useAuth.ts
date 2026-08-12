@@ -130,10 +130,12 @@ const getDashboardUrl = () => {
   return `${baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`}dashboard`;
 };
 
-const redirectToDashboard = () => {
+const redirectToDashboard = async () => {
   const dashboardUrl = getDashboardUrl();
   console.log("[auth] dashboard redirect", { dashboardUrl });
-  window.location.replace(dashboardUrl);
+  window.history.replaceState(window.history.state, "", dashboardUrl);
+  window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
 };
 
 const toErrorMessage = (err: unknown) => {
@@ -263,7 +265,7 @@ export const useAuth = () => {
           setUser(storeUser(toUser(response.data.user, devFallback)));
           setShowSignIn(false);
           setAuthFeedback({ type: "success", message: "Signed in with local development account." });
-          redirectToDashboard();
+          await redirectToDashboard();
           return true;
         } catch (err) {
           console.error("Development login failed:", err);
@@ -302,7 +304,7 @@ export const useAuth = () => {
         hasAccessToken: Boolean(authResult.accessToken),
       });
       await signInUser(authResult);
-      redirectToDashboard();
+      await redirectToDashboard();
       return true;
     } catch (err) {
       console.error("Pi login failed:", err);
