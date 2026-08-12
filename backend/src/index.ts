@@ -353,6 +353,7 @@ const start = async () => {
       app.locals.jobApplicationCollection = db.collection("job_applications");
       app.locals.jobProfileCollection = db.collection("job_profiles");
       app.locals.jobAuditCollection = db.collection("job_audit_log");
+      app.locals.jobBillingCollection = db.collection("job_billing");
       app.locals.sessionCollection = db.collection("user_sessions");
       app.locals.transportBookingCollection =
         db.collection("transport_bookings");
@@ -501,6 +502,8 @@ const start = async () => {
           targetId: 1,
           createdAt: -1,
         }),
+        app.locals.jobBillingCollection.createIndex({ billingId: 1 }, { unique: true }),
+        app.locals.jobBillingCollection.createIndex({ employerId: 1, status: 1, createdAt: -1 }),
         app.locals.streamContentCollection.createIndex(
           { cloudflareUid: 1 },
           { unique: true },

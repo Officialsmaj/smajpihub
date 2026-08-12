@@ -16,6 +16,11 @@ const APPLICATION_STATUSES = [
   "hired",
   "withdrawn",
 ];
+const employerPlans = [
+  { id: "standard", name: "Standard job post", priceUsdt: 25 },
+  { id: "featured", name: "Featured job post", priceUsdt: 99 },
+  { id: "monthly", name: "Monthly employer plan", priceUsdt: 299 },
+].map(plan => ({ ...plan, pricePi: piFromUsdt(plan.priceUsdt), piRateUsed: PI_USDT_RATE }));
 
 const seedJobs = [
   {
@@ -128,6 +133,7 @@ const seedCompanies = ecosystemCompanyNames.map((name, priority) => ({
     .slice(0, 2)
     .toUpperCase(),
   verified: false,
+  verificationStatus: "unclaimed",
   directoryPriority: priority,
 }));
 
@@ -293,6 +299,14 @@ const ensureSeedData = async (req: Request) => {
     { moderationStatus: { $exists: false } },
     { $set: { moderationStatus: "approved" } },
   );
+  await req.app.locals.jobCompanyCollection.updateMany(
+    { verificationStatus: { $exists: false }, ownerId: { $exists: true } },
+    { $set: { verificationStatus: "pending", verified: false } },
+  );
+  await req.app.locals.jobCompanyCollection.updateMany(
+    { verificationStatus: { $exists: false }, ownerId: { $exists: false } },
+    { $set: { verificationStatus: "unclaimed", verified: false } },
+  );
 };
 
 export default function mountJobsEndpoints(router: Router) {
@@ -410,12 +424,34 @@ export default function mountJobsEndpoints(router: Router) {
         .toUpperCase(),
       ownerId,
       verified: false,
+      verificationStatus: "pending",
+      website: String(req.body?.website || "").trim().slice(0, 500),
+      country: String(req.body?.country || "").trim().slice(0, 120),
+      registrationNumber: String(req.body?.registrationNumber || "").trim().slice(0, 120),
+      representativeRole: String(req.body?.representativeRole || "").trim().slice(0, 120),
       moderationStatus: "pending",
       createdAt: new Date().toISOString(),
     };
     await req.app.locals.jobCompanyCollection.insertOne(company);
     await audit(req, user, "company.created", slug);
     res.status(201).json({ company: serializeJobDocument(company) });
+  });
+  router.post("/companies/:id/claim", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const company = await req.app.locals.jobCompanyCollection.findOne({ slug: req.params.id });
+    if (!company || (company.ownerId && company.ownerId !== userId(user))) return res.status(409).json({ error: "not_claimable", message: "This company is already claimed." });
+    const evidence = String(req.body?.evidence || "").trim().slice(0, 1000); const website = String(req.body?.website || company.website || "").trim().slice(0, 500);
+    if (!evidence || !website) return res.status(400).json({ error: "evidence_required" });
+    await req.app.locals.jobCompanyCollection.updateOne({ slug: company.slug }, { $set: { ownerId: userId(user), website, claimEvidence: evidence, verificationStatus: "claimed", claimedAt: new Date().toISOString() } });
+    await audit(req, user, "company.claimed", company.slug); res.json({ verificationStatus: "claimed" });
+  });
+  router.post("/companies/:id/verification-request", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const company = await req.app.locals.jobCompanyCollection.findOne({ slug: req.params.id, ownerId: userId(user) }); if (!company) return res.status(404).json({ error: "not_found" });
+    const evidence = { registrationNumber: String(req.body?.registrationNumber || "").trim().slice(0, 120), businessEmail: String(req.body?.businessEmail || "").trim().slice(0, 200), representativeRole: String(req.body?.representativeRole || "").trim().slice(0, 120), notes: String(req.body?.notes || "").trim().slice(0, 1000) };
+    if (!evidence.businessEmail || !evidence.representativeRole) return res.status(400).json({ error: "evidence_required" });
+    await req.app.locals.jobCompanyCollection.updateOne({ slug: company.slug }, { $set: { verificationStatus: "pending", verificationEvidence: evidence, verificationRequestedAt: new Date().toISOString() } });
+    await audit(req, user, "company.verification_requested", company.slug); res.json({ verificationStatus: "pending" });
   });
   router.post("/jobs", async (req, res) => {
     const user = await requireEmployer(req, res);
@@ -526,6 +562,22 @@ export default function mountJobsEndpoints(router: Router) {
     if (jobsMode === "employer" || jobsMode === "both") await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { jobsRole: "employer" } });
     await audit(req, user, "preferences.updated", userId(user), { jobsMode });
     res.json({ preferences });
+  });
+  router.post("/profile/verification-request", async (req, res) => {
+    const user = await requireUser(req, res); if (!user) return;
+    const profile = await req.app.locals.jobProfileCollection.findOne({ userId: userId(user) });
+    if (!profile?.title || !profile?.summary) return res.status(400).json({ error: "profile_incomplete", message: "Complete your professional profile first." });
+    const evidence = { portfolio: String(req.body?.portfolio || profile.portfolio || "").trim().slice(0, 500), credential: String(req.body?.credential || "").trim().slice(0, 500), notes: String(req.body?.notes || "").trim().slice(0, 1000) };
+    await req.app.locals.jobProfileCollection.updateOne({ userId: userId(user) }, { $set: { verificationStatus: "pending", verificationEvidence: evidence, verificationRequestedAt: new Date().toISOString() } });
+    await audit(req, user, "candidate.verification_requested", userId(user)); res.json({ verificationStatus: "pending" });
+  });
+  router.get("/billing/plans", (_req, res) => res.json({ plans: employerPlans }));
+  router.post("/billing/intents", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const plan = employerPlans.find(item => item.id === req.body?.planId); if (!plan) return res.status(400).json({ error: "invalid_plan" });
+    const intent = { billingId: `job-billing-${Date.now().toString(36)}`, employerId: userId(user), ...plan, status: "pending_payment", createdAt: new Date().toISOString() };
+    await req.app.locals.jobBillingCollection.insertOne(intent); await audit(req, user, "billing.intent_created", intent.billingId, { planId: plan.id });
+    res.status(201).json({ intent, paymentEnabled: false, message: "Pi payment activation is pending platform payment configuration." });
   });
   router.put("/profile", async (req, res) => {
     const user = await requireUser(req, res);
@@ -779,7 +831,6 @@ export default function mountJobsEndpoints(router: Router) {
       {
         $set: {
           moderationStatus,
-          verified: moderationStatus === "approved",
           moderatedAt: new Date().toISOString(),
           moderatorId: userId(user),
         },
@@ -789,5 +840,31 @@ export default function mountJobsEndpoints(router: Router) {
       moderationStatus,
     });
     res.json({ moderationStatus });
+  });
+  router.patch("/admin/companies/:id/verify", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user || !isAdmin(user))
+      return user ? res.status(403).json({ error: "admin_required" }) : undefined;
+    const verificationStatus = ["verified", "pi_kyb", "rejected"].includes(req.body?.status)
+      ? req.body.status
+      : "pending";
+    await req.app.locals.jobCompanyCollection.updateOne(
+      { slug: req.params.id },
+      { $set: { verificationStatus, verified: ["verified", "pi_kyb"].includes(verificationStatus), verifiedAt: new Date().toISOString(), verifierId: userId(user) } },
+    );
+    await audit(req, user, "company.verification_reviewed", req.params.id, { verificationStatus });
+    res.json({ verificationStatus });
+  });
+  router.patch("/admin/profiles/:userId/verify", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user || !isAdmin(user))
+      return user ? res.status(403).json({ error: "admin_required" }) : undefined;
+    const verificationStatus = ["verified", "rejected"].includes(req.body?.status) ? req.body.status : "pending";
+    await req.app.locals.jobProfileCollection.updateOne(
+      { userId: req.params.userId },
+      { $set: { verificationStatus, verifiedAt: new Date().toISOString(), verifierId: userId(user) } },
+    );
+    await audit(req, user, "candidate.verification_reviewed", req.params.userId, { verificationStatus });
+    res.json({ verificationStatus });
   });
 }

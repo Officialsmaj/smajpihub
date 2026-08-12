@@ -22,6 +22,9 @@ export type JobsApiCompany = {
   field: string;
   openings: number;
   mark: string;
+  verificationStatus?: "unclaimed" | "claimed" | "pending" | "verified" | "pi_kyb" | "rejected";
+  ownerId?: string;
+  website?: string;
 };
 
 export type JobsApiApplication = {
@@ -43,8 +46,18 @@ export type JobsProfile = {
   portfolio: string;
   summary: string;
   updatedAt?: string;
+  verificationStatus?: "unverified" | "pending" | "verified" | "rejected";
 } & Partial<JobsPreferences>;
-export type JobsPreferences = { jobsMode: "candidate" | "employer" | "both"; minimumPayUsdt: number; payPeriod: "hour" | "day" | "week" | "month" | "year"; preferredLocations: string[]; remotePreference: "all" | "remote" | "onsite"; openToAnywhere: boolean; preferredTitles: string[]; preferredCategories: string[] };
+export type JobsPreferences = {
+  jobsMode: "candidate" | "employer" | "both";
+  minimumPayUsdt: number;
+  payPeriod: "hour" | "day" | "week" | "month" | "year";
+  preferredLocations: string[];
+  remotePreference: "all" | "remote" | "onsite";
+  openToAnywhere: boolean;
+  preferredTitles: string[];
+  preferredCategories: string[];
+};
 export type JobsMetrics = { opportunities: number; verifiedEmployers: number; remotePercent: number };
 export type JobsPagination = { page: number; pageSize: number; total: number; pages: number };
 
@@ -132,3 +145,19 @@ export const updateEmployerApplication = async (id: string, status: string) =>
     .data.status;
 export const withdrawJobApplication = async (id: string) =>
   (await axiosClient.patch<{ status: string }>(`/jobs/applications/${encodeURIComponent(id)}/withdraw`)).data.status;
+export const claimJobCompany = async (id: string, evidence: { website: string; evidence: string }) =>
+  (await axiosClient.post(`/jobs/companies/${encodeURIComponent(id)}/claim`, evidence)).data;
+export const requestCompanyVerification = async (
+  id: string,
+  evidence: { registrationNumber: string; businessEmail: string; representativeRole: string; notes: string }
+) => (await axiosClient.post(`/jobs/companies/${encodeURIComponent(id)}/verification-request`, evidence)).data;
+export const requestCandidateVerification = async (evidence: {
+  portfolio: string;
+  credential: string;
+  notes: string;
+}) => (await axiosClient.post("/jobs/profile/verification-request", evidence)).data;
+export type JobsBillingPlan = { id: string; name: string; priceUsdt: number; pricePi: number; piRateUsed: number };
+export const getJobsBillingPlans = async () =>
+  (await axiosClient.get<{ plans: JobsBillingPlan[] }>("/jobs/billing/plans")).data.plans;
+export const createJobsBillingIntent = async (planId: string) =>
+  (await axiosClient.post("/jobs/billing/intents", { planId })).data;

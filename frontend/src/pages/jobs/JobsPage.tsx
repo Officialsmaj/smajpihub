@@ -13,6 +13,7 @@ import {
   applyToJob,
   createJobCompany,
   createJob,
+  createJobsBillingIntent,
   enrollEmployer,
   getEmployerDashboard,
   getJobApplications,
@@ -20,8 +21,11 @@ import {
   getJobs,
   getJobsMetrics,
   getJobsProfile,
+  getJobsBillingPlans,
   getSavedJobs,
   saveJobsProfile,
+  requestCandidateVerification,
+  requestCompanyVerification,
   toggleSavedJob,
   updateEmployerApplication,
   type JobsApiApplication,
@@ -29,6 +33,7 @@ import {
   type JobsApiJob,
   type JobsMetrics,
   type JobsProfile,
+  type JobsBillingPlan,
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import "./JobsPage.css";
@@ -150,9 +155,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
     </div>
     <div className="job-card-main">
       <div className="job-card-top">
-        <span>
-          {job.company} <CheckCircleRoundedIcon />
-        </span>
+        <span>{job.company}</span>
         <small>{job.featured ? "Featured" : "Recently added"}</small>
       </div>
       <Link to={`/services/jobs/job/${job.id}`}>{job.title}</Link>
@@ -198,6 +201,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
   const [postCompanyId, setPostCompanyId] = useState("");
+  const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -243,6 +247,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       });
     return () => controller.abort();
   }, [searchParams, category, kind, page]);
+  useEffect(() => {
+    void getJobsBillingPlans()
+      .then(setBillingPlans)
+      .catch(() => setBillingPlans([]));
+  }, []);
   const effectiveQuery = query || searchParams.get("q") || "";
   const visibleJobs = useMemo(
     () =>
@@ -370,6 +379,47 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("Application status could not be updated.");
     }
   };
+  const submitCompanyVerification = async (event: FormEvent<HTMLFormElement>, companyId: string) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await requestCompanyVerification(companyId, {
+        registrationNumber: String(data.get("registrationNumber") || ""),
+        businessEmail: String(data.get("businessEmail") || ""),
+        representativeRole: String(data.get("representativeRole") || ""),
+        notes: String(data.get("notes") || ""),
+      });
+      setEmployerCompanies(current =>
+        current.map(company => (company.id === companyId ? { ...company, verificationStatus: "pending" } : company))
+      );
+      setActionMessage("Company verification submitted for review.");
+    } catch {
+      setActionMessage("Company verification request could not be submitted.");
+    }
+  };
+  const submitCandidateVerification = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await requestCandidateVerification({
+        portfolio: String(data.get("verificationPortfolio") || ""),
+        credential: String(data.get("credential") || ""),
+        notes: String(data.get("verificationNotes") || ""),
+      });
+      setProfile(current => (current ? { ...current, verificationStatus: "pending" } : current));
+      setActionMessage("Professional verification submitted for review.");
+    } catch {
+      setActionMessage("Complete your professional profile before requesting verification.");
+    }
+  };
+  const startBilling = async (planId: string) => {
+    try {
+      const result = await createJobsBillingIntent(planId);
+      setActionMessage(result.message || "Billing request created.");
+    } catch {
+      setActionMessage("Billing request could not be created.");
+    }
+  };
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
@@ -437,7 +487,27 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               </aside>
             </section>
-            {user && !loading ? <JobPreferencesPanel key={profile?.updatedAt || profile?.jobsMode || "new"} userName={user.displayName || user.piUsername || user.username || "Pioneer"} profile={profile} jobs={jobs} onSaved={preferences => setProfile(current => ({ ...(current || { title: "", skills: [], location: "", availability: "", portfolio: "", summary: "" }), ...preferences }))} /> : null}
+            {user && !loading ? (
+              <JobPreferencesPanel
+                key={profile?.updatedAt || profile?.jobsMode || "new"}
+                userName={user.displayName || user.piUsername || user.username || "Pioneer"}
+                profile={profile}
+                jobs={jobs}
+                onSaved={preferences =>
+                  setProfile(current => ({
+                    ...(current || {
+                      title: "",
+                      skills: [],
+                      location: "",
+                      availability: "",
+                      portfolio: "",
+                      summary: "",
+                    }),
+                    ...preferences,
+                  }))
+                }
+              />
+            ) : null}
             <section className="jobs-section">
               <header>
                 <div>
@@ -496,7 +566,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <Link to={`/services/jobs/company/${company.id}`} key={company.id}>
                   <span>{company.mark}</span>
                   <h2>
-                    {company.name} <CheckCircleRoundedIcon />
+                    {company.name}{" "}
+                    {company.verificationStatus === "verified" || company.verificationStatus === "pi_kyb" ? (
+                      <CheckCircleRoundedIcon aria-label="Verified company" />
+                    ) : null}
                   </h2>
                   <p>{company.field}</p>
                   <b>{company.openings} open opportunities</b>
@@ -572,7 +645,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <div className="company-hero">
               <span>{selectedCompany.mark}</span>
               <div>
-                <small>VERIFIED EMPLOYER</small>
+                <small>
+                  {selectedCompany.verificationStatus === "pi_kyb"
+                    ? "PI KYB VERIFIED"
+                    : selectedCompany.verificationStatus === "verified"
+                      ? "VERIFIED EMPLOYER"
+                      : selectedCompany.verificationStatus === "pending"
+                        ? "VERIFICATION PENDING"
+                        : selectedCompany.verificationStatus === "claimed"
+                          ? "CLAIMED COMPANY"
+                          : "COMPANY PROFILE"}
+                </small>
                 <h1>{selectedCompany.name}</h1>
                 <p>{selectedCompany.field} · Building useful products for the Pi community.</p>
               </div>
@@ -809,45 +892,77 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 ))}
               </div>
             ) : kind === "profile" ? (
-              <form className="job-form" onSubmit={saveProfile}>
-                <label>
-                  Professional title
-                  <input name="title" defaultValue={profile?.title} required placeholder="e.g. Frontend Engineer" />
-                </label>
-                <label>
-                  Skills
-                  <input
-                    name="skills"
-                    defaultValue={Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills}
-                    required
-                    placeholder="React, TypeScript, product design"
-                  />
-                </label>
-                <div>
+              <div className="jobs-profile-workspace">
+                <form className="job-form" onSubmit={saveProfile}>
                   <label>
-                    Location
-                    <input name="location" defaultValue={profile?.location} placeholder="City or Remote" />
+                    Professional title
+                    <input name="title" defaultValue={profile?.title} required placeholder="e.g. Frontend Engineer" />
                   </label>
                   <label>
-                    Availability
-                    <select name="availability" defaultValue={profile?.availability || "Open to offers"}>
-                      <option>Available now</option>
-                      <option>Open to offers</option>
-                      <option>Not available</option>
-                    </select>
+                    Skills
+                    <input
+                      name="skills"
+                      defaultValue={Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills}
+                      required
+                      placeholder="React, TypeScript, product design"
+                    />
                   </label>
-                </div>
-                <label>
-                  Portfolio URL
-                  <input name="portfolio" defaultValue={profile?.portfolio} type="url" placeholder="https://..." />
-                </label>
-                <label>
-                  Professional summary
-                  <textarea name="summary" defaultValue={profile?.summary} required minLength={30} rows={6} />
-                </label>
-                <button type="submit">Save profile</button>
-                {profileSaved ? <p className="jobs-action-message">Profile saved on this device.</p> : null}
-              </form>
+                  <div>
+                    <label>
+                      Location
+                      <input name="location" defaultValue={profile?.location} placeholder="City or Remote" />
+                    </label>
+                    <label>
+                      Availability
+                      <select name="availability" defaultValue={profile?.availability || "Open to offers"}>
+                        <option>Available now</option>
+                        <option>Open to offers</option>
+                        <option>Not available</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>
+                    Portfolio URL
+                    <input name="portfolio" defaultValue={profile?.portfolio} type="url" placeholder="https://..." />
+                  </label>
+                  <label>
+                    Professional summary
+                    <textarea name="summary" defaultValue={profile?.summary} required minLength={30} rows={6} />
+                  </label>
+                  <button type="submit">Save profile</button>
+                  {profileSaved ? <p className="jobs-action-message">Profile saved on this device.</p> : null}
+                </form>
+                <form className="job-form jobs-verification-form" onSubmit={submitCandidateVerification}>
+                  <h2>Professional verification</h2>
+                  <p>
+                    Status: <b>{profile?.verificationStatus || "unverified"}</b>. Verification reviews evidence; it does
+                    not guarantee a candidate's work.
+                  </p>
+                  <label>
+                    Portfolio or work URL
+                    <input
+                      name="verificationPortfolio"
+                      type="url"
+                      defaultValue={profile?.portfolio}
+                      placeholder="https://..."
+                    />
+                  </label>
+                  <label>
+                    Credential URL
+                    <input name="credential" type="url" placeholder="https://..." />
+                  </label>
+                  <label>
+                    Review notes
+                    <textarea
+                      name="verificationNotes"
+                      rows={3}
+                      placeholder="Explain what the reviewer should confirm"
+                    />
+                  </label>
+                  <button type="submit">Request professional verification</button>
+                </form>
+                {actionMessage ? <p className="jobs-action-message">{actionMessage}</p> : null}
+              </div>
             ) : kind === "employer" ? (
               <div className="jobs-employer-dashboard">
                 <article>
@@ -877,6 +992,60 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <button type="submit">Submit company for review</button>
                 </form>
+                <section className="jobs-trust-section">
+                  <h2>Company verification</h2>
+                  <p>Submit business identity and representative evidence. A badge appears only after review.</p>
+                  {employerCompanies.map(company => (
+                    <form
+                      className="job-form jobs-verification-form"
+                      key={company.id}
+                      onSubmit={event => void submitCompanyVerification(event, company.id)}
+                    >
+                      <h3>
+                        {company.name} <small>{company.verificationStatus || "unverified"}</small>
+                      </h3>
+                      <label>
+                        Registration number
+                        <input name="registrationNumber" />
+                      </label>
+                      <label>
+                        Business email
+                        <input name="businessEmail" type="email" required />
+                      </label>
+                      <label>
+                        Your role
+                        <input name="representativeRole" required placeholder="Owner, director, recruiter..." />
+                      </label>
+                      <label>
+                        Evidence notes
+                        <textarea name="notes" rows={3} />
+                      </label>
+                      <button
+                        type="submit"
+                        disabled={company.verificationStatus === "verified" || company.verificationStatus === "pi_kyb"}
+                      >
+                        Request company verification
+                      </button>
+                    </form>
+                  ))}
+                </section>
+                <section className="jobs-trust-section jobs-billing-plans">
+                  <h2>Employer plans</h2>
+                  <p>
+                    Candidate profiles and applications stay free. Employer promotion and posting plans fund SMAJ PI
+                    HUB; salaries remain between employer and worker.
+                  </p>
+                  {billingPlans.map(plan => (
+                    <article key={plan.id}>
+                      <h3>{plan.name}</h3>
+                      <strong>{formatPiAmount(plan.pricePi)}</strong>
+                      <small>{formatUsdAmount(plan.priceUsdt)} at the configured store rate</small>
+                      <button type="button" onClick={() => void startBilling(plan.id)}>
+                        Create billing request
+                      </button>
+                    </article>
+                  ))}
+                </section>
                 {actionMessage ? <p className="jobs-action-message">{actionMessage}</p> : null}
                 <div className="jobs-application-list">
                   {employerApplications.map(application => (
