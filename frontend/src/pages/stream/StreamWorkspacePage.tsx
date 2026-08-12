@@ -969,7 +969,22 @@ const StreamPlansPanel = () => {
         requestPiBrowserHandoff("Pi payment required");
         throw new Error("Open SMAJ PI HUB in Pi Browser to pay with Pi.");
       }
-      await window.Pi.authenticate(["payments"], () => console.info("Incomplete Stream Pi payment found."));
+      await window.Pi.authenticate(["payments"], payment => {
+        const incompletePlan = payment.metadata?.service === "stream" && ["plus", "family"].includes(String(payment.metadata?.plan))
+          ? payment.metadata.plan as StreamPlanId
+          : null;
+        if (!incompletePlan) return;
+        void (async () => {
+          try {
+            if (!payment.status.developer_approved) await approveStreamSubscriptionPayment(incompletePlan, payment.identifier);
+            if (!payment.transaction?.txid) return;
+            const completed = await completeStreamSubscriptionPayment(incompletePlan, payment.identifier, payment.transaction.txid);
+            setSubscription(completed.subscription);
+            setMessage(completed.message);
+            setState("ready");
+          } catch { setMessage("An incomplete Pi payment is still awaiting confirmation. Your plan has not changed."); }
+        })();
+      });
       await window.Pi.createPayment(
         { amount: result.checkout.amountPi, memo: result.checkout.memo, metadata: { service: "stream", plan: result.checkout.plan } },
         {

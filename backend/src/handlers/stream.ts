@@ -448,16 +448,25 @@ const mountStreamEndpoints = (router: Router) => {
     const txid = String(req.body?.txid || "").trim();
     const plan = String(req.body?.plan || "") as StreamPlanId;
     const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    if (stored?.streamSubscription?.paymentStatus === "paid" && stored.streamSubscription.paymentId === paymentId && stored.streamSubscription.plan === plan)
+      return res.json({ subscription: normalizeStreamSubscription(stored.streamSubscription), message: `${streamPlans[plan].name} is already active.` });
     const pending = stored?.pendingStreamSubscription;
     if (!paymentId || !txid || !(plan in streamPlans) || !pending || pending.plan !== plan || pending.paymentId !== paymentId)
       return res.status(409).json({ error: "payment_mismatch", message: "This Pi payment does not match an approved Stream checkout." });
     try {
-      await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+      const completedResponse = await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+      const completedPayment = completedResponse.data;
+      if (completedPayment?.status?.developer_completed !== true || completedPayment?.transaction?.verified !== true || completedPayment?.transaction?.txid !== txid)
+        return res.status(409).json({ error: "payment_not_completed", message: "Pi has not fully confirmed this payment. Your Stream plan was not changed." });
       const now = new Date();
       const expiresAt = new Date(now); expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 1);
       const pricing = streamPlanPrice(streamPlans[plan].priceUsd);
       const subscription = { plan, status: "active", startedAt: now, expiresAt, priceUsd: pricing.priceUsd, pricePi: pricing.pricePi, piRateUsed: pricing.piRateUsed, paymentStatus: "paid", paymentId, paymentTxid: txid, updatedAt: now };
-      await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription }, $unset: { pendingStreamSubscription: "" } });
+      const activation = await req.app.locals.userCollection.updateOne(
+        { _id: user._id, "pendingStreamSubscription.plan": plan, "pendingStreamSubscription.paymentId": paymentId },
+        { $set: { streamSubscription: subscription }, $unset: { pendingStreamSubscription: "" } },
+      );
+      if (!activation.matchedCount) return res.status(409).json({ error: "checkout_changed", message: "This checkout is no longer active. Contact support with your Pi transaction ID." });
       return res.json({ subscription: normalizeStreamSubscription(subscription), message: `${streamPlans[plan].name} is active for one month.` });
     } catch (error) {
       const status = Number((error as { response?: { status?: number } }).response?.status || 502);
