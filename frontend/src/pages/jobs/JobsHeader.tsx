@@ -11,7 +11,6 @@ const candidateLinks = [
   ["freelance", "Freelance"],
   ["saved", "Saved jobs"],
   ["applications", "Applications"],
-  ["profile", "My professional profile"],
 ] as const;
 
 const employerLinks = [
@@ -102,13 +101,11 @@ const JobsHeader = ({
             {label}
           </NavLink>
         ))}
-        <NavLink
-          className="jobs-mobile-post"
-          to={workspaceMode === "candidate" ? "/services/jobs/search" : "/services/jobs/post"}
-          onClick={() => setMenuOpen(false)}
-        >
-          {workspaceMode === "candidate" ? "Search jobs" : "Post a job"}
-        </NavLink>
+        {workspaceMode === "employer" ? (
+          <NavLink className="jobs-mobile-post" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
+            Post a job
+          </NavLink>
+        ) : null}
       </nav>
       <form className="jobs-header-search" role="search" onSubmit={submit}>
         <SearchRoundedIcon />
@@ -128,13 +125,11 @@ const JobsHeader = ({
       >
         <NotificationsNoneRoundedIcon />
       </NavLink>
-      <NavLink
-        className="jobs-post-button"
-        to={workspaceMode === "candidate" ? "/services/jobs/search" : "/services/jobs/post"}
-        onClick={() => setMenuOpen(false)}
-      >
-        {workspaceMode === "candidate" ? "Search jobs" : "Post a job"}
-      </NavLink>
+      {workspaceMode === "employer" ? (
+        <NavLink className="jobs-post-button" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
+          Post a job
+        </NavLink>
+      ) : null}
       <button
         className="jobs-menu-button"
         type="button"
