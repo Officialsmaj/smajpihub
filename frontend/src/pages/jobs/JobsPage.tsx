@@ -1259,9 +1259,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <h1>
                 {kind === "post"
                   ? "Post a new opportunity"
-                  : kind === "profile"
-                    ? "Professional profile"
-                    : kind === "employer"
+                  : kind === "employer"
                       ? "Employer dashboard"
                       : "Applications"}
               </h1>
