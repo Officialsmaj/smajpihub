@@ -916,6 +916,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             ) : kind === "profile" ? (
               <div className="jobs-profile-workspace">
                 <form className="job-form" onSubmit={saveProfile}>
+                  <div className="jobs-profile-identity">
+                    <span className="jobs-profile-avatar">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="" />
+                      ) : (
+                        (user?.displayName || user?.piUsername || user?.username || "P").slice(0, 1).toUpperCase()
+                      )}
+                    </span>
+                    <div>
+                      <strong>{user?.displayName || user?.piUsername || user?.username || "Pioneer"}</strong>
+                      <small>Your SMAJ PI HUB photo and identity</small>
+                    </div>
+                  </div>
                   <label>
                     Professional title
                     <input name="title" defaultValue={profile?.title} required placeholder="e.g. Frontend Engineer" />
@@ -931,8 +944,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <div>
                     <label>
-                      Location
-                      <input name="location" defaultValue={profile?.location} placeholder="City or Remote" />
+                      Country
+                      <input
+                        name="location"
+                        required
+                        list="profile-country-options"
+                        defaultValue={profile?.location || user?.country}
+                        placeholder="Search for your country"
+                        autoComplete="country-name"
+                      />
+                      <datalist id="profile-country-options">
+                        {JOB_COUNTRIES.map(country => (
+                          <option key={country.code} value={country.label} />
+                        ))}
+                      </datalist>
                     </label>
                     <label>
                       Availability
@@ -952,7 +977,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <textarea name="summary" defaultValue={profile?.summary} required minLength={30} rows={6} />
                   </label>
                   <button type="submit">Save profile</button>
-                  {profileSaved ? <p className="jobs-action-message">Profile saved on this device.</p> : null}
+                  {profileSaved ? <p className="jobs-action-message">Profile saved to your SMAJ account.</p> : null}
                 </form>
                 <form className="job-form jobs-verification-form" onSubmit={submitCandidateVerification}>
                   <h2>Professional verification</h2>

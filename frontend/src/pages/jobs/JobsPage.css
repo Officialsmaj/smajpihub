@@ -795,6 +795,41 @@
 .job-form button {
   justify-self: start;
 }
+.job-form .jobs-profile-identity {
+  padding: 14px;
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #dce7e1;
+  border-radius: 12px;
+  background: #f7faf8;
+}
+.jobs-profile-avatar {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--green);
+  font-size: 20px;
+  font-weight: 900;
+}
+.jobs-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.jobs-profile-identity div {
+  display: grid;
+  gap: 3px;
+}
+.jobs-profile-identity small {
+  color: var(--muted);
+}
 .job-compensation {
   margin: 0;
   padding: 18px;
