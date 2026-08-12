@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const rootDir = configDir;
   const env = loadEnv(mode, rootDir, "");
   const isPublicBuild = mode === "public";
+  const isLegacyBuild = mode === "legacy";
   const build = {
     ...(isPublicBuild
       ? {
@@ -40,12 +41,16 @@ export default defineConfig(({ mode }) => {
     base: "/",
     plugins: [
       react(),
-      legacy({
-        // Force legacy output for embedded/older webviews.
-        targets: ["Android >= 5", "iOS >= 10"],
-        renderLegacyChunks: true,
-        modernPolyfills: true,
-      }),
+      ...(isLegacyBuild
+        ? [
+            legacy({
+              // Opt-in compatibility output for embedded/older webviews.
+              targets: ["Android >= 5", "iOS >= 10"],
+              renderLegacyChunks: true,
+              modernPolyfills: true,
+            }),
+          ]
+        : []),
       {
         name: "html-env-replace",
         transformIndexHtml(html) {

@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:public": "tsc -b && vite build --mode public",
+    "build:legacy": "tsc -b && vite build --mode legacy",
     "lint": "eslint .",
     "test:jobs": "node tests/jobsUi.test.mjs",
     "preview": "vite preview",
