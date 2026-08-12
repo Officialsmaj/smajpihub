@@ -24,7 +24,6 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
-import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -445,7 +444,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       {!isStreamImmersive ? <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
         {(isStreamShell ? [
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
-          { to: "/app/services/stream/movies", label: "Movies", icon: <MovieOutlinedIcon /> },
+          { to: "/app/services/stream/search", label: "Browse", icon: <SearchOutlinedIcon /> },
           { to: "/app/services/stream/live/now", label: "Live", icon: <LiveTvOutlinedIcon /> },
           { to: "/app/services/stream/downloads", label: "Downloads", icon: <DownloadOutlinedIcon /> },
           { to: "/app/services/stream/studio/channel", label: "Account", icon: <PersonOutlineIcon /> },

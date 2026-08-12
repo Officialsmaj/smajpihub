@@ -44,7 +44,6 @@
   caret-color:#fff;
 }
 
-.stream-global-search-button,
 .stream-global-cast-button{
   width:40px;
   height:40px;
@@ -59,16 +58,13 @@
   text-decoration:none;
   cursor:pointer;
 }
-.stream-global-search-button{margin-left:auto}
-.stream-global-search-button:hover,
-.stream-global-search-button:focus-visible,
+.stream-global-cast-button{margin-left:auto}
 .stream-global-cast-button:hover,
 .stream-global-cast-button:focus-visible{
   color:#fff;
   opacity:.72;
   outline:2px solid transparent;
 }
-.stream-global-search-button svg{font-size:30px}
 .stream-global-cast-button svg{font-size:31px}
 
 .stream-cast-layer{

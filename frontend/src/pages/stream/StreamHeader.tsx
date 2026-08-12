@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CastConnectedRoundedIcon from "@mui/icons-material/CastConnectedRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -84,9 +83,6 @@ const StreamHeader = (props: StreamHeaderProps) => {
           </Link>
           <Link className="stream-global-title" to="/app/services/stream">
             Stream
-          </Link>
-          <Link className="stream-global-search-button" to="/app/services/stream/search" aria-label="Open Stream search">
-            <SearchRoundedIcon />
           </Link>
           <button className="stream-global-cast-button" type="button" onClick={() => setCastOpen(true)} aria-label="Find casting devices">
             <CastConnectedRoundedIcon />
