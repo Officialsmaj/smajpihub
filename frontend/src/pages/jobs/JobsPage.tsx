@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -202,6 +203,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [payMax, setPayMax] = useState("");
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false);
+  const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("smaj_jobs_recent_searches") || "[]");
+    } catch {
+      return [];
+    }
+  });
   const [workspaceMode, setWorkspaceMode] = useState<"candidate" | "employer">(
     kind === "employer" || kind === "post" ? "employer" : "candidate"
   );
@@ -214,6 +223,38 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       : ["search", "freelance", "saved", "applications", "profile"].includes(kind)
         ? "candidate"
         : workspaceMode;
+  const jobSearchSuggestions = useMemo(() => {
+    const available = [
+      ...recentJobSearches,
+      ...jobs.map(job => job.title),
+      ...jobs.flatMap(job => job.skills),
+      ...jobs.map(job => job.category),
+    ];
+    const term = query.trim().toLowerCase();
+    return [...new Set(available)].filter(item => !term || item.toLowerCase().includes(term)).slice(0, 10);
+  }, [jobs, query, recentJobSearches]);
+  const runJobSearch = (term = query) => {
+    const cleanTerm = term.trim();
+    const params = new URLSearchParams({
+      ...(cleanTerm ? { q: cleanTerm } : {}),
+      ...(location ? { location } : {}),
+    });
+    if (cleanTerm) {
+      const nextRecent = [cleanTerm, ...recentJobSearches.filter(item => item !== cleanTerm)].slice(0, 6);
+      setRecentJobSearches(nextRecent);
+      window.localStorage.setItem("smaj_jobs_recent_searches", JSON.stringify(nextRecent));
+    }
+    setSearchSheetOpen(false);
+    navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
+  };
+  useEffect(() => {
+    if (!searchSheetOpen) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSearchSheetOpen(false);
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [searchSheetOpen]);
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -481,11 +522,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 role="search"
                 onSubmit={event => {
                   event.preventDefault();
-                  const params = new URLSearchParams({
-                    ...(query ? { q: query } : {}),
-                    ...(location ? { location } : {}),
-                  });
-                  navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
+                  runJobSearch();
                 }}
               >
                 <label>
@@ -495,6 +532,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     onChange={event => setQuery(event.target.value)}
                     placeholder="Job title, skill or company"
                     aria-label="Job title, skill or company"
+                    onFocus={() => setSearchSheetOpen(true)}
                   />
                 </label>
                 <label>
@@ -508,6 +546,57 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <button type="submit">Search</button>
               </form>
+              {searchSheetOpen ? (
+                <div className="jobs-search-sheet-layer">
+                  <button
+                    className="jobs-search-sheet-overlay"
+                    type="button"
+                    aria-label="Close job search"
+                    onClick={() => setSearchSheetOpen(false)}
+                  />
+                  <section className="jobs-search-sheet" role="dialog" aria-modal="true" aria-label="Search jobs">
+                    <header>
+                      <button type="button" onClick={() => setSearchSheetOpen(false)} aria-label="Back">
+                        <ArrowBackRoundedIcon />
+                      </button>
+                      <label>
+                        <SearchRoundedIcon />
+                        <input
+                          autoFocus
+                          value={query}
+                          onChange={event => setQuery(event.target.value)}
+                          onKeyDown={event => {
+                            if (event.key === "Enter") runJobSearch();
+                          }}
+                          placeholder="Job title, keywords, or company"
+                          aria-label="Search job title, keywords, or company"
+                        />
+                      </label>
+                    </header>
+                    <div className="jobs-search-suggestions">
+                      <b>Search suggestions</b>
+                      {jobSearchSuggestions.map(suggestion => (
+                        <button
+                          type="button"
+                          key={suggestion}
+                          onClick={() => {
+                            setQuery(suggestion);
+                            runJobSearch(suggestion);
+                          }}
+                        >
+                          <SearchRoundedIcon /> <span>{suggestion}</span>
+                        </button>
+                      ))}
+                      {!jobSearchSuggestions.length ? <p>No matching suggestions. Search for “{query}”.</p> : null}
+                    </div>
+                    <footer>
+                      <button type="button" onClick={() => runJobSearch()}>
+                        Search
+                      </button>
+                    </footer>
+                  </section>
+                </div>
+              ) : null}
               {user && !loading && activeWorkspaceMode === "candidate" ? (
                 <JobPreferencesPanel
                   key={profile?.updatedAt || profile?.jobsMode || "new"}

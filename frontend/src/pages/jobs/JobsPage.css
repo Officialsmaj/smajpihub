@@ -155,6 +155,118 @@
 .jobs-recommended h2 {
   margin: 0 0 14px;
 }
+.jobs-search-sheet-layer {
+  position: fixed;
+  z-index: 2147483000;
+  inset: 0;
+}
+.jobs-search-sheet-overlay {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: #08100f80;
+}
+.jobs-search-sheet {
+  width: min(100%, 560px);
+  height: min(88vh, 720px);
+  padding: 18px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  box-shadow: 0 -16px 45px #0003;
+  animation: jobs-search-sheet-in 180ms ease-out;
+}
+.jobs-search-sheet > header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jobs-search-sheet > header > button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+}
+.jobs-search-sheet > header label {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 12px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #8e9b95;
+  border-radius: 12px;
+}
+.jobs-search-sheet > header input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+.jobs-search-suggestions {
+  min-height: 0;
+  padding: 18px 6px;
+  flex: 1;
+  overflow-y: auto;
+}
+.jobs-search-suggestions > b {
+  margin-bottom: 8px;
+  display: block;
+  font-size: 12px;
+}
+.jobs-search-suggestions > button {
+  width: 100%;
+  padding: 11px 4px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 0;
+  color: #3f4d47;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+}
+.jobs-search-suggestions > button svg {
+  color: #17221e;
+  font-size: 18px;
+}
+.jobs-search-sheet > footer {
+  padding-top: 12px;
+  border-top: 1px solid #e4eae7;
+}
+.jobs-search-sheet > footer button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  background: var(--green);
+  font-weight: 900;
+}
+@keyframes jobs-search-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jobs-search-sheet {
+    animation: none;
+  }
+}
 .jobs-sheet-backdrop {
   position: fixed;
   z-index: 100;
