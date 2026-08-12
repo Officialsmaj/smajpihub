@@ -7,6 +7,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 const candidateLinks = [
   ["activity", "Activity on profile"],
+  ["activity?tab=actions", "Employer invites"],
   ["search#alerts", "Job alerts"],
   ["companies", "Companies"],
   ["freelance", "Freelance projects"],
@@ -14,12 +15,7 @@ const candidateLinks = [
 ] as const;
 
 const employerLinks = [
-  ["employer", "Employer dashboard"],
-  ["post", "Post a job"],
   ["employer#jobs", "Manage jobs"],
-  ["employer#candidates", "Candidates"],
-  ["companies", "Company profile"],
-  ["employer#verification", "Company verification"],
 ] as const;
 
 type WorkspaceMode = "candidate" | "employer";

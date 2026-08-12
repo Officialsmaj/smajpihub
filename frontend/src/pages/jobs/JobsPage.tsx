@@ -253,6 +253,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
+  }, [kind, searchParams]);
   const activeWorkspaceMode =
     kind === "employer" || kind === "post"
       ? "employer"
