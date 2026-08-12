@@ -43,8 +43,18 @@ const buildLegacyMongoUri = () => {
   return `mongodb://${env.mongo_host}/${dbName}`;
 };
 const mongoUri = env.mongodb_uri || buildLegacyMongoUri();
-const baseMongoClientOptions = { serverSelectionTimeoutMS: 5000 };
+const baseMongoClientOptions = {
+  serverSelectionTimeoutMS: 15000,
+  maxPoolSize: 20,
+  minPoolSize: 0,
+  maxIdleTimeMS: 60000,
+};
 const mongoClientOptions = baseMongoClientOptions;
+let mongoClientPromise: Promise<MongoClient> | null = null;
+const getMongoClient = () => {
+  if (!mongoClientPromise) mongoClientPromise = MongoClient.connect(mongoUri, mongoClientOptions);
+  return mongoClientPromise;
+};
 const maskMongoUri = (uri: string) =>
   uri.replace(/\/\/([^:/?#]+):([^@/?#]+)@/, "//$1:****@");
 
@@ -166,8 +176,7 @@ app.use(
       ? {}
       : {
           store: MongoStore.create({
-            mongoUrl: mongoUri,
-            mongoOptions: mongoClientOptions,
+            clientPromise: getMongoClient(),
             dbName: dbName,
             collectionName: "user_sessions",
             ttl: sessionTtlSeconds,
@@ -311,7 +320,7 @@ const start = async () => {
         "Using in-memory development database. Data resets when the backend stops.",
       );
     } else {
-      const client = await MongoClient.connect(mongoUri, mongoClientOptions);
+      const client = await getMongoClient();
       const db = client.db(dbName);
       app.locals.paymentCollection = db.collection("pi_payments");
       app.locals.marketplaceOrderCollection = db.collection("orders");

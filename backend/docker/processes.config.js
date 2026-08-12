@@ -5,7 +5,7 @@ module.exports = {
   apps: [{
     name: "demoapp-backend",
     script: "/usr/src/app/build/index.js",
-    exec_mode: "cluster",
-    instances: 4,
+    exec_mode: "fork",
+    instances: 1,
   }]
 }
