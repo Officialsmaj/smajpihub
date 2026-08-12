@@ -145,6 +145,18 @@ const fallbackCompanies: JobsApiCompany[] = [
   { id: "smaj-services", name: "SMAJ Services", field: "Digital services", openings: 8, mark: "SS" },
 ];
 
+const formatJobCompensation = (salary: string) =>
+  salary
+    .replace(/^([\d,.]+(?:–[\d,.]+)?)\s*Pi\b/i, "π $1")
+    .replace(/\bPi\b/gi, "π")
+    .replace(/π\s([^–]+)–π\s/, "π $1–")
+    .replace(
+      /\s*\/\s*(hour|day|week|month|year)\b/gi,
+      (_match, period: string) =>
+        ` / ${{ hour: "hr", day: "day", week: "wk", month: "mo", year: "yr" }[period.toLowerCase()]}`
+    )
+    .replace(/\s+fixed$/i, " / project");
+
 const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () => void }) => (
   <article className="job-card">
     <div className="job-company-mark">
@@ -168,7 +180,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
           <span key={skill}>{skill}</span>
         ))}
       </div>
-      <strong>{job.salary}</strong>
+      <strong>{formatJobCompensation(job.salary)}</strong>
     </div>
     <button className={saved ? "saved" : ""} type="button" onClick={onSave} aria-label={`Save ${job.title}`}>
       <BookmarkBorderRoundedIcon />
@@ -1320,6 +1332,18 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 ) : null}
               </div>
             </div>
+            {kind === "search" ? (
+              <section className="jobs-cta jobs-search-employer-cta">
+                <div>
+                  <span className="jobs-kicker">FOR EMPLOYERS</span>
+                  <h2>Meet talent that is ready to build.</h2>
+                  <p>Publish a role, review verified profiles and manage candidates in one place.</p>
+                </div>
+                <Link to="/services/jobs/post">
+                  Post your first job <ArrowForwardRoundedIcon />
+                </Link>
+              </section>
+            ) : null}
           </section>
         )}
         <nav className="jobs-mobile-nav">

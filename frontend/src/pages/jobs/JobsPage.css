@@ -702,7 +702,7 @@
 .job-card-main > strong {
   margin-top: 13px;
   display: block;
-  color: #087d4b;
+  color: #6d3df5;
   font-size: 13px;
 }
 .job-card > button {
@@ -769,6 +769,10 @@
   background: #fff;
   font-weight: 850;
   text-decoration: none;
+}
+.jobs-search-employer-cta {
+  margin-top: 42px;
+  margin-bottom: 20px;
 }
 .jobs-page-heading {
   margin-bottom: 35px;
