@@ -599,6 +599,33 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, `profile.avatar_${status}`, userId(user));
     res.json({ status, avatar });
   });
+  router.put("/profile/cv", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const url = String(req.body?.url || "").trim().slice(0, 1200);
+    const name = String(req.body?.name || "CV.pdf").replace(/[\\/]/g, "-").slice(0, 120);
+    const size = Math.max(0, Math.min(5_000_000, Number(req.body?.size) || 0));
+    const visibility = ["applications", "verified_employers", "private"].includes(req.body?.visibility)
+      ? req.body.visibility
+      : "applications";
+    if (!/^https:\/\/res\.cloudinary\.com\//i.test(url) || !name.toLowerCase().endsWith(".pdf") || !size)
+      return res.status(400).json({ error: "invalid_cv", message: "Upload a valid PDF CV." });
+    const cv = { url, name, size, visibility, updatedAt: new Date().toISOString() };
+    await req.app.locals.jobProfileCollection.updateOne(
+      { userId: userId(user) },
+      { $set: { cv }, $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() } },
+      { upsert: true },
+    );
+    await audit(req, user, "profile.cv_updated", userId(user), { visibility, size });
+    res.json({ cv });
+  });
+  router.delete("/profile/cv", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    await req.app.locals.jobProfileCollection.updateOne({ userId: userId(user) }, { $unset: { cv: "" } });
+    await audit(req, user, "profile.cv_deleted", userId(user));
+    res.status(204).send();
+  });
   router.patch("/preferences", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
@@ -744,6 +771,10 @@ export default function mountJobsEndpoints(router: Router) {
         message: "Complete your professional profile before applying.",
       });
     const now = new Date().toISOString();
+    const applicationCompany = await req.app.locals.jobCompanyCollection.findOne({ slug: job.companyId });
+    const shareCv =
+      profile.cv?.visibility === "applications" ||
+      (profile.cv?.visibility === "verified_employers" && applicationCompany?.verified === true);
     const application = {
       ...key,
       employerId: job.employerId,
@@ -758,6 +789,7 @@ export default function mountJobsEndpoints(router: Router) {
         location: profile.location,
         portfolio: profile.portfolio,
         summary: profile.summary,
+        ...(shareCv ? { cv: profile.cv } : {}),
       },
       status: "submitted",
       statusHistory: [{ status: "submitted", at: now, actorId: userId(user) }],

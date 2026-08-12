@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -16,6 +16,7 @@ import {
   createJob,
   createJobsBillingIntent,
   confirmJobsProfileAvatar,
+  deleteJobsCv,
   enrollEmployer,
   getEmployerDashboard,
   getJobApplications,
@@ -28,7 +29,9 @@ import {
   saveJobsProfile,
   requestCandidateVerification,
   requestCompanyVerification,
+  saveJobsCv,
   toggleSavedJob,
+  uploadJobsCv,
   updateEmployerApplication,
   type JobsApiApplication,
   type JobsApiCompany,
@@ -208,6 +211,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [cvSaving, setCvSaving] = useState(false);
+  const [cvMessage, setCvMessage] = useState("");
   const [avatarPromptDismissed, setAvatarPromptDismissed] = useState(false);
   const [profile, setProfile] = useState<JobsProfile | null>(null);
   const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
@@ -254,6 +259,54 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       current ? { ...current, avatarConfirmationStatus: status, avatarConfirmationValue: currentAvatar } : current
     );
     setAvatarPromptDismissed(true);
+  };
+  const profileChecks = [
+    Boolean(currentAvatar),
+    Boolean(profile?.title),
+    Boolean(Array.isArray(profile?.skills) ? profile.skills.length : profile?.skills),
+    Boolean(profile?.location),
+    Boolean(profile?.summary),
+    Boolean(profile?.cv),
+  ];
+  const profileCompletion = Math.round((profileChecks.filter(Boolean).length / profileChecks.length) * 100);
+  const missingProfileItems = profileChecks.filter(item => !item).length;
+  const uploadCv = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf" || file.size > 5_000_000) {
+      setCvMessage("Choose a PDF CV that is 5 MB or smaller.");
+      return;
+    }
+    setCvSaving(true);
+    setCvMessage("");
+    try {
+      const document = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("read_failed"));
+        reader.readAsDataURL(file);
+      });
+      const upload = await uploadJobsCv(document, file.name);
+      const cv = await saveJobsCv({ url: upload.url, name: file.name, size: file.size, visibility: "applications" });
+      setProfile(current => (current ? { ...current, cv } : current));
+      setCvMessage("CV updated successfully.");
+    } catch {
+      setCvMessage("CV could not be uploaded. Try again.");
+    } finally {
+      setCvSaving(false);
+    }
+  };
+  const removeCv = async () => {
+    await deleteJobsCv();
+    setProfile(current => (current ? { ...current, cv: undefined } : current));
+    setCvMessage("CV removed.");
+  };
+  const changeCvVisibility = async (visibility: "applications" | "verified_employers" | "private") => {
+    if (!profile?.cv) return;
+    const cv = await saveJobsCv({ ...profile.cv, visibility });
+    setProfile(current => (current ? { ...current, cv } : current));
+    setCvMessage("CV visibility updated.");
   };
   const jobSearchSuggestions = useMemo(() => {
     const available = [
@@ -1196,7 +1249,102 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </div>
             ) : kind === "profile" ? (
               <div className="jobs-profile-workspace">
-                <form className="job-form" onSubmit={saveProfile}>
+                <section className="jobs-profile-overview">
+                  <div className="jobs-profile-summary-card">
+                    <span className="jobs-profile-avatar">
+                      {currentAvatar ? <img src={currentAvatar} alt="" /> : (user?.displayName || "P")[0]}
+                    </span>
+                    <div>
+                      <h2>{user?.displayName || user?.piUsername || user?.username || "Pioneer"}</h2>
+                      <p>{profile?.title || "Add your professional title"}</p>
+                      <small>{profile?.location || user?.country || "Add your country"}</small>
+                    </div>
+                    <strong>{profileCompletion}%</strong>
+                    <progress value={profileCompletion} max="100">
+                      {profileCompletion}%
+                    </progress>
+                  </div>
+                  {missingProfileItems ? (
+                    <div className="jobs-profile-pending-card">
+                      <div>
+                        <b>{missingProfileItems} pending actions</b>
+                        <p>Add the missing information to complete your professional profile.</p>
+                      </div>
+                      <a href="#jobs-profile-details">Complete now</a>
+                    </div>
+                  ) : null}
+                  <div className="jobs-profile-card-grid">
+                    <article>
+                      <h3>Professional headline</h3>
+                      <p>{profile?.title || "Not added"}</p>
+                      <a href="#jobs-profile-details">Edit</a>
+                    </article>
+                    <article>
+                      <h3>Key skills</h3>
+                      <p>
+                        {Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills || "Not added"}
+                      </p>
+                      <a href="#jobs-profile-details">Edit</a>
+                    </article>
+                    <article className="jobs-cv-card">
+                      <h3>CV</h3>
+                      {profile?.cv ? (
+                        <>
+                          <div className="jobs-cv-preview">
+                            <b>PDF</b>
+                            <span>{profile.cv.name}</span>
+                          </div>
+                          <small>Last updated {new Date(profile.cv.updatedAt).toLocaleDateString()}</small>
+                          <div>
+                            <a href={profile.cv.url} target="_blank" rel="noreferrer">
+                              View
+                            </a>
+                            <label>
+                              {cvSaving ? "Uploading…" : "Update"}
+                              <input
+                                type="file"
+                                accept="application/pdf,.pdf"
+                                onChange={event => void uploadCv(event)}
+                                disabled={cvSaving}
+                              />
+                            </label>
+                            <button type="button" onClick={() => void removeCv()}>
+                              Delete
+                            </button>
+                          </div>
+                          <label className="jobs-cv-visibility">
+                            CV visibility
+                            <select
+                              value={profile.cv.visibility}
+                              onChange={event =>
+                                void changeCvVisibility(
+                                  event.target.value as "applications" | "verified_employers" | "private"
+                                )
+                              }
+                            >
+                              <option value="applications">Share when I apply</option>
+                              <option value="verified_employers">Verified employers</option>
+                              <option value="private">Private</option>
+                            </select>
+                          </label>
+                        </>
+                      ) : (
+                        <label className="jobs-cv-upload">
+                          {cvSaving ? "Uploading…" : "Upload PDF CV"}
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            onChange={event => void uploadCv(event)}
+                            disabled={cvSaving}
+                          />
+                        </label>
+                      )}
+                      <p className="jobs-cv-privacy">Shared only with applications by default.</p>
+                      {cvMessage ? <small>{cvMessage}</small> : null}
+                    </article>
+                  </div>
+                </section>
+                <form className="job-form" id="jobs-profile-details" onSubmit={saveProfile}>
                   <div className="jobs-profile-identity">
                     <span className="jobs-profile-avatar">
                       {user?.avatar ? (

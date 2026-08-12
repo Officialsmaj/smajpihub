@@ -42,6 +42,7 @@ const matchesQuery = (document: Document, query: Query = {}): boolean =>
 
 const applyUpdate = (document: Document, update: Document, inserting = false) => {
   if (update.$set) Object.assign(document, update.$set);
+  if (update.$unset) Object.keys(update.$unset).forEach((key) => delete document[key]);
   if (inserting && update.$setOnInsert) Object.assign(document, update.$setOnInsert);
   if (update.$push) {
     Object.entries(update.$push).forEach(([key, value]) => {

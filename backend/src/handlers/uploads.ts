@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { isBase64Image, resolveImageValue, safePurpose, uploadImageToCloudinary } from "../services/imageStorage";
+import { isBase64Image, resolveImageValue, safePurpose, uploadImageToCloudinary, uploadPdfToCloudinary } from "../services/imageStorage";
+import { resolveCurrentUser } from "../services/auth";
 
 export default function mountUploadEndpoints(router: Router) {
   const uploadImageValue = async (image: string, purpose: string) => {
@@ -40,6 +41,19 @@ export default function mountUploadEndpoints(router: Router) {
       if (err?.statusCode === 503) return res.status(503).json({ error: "upload_unavailable", message: err.message });
       console.error("Image upload failed:", err);
       return res.status(500).json({ error: "upload_failed", message: "Image upload failed." });
+    }
+  });
+  router.post("/document", async (req: Request, res: Response) => {
+    try {
+      const user = await resolveCurrentUser(req);
+      if (!user) return res.status(401).json({ error: "authentication_required" });
+      const name = String(req.body?.name || "document.pdf").slice(0, 120);
+      const upload = await uploadPdfToCloudinary(String(req.body?.document || ""), safePurpose(req.body?.purpose), name);
+      return res.status(201).json(upload);
+    } catch (err: any) {
+      if ([400, 413, 503].includes(err?.statusCode)) return res.status(err.statusCode).json({ error: "document_upload_failed", message: err.message });
+      console.error("Document upload failed:", err);
+      return res.status(500).json({ error: "document_upload_failed", message: "Document upload failed." });
     }
   });
 }

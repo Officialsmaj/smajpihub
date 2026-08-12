@@ -49,6 +49,13 @@ export type JobsProfile = {
   verificationStatus?: "unverified" | "pending" | "verified" | "rejected";
   avatarConfirmationStatus?: "confirmed" | "deferred";
   avatarConfirmationValue?: string;
+  cv?: {
+    url: string;
+    name: string;
+    size: number;
+    visibility: "applications" | "verified_employers" | "private";
+    updatedAt: string;
+  };
 } & Partial<JobsPreferences>;
 export type JobsPreferences = {
   jobsMode: "candidate" | "employer" | "both";
@@ -135,6 +142,11 @@ export const saveJobsPreferences = async (preferences: JobsPreferences) =>
   (await axiosClient.patch<{ preferences: JobsPreferences }>("/jobs/preferences", preferences)).data.preferences;
 export const confirmJobsProfileAvatar = async (avatar: string, status: "confirmed" | "deferred") =>
   (await axiosClient.patch("/jobs/profile/avatar-confirmation", { avatar, status })).data;
+export const uploadJobsCv = async (document: string, name: string) =>
+  (await axiosClient.post<{ url: string }>("/uploads/document", { document, name, purpose: "jobs-private-cv" })).data;
+export const saveJobsCv = async (cv: { url: string; name: string; size: number; visibility: string }) =>
+  (await axiosClient.put<{ cv: JobsProfile["cv"] }>("/jobs/profile/cv", cv)).data.cv;
+export const deleteJobsCv = async () => axiosClient.delete("/jobs/profile/cv");
 export const enrollEmployer = async () => (await axiosClient.post<{ role: string }>("/jobs/employer/enroll")).data;
 export const createJobCompany = async (company: { name: string; field: string }) =>
   (await axiosClient.post<{ company: JobsApiCompany }>("/jobs/companies", company)).data.company;

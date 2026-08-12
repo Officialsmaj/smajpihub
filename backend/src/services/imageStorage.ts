@@ -24,6 +24,8 @@ export const isBase64Image = (value?: unknown) =>
 
 const isSupportedBase64Image = (value: string) => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(value);
 const isHttpsUrl = (value: string) => /^https:\/\/[^\s]+$/i.test(value);
+const isBase64Pdf = (value: unknown): value is string =>
+  typeof value === "string" && /^data:application\/pdf;base64,/i.test(value);
 
 export const sanitizeAssetName = (value: unknown, fallback = "image") => {
   const safeName = String(value || fallback)
@@ -79,6 +81,26 @@ export const uploadImageToCloudinary = async (image: string, purpose = "image", 
     format: data.format,
     storage: "cloudinary",
   };
+};
+
+export const uploadPdfToCloudinary = async (document: string, purpose = "document", originalName = "document.pdf") => {
+  if (!isBase64Pdf(document)) throw Object.assign(new Error("Upload a valid PDF file."), { statusCode: 400 });
+  if (document.length > 7_000_000) throw Object.assign(new Error("PDF must be 5 MB or smaller."), { statusCode: 413 });
+  if (!env.cloudinary_cloud_name || !env.cloudinary_upload_preset)
+    throw Object.assign(new Error("Cloudinary upload is not configured."), { statusCode: 503 });
+  const params = new URLSearchParams();
+  params.set("file", document);
+  params.set("upload_preset", env.cloudinary_upload_preset);
+  params.set("filename_override", sanitizeAssetName(originalName, "document.pdf"));
+  params.set("folder", `${env.cloudinary_folder}/${safePurpose(purpose)}`);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${env.cloudinary_cloud_name}/raw/upload`, {
+    method: "POST",
+    body: params,
+  });
+  if (!response.ok) throw new Error(`Cloudinary PDF upload failed: ${response.status}`);
+  const data = (await response.json()) as CloudinaryResponse;
+  if (!data.secure_url?.startsWith("https://res.cloudinary.com/")) throw new Error("Cloudinary did not return a secure PDF URL");
+  return { url: data.secure_url, publicId: data.public_id, bytes: data.bytes, format: data.format, storage: "cloudinary" as const };
 };
 
 export const resolveImageValue = async (value: unknown, purpose = "image", originalName = "image") => {
