@@ -56,28 +56,19 @@
 .jobs-preferences > header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
 }
 .jobs-preferences h2 {
-  margin: 4px 0 14px;
-}
-.jobs-preferences header label {
-  display: grid;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 800;
-}
-.jobs-preferences header select {
-  padding: 9px;
-  border: 1px solid #ccd9d3;
-  border-radius: 9px;
-  background: #fff;
+  margin: 0 0 14px;
 }
 .jobs-preference-chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 9px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jobs-preference-chips::-webkit-scrollbar {
+  display: none;
 }
 .jobs-preference-chips button {
   padding: 9px 12px;
@@ -85,6 +76,7 @@
   border-radius: 10px;
   background: #fff;
   font-weight: 750;
+  white-space: nowrap;
 }
 .jobs-recommendation-note {
   margin-top: 14px;
