@@ -1322,6 +1322,93 @@
   color: var(--green);
   font-weight: 800;
 }
+.jobs-profile-card-grid article > button {
+  border: 0;
+  color: var(--green);
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+}
+.jobs-profile-editor {
+  position: fixed;
+  z-index: 2147483000;
+  inset: 0;
+  overflow-y: auto;
+  background: #fff;
+}
+.jobs-profile-editor form {
+  width: min(620px, 100%);
+  min-height: 100%;
+  margin: auto;
+  padding: 28px 24px 90px;
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+.jobs-profile-editor header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  text-align: center;
+}
+.jobs-profile-editor header > button {
+  border: 0;
+  background: transparent;
+  font-size: 26px;
+}
+.jobs-profile-editor header > div {
+  flex: 1;
+}
+.jobs-profile-editor header h1 {
+  margin: 12px 0 5px;
+  font-size: 22px;
+}
+.jobs-profile-editor header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.jobs-profile-editor label {
+  display: grid;
+  gap: 7px;
+  color: #476074;
+  font-size: 12px;
+}
+.jobs-profile-editor input,
+.jobs-profile-editor select,
+.jobs-profile-editor textarea {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid #ccd7e2;
+  outline: 0;
+  background: #fff;
+  font: inherit;
+}
+.jobs-profile-editor textarea {
+  padding: 12px;
+  border: 1px solid #ccd7e2;
+  border-radius: 8px;
+}
+.jobs-profile-editor form > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.jobs-profile-editor .jobs-editor-check {
+  display: flex;
+  align-items: center;
+}
+.jobs-profile-editor .jobs-editor-check input {
+  width: auto;
+}
+.jobs-editor-save {
+  min-height: 48px;
+  border: 0;
+  border-radius: 24px;
+  color: #fff;
+  background: var(--green);
+  font-weight: 900;
+}
 .jobs-profile-card-grid .jobs-cv-card {
   grid-column: 1/-1;
 }

@@ -27,6 +27,7 @@ import {
   getJobsBillingPlans,
   getSavedJobs,
   saveJobsProfile,
+  saveJobsProfileSection,
   requestCandidateVerification,
   requestCompanyVerification,
   saveJobsCv,
@@ -213,6 +214,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [profileSaved, setProfileSaved] = useState(false);
   const [cvSaving, setCvSaving] = useState(false);
   const [cvMessage, setCvMessage] = useState("");
+  const [profileEditor, setProfileEditor] = useState<"basic" | "headline" | "skills" | "employment" | "">("");
   const [avatarPromptDismissed, setAvatarPromptDismissed] = useState(false);
   const [profile, setProfile] = useState<JobsProfile | null>(null);
   const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
@@ -307,6 +309,47 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const cv = await saveJobsCv({ ...profile.cv, visibility });
     setProfile(current => (current ? { ...current, cv } : current));
     setCvMessage("CV visibility updated.");
+  };
+  const saveProfileEditor = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    let values: Record<string, unknown> = {};
+    if (profileEditor === "headline") values = { title: data.get("title") };
+    else if (profileEditor === "skills")
+      values = {
+        skills: String(data.get("skills") || "")
+          .split(",")
+          .map(item => item.trim())
+          .filter(Boolean),
+      };
+    else if (profileEditor === "basic")
+      values = {
+        location: data.get("location"),
+        availability: data.get("availability"),
+        portfolio: data.get("portfolio"),
+        summary: data.get("summary"),
+      };
+    else
+      values = {
+        employment: [
+          {
+            id: String(data.get("id") || Date.now()),
+            position: data.get("position"),
+            employer: data.get("employer"),
+            current: data.get("current") === "on",
+            location: data.get("employerLocation"),
+            country: data.get("country"),
+            startMonth: data.get("startMonth"),
+            startYear: data.get("startYear"),
+            endMonth: data.get("endMonth"),
+            endYear: data.get("endYear"),
+            description: data.get("description"),
+          },
+        ],
+      };
+    const result = await saveJobsProfileSection(profileEditor, values);
+    setProfile(current => (current ? { ...current, ...result.values } : current));
+    setProfileEditor("");
   };
   const jobSearchSuggestions = useMemo(() => {
     const available = [
@@ -1275,16 +1318,38 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   ) : null}
                   <div className="jobs-profile-card-grid">
                     <article>
-                      <h3>Professional headline</h3>
+                      <h3>CV Headline</h3>
                       <p>{profile?.title || "Not added"}</p>
-                      <a href="#jobs-profile-details">Edit</a>
+                      <button type="button" onClick={() => setProfileEditor("headline")}>
+                        Edit
+                      </button>
                     </article>
                     <article>
-                      <h3>Key skills</h3>
+                      <h3>Key Skills</h3>
                       <p>
                         {Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills || "Not added"}
                       </p>
-                      <a href="#jobs-profile-details">Edit</a>
+                      <button type="button" onClick={() => setProfileEditor("skills")}>
+                        Edit
+                      </button>
+                    </article>
+                    <article>
+                      <h3>Basic Details</h3>
+                      <p>{profile?.location || user?.country || "Not added"}</p>
+                      <button type="button" onClick={() => setProfileEditor("basic")}>
+                        Edit
+                      </button>
+                    </article>
+                    <article>
+                      <h3>Employment Details</h3>
+                      <p>
+                        {profile?.employment?.[0]
+                          ? `${profile.employment[0].position} at ${profile.employment[0].employer}`
+                          : "Not added"}
+                      </p>
+                      <button type="button" onClick={() => setProfileEditor("employment")}>
+                        Edit
+                      </button>
                     </article>
                     <article className="jobs-cv-card">
                       <h3>CV</h3>
@@ -1344,6 +1409,149 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </article>
                   </div>
                 </section>
+                {profileEditor ? (
+                  <div className="jobs-profile-editor">
+                    <form onSubmit={event => void saveProfileEditor(event)}>
+                      <header>
+                        <button type="button" onClick={() => setProfileEditor("")}>
+                          ←
+                        </button>
+                        <div>
+                          <h1>
+                            {profileEditor === "headline"
+                              ? "CV Headline"
+                              : profileEditor === "skills"
+                                ? "Key Skills"
+                                : profileEditor === "employment"
+                                  ? "Employment Details"
+                                  : "Basic Details"}
+                          </h1>
+                          <p>Keep this information current for suitable job opportunities.</p>
+                        </div>
+                      </header>
+                      {profileEditor === "headline" ? (
+                        <label>
+                          Professional headline
+                          <input name="title" maxLength={80} required defaultValue={profile?.title} />
+                          <small>Maximum 80 characters</small>
+                        </label>
+                      ) : null}
+                      {profileEditor === "skills" ? (
+                        <label>
+                          Skills
+                          <input
+                            name="skills"
+                            required
+                            defaultValue={Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills}
+                            placeholder="Add skills separated by commas"
+                          />
+                        </label>
+                      ) : null}
+                      {profileEditor === "basic" ? (
+                        <>
+                          <label>
+                            Full name
+                            <input value={user?.displayName || user?.username || ""} disabled />
+                          </label>
+                          <label>
+                            Country or city
+                            <input
+                              name="location"
+                              list="profile-country-options"
+                              defaultValue={profile?.location || user?.country}
+                            />
+                          </label>
+                          <label>
+                            Availability
+                            <select name="availability" defaultValue={profile?.availability}>
+                              <option>Available now</option>
+                              <option>Open to offers</option>
+                              <option>Not available</option>
+                            </select>
+                          </label>
+                          <label>
+                            Portfolio URL
+                            <input name="portfolio" type="url" defaultValue={profile?.portfolio} />
+                          </label>
+                          <label>
+                            Professional summary
+                            <textarea name="summary" maxLength={3000} rows={7} defaultValue={profile?.summary} />
+                          </label>
+                        </>
+                      ) : null}
+                      {profileEditor === "employment" ? (
+                        <>
+                          <input type="hidden" name="id" defaultValue={profile?.employment?.[0]?.id} />
+                          <label>
+                            Designation / Position
+                            <input name="position" required defaultValue={profile?.employment?.[0]?.position} />
+                          </label>
+                          <label>
+                            Employer Name
+                            <input name="employer" required defaultValue={profile?.employment?.[0]?.employer} />
+                          </label>
+                          <label className="jobs-editor-check">
+                            <input name="current" type="checkbox" defaultChecked={profile?.employment?.[0]?.current} />{" "}
+                            I currently work here
+                          </label>
+                          <label>
+                            Employer location
+                            <input name="employerLocation" defaultValue={profile?.employment?.[0]?.location} />
+                          </label>
+                          <label>
+                            Employer Country
+                            <input
+                              name="country"
+                              list="profile-country-options"
+                              defaultValue={profile?.employment?.[0]?.country}
+                            />
+                          </label>
+                          <div>
+                            <label>
+                              Started month
+                              <input name="startMonth" defaultValue={profile?.employment?.[0]?.startMonth} />
+                            </label>
+                            <label>
+                              Started year
+                              <input
+                                name="startYear"
+                                inputMode="numeric"
+                                defaultValue={profile?.employment?.[0]?.startYear}
+                              />
+                            </label>
+                          </div>
+                          <div>
+                            <label>
+                              Ended month
+                              <input name="endMonth" defaultValue={profile?.employment?.[0]?.endMonth} />
+                            </label>
+                            <label>
+                              Ended year
+                              <input
+                                name="endYear"
+                                inputMode="numeric"
+                                defaultValue={profile?.employment?.[0]?.endYear}
+                              />
+                            </label>
+                          </div>
+                          <label>
+                            Describe your job profile
+                            <textarea
+                              name="description"
+                              maxLength={1000}
+                              rows={8}
+                              defaultValue={profile?.employment?.[0]?.description}
+                            />
+                            <small>Maximum 1000 characters</small>
+                          </label>
+                        </>
+                      ) : null}
+                      <button className="jobs-editor-save" type="submit">
+                        Save
+                      </button>
+                    </form>
+                  </div>
+                ) : null}
                 <form className="job-form" id="jobs-profile-details" onSubmit={saveProfile}>
                   <div className="jobs-profile-identity">
                     <span className="jobs-profile-avatar">

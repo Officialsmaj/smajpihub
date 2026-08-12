@@ -56,6 +56,19 @@ export type JobsProfile = {
     visibility: "applications" | "verified_employers" | "private";
     updatedAt: string;
   };
+  employment?: Array<{
+    id: string;
+    position: string;
+    employer: string;
+    current: boolean;
+    location: string;
+    country: string;
+    startMonth: string;
+    startYear: string;
+    endMonth: string;
+    endYear: string;
+    description: string;
+  }>;
 } & Partial<JobsPreferences>;
 export type JobsPreferences = {
   jobsMode: "candidate" | "employer" | "both";
@@ -147,6 +160,8 @@ export const uploadJobsCv = async (document: string, name: string) =>
 export const saveJobsCv = async (cv: { url: string; name: string; size: number; visibility: string }) =>
   (await axiosClient.put<{ cv: JobsProfile["cv"] }>("/jobs/profile/cv", cv)).data.cv;
 export const deleteJobsCv = async () => axiosClient.delete("/jobs/profile/cv");
+export const saveJobsProfileSection = async (section: string, values: Record<string, unknown>) =>
+  (await axiosClient.patch("/jobs/profile/section", { section, ...values })).data;
 export const enrollEmployer = async () => (await axiosClient.post<{ role: string }>("/jobs/employer/enroll")).data;
 export const createJobCompany = async (company: { name: string; field: string }) =>
   (await axiosClient.post<{ company: JobsApiCompany }>("/jobs/companies", company)).data.company;

@@ -626,6 +626,17 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, "profile.cv_deleted", userId(user));
     res.status(204).send();
   });
+  router.patch("/profile/section", async (req, res) => {
+    const user = await requireUser(req, res); if (!user) return;
+    const section = String(req.body?.section || ""); let values: Record<string, unknown> = {};
+    if (section === "headline") values = { title: String(req.body?.title || "").trim().slice(0, 80) };
+    else if (section === "skills") values = { skills: Array.isArray(req.body?.skills) ? req.body.skills.map((item: unknown) => String(item).trim().slice(0, 60)).filter(Boolean).slice(0, 30) : [] };
+    else if (section === "basic") values = { location: String(req.body?.location || "").trim().slice(0, 120), availability: String(req.body?.availability || "Open to offers").slice(0, 40), portfolio: String(req.body?.portfolio || "").trim().slice(0, 500), summary: String(req.body?.summary || "").trim().slice(0, 3000) };
+    else if (section === "employment") values = { employment: Array.isArray(req.body?.employment) ? req.body.employment.slice(0, 20).map((item: any) => ({ id: String(item.id || Date.now()), position: String(item.position || "").trim().slice(0, 120), employer: String(item.employer || "").trim().slice(0, 120), current: Boolean(item.current), location: String(item.location || "").trim().slice(0, 120), country: String(item.country || "").trim().slice(0, 120), startMonth: String(item.startMonth || "").slice(0, 20), startYear: String(item.startYear || "").slice(0, 4), endMonth: item.current ? "Present" : String(item.endMonth || "").slice(0, 20), endYear: item.current ? "Present" : String(item.endYear || "").slice(0, 4), description: String(item.description || "").trim().slice(0, 1000) })) : [] };
+    else return res.status(400).json({ error: "invalid_section" });
+    await req.app.locals.jobProfileCollection.updateOne({ userId: userId(user) }, { $set: { ...values, updatedAt: new Date().toISOString() }, $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() } }, { upsert: true });
+    await audit(req, user, `profile.${section}_updated`, userId(user)); res.json({ section, values });
+  });
   router.patch("/preferences", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
