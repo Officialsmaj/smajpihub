@@ -126,9 +126,60 @@
   width: 100%;
   border: 0;
   outline: 0;
-  background: transparent;
+  background: #fff !important;
+  -webkit-appearance: none;
   font: inherit;
 }
+.jobs-settings-page {
+  width: min(620px, 100%);
+  min-height: calc(100vh - 62px);
+  margin: 0 auto;
+  padding-bottom: 90px;
+  color: #173d5a;
+  background: #fff;
+}
+.jobs-settings-page > header {
+  min-height: 58px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #dce8ef;
+}
+.jobs-settings-page > header a { color: #17496c; text-decoration: none; font-size: 24px; }
+.jobs-settings-page > header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+.jobs-settings-page > nav { padding: 4px 16px; display: grid; }
+.jobs-settings-page > nav a,
+.jobs-settings-page > nav button {
+  padding: 20px 0;
+  display: grid;
+  gap: 4px;
+  border: 0;
+  border-bottom: 1px solid #dce8ef;
+  color: #173d5a;
+  background: #fff;
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+}
+.jobs-settings-page small { display: block; color: #4c7390; font-size: 11px; line-height: 1.35; }
+.jobs-visibility-page { padding-bottom: 70px; }
+.jobs-visibility-option {
+  margin: 0 16px;
+  padding: 20px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid #dce8ef;
+}
+.jobs-visibility-option > span { flex: 1; display: grid; gap: 7px; }
+.jobs-visibility-option input { width: 18px; height: 18px; accent-color: #2864ee; }
+.jobs-visible-details { margin: 0 20px; padding: 0 12px; background: #f4f7fa; }
+.jobs-visible-details > button { width: 100%; padding: 16px 0; display: flex; gap: 12px; border: 0; color: #173d5a; background: transparent; text-align: left; }
+.jobs-visible-details > button span { flex: 1; display: grid; gap: 8px; }
+.jobs-visible-details ul { margin: 0; padding: 0 0 12px; list-style: none; }
+.jobs-visible-details li { padding: 8px 0; display: flex; justify-content: space-between; }
+.jobs-visible-details li small { color: #17496c; }
 .jobs-quick-search > button {
   width: 1px;
   height: 1px;

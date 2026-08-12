@@ -156,6 +156,8 @@ const jobsRoutes: Array<[string, JobsPageKind]> = [
   ["applications", "applications"],
   ["activity", "activity"],
   ["profile", "profile"],
+  ["settings", "settings"],
+  ["settings/visibility", "visibility"],
   ["post", "post"],
   ["employer", "employer"],
 ];

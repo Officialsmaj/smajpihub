@@ -10,8 +10,7 @@ const candidateLinks = [
   ["search#alerts", "Job alerts"],
   ["companies", "Companies"],
   ["freelance", "Freelance projects"],
-  ["profile#cv", "My CV and documents"],
-  ["profile#verification", "Verification status"],
+  ["settings", "Settings"],
 ] as const;
 
 const employerLinks = [

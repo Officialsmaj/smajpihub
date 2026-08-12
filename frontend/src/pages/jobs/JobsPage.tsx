@@ -60,6 +60,8 @@ export type JobsPageKind =
   | "applications"
   | "activity"
   | "profile"
+  | "settings"
+  | "visibility"
   | "post"
   | "employer"
   | "job"
@@ -159,18 +161,6 @@ const fallbackCompanies: JobsApiCompany[] = [
   { id: "smaj-services", name: "SMAJ Services", field: "Digital services", openings: 8, mark: "SS" },
 ];
 
-const formatJobCompensation = (salary: string) =>
-  salary
-    .replace(/^([\d,.]+(?:–[\d,.]+)?)\s*Pi\b/i, "π $1")
-    .replace(/\bPi\b/gi, "π")
-    .replace(/π\s([^–]+)–π\s/, "π $1–")
-    .replace(
-      /\s*\/\s*(hour|day|week|month|year)\b/gi,
-      (_match, period: string) =>
-        ` / ${{ hour: "hr", day: "day", week: "wk", month: "mo", year: "yr" }[period.toLowerCase()]}`
-    )
-    .replace(/\s+fixed$/i, " / project");
-
 const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () => void }) => (
   <article className="job-card">
     <div className="job-company-mark">
@@ -194,7 +184,6 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
           <span key={skill}>{skill}</span>
         ))}
       </div>
-      <strong>{formatJobCompensation(job.salary)}</strong>
     </div>
     <button className={saved ? "saved" : ""} type="button" onClick={onSave} aria-label={`Save ${job.title}`}>
       <BookmarkBorderRoundedIcon />
@@ -237,6 +226,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [activity, setActivity] = useState<JobsActivity | null>(null);
   const [activityTab, setActivityTab] = useState<"appearances" | "actions">("appearances");
   const [activityDays, setActivityDays] = useState(7);
+  const [profileVisibility, setProfileVisibility] = useState<"active" | "open" | "deactivated">("active");
+  const [visibilityDetailsOpen, setVisibilityDetailsOpen] = useState(true);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -255,7 +246,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const activeWorkspaceMode =
     kind === "employer" || kind === "post"
       ? "employer"
-      : ["search", "freelance", "saved", "applications", "profile", "activity"].includes(kind)
+      : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility"].includes(kind)
         ? "candidate"
         : workspaceMode;
   const currentAvatar = user?.avatar || "";
@@ -1049,7 +1040,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               </article>
               <aside>
-                <b>{selectedJob.salary}</b>
                 <p>Paid through the Pi ecosystem</p>
                 <hr />
                 <span>Category</span>
@@ -1081,9 +1071,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>{selectedCompany.field} · Building useful products for the Pi community.</p>
               </div>
             </div>
-            {kind !== "profile" ? <div className="jobs-page-heading">
+            <div className="jobs-page-heading">
               <h2>Open opportunities</h2>
-            </div> : null}
+            </div>
             <div className="jobs-list">
               {jobs
                 .filter(job => job.company === selectedCompany.name)
@@ -1163,6 +1153,42 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <Link to="/services/jobs/profile">Feature your profile</Link>
               <p>Complete your profile so verified employers can discover relevant talent.</p>
             </footer>
+          </section>
+        ) : kind === "settings" ? (
+          <section className="jobs-settings-page">
+            <header><Link to="/services/jobs/profile">←</Link><h1>Settings</h1></header>
+            <nav>
+              <Link to="/services/jobs/settings/visibility">
+                <b>Profile Visibility</b>
+                <small>Current Status: Actively looking for a job</small>
+              </Link>
+              <button type="button"><b>Manage Communications</b><small>Currently Receiving Job Related Communications, Career Related Communications and Promotion & Offers</small></button>
+              <button type="button"><b>Manage Account</b><small>Manage your login details and connect your social accounts</small></button>
+              <button type="button"><b>Block Employers</b><small>Add employers to ensure they are not able to see you</small></button>
+            </nav>
+          </section>
+        ) : kind === "visibility" ? (
+          <section className="jobs-settings-page jobs-visibility-page">
+            <header><Link to="/services/jobs/settings">←</Link><h1>Profile Visibility</h1></header>
+            <label className="jobs-visibility-option">
+              <span><b>I am actively looking for a job</b><small>Your profile will be visible to employers and they can reach out to you for matching opportunities</small></span>
+              <input type="radio" name="profileVisibility" checked={profileVisibility === "active"} onChange={() => setProfileVisibility("active")} />
+            </label>
+            <section className="jobs-visible-details">
+              <button type="button" onClick={() => setVisibilityDetailsOpen(value => !value)}>
+                <span><b>Basic details visible to employers</b><small>Hiding below details will lead to less profile views by employers. We can not hide any detail within attached/pasted CVs</small></span>
+                <i>{visibilityDetailsOpen ? "⌃" : "⌄"}</i>
+              </button>
+              {visibilityDetailsOpen ? <ul>{["Email", "Name", "Contact Number", "Current Employer"].map(item => <li key={item}><span>{item}</span><small>Visible ◉</small></li>)}</ul> : null}
+            </section>
+            <label className="jobs-visibility-option">
+              <span><b>Not looking for a job change right now but open to good opportunities</b><small>Your profile will not be visible to employers but you can still search and apply to jobs. You may still receive relevant jobs on your email Id.</small></span>
+              <input type="radio" name="profileVisibility" checked={profileVisibility === "open"} onChange={() => setProfileVisibility("open")} />
+            </label>
+            <label className="jobs-visibility-option">
+              <span><b>I want to deactivate my account</b><small>Employers will not be able to view your profile and you will not receive job related updates</small></span>
+              <input type="radio" name="profileVisibility" checked={profileVisibility === "deactivated"} onChange={() => setProfileVisibility("deactivated")} />
+            </label>
           </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
           <section className="jobs-workspace">
