@@ -368,6 +368,8 @@ const mountStreamEndpoints = (router: Router) => {
     const mediaType = req.body?.mediaType === "tv" ? "tv" : req.body?.mediaType === "movie" ? "movie" : null;
     const title = String(req.body?.title || "").trim().slice(0, 180);
     if (!Number.isInteger(tmdbId) || tmdbId <= 0 || !mediaType || !title) return res.status(400).json({ error: "bad_request", message: "A valid TMDB title is required." });
+    const licensedVideo = await req.app.locals.streamContentCollection?.findOne({ "catalogAttachment.tmdbId": tmdbId, "catalogAttachment.mediaType": mediaType, visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready", downloadAllowed: true });
+    if (!licensedVideo) return res.status(403).json({ error: "download_not_permitted", message: "This title is not licensed for download." });
     const item = { tmdbId, id: String(tmdbId), mediaType, title, overview: String(req.body?.overview || "").slice(0, 1200), posterUrl: req.body?.posterUrl ? String(req.body.posterUrl).slice(0, 500) : null, backdropUrl: req.body?.backdropUrl ? String(req.body.backdropUrl).slice(0, 500) : null, releaseDate: req.body?.releaseDate ? String(req.body.releaseDate).slice(0, 20) : null, rating: Number.isFinite(Number(req.body?.rating)) ? Number(req.body.rating) : null, downloadStatus: "ready", downloadedAt: new Date() };
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $pull: { streamDownloads: { tmdbId, mediaType } } });
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $addToSet: { streamDownloads: item } });
@@ -949,6 +951,60 @@ const mountStreamEndpoints = (router: Router) => {
     return res.json({ videos: videos.map((video: Record<string, unknown>) => ({ ...video, _id: String(video._id), playback: undefined })) });
   });
 
+  router.post("/admin/internet-archive/import", async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const identifier = String(req.body?.identifier || "").trim();
+    const tmdbId = Number(req.body?.tmdbId);
+    const mediaType = req.body?.mediaType === "tv" ? "tv" : req.body?.mediaType === "movie" ? "movie" : null;
+    const license = String(req.body?.license || "").trim().slice(0, 240);
+    const rightsUrl = String(req.body?.rightsUrl || "").trim().slice(0, 800);
+    const downloadAllowed = req.body?.downloadAllowed === true;
+    if (!/^[A-Za-z0-9_.-]{1,160}$/.test(identifier) || !Number.isInteger(tmdbId) || tmdbId < 1 || !mediaType)
+      return res.status(400).json({ error: "invalid_import", message: "Add a valid Archive identifier and TMDB title." });
+    if (req.body?.rightsConfirmed !== true || license.length < 3 || !/^https:\/\//i.test(rightsUrl))
+      return res.status(400).json({ error: "rights_required", message: "Confirm the rights and provide the license name and HTTPS evidence URL." });
+    try {
+      const response = await axios.get<{ metadata?: Record<string, unknown>; files?: Array<Record<string, unknown>> }>(`https://archive.org/metadata/${encodeURIComponent(identifier)}`, { timeout: 15_000 });
+      const metadata = response.data.metadata || {};
+      const files = response.data.files || [];
+      const mp4 = files
+        .filter(file => typeof file.name === "string" && /\.mp4$/i.test(file.name) && file.private !== true && file.private !== "true")
+        .sort((left, right) => Number(right.size || 0) - Number(left.size || 0))[0];
+      if (!mp4?.name) return res.status(422).json({ error: "mp4_missing", message: "This Archive item has no public MP4/H.264 file." });
+      const encodedName = String(mp4.name).split("/").map(encodeURIComponent).join("/");
+      const streamUrl = `https://archive.org/download/${encodeURIComponent(identifier)}/${encodedName}`;
+      const now = new Date();
+      const record = {
+        cloudflareUid: `ia-${identifier}`,
+        contentSource: "internet_archive",
+        archiveIdentifier: identifier,
+        title: String(metadata.title || req.body?.title || "Internet Archive film").slice(0, 180),
+        description: String(metadata.description || "").replace(/<[^>]+>/g, " ").slice(0, 2000),
+        creatorName: String(metadata.creator || "Internet Archive").slice(0, 120),
+        thumbnailUrl: `https://archive.org/services/img/${encodeURIComponent(identifier)}`,
+        playback: { mp4: streamUrl },
+        downloadUrl: downloadAllowed ? streamUrl : null,
+        downloadAllowed,
+        license,
+        rightsUrl,
+        rightsConfirmed: true,
+        rightsConfirmedAt: now,
+        rightsConfirmedBy: String(admin._id),
+        processingStatus: "ready",
+        moderationStatus: "approved",
+        visibility: "public",
+        playbackAllowed: true,
+        catalogAttachment: { tmdbId, mediaType, title: String(req.body?.title || metadata.title || "").slice(0, 140), attachedAt: now, attachedBy: String(admin._id) },
+        updatedAt: now,
+      };
+      await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: record.cloudflareUid }, { $set: record, $setOnInsert: { createdAt: now } }, { upsert: true });
+      return res.status(201).json({ video: { ...record, playback: undefined } });
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      return res.status(status).json({ error: "archive_lookup_failed", message: "Internet Archive metadata could not be verified." });
+    }
+  });
+
   router.get("/admin/overview", async (req, res) => {
     const admin = await requireStreamAdmin(req, res); if (!admin) return;
     const videos = await req.app.locals.streamContentCollection.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(1000).toArray();
@@ -1044,7 +1100,7 @@ const mountStreamEndpoints = (router: Router) => {
     const user = await requireViewer(req, res); if (!user) return;
     if (!req.app.locals.streamContentCollection) return res.json({ available: false });
     const video = await req.app.locals.streamContentCollection.findOne({ "catalogAttachment.tmdbId": Number(req.params.id), "catalogAttachment.mediaType": req.params.type, visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready" });
-    return res.json(video ? { available: true, playbackId: video.cloudflareUid, title: video.title } : { available: false });
+    return res.json(video ? { available: true, playbackId: video.cloudflareUid, title: video.title, downloadAllowed: video.downloadAllowed === true } : { available: false, downloadAllowed: false });
   });
 
   router.get("/live/:uid/playback", async (req, res) => {
@@ -1074,6 +1130,8 @@ const mountStreamEndpoints = (router: Router) => {
     let video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
     if (!video) video = await req.app.locals.streamContentCollection.findOne({ youtubeVideoId: uid });
     if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true) return res.status(404).json({ error: "not_available", message: "This video is not published or licensed for playback." });
+    if (video.contentSource === "internet_archive" && /^https:\/\/archive\.org\/download\//i.test(String(video.playback?.mp4 || "")))
+      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: video.playback.mp4, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
     if (video.contentSource === "youtube" && video.youtubeVideoId) return res.json({ video: { id: String(video.cloudflareUid), sourceType: "youtube", youtubeVideoId: video.youtubeVideoId, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl, duration: video.duration || null } });
     let playback = video.playback as { hls?: string; dash?: string } | undefined;
     if ((!playback?.hls || video.processingStatus !== "ready") && env.cloudflare_stream_account_id && env.cloudflare_stream_api_token) {

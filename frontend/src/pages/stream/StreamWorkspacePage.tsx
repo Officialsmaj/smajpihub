@@ -31,6 +31,7 @@ import {
   getStreamAdminOverview,
   getStreamAdminSettings,
   getTitleAvailability,
+  importInternetArchiveTitle,
   saveStreamAdminSettings,
   type StreamAdminOverview,
   type StreamAdminSettings,
@@ -544,6 +545,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
+  const [downloadAllowed, setDownloadAllowed] = useState(false);
   const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [trailerLoaded, setTrailerLoaded] = useState(false);
@@ -559,13 +561,14 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       getStreamTitle(type, id),
       getStreamMyListStatus(type, id).catch(() => false),
       getStreamDownloadStatus(type, id).catch(() => false),
-      getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string } => ({ available: false })),
+      getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string; downloadAllowed: boolean } => ({ available: false, downloadAllowed: false })),
     ])
       .then(([titleData, savedStatus, downloadStatus, availability]) => {
         setDetail(titleData as typeof detail);
         setSaved(savedStatus);
         setDownloaded(downloadStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
+        setDownloadAllowed(availability.available && availability.downloadAllowed === true);
         setState("ready");
       })
       .catch(() => setState("error"));
@@ -681,7 +684,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     }
   };
   const toggleDownloaded = async () => {
-    if (!id || !playbackId) return;
+    if (!id || !playbackId || !downloadAllowed) return;
     setDownloading(true);
     try {
       if (downloaded) await removeStreamDownload(type, id);
@@ -758,10 +761,10 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               <button
                 className={`sw-detail-download-action ${downloaded ? "downloaded" : ""}`}
                 type="button"
-                disabled={!playbackId || downloading}
+                disabled={!playbackId || !downloadAllowed || downloading}
                 onClick={() => void toggleDownloaded()}
-                aria-label={!playbackId ? "Download unavailable" : downloading ? "Downloading" : downloaded ? "Remove download" : "Download"}
-                title={!playbackId ? "Download unavailable" : downloaded ? "Downloaded" : "Download"}
+                aria-label={!playbackId || !downloadAllowed ? "Download unavailable" : downloading ? "Downloading" : downloaded ? "Remove download" : "Download"}
+                title={!playbackId || !downloadAllowed ? "Download unavailable" : downloaded ? "Downloaded" : "Download"}
               >
                 <DownloadRoundedIcon />
               </button>
@@ -1223,6 +1226,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [archiveImport, setArchiveImport] = useState({ identifier: "", tmdbId: "", mediaType: "movie" as "movie" | "tv", title: "", license: "Public Domain", rightsUrl: "", rightsConfirmed: false, downloadAllowed: false });
   const load = useCallback(async () => {
     try {
       const data = await getStreamAdminOverview();
@@ -1264,6 +1268,18 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
     } finally {
       setSaving(false);
     }
+  };
+  const importArchive = async (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      setSaving(true); setMessage("");
+      await importInternetArchiveTitle({ ...archiveImport, tmdbId: Number(archiveImport.tmdbId) });
+      setMessage("Internet Archive title verified, approved, and attached to the catalogue.");
+      setArchiveImport(current => ({ ...current, identifier: "", tmdbId: "", title: "", rightsUrl: "", rightsConfirmed: false, downloadAllowed: false }));
+      await load();
+    } catch (error) {
+      setMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Internet Archive item could not be imported.");
+    } finally { setSaving(false); }
   };
   const videos = overview?.recent || [];
   const rows =
@@ -1353,6 +1369,15 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
           </div>
         ) : null}
         {kind === "reports" || kind === "catalog-admin" ? (
+          <>
+          {kind === "catalog-admin" ? <form className="sw-archive-import" onSubmit={event => void importArchive(event)}>
+            <h2>Import permitted Internet Archive film</h2>
+            <p>Only import an item after reviewing its license and rights evidence.</p>
+            <div><label>Archive identifier<input required value={archiveImport.identifier} onChange={event => setArchiveImport(current => ({ ...current, identifier: event.target.value }))} /></label><label>TMDB ID<input required inputMode="numeric" value={archiveImport.tmdbId} onChange={event => setArchiveImport(current => ({ ...current, tmdbId: event.target.value }))} /></label><label>Type<select value={archiveImport.mediaType} onChange={event => setArchiveImport(current => ({ ...current, mediaType: event.target.value as "movie" | "tv" }))}><option value="movie">Movie</option><option value="tv">Series</option></select></label><label>Catalogue title<input required value={archiveImport.title} onChange={event => setArchiveImport(current => ({ ...current, title: event.target.value }))} /></label><label>License<input required value={archiveImport.license} onChange={event => setArchiveImport(current => ({ ...current, license: event.target.value }))} /></label><label>Rights evidence URL<input required type="url" value={archiveImport.rightsUrl} onChange={event => setArchiveImport(current => ({ ...current, rightsUrl: event.target.value }))} /></label></div>
+            <label className="check"><input type="checkbox" checked={archiveImport.rightsConfirmed} onChange={event => setArchiveImport(current => ({ ...current, rightsConfirmed: event.target.checked }))} /> I reviewed the item and confirm SMAJ may stream it.</label>
+            <label className="check"><input type="checkbox" checked={archiveImport.downloadAllowed} onChange={event => setArchiveImport(current => ({ ...current, downloadAllowed: event.target.checked }))} /> The license also permits user downloads.</label>
+            <button className="sw-admin-save" type="submit" disabled={saving || !archiveImport.rightsConfirmed}>{saving ? "Verifying..." : "Verify and import"}</button>
+          </form> : null}
           <div className="sw-admin-list">
             {rows.map(video => (
               <article key={video.cloudflareUid}>
@@ -1377,6 +1402,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
               </div>
             ) : null}
           </div>
+          </>
         ) : null}
         {kind === "stream-settings" && settings ? (
           <div className="sw-settings-card">

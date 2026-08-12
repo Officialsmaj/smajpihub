@@ -2,7 +2,7 @@ import { axiosClient } from "./axiosClient";
 
 export type StreamPlaybackVideo = {
   id: string;
-  sourceType: "hls" | "youtube";
+  sourceType: "hls" | "youtube" | "mp4";
   playbackUrl?: string;
   youtubeVideoId?: string;
   title: string;
@@ -10,6 +10,10 @@ export type StreamPlaybackVideo = {
   creatorName?: string;
   thumbnailUrl?: string | null;
   duration?: number | null;
+  downloadUrl?: string | null;
+  downloadAllowed?: boolean;
+  license?: string;
+  rightsUrl?: string;
 };
 
 export type StreamWatchProgress = { videoId: string; title: string; thumbnailUrl: string | null; position: number; duration: number; completed: boolean; updatedAt: string };

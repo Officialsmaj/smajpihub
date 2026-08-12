@@ -78,14 +78,15 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
 
   useEffect(() => {
     const element = videoRef.current;
-    if (!element || !video?.playbackUrl || video.sourceType !== "hls") return;
+    if (!element || !video?.playbackUrl || !["hls", "mp4"].includes(video.sourceType)) return;
     let hls: Hls | null = null;
     const resume = () => {
       if (lastSavedRef.current > 0 && lastSavedRef.current < element.duration - 15)
         element.currentTime = lastSavedRef.current;
     };
     element.addEventListener("loadedmetadata", resume, { once: true });
-    if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
+    if (video.sourceType === "mp4") element.src = video.playbackUrl;
+    else if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
     else if (Hls.isSupported()) {
       hls = new Hls({ enableWorker: true, lowLatencyMode: true });
       hls.loadSource(video.playbackUrl);
