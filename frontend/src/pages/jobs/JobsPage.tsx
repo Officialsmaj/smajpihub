@@ -62,6 +62,8 @@ export type JobsPageKind =
   | "profile"
   | "settings"
   | "visibility"
+  | "account-settings"
+  | "blocked-employers"
   | "post"
   | "employer"
   | "job"
@@ -228,6 +230,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [activityDays, setActivityDays] = useState(7);
   const [profileVisibility, setProfileVisibility] = useState<"active" | "open" | "deactivated">("active");
   const [visibilityDetailsOpen, setVisibilityDetailsOpen] = useState(true);
+  const [employerSearch, setEmployerSearch] = useState("");
+  const [blockedEmployers, setBlockedEmployers] = useState<string[]>(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("smaj_jobs_blocked_employers") || "[]");
+    } catch {
+      return [];
+    }
+  });
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -246,7 +256,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const activeWorkspaceMode =
     kind === "employer" || kind === "post"
       ? "employer"
-      : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility"].includes(kind)
+      : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility", "account-settings", "blocked-employers"].includes(kind)
         ? "candidate"
         : workspaceMode;
   const currentAvatar = user?.avatar || "";
@@ -1163,8 +1173,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <small>Current Status: Actively looking for a job</small>
               </Link>
               <button type="button"><b>Manage Communications</b><small>Currently Receiving Job Related Communications, Career Related Communications and Promotion & Offers</small></button>
-              <button type="button"><b>Manage Account</b><small>Manage your login details and connect your social accounts</small></button>
-              <button type="button"><b>Block Employers</b><small>Add employers to ensure they are not able to see you</small></button>
+              <Link to="/services/jobs/settings/account"><b>Manage Account</b><small>View your Pi Network identity and SMAJ PI HUB account details</small></Link>
+              <Link to="/services/jobs/settings/blocked-employers"><b>Block Employers</b><small>Add employers to ensure they are not able to see you</small></Link>
             </nav>
           </section>
         ) : kind === "visibility" ? (
@@ -1189,6 +1199,58 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <span><b>I want to deactivate my account</b><small>Employers will not be able to view your profile and you will not receive job related updates</small></span>
               <input type="radio" name="profileVisibility" checked={profileVisibility === "deactivated"} onChange={() => setProfileVisibility("deactivated")} />
             </label>
+          </section>
+        ) : kind === "account-settings" ? (
+          <section className="jobs-settings-page jobs-account-page">
+            <header><Link to="/services/jobs/settings">←</Link><h1>Manage Account</h1></header>
+            <section className="jobs-login-details">
+              <h2>Your Login Details</h2>
+              <div><span>Pi username</span><b>@{user?.piUsername || user?.username || "Pioneer"}</b><small>This is your Pi Network identity used to access SMAJ PI HUB Jobs.</small></div>
+              <div><span>Display name</span><b>{user?.displayName || user?.piUsername || user?.username || "Pioneer"}</b></div>
+              {user?.wallet_address ? <div><span>Wallet address</span><b>{`${user.wallet_address.slice(0, 7)}…${user.wallet_address.slice(-5)}`}</b></div> : null}
+            </section>
+            <section className="jobs-pi-connection">
+              <span className="jobs-pi-mark">π</span>
+              <div><b>Connected to Pi Network</b><small>@{user?.piUsername || user?.username || "Pioneer"}</small></div>
+              <span className="jobs-connected-dot" aria-label="Connected">✓</span>
+            </section>
+            <section className="jobs-account-benefits">
+              <h2>Why connect your Pi account?</h2>
+              <p>✓ No additional Jobs password required</p>
+              <p>✓ Uses your existing SMAJ PI HUB identity</p>
+              <p>✓ Supports Pi payments</p>
+              <p>✓ Helps protect employers and job seekers</p>
+              <small>Your details remain private and are handled according to your profile visibility.</small>
+            </section>
+          </section>
+        ) : kind === "blocked-employers" ? (
+          <section className="jobs-settings-page jobs-block-employers">
+            <header><Link to="/services/jobs/settings">←</Link><h1>Block Employers</h1></header>
+            <div>
+              <p>Hide my profile from companies chosen below</p>
+              <label>
+                <SearchRoundedIcon />
+                <input value={employerSearch} onChange={event => setEmployerSearch(event.target.value)} placeholder="Search verified company name" />
+              </label>
+              <div className="jobs-employer-suggestions">
+                {employerSearch.trim() ? companies.filter(company => company.name.toLowerCase().includes(employerSearch.trim().toLowerCase()) && !blockedEmployers.includes(company.id)).slice(0, 6).map(company => (
+                  <button type="button" key={company.id} onClick={() => {
+                    const next = [...blockedEmployers, company.id];
+                    setBlockedEmployers(next);
+                    window.localStorage.setItem("smaj_jobs_blocked_employers", JSON.stringify(next));
+                    setEmployerSearch("");
+                  }}><span>{company.name}</span><small>{company.verificationStatus === "verified" || company.verificationStatus === "pi_kyb" ? "Verified company" : company.field}</small><b>Block</b></button>
+                )) : null}
+              </div>
+              {blockedEmployers.length ? <section className="jobs-blocked-list"><h2>Blocked employers</h2>{blockedEmployers.map(id => {
+                const company = companies.find(item => item.id === id);
+                return <div key={id}><span>{company?.name || id}</span><button type="button" onClick={() => {
+                  const next = blockedEmployers.filter(item => item !== id);
+                  setBlockedEmployers(next);
+                  window.localStorage.setItem("smaj_jobs_blocked_employers", JSON.stringify(next));
+                }}>Unblock</button></div>;
+              })}</section> : null}
+            </div>
           </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
           <section className="jobs-workspace">

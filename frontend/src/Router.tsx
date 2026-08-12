@@ -158,6 +158,8 @@ const jobsRoutes: Array<[string, JobsPageKind]> = [
   ["profile", "profile"],
   ["settings", "settings"],
   ["settings/visibility", "visibility"],
+  ["settings/account", "account-settings"],
+  ["settings/blocked-employers", "blocked-employers"],
   ["post", "post"],
   ["employer", "employer"],
 ];

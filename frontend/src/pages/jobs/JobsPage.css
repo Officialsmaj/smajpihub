@@ -180,6 +180,37 @@
 .jobs-visible-details ul { margin: 0; padding: 0 0 12px; list-style: none; }
 .jobs-visible-details li { padding: 8px 0; display: flex; justify-content: space-between; }
 .jobs-visible-details li small { color: #17496c; }
+.jobs-login-details,
+.jobs-account-benefits { padding: 18px 20px; }
+.jobs-login-details h2,
+.jobs-account-benefits h2,
+.jobs-blocked-list h2 { margin: 0 0 18px; font-size: 15px; }
+.jobs-login-details > div { padding: 12px 0; display: grid; gap: 6px; border-bottom: 1px solid #dce8ef; }
+.jobs-login-details span { font-size: 12px; }
+.jobs-pi-connection {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border-block: 1px solid #dce8ef;
+}
+.jobs-pi-connection > div { display: grid; gap: 4px; }
+.jobs-pi-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #6f3bd8; font-size: 23px; font-weight: 800; }
+.jobs-connected-dot { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #20b486; }
+.jobs-account-benefits p { margin: 12px 0; color: #245474; font-size: 13px; }
+.jobs-account-benefits > small { margin-top: 26px; }
+.jobs-block-employers > div { padding: 18px 20px; }
+.jobs-block-employers label { padding: 10px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #cad9e5; }
+.jobs-block-employers label svg { width: 18px; color: #64829a; }
+.jobs-block-employers input { width: 100%; border: 0; outline: 0; background: #fff; font: inherit; }
+.jobs-employer-suggestions { display: grid; }
+.jobs-employer-suggestions > button { padding: 13px 0; display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; border: 0; border-bottom: 1px solid #e2eaf0; color: #173d5a; background: #fff; text-align: left; }
+.jobs-employer-suggestions > button small { grid-column: 1; }
+.jobs-employer-suggestions > button b { grid-column: 2; grid-row: 1/3; align-self: center; color: #2864ee; }
+.jobs-blocked-list { margin-top: 28px; }
+.jobs-blocked-list > div { padding: 12px 0; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2eaf0; }
+.jobs-blocked-list button { border: 0; color: #2864ee; background: transparent; font: inherit; }
 .jobs-quick-search > button {
   width: 1px;
   height: 1px;
