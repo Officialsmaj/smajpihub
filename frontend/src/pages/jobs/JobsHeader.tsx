@@ -11,6 +11,8 @@ const links = [
   ["freelance", "Freelance"],
   ["companies", "Companies"],
   ["applications", "Applications"],
+  ["profile", "Job seeker profile"],
+  ["employer", "Employer dashboard"],
 ] as const;
 
 const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => {
@@ -61,7 +63,7 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
           </NavLink>
         ))}
         <NavLink className="jobs-mobile-post" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
-          Post a job
+          Employer: post a job
         </NavLink>
       </nav>
       <form className="jobs-header-search" role="search" onSubmit={submit}>
@@ -78,7 +80,7 @@ const JobsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (v
         <NotificationsNoneRoundedIcon />
       </NavLink>
       <NavLink className="jobs-post-button" to="/services/jobs/post" onClick={() => setMenuOpen(false)}>
-        Post a job
+        Employer: post a job
       </NavLink>
       <button
         className="jobs-menu-button"
