@@ -47,6 +47,8 @@ export type JobsProfile = {
   summary: string;
   updatedAt?: string;
   verificationStatus?: "unverified" | "pending" | "verified" | "rejected";
+  avatarConfirmationStatus?: "confirmed" | "deferred";
+  avatarConfirmationValue?: string;
 } & Partial<JobsPreferences>;
 export type JobsPreferences = {
   jobsMode: "candidate" | "employer" | "both";
@@ -131,6 +133,8 @@ export const saveJobsProfile = async (profile: JobsProfile) =>
   (await axiosClient.put<{ profile: JobsProfile }>("/jobs/profile", profile)).data.profile;
 export const saveJobsPreferences = async (preferences: JobsPreferences) =>
   (await axiosClient.patch<{ preferences: JobsPreferences }>("/jobs/preferences", preferences)).data.preferences;
+export const confirmJobsProfileAvatar = async (avatar: string, status: "confirmed" | "deferred") =>
+  (await axiosClient.patch("/jobs/profile/avatar-confirmation", { avatar, status })).data;
 export const enrollEmployer = async () => (await axiosClient.post<{ role: string }>("/jobs/employer/enroll")).data;
 export const createJobCompany = async (company: { name: string; field: string }) =>
   (await axiosClient.post<{ company: JobsApiCompany }>("/jobs/companies", company)).data.company;

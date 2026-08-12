@@ -579,6 +579,26 @@ export default function mountJobsEndpoints(router: Router) {
     });
     res.json({ profile: serializeJobDocument(profile) });
   });
+  router.patch("/profile/avatar-confirmation", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const status = req.body?.status === "confirmed" ? "confirmed" : "deferred";
+    const avatar = String(req.body?.avatar || "").trim().slice(0, 1000);
+    await req.app.locals.jobProfileCollection.updateOne(
+      { userId: userId(user) },
+      {
+        $set: {
+          avatarConfirmationStatus: status,
+          avatarConfirmationValue: avatar,
+          avatarConfirmationUpdatedAt: new Date().toISOString(),
+        },
+        $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() },
+      },
+      { upsert: true },
+    );
+    await audit(req, user, `profile.avatar_${status}`, userId(user));
+    res.json({ status, avatar });
+  });
   router.patch("/preferences", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;

@@ -15,6 +15,7 @@ import {
   createJobCompany,
   createJob,
   createJobsBillingIntent,
+  confirmJobsProfileAvatar,
   enrollEmployer,
   getEmployerDashboard,
   getJobApplications,
@@ -207,6 +208,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [avatarPromptDismissed, setAvatarPromptDismissed] = useState(false);
   const [profile, setProfile] = useState<JobsProfile | null>(null);
   const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
   const [loading, setLoading] = useState(true);
@@ -243,6 +245,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       : ["search", "freelance", "saved", "applications", "profile"].includes(kind)
         ? "candidate"
         : workspaceMode;
+  const currentAvatar = user?.avatar || "";
+  const showAvatarConfirmation =
+    kind === "profile" && Boolean(user) && !avatarPromptDismissed && profile?.avatarConfirmationValue !== currentAvatar;
+  const updateAvatarConfirmation = async (status: "confirmed" | "deferred") => {
+    await confirmJobsProfileAvatar(currentAvatar, status);
+    setProfile(current =>
+      current ? { ...current, avatarConfirmationStatus: status, avatarConfirmationValue: currentAvatar } : current
+    );
+    setAvatarPromptDismissed(true);
+  };
   const jobSearchSuggestions = useMemo(() => {
     const available = [
       ...recentJobSearches,
@@ -549,6 +561,41 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             navigate(mode === "candidate" ? "/services/jobs" : "/services/jobs/employer");
           }}
         />
+        {showAvatarConfirmation ? (
+          <div className="jobs-avatar-confirm-layer" role="dialog" aria-modal="true" aria-label="Confirm profile photo">
+            <button
+              className="jobs-avatar-confirm-overlay"
+              type="button"
+              aria-label="Not now"
+              onClick={() => void updateAvatarConfirmation("deferred")}
+            />
+            <section className="jobs-avatar-confirm-sheet">
+              <button
+                className="jobs-avatar-confirm-close"
+                type="button"
+                aria-label="Not now"
+                onClick={() => void updateAvatarConfirmation("deferred")}
+              >
+                ×
+              </button>
+              <span className="jobs-profile-avatar jobs-avatar-confirm-preview">
+                {currentAvatar ? <img src={currentAvatar} alt="Your SMAJ profile" /> : (user?.displayName || "P")[0]}
+              </span>
+              <h2>{currentAvatar ? "Is this your current profile photo?" : "Add a profile photo"}</h2>
+              <p>Jobs uses the same photo as your SMAJ PI HUB account.</p>
+              <div>
+                {currentAvatar ? (
+                  <button type="button" onClick={() => void updateAvatarConfirmation("confirmed")}>
+                    Yes
+                  </button>
+                ) : null}
+                <Link to="/profile?edit=1&returnTo=%2Fservices%2Fjobs%2Fprofile">
+                  {currentAvatar ? "Edit" : "Add photo"}
+                </Link>
+              </div>
+            </section>
+          </div>
+        ) : null}
         {loading ? (
           <p className="jobs-status" role="status">
             Loading live opportunities…
