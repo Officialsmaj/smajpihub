@@ -194,6 +194,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postCategory, setPostCategory] = useState("");
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
+  const [postCompanyId, setPostCompanyId] = useState("");
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -272,21 +273,35 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     try {
+      let companyId = String(data.get("companyId") || "");
+      if (companyId === "__add__") {
+        await enrollEmployer();
+        const company = await createJobCompany({
+          name: String(data.get("newCompanyName") || ""),
+          field: String(data.get("newCompanyField") || ""),
+        });
+        setEmployerCompanies(current => [...current, company]);
+        setCompanies(current => [...current, company]);
+        setPostCompanyId(company.id);
+        companyId = company.id;
+      }
       const created = await createJob({
         title: String(data.get("title") || ""),
-      companyId: String(data.get("companyId") || ""),
-      location: String(data.get("country") || ""),
+        companyId,
+        location: String(data.get("country") || ""),
         type: String(data.get("type") || ""),
         mode: String(data.get("mode") || "Remote"),
-      category: String(data.get("category") === "Other" ? data.get("customCategory") : data.get("category") || "Other"),
+        category: String(
+          data.get("category") === "Other" ? data.get("customCategory") : data.get("category") || "Other"
+        ),
         skills: String(data.get("skills") || "")
           .split(",")
           .map(skill => skill.trim())
           .filter(Boolean),
-      salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin"))))}${Number(data.get("compensationMax")) > Number(data.get("compensationMin")) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax"))))}` : ""} / ${String(data.get("compensationPeriod") || "month")}`,
-      compensationMinUsdt: Number(data.get("compensationMin")),
-      compensationMaxUsdt: Number(data.get("compensationMax")) || Number(data.get("compensationMin")),
-      compensationPeriod: String(data.get("compensationPeriod") || "month"),
+        salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin"))))}${Number(data.get("compensationMax")) > Number(data.get("compensationMin")) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax"))))}` : ""} / ${String(data.get("compensationPeriod") || "month")}`,
+        compensationMinUsdt: Number(data.get("compensationMin")),
+        compensationMaxUsdt: Number(data.get("compensationMax")) || Number(data.get("compensationMin")),
+        compensationPeriod: String(data.get("compensationPeriod") || "month"),
         summary: String(data.get("summary") || ""),
       });
       setJobs(current => [created, ...current]);
@@ -592,22 +607,67 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <label>
                   Company
-                  <select name="companyId" required defaultValue="">
+                  <select
+                    name="companyId"
+                    required
+                    value={postCompanyId}
+                    onChange={event => setPostCompanyId(event.target.value)}
+                  >
                     <option value="" disabled>
                       Select your approved company
                     </option>
-                    {employerCompanies.map(company => (
-                      <option value={company.id} key={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
+                    {[...companies]
+                      .sort((left, right) =>
+                        left.name === "SMAJ PI HUB"
+                          ? -1
+                          : right.name === "SMAJ PI HUB"
+                            ? 1
+                            : left.name.localeCompare(right.name)
+                      )
+                      .map(company => (
+                        <option
+                          value={company.id}
+                          key={company.id}
+                          disabled={!employerCompanies.some(owned => owned.id === company.id)}
+                        >
+                          {company.name}
+                        </option>
+                      ))}
+                    <option value="__add__">＋ Add another company</option>
                   </select>
                 </label>
+                {postCompanyId === "__add__" ? (
+                  <div className="job-add-company">
+                    <label>
+                      Company name
+                      <input name="newCompanyName" required minLength={2} maxLength={120} />
+                    </label>
+                    <label>
+                      Industry
+                      <input name="newCompanyField" required maxLength={100} />
+                    </label>
+                    <small>
+                      Your company is saved immediately and added to this dropdown. Jobs remain under moderation.
+                    </small>
+                  </div>
+                ) : null}
                 <div>
                   <label>
                     Country or work location
-                    <input name="country" required list="job-country-options" placeholder="Search country" autoComplete="off" />
-                    <datalist id="job-country-options"><option value="🌐 Worldwide" /><option value="🏠 Remote" />{JOB_COUNTRIES.map(country => <option key={country.code} value={country.label} />)}</datalist>
+                    <input
+                      name="country"
+                      required
+                      list="job-country-options"
+                      placeholder="Search country"
+                      autoComplete="off"
+                    />
+                    <datalist id="job-country-options">
+                      <option value="🌐 Worldwide" />
+                      <option value="🏠 Remote" />
+                      {JOB_COUNTRIES.map(country => (
+                        <option key={country.code} value={country.label} />
+                      ))}
+                    </datalist>
                   </label>
                   <label>
                     Job type
@@ -630,15 +690,38 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <div>
                   <label>
                     Category
-                    <input name="category" required list="job-category-options" value={postCategory} onChange={event => setPostCategory(event.target.value)} placeholder="Search 100+ categories" autoComplete="off" />
-                    <datalist id="job-category-options">{JOB_CATEGORIES.map(item => <option value={item} key={item} />)}</datalist>
+                    <input
+                      name="category"
+                      required
+                      list="job-category-options"
+                      value={postCategory}
+                      onChange={event => setPostCategory(event.target.value)}
+                      placeholder="Search 100+ categories"
+                      autoComplete="off"
+                    />
+                    <datalist id="job-category-options">
+                      {JOB_CATEGORIES.map(item => (
+                        <option value={item} key={item} />
+                      ))}
+                    </datalist>
                   </label>
                   <label>
                     Skills
                     <input name="skills" required placeholder="React, Research, Communication" />
                   </label>
                 </div>
-                {postCategory === "Other" ? <label>Custom category<input name="customCategory" required minLength={2} maxLength={80} placeholder="Type the job category" /></label> : null}
+                {postCategory === "Other" ? (
+                  <label>
+                    Custom category
+                    <input
+                      name="customCategory"
+                      required
+                      minLength={2}
+                      maxLength={80}
+                      placeholder="Type the job category"
+                    />
+                  </label>
+                ) : null}
                 <label>
                   Description
                   <textarea
@@ -651,10 +734,59 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <fieldset className="job-compensation">
                   <legend>Compensation</legend>
-                  <p>Enter the genuine real-world amount. Store conversion: 1 Pi = {PI_USDT_RATE.toLocaleString()} USDT.</p>
-                  <div><label>Minimum (USDT)<input name="compensationMin" type="number" min="1" step="0.01" required value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="e.g. 3000" /></label><label>Maximum (USDT)<input name="compensationMax" type="number" min={payMin || "1"} step="0.01" value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="e.g. 4500" /></label><label>Pay period<select name="compensationPeriod"><option value="hour">Per hour</option><option value="day">Per day</option><option value="week">Per week</option><option value="month">Per month</option><option value="year">Per year</option><option value="project">Fixed project</option></select></label></div>
-                  {Number(payMin) > 0 ? <output>{formatUsdAmount(Number(payMin))}{Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} = {formatPiAmount(piFromUsdt(Number(payMin)))}{Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}</output> : null}
-                  <label className="job-pay-confirm"><input name="compensationConfirmed" type="checkbox" required /> I confirm this compensation is genuine and can be honored.</label>
+                  <p>
+                    Enter the genuine real-world amount. Store conversion: 1 Pi = {PI_USDT_RATE.toLocaleString()} USDT.
+                  </p>
+                  <div>
+                    <label>
+                      Minimum (USDT)
+                      <input
+                        name="compensationMin"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        required
+                        value={payMin}
+                        onChange={event => setPayMin(event.target.value)}
+                        placeholder="e.g. 3000"
+                      />
+                    </label>
+                    <label>
+                      Maximum (USDT)
+                      <input
+                        name="compensationMax"
+                        type="number"
+                        min={payMin || "1"}
+                        step="0.01"
+                        value={payMax}
+                        onChange={event => setPayMax(event.target.value)}
+                        placeholder="e.g. 4500"
+                      />
+                    </label>
+                    <label>
+                      Pay period
+                      <select name="compensationPeriod">
+                        <option value="hour">Per hour</option>
+                        <option value="day">Per day</option>
+                        <option value="week">Per week</option>
+                        <option value="month">Per month</option>
+                        <option value="year">Per year</option>
+                        <option value="project">Fixed project</option>
+                      </select>
+                    </label>
+                  </div>
+                  {Number(payMin) > 0 ? (
+                    <output>
+                      {formatUsdAmount(Number(payMin))}
+                      {Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} ={" "}
+                      {formatPiAmount(piFromUsdt(Number(payMin)))}
+                      {Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}
+                    </output>
+                  ) : null}
+                  <label className="job-pay-confirm">
+                    <input name="compensationConfirmed" type="checkbox" required /> I confirm this compensation is
+                    genuine and can be honored.
+                  </label>
                 </fieldset>
                 <button type="submit">Publish job</button>
               </form>

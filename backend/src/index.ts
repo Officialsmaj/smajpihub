@@ -52,7 +52,8 @@ const baseMongoClientOptions = {
 const mongoClientOptions = baseMongoClientOptions;
 let mongoClientPromise: Promise<MongoClient> | null = null;
 const getMongoClient = () => {
-  if (!mongoClientPromise) mongoClientPromise = MongoClient.connect(mongoUri, mongoClientOptions);
+  if (!mongoClientPromise)
+    mongoClientPromise = MongoClient.connect(mongoUri, mongoClientOptions);
   return mongoClientPromise;
 };
 const maskMongoUri = (uri: string) =>
@@ -332,30 +333,38 @@ const start = async () => {
       app.locals.conversationCollection = db.collection("conversations");
       app.locals.messageCollection = db.collection("messages");
       app.locals.notificationCollection = db.collection("notifications");
-      app.locals.pushSubscriptionCollection = db.collection("push_subscriptions");
+      app.locals.pushSubscriptionCollection =
+        db.collection("push_subscriptions");
       app.locals.onboardingCollection = db.collection(
         "onboarding_applications",
       );
       app.locals.supportCollection = db.collection("support_requests");
       app.locals.heroBannerCollection = db.collection("hero_banners");
-      app.locals.ambassadorCollection = db.collection("ambassador_applications");
+      app.locals.ambassadorCollection = db.collection(
+        "ambassador_applications",
+      );
       app.locals.streamContentCollection = db.collection("stream_content");
       app.locals.streamPostCollection = db.collection("stream_posts");
       app.locals.streamReviewCollection = db.collection("stream_reviews");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
-app.locals.jobCollection = db.collection("jobs");
-       app.locals.jobCompanyCollection = db.collection("job_companies");
-       app.locals.jobSavedCollection = db.collection("job_saved");
-       app.locals.jobApplicationCollection = db.collection("job_applications");
-       app.locals.jobProfileCollection = db.collection("job_profiles");
-       app.locals.jobAuditCollection = db.collection("job_audit_log");
-       app.locals.sessionCollection = db.collection("user_sessions");
-       app.locals.transportBookingCollection = db.collection("transport_bookings");
-       app.locals.transportDriverCollection = db.collection("transport_drivers");
-       app.locals.transportVehicleCollection = db.collection("transport_vehicles");
-       app.locals.transportTripCollection = db.collection("transport_trips");
-       app.locals.transportReceiptCollection = db.collection("transport_receipts");
-       app.locals.transportNotificationCollection = db.collection("transport_notifications");
+      app.locals.jobCollection = db.collection("jobs");
+      app.locals.jobCompanyCollection = db.collection("job_companies");
+      app.locals.jobSavedCollection = db.collection("job_saved");
+      app.locals.jobApplicationCollection = db.collection("job_applications");
+      app.locals.jobProfileCollection = db.collection("job_profiles");
+      app.locals.jobAuditCollection = db.collection("job_audit_log");
+      app.locals.sessionCollection = db.collection("user_sessions");
+      app.locals.transportBookingCollection =
+        db.collection("transport_bookings");
+      app.locals.transportDriverCollection = db.collection("transport_drivers");
+      app.locals.transportVehicleCollection =
+        db.collection("transport_vehicles");
+      app.locals.transportTripCollection = db.collection("transport_trips");
+      app.locals.transportReceiptCollection =
+        db.collection("transport_receipts");
+      app.locals.transportNotificationCollection = db.collection(
+        "transport_notifications",
+      );
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -390,7 +399,10 @@ app.locals.jobCollection = db.collection("jobs");
         }),
         app.locals.conversationCollection.createIndex(
           { pairKey: 1 },
-          { unique: true, partialFilterExpression: { pairKey: { $type: "string" } } },
+          {
+            unique: true,
+            partialFilterExpression: { pairKey: { $type: "string" } },
+          },
         ),
         app.locals.messageCollection.createIndex({
           conversationId: 1,
@@ -400,12 +412,29 @@ app.locals.jobCollection = db.collection("jobs");
           userId: 1,
           createdAt: -1,
         }),
-        app.locals.pushSubscriptionCollection.createIndex({ endpoint: 1 }, { unique: true }),
+        app.locals.pushSubscriptionCollection.createIndex(
+          { endpoint: 1 },
+          { unique: true },
+        ),
         app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
-        app.locals.heroBannerCollection.createIndex({ placement: 1, active: 1, order: 1 }),
-        app.locals.heroBannerCollection.createIndex({ sourceKey: 1 }, { unique: true, sparse: true }),
-        app.locals.ambassadorCollection.createIndex({ userId: 1 }, { unique: true }),
-        app.locals.ambassadorCollection.createIndex({ status: 1, countryCode: 1, services: 1 }),
+        app.locals.heroBannerCollection.createIndex({
+          placement: 1,
+          active: 1,
+          order: 1,
+        }),
+        app.locals.heroBannerCollection.createIndex(
+          { sourceKey: 1 },
+          { unique: true, sparse: true },
+        ),
+        app.locals.ambassadorCollection.createIndex(
+          { userId: 1 },
+          { unique: true },
+        ),
+        app.locals.ambassadorCollection.createIndex({
+          status: 1,
+          countryCode: 1,
+          services: 1,
+        }),
         app.locals.streamContentCollection.createIndex({
           creatorId: 1,
           createdAt: -1,
@@ -418,19 +447,60 @@ app.locals.jobCollection = db.collection("jobs");
           visibility: 1,
           createdAt: -1,
         }),
-        app.locals.streamReviewCollection.createIndex({ userId: 1, mediaType: 1, tmdbId: 1 }, { unique: true }),
-        app.locals.streamReviewCollection.createIndex({ status: 1, popularityScore: -1, createdAt: -1 }),
+        app.locals.streamReviewCollection.createIndex(
+          { userId: 1, mediaType: 1, tmdbId: 1 },
+          { unique: true },
+        ),
+        app.locals.streamReviewCollection.createIndex({
+          status: 1,
+          popularityScore: -1,
+          createdAt: -1,
+        }),
         app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),
-        app.locals.jobCollection.createIndex({ status: 1, category: 1, createdAt: -1 }),
-        app.locals.jobCollection.createIndex({ moderationStatus: 1, expiresAt: 1, mode: 1 }),
+        app.locals.jobCollection.createIndex({
+          status: 1,
+          category: 1,
+          createdAt: -1,
+        }),
+        app.locals.jobCollection.createIndex({
+          moderationStatus: 1,
+          expiresAt: 1,
+          mode: 1,
+        }),
         app.locals.jobCollection.createIndex({ employerId: 1, createdAt: -1 }),
-        app.locals.jobCompanyCollection.createIndex({ slug: 1 }, { unique: true }),
-        app.locals.jobCompanyCollection.createIndex({ ownerId: 1 }, { unique: true, sparse: true }),
-        app.locals.jobSavedCollection.createIndex({ userId: 1, jobId: 1 }, { unique: true }),
-        app.locals.jobApplicationCollection.createIndex({ candidateId: 1, jobId: 1 }, { unique: true }),
-        app.locals.jobApplicationCollection.createIndex({ employerId: 1, status: 1, createdAt: -1 }),
-        app.locals.jobProfileCollection.createIndex({ userId: 1 }, { unique: true }),
-        app.locals.jobAuditCollection.createIndex({ targetId: 1, createdAt: -1 }),
+        app.locals.jobCompanyCollection.createIndex(
+          { slug: 1 },
+          { unique: true },
+        ),
+        app.locals.jobCompanyCollection.createIndex({
+          directoryPriority: 1,
+          name: 1,
+        }),
+        app.locals.jobCompanyCollection.createIndex(
+          { ownerId: 1 },
+          { unique: true, sparse: true },
+        ),
+        app.locals.jobSavedCollection.createIndex(
+          { userId: 1, jobId: 1 },
+          { unique: true },
+        ),
+        app.locals.jobApplicationCollection.createIndex(
+          { candidateId: 1, jobId: 1 },
+          { unique: true },
+        ),
+        app.locals.jobApplicationCollection.createIndex({
+          employerId: 1,
+          status: 1,
+          createdAt: -1,
+        }),
+        app.locals.jobProfileCollection.createIndex(
+          { userId: 1 },
+          { unique: true },
+        ),
+        app.locals.jobAuditCollection.createIndex({
+          targetId: 1,
+          createdAt: -1,
+        }),
         app.locals.streamContentCollection.createIndex(
           { cloudflareUid: 1 },
           { unique: true },
@@ -444,18 +514,48 @@ app.locals.jobCollection = db.collection("jobs");
           { expires: 1 },
           { expireAfterSeconds: 0 },
         ),
-        app.locals.transportBookingCollection.createIndex({ userId: 1, createdAt: -1 }),
-        app.locals.transportBookingCollection.createIndex({ bookingId: 1 }, { unique: true }),
+        app.locals.transportBookingCollection.createIndex({
+          userId: 1,
+          createdAt: -1,
+        }),
+        app.locals.transportBookingCollection.createIndex(
+          { bookingId: 1 },
+          { unique: true },
+        ),
         app.locals.transportDriverCollection.createIndex({ userId: 1 }),
-        app.locals.transportDriverCollection.createIndex({ driverId: 1 }, { unique: true }),
-        app.locals.transportDriverCollection.createIndex({ "currentLocation.lat": 1, "currentLocation.lng": 1 }),
+        app.locals.transportDriverCollection.createIndex(
+          { driverId: 1 },
+          { unique: true },
+        ),
+        app.locals.transportDriverCollection.createIndex({
+          "currentLocation.lat": 1,
+          "currentLocation.lng": 1,
+        }),
         app.locals.transportVehicleCollection.createIndex({ userId: 1 }),
-        app.locals.transportVehicleCollection.createIndex({ vehicleId: 1 }, { unique: true }),
-        app.locals.transportTripCollection.createIndex({ userId: 1, createdAt: -1 }),
-        app.locals.transportTripCollection.createIndex({ tripId: 1 }, { unique: true }),
-        app.locals.transportReceiptCollection.createIndex({ userId: 1, createdAt: -1 }),
-        app.locals.transportReceiptCollection.createIndex({ receiptId: 1 }, { unique: true }),
-        app.locals.transportNotificationCollection.createIndex({ userId: 1, createdAt: -1 })
+        app.locals.transportVehicleCollection.createIndex(
+          { vehicleId: 1 },
+          { unique: true },
+        ),
+        app.locals.transportTripCollection.createIndex({
+          userId: 1,
+          createdAt: -1,
+        }),
+        app.locals.transportTripCollection.createIndex(
+          { tripId: 1 },
+          { unique: true },
+        ),
+        app.locals.transportReceiptCollection.createIndex({
+          userId: 1,
+          createdAt: -1,
+        }),
+        app.locals.transportReceiptCollection.createIndex(
+          { receiptId: 1 },
+          { unique: true },
+        ),
+        app.locals.transportNotificationCollection.createIndex({
+          userId: 1,
+          createdAt: -1,
+        }),
       ]);
     }
 

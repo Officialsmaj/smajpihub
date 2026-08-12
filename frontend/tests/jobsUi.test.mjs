@@ -18,4 +18,7 @@ assert.match(header, /pointerdown/);
 assert.match(header, /event\.key === "Escape"/);
 assert.match(header, /jobs-menu-backdrop/);
 assert.match(header, /setMenuOpen\(value => !value\)/);
+assert.match(page, /SMAJ PI HUB/);
+assert.match(page, /Add another company/);
+assert.match(page, /newCompanyName/);
 console.log("Jobs UI tests passed.");
