@@ -1294,21 +1294,54 @@
 }
 .jobs-profile-summary-card {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 14px;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px 12px;
+  border-radius: 0 0 18px 18px;
 }
 .jobs-profile-summary-card h2,
 .jobs-profile-summary-card p {
   margin: 0 0 4px;
 }
-.jobs-profile-summary-card > strong {
-  color: var(--green);
-  font-size: 20px;
+.jobs-profile-summary-card h2 {
+  color: #173d5a;
+  font-size: 17px;
+  font-weight: 600;
+}
+.jobs-profile-intro {
+  display: grid;
+  gap: 6px;
+  color: #355f7d;
+  font-size: 12px;
+}
+.jobs-profile-intro p {
+  color: #315777;
+}
+.jobs-profile-intro span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.jobs-profile-intro svg {
+  width: 15px;
+  height: 15px;
+}
+.jobs-profile-intro b {
+  margin-left: auto;
+  padding: 2px 6px;
+  color: #159c73;
+  background: #ddf6ec;
+  font-size: 10px;
+}
+.jobs-profile-completion {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: space-between;
+  color: #3b637d;
 }
 .jobs-profile-summary-card progress {
   width: 100%;
-  height: 7px;
+  height: 5px;
   grid-column: 1/-1;
   accent-color: var(--green);
 }
@@ -1318,16 +1351,22 @@
   justify-content: space-between;
   gap: 16px;
   color: #fff;
-  background: linear-gradient(135deg, #6d3df5, #4f24bd);
+  min-height: 118px;
+  border: 0;
+  border-radius: 0 0 18px 18px;
+  background: linear-gradient(135deg, #0ea685, #13c5a0);
 }
 .jobs-profile-pending-card p {
   margin: 7px 0 0;
-  color: #eee8ff;
+  max-width: 430px;
+  color: #fff;
+  font-size: 12px;
 }
-.jobs-profile-pending-card a {
+.jobs-profile-pending-card button {
   padding: 10px 16px;
+  border: 0;
   border-radius: 22px;
-  color: #4f24bd;
+  color: #173d5a;
   background: #fff;
   text-decoration: none;
   white-space: nowrap;
@@ -1548,32 +1587,65 @@
 }
 .jobs-profile-card-grid .jobs-cv-card {
   grid-column: 1/-1;
+  position: relative;
+}
+.jobs-cv-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.jobs-cv-card > header h3 {
+  margin: 0;
 }
 .jobs-cv-preview {
-  width: min(240px, 100%);
-  min-height: 94px;
-  padding: 12px;
+  width: min(250px, 75%);
+  min-height: 118px;
+  margin-top: 14px;
+  padding: 8px;
   display: grid;
-  grid-template-columns: 46px 1fr;
-  align-items: center;
-  gap: 10px;
+  align-content: space-between;
   border: 1px solid #cbd3df;
   background: #eef5fb;
 }
-.jobs-cv-preview b {
-  padding: 13px 6px;
-  color: #fff;
-  background: var(--green);
-  text-align: center;
+.jobs-cv-document {
+  min-height: 78px;
+  padding: 12px 14px 10px 46px;
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 2px solid #91abc3;
+  background: #fff;
+  box-shadow: inset 0 0 0 3px #e5edf4;
+}
+.jobs-cv-document span {
+  position: absolute;
+  top: 18px;
+  left: 14px;
+  color: #8aa6bf;
+  font-size: 17px;
+}
+.jobs-cv-document i {
+  width: 72%;
+  height: 4px;
+  display: block;
+  background: #9bb5ca;
+}
+.jobs-cv-document i:nth-of-type(2) {
+  width: 92%;
+}
+.jobs-cv-preview > span {
+  color: #426681;
+  font-size: 12px;
 }
 .jobs-cv-card > small {
   margin: 8px 0;
   display: block;
   color: var(--muted);
 }
-.jobs-cv-card > div:last-of-type {
+.jobs-cv-update-row {
   display: flex;
-  gap: 14px;
+  justify-content: flex-end;
 }
 .jobs-cv-card a,
 .jobs-cv-card label,
@@ -1588,6 +1660,40 @@
 }
 .jobs-cv-card input {
   display: none;
+}
+.jobs-cv-menu {
+  position: relative;
+}
+.jobs-cv-menu summary {
+  padding: 2px 8px;
+  color: #356788;
+  cursor: pointer;
+  list-style: none;
+  font-size: 20px;
+}
+.jobs-cv-menu > div {
+  width: 190px;
+  padding: 12px;
+  position: absolute;
+  z-index: 2;
+  top: 30px;
+  right: 0;
+  display: grid;
+  gap: 12px;
+  border: 1px solid #d9e2ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgb(22 48 67 / 16%);
+}
+.jobs-cv-menu label {
+  display: grid;
+  gap: 5px;
+}
+.jobs-cv-menu select {
+  padding: 7px;
+  border: 1px solid #d6d0e8;
+  border-radius: 6px;
+  background: #fff;
 }
 .jobs-cv-upload {
   padding: 13px 16px;

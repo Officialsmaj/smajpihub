@@ -7,6 +7,7 @@ import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import AppLayout from "../../layouts/AppLayout";
@@ -27,7 +28,6 @@ import {
   getJobsBillingPlans,
   getJobsActivity,
   getSavedJobs,
-  saveJobsProfile,
   saveJobsProfileSection,
   requestCandidateVerification,
   requestCompanyVerification,
@@ -214,7 +214,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const [profileSaved, setProfileSaved] = useState(false);
   const [cvSaving, setCvSaving] = useState(false);
   const [cvMessage, setCvMessage] = useState("");
   const [profileEditor, setProfileEditor] = useState<"basic" | "headline" | "skills" | "employment" | "">("");
@@ -583,25 +582,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("Application submitted successfully.");
     } catch {
       setActionMessage("This application could not be submitted. Check whether you already applied and try again.");
-    }
-  };
-  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    try {
-      const next = await saveJobsProfile({
-        title: String(data.title || ""),
-        skills: String(data.skills || ""),
-        location: String(data.location || ""),
-        availability: String(data.availability || ""),
-        portfolio: String(data.portfolio || ""),
-        summary: String(data.summary || ""),
-      });
-      setProfile(next);
-      setProfileSaved(true);
-      setError("");
-    } catch {
-      setError("Your profile could not be saved. Please try again from your SMAJ account.");
     }
   };
   const createCompany = async (event: FormEvent<HTMLFormElement>) => {
@@ -1101,9 +1081,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>{selectedCompany.field} · Building useful products for the Pi community.</p>
               </div>
             </div>
-            <div className="jobs-page-heading">
+            {kind !== "profile" ? <div className="jobs-page-heading">
               <h2>Open opportunities</h2>
-            </div>
+            </div> : null}
             <div className="jobs-list">
               {jobs
                 .filter(job => job.company === selectedCompany.name)
@@ -1186,7 +1166,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
           <section className="jobs-workspace">
-            <div className="jobs-page-heading">
+            {kind !== "profile" ? <div className="jobs-page-heading">
               <span className="jobs-kicker">{kind === "post" ? "EMPLOYER WORKSPACE" : "YOUR JOBS WORKSPACE"}</span>
               <h1>
                 {kind === "post"
@@ -1198,7 +1178,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       : "Applications"}
               </h1>
               <p>Everything you need to manage your next step in the Pi economy.</p>
-            </div>
+            </div> : null}
             {kind === "post" ? (
               <form className="job-form" onSubmit={event => void submitJob(event)}>
                 <label>
@@ -1411,12 +1391,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <span className="jobs-profile-avatar">
                       {currentAvatar ? <img src={currentAvatar} alt="" /> : (user?.displayName || "P")[0]}
                     </span>
-                    <div>
-                      <h2>{user?.displayName || user?.piUsername || user?.username || "Pioneer"}</h2>
-                      <p>{profile?.title || "Add your professional title"}</p>
-                      <small>{profile?.location || user?.country || "Add your country"}</small>
+                    <div className="jobs-profile-intro">
+                      <h2>Hi {user?.displayName || user?.piUsername || user?.username || "Pioneer"} !</h2>
+                      <p>
+                        {profile?.employment?.[0]?.position || profile?.title || "Add your professional title"}
+                        {profile?.employment?.[0]?.employer ? ` at ${profile.employment[0].employer}` : ""}
+                      </p>
+                      <span><LocationOnOutlinedIcon /> {profile?.location || user?.country || "Add your country"}</span>
+                      <span>
+                        <CheckCircleRoundedIcon /> {user?.piUsername ? `@${user.piUsername}` : "SMAJ PI HUB account"}
+                        {profile?.verificationStatus === "verified" ? <b>Verified</b> : null}
+                      </span>
+                      {user?.contactPhone ? <span><PhoneOutlinedIcon /> {user.contactPhone}</span> : null}
                     </div>
-                    <strong>{profileCompletion}%</strong>
+                    <div className="jobs-profile-completion">
+                      <small>{profileCompletion}% Profile Completed</small>
+                      <small>Updated Today</small>
+                    </div>
                     <progress value={profileCompletion} max="100">
                       {profileCompletion}%
                     </progress>
@@ -1424,10 +1415,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   {missingProfileItems ? (
                     <div className="jobs-profile-pending-card">
                       <div>
-                        <b>{missingProfileItems} pending actions</b>
-                        <p>Add the missing information to complete your professional profile.</p>
+                        <b>{missingProfileItems} Pending Actions</b>
+                        <p>Here is a list of information missing in your profile. Add these to reach a 100% profile completion score.</p>
                       </div>
-                      <a href="#jobs-profile-details">Complete now</a>
+                      <button type="button" onClick={() => setProfileEditor("basic")}>
+                        View All
+                      </button>
                     </div>
                   ) : null}
                   <div className="jobs-profile-card-grid">
@@ -1466,19 +1459,47 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       </button>
                     </article>
                     <article className="jobs-cv-card">
-                      <h3>CV</h3>
+                      <header>
+                        <h3>CV</h3>
+                        {profile?.cv ? (
+                          <details className="jobs-cv-menu">
+                            <summary aria-label="CV options">⋮</summary>
+                            <div>
+                              <a href={profile.cv.url} target="_blank" rel="noreferrer">View CV</a>
+                              <label>
+                                Visibility
+                                <select
+                                  value={profile.cv.visibility}
+                                  onChange={event =>
+                                    void changeCvVisibility(
+                                      event.target.value as "applications" | "verified_employers" | "private"
+                                    )
+                                  }
+                                >
+                                  <option value="applications">Applications</option>
+                                  <option value="verified_employers">Verified employers</option>
+                                  <option value="private">Private</option>
+                                </select>
+                              </label>
+                              <button type="button" onClick={() => void removeCv()}>Delete CV</button>
+                            </div>
+                          </details>
+                        ) : null}
+                      </header>
                       {profile?.cv ? (
                         <>
                           <div className="jobs-cv-preview">
-                            <b>PDF</b>
+                            <div className="jobs-cv-document" aria-hidden="true">
+                              <span>●</span>
+                              <i />
+                              <i />
+                              <i />
+                            </div>
                             <span>{profile.cv.name}</span>
                           </div>
                           <small>Last updated {new Date(profile.cv.updatedAt).toLocaleDateString()}</small>
-                          <div>
-                            <a href={profile.cv.url} target="_blank" rel="noreferrer">
-                              View
-                            </a>
-                            <label>
+                          <div className="jobs-cv-update-row">
+                            <label className="jobs-cv-update">
                               {cvSaving ? "Uploading…" : "Update"}
                               <input
                                 type="file"
@@ -1487,25 +1508,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                                 disabled={cvSaving}
                               />
                             </label>
-                            <button type="button" onClick={() => void removeCv()}>
-                              Delete
-                            </button>
                           </div>
-                          <label className="jobs-cv-visibility">
-                            CV visibility
-                            <select
-                              value={profile.cv.visibility}
-                              onChange={event =>
-                                void changeCvVisibility(
-                                  event.target.value as "applications" | "verified_employers" | "private"
-                                )
-                              }
-                            >
-                              <option value="applications">Share when I apply</option>
-                              <option value="verified_employers">Verified employers</option>
-                              <option value="private">Private</option>
-                            </select>
-                          </label>
                         </>
                       ) : (
                         <label className="jobs-cv-upload">
@@ -1518,11 +1521,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                           />
                         </label>
                       )}
-                      <p className="jobs-cv-privacy">Shared only with applications by default.</p>
                       {cvMessage ? <small>{cvMessage}</small> : null}
                     </article>
                   </div>
                 </section>
+                <datalist id="profile-country-options">
+                  {JOB_COUNTRIES.map(country => (
+                    <option key={country.code} value={country.label} />
+                  ))}
+                </datalist>
                 {profileEditor ? (
                   <div className="jobs-profile-editor">
                     <form onSubmit={event => void saveProfileEditor(event)}>
@@ -1573,6 +1580,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                               name="location"
                               list="profile-country-options"
                               defaultValue={profile?.location || user?.country}
+                              placeholder="Search for your country"
                             />
                           </label>
                           <label>
@@ -1666,70 +1674,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </form>
                   </div>
                 ) : null}
-                <form className="job-form" id="jobs-profile-details" onSubmit={saveProfile}>
-                  <div className="jobs-profile-identity">
-                    <span className="jobs-profile-avatar">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt="" />
-                      ) : (
-                        (user?.displayName || user?.piUsername || user?.username || "P").slice(0, 1).toUpperCase()
-                      )}
-                    </span>
-                    <div>
-                      <strong>{user?.displayName || user?.piUsername || user?.username || "Pioneer"}</strong>
-                      <small>Your SMAJ PI HUB photo and identity</small>
-                    </div>
-                  </div>
-                  <label>
-                    Professional title
-                    <input name="title" defaultValue={profile?.title} required placeholder="e.g. Frontend Engineer" />
-                  </label>
-                  <label>
-                    Skills
-                    <input
-                      name="skills"
-                      defaultValue={Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills}
-                      required
-                      placeholder="React, TypeScript, product design"
-                    />
-                  </label>
-                  <div>
-                    <label>
-                      Country
-                      <input
-                        name="location"
-                        required
-                        list="profile-country-options"
-                        defaultValue={profile?.location || user?.country}
-                        placeholder="Search for your country"
-                        autoComplete="country-name"
-                      />
-                      <datalist id="profile-country-options">
-                        {JOB_COUNTRIES.map(country => (
-                          <option key={country.code} value={country.label} />
-                        ))}
-                      </datalist>
-                    </label>
-                    <label>
-                      Availability
-                      <select name="availability" defaultValue={profile?.availability || "Open to offers"}>
-                        <option>Available now</option>
-                        <option>Open to offers</option>
-                        <option>Not available</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label>
-                    Portfolio URL
-                    <input name="portfolio" defaultValue={profile?.portfolio} type="url" placeholder="https://..." />
-                  </label>
-                  <label>
-                    Professional summary
-                    <textarea name="summary" defaultValue={profile?.summary} required minLength={30} rows={6} />
-                  </label>
-                  <button type="submit">Save profile</button>
-                  {profileSaved ? <p className="jobs-action-message">Profile saved to your SMAJ account.</p> : null}
-                </form>
                 <form className="job-form jobs-verification-form" onSubmit={submitCandidateVerification}>
                   <h2>Professional verification</h2>
                   <p>
