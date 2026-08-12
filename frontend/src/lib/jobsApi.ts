@@ -102,6 +102,9 @@ export const createJob = async (job: {
   salary: string;
   summary: string;
   durationDays?: number;
+  compensationMinUsdt: number;
+  compensationMaxUsdt: number;
+  compensationPeriod: string;
 }) => {
   const response = await axiosClient.post<{ job: JobsApiJob }>("/jobs/jobs", job);
   return response.data.job;

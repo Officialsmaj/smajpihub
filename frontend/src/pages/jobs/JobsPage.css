@@ -123,7 +123,8 @@
   text-decoration: none;
 }
 .jobs-menu-button,
-.jobs-mobile-post {
+.jobs-mobile-post,
+.jobs-menu-backdrop {
   display: none;
 }
 .jobs-hero {
@@ -633,6 +634,13 @@
 .job-form button {
   justify-self: start;
 }
+.job-compensation { margin: 0; padding: 18px; display: grid; gap: 14px; border: 1px solid #d5e1db; border-radius: 12px; }
+.job-compensation legend { padding: 0 7px; color: #243d33; font-weight: 850; }
+.job-compensation > p { margin: 0; color: #60736b; font-size: 12px; }
+.job-compensation > div { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.job-compensation output { padding: 12px; border-radius: 9px; color: #075f3a; background: #ebfaf2; font-weight: 800; }
+.job-compensation .job-pay-confirm { display: flex; grid-template-columns: none; align-items: center; gap: 9px; }
+.job-compensation .job-pay-confirm input { width: auto; }
 .workspace-empty {
   text-align: center;
   color: var(--muted);
@@ -803,7 +811,8 @@
     flex-direction: column;
     border-bottom: 1px solid #dbe6e0;
     background: #fff;
-    box-shadow: 0 15px 30px #173b2920;
+      box-shadow: 0 15px 30px #173b2920;
+      z-index: 2;
   }
   .jobs-header > nav.open {
     display: flex;
@@ -820,9 +829,19 @@
     display: none;
   }
   .jobs-menu-button {
-    display: grid;
-    margin-left: auto;
-  }
+      display: grid;
+      margin-left: auto;
+      position: relative;
+      z-index: 3;
+    }
+    .jobs-menu-backdrop {
+      display: block;
+      position: fixed;
+      z-index: 1;
+      inset: 62px 0 0;
+      border: 0;
+      background: rgb(15 35 27 / 18%);
+    }
   .jobs-hero {
     min-height: auto;
     padding: 55px 20px;
@@ -895,6 +914,7 @@
   .job-form > div {
     grid-template-columns: 1fr;
   }
+  .job-compensation > div { grid-template-columns: 1fr; }
   .jobs-mobile-nav {
     height: 64px;
     padding: 6px 8px;

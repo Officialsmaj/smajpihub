@@ -1,6 +1,7 @@
 import type { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
+import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
 
 const ACTIVE = {
   status: "active",
@@ -126,7 +127,11 @@ export const clampPage = (value: unknown) =>
   Math.max(1, Math.min(10_000, Number.parseInt(String(value ?? "1"), 10) || 1));
 export const clampPageSize = (value: unknown) =>
   Math.max(1, Math.min(50, Number.parseInt(String(value ?? "20"), 10) || (String(value) === "0" ? 0 : 20)));
-export const cleanJobInput = (body: any) => ({
+export const cleanJobInput = (body: any) => {
+  const compensationMinUsdt = Number(body?.compensationMinUsdt);
+  const compensationMaxUsdt = Number(body?.compensationMaxUsdt) || compensationMinUsdt;
+  const compensationPeriod = ["hour", "day", "week", "month", "year", "project"].includes(body?.compensationPeriod) ? body.compensationPeriod : "month";
+  return ({
   title: String(body?.title || "")
     .trim()
     .slice(0, 120),
@@ -145,6 +150,12 @@ export const cleanJobInput = (body: any) => ({
   salary: String(body?.salary || "")
     .trim()
     .slice(0, 120),
+  compensationMinUsdt,
+  compensationMaxUsdt,
+  compensationMinPi: piFromUsdt(compensationMinUsdt),
+  compensationMaxPi: piFromUsdt(compensationMaxUsdt),
+  compensationPeriod,
+  piRateUsed: PI_USDT_RATE,
   category: String(body?.category || "Other")
     .trim()
     .slice(0, 80),
@@ -162,7 +173,8 @@ export const cleanJobInput = (body: any) => ({
     Date.now() +
       Math.max(1, Math.min(90, Number(body?.durationDays) || 30)) * 86_400_000,
   ).toISOString(),
-});
+  });
+};
 
 const userId = (user: any) => user._id?.toString() || user.uid;
 const isAdmin = (user: any) => user.role === "admin";
@@ -382,7 +394,7 @@ export default function mountJobsEndpoints(router: Router) {
           error: "company_forbidden",
           message: "You may only post for a company you own.",
         });
-    if (!job.title || !job.location || !job.salary || job.summary.length < 30)
+    if (!job.title || !job.location || !job.salary || !Number.isFinite(job.compensationMinUsdt) || job.compensationMinUsdt <= 0 || job.compensationMaxUsdt < job.compensationMinUsdt || job.summary.length < 30)
       return res
         .status(400)
         .json({
