@@ -119,6 +119,14 @@ export const getJobApplications = async () => {
   const response = await axiosClient.get<{ applications: JobsApiApplication[] }>("/jobs/applications");
   return response.data.applications;
 };
+export type JobsActivity = {
+  days: number;
+  appearances: Array<{ date: string; count: number }>;
+  totalAppearances: number;
+  employerActions: Array<{ status: string; at: string; jobTitle: string; company: string }>;
+};
+export const getJobsActivity = async (days = 7) =>
+  (await axiosClient.get<JobsActivity>("/jobs/activity", { params: { days } })).data;
 
 export const applyToJob = async (jobId: string, coverNote = "") => {
   const response = await axiosClient.post<{ application: JobsApiApplication }>(

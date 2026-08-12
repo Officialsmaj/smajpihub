@@ -757,6 +757,15 @@ export default function mountJobsEndpoints(router: Router) {
       .toArray();
     res.json({ applications: applications.map(serializeJobDocument) });
   });
+  router.get("/activity", async (req, res) => {
+    const user = await requireUser(req, res); if (!user) return;
+    const days = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 7;
+    const since = new Date(Date.now() - days * 86_400_000);
+    const applications = await req.app.locals.jobApplicationCollection.find({ candidateId: userId(user) }).toArray();
+    const employerActions = applications.flatMap((application: any) => (application.statusHistory || []).filter((entry: any) => !["submitted", "withdrawn"].includes(entry.status) && new Date(entry.at) >= since).map((entry: any) => ({ status: entry.status, at: entry.at, jobTitle: application.jobTitle, company: application.company })));
+    const appearances = Array.from({ length: days }, (_, index) => ({ date: new Date(Date.now() - (days - index - 1) * 86_400_000).toISOString().slice(0, 10), count: 0 }));
+    res.json({ days, appearances, totalAppearances: 0, employerActions: employerActions.sort((a: any, b: any) => b.at.localeCompare(a.at)) });
+  });
   router.post("/jobs/:jobId/apply", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;

@@ -11,6 +11,7 @@ const candidateLinks = [
   ["freelance", "Freelance"],
   ["saved", "Saved jobs"],
   ["applications", "Applications"],
+  ["activity", "Activity on profile"],
 ] as const;
 
 const employerLinks = [

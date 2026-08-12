@@ -25,6 +25,7 @@ import {
   getJobsMetrics,
   getJobsProfile,
   getJobsBillingPlans,
+  getJobsActivity,
   getSavedJobs,
   saveJobsProfile,
   saveJobsProfileSection,
@@ -40,6 +41,7 @@ import {
   type JobsMetrics,
   type JobsProfile,
   type JobsBillingPlan,
+  type JobsActivity,
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import "./JobsPage.css";
@@ -56,6 +58,7 @@ export type JobsPageKind =
   | "companies"
   | "saved"
   | "applications"
+  | "activity"
   | "profile"
   | "post"
   | "employer"
@@ -216,6 +219,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [cvMessage, setCvMessage] = useState("");
   const [profileEditor, setProfileEditor] = useState<"basic" | "headline" | "skills" | "employment" | "">("");
   const [avatarPromptDismissed, setAvatarPromptDismissed] = useState(false);
+  const [avatarConfirmationState, setAvatarConfirmationState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [profile, setProfile] = useState<JobsProfile | null>(null);
   const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
   const [loading, setLoading] = useState(true);
@@ -231,6 +235,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [payMax, setPayMax] = useState("");
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
+  const [activity, setActivity] = useState<JobsActivity | null>(null);
+  const [activityTab, setActivityTab] = useState<"appearances" | "actions">("appearances");
+  const [activityDays, setActivityDays] = useState(7);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -249,18 +256,30 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const activeWorkspaceMode =
     kind === "employer" || kind === "post"
       ? "employer"
-      : ["search", "freelance", "saved", "applications", "profile"].includes(kind)
+      : ["search", "freelance", "saved", "applications", "profile", "activity"].includes(kind)
         ? "candidate"
         : workspaceMode;
   const currentAvatar = user?.avatar || "";
   const showAvatarConfirmation =
     kind === "profile" && Boolean(user) && !avatarPromptDismissed && profile?.avatarConfirmationValue !== currentAvatar;
   const updateAvatarConfirmation = async (status: "confirmed" | "deferred") => {
-    await confirmJobsProfileAvatar(currentAvatar, status);
-    setProfile(current =>
-      current ? { ...current, avatarConfirmationStatus: status, avatarConfirmationValue: currentAvatar } : current
-    );
+    if (avatarConfirmationState === "saving") return;
+    setAvatarConfirmationState("saving");
+    try {
+      await confirmJobsProfileAvatar(currentAvatar, status);
+      setProfile(current =>
+        current ? { ...current, avatarConfirmationStatus: status, avatarConfirmationValue: currentAvatar } : current
+      );
+      setAvatarConfirmationState("saved");
+      window.setTimeout(() => setAvatarPromptDismissed(true), 700);
+    } catch {
+      setAvatarConfirmationState("error");
+    }
+  };
+  const deferAvatarConfirmation = () => {
     setAvatarPromptDismissed(true);
+    setAvatarConfirmationState("idle");
+    void confirmJobsProfileAvatar(currentAvatar, "deferred").catch(() => undefined);
   };
   const profileChecks = [
     Boolean(currentAvatar),
@@ -449,6 +468,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       .then(setBillingPlans)
       .catch(() => setBillingPlans([]));
   }, []);
+  useEffect(() => {
+    if (kind === "activity")
+      void getJobsActivity(activityDays)
+        .then(setActivity)
+        .catch(() => setActivity(null));
+  }, [kind, activityDays]);
   const effectiveQuery = query || searchParams.get("q") || "";
   const effectiveLocation = searchParams.get("location") || "";
   const visibleJobs = useMemo(
@@ -663,14 +688,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               className="jobs-avatar-confirm-overlay"
               type="button"
               aria-label="Not now"
-              onClick={() => void updateAvatarConfirmation("deferred")}
+              onClick={deferAvatarConfirmation}
             />
             <section className="jobs-avatar-confirm-sheet">
               <button
                 className="jobs-avatar-confirm-close"
                 type="button"
                 aria-label="Not now"
-                onClick={() => void updateAvatarConfirmation("deferred")}
+                onClick={deferAvatarConfirmation}
               >
                 ×
               </button>
@@ -679,10 +704,27 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </span>
               <h2>{currentAvatar ? "Is this your current profile photo?" : "Add a profile photo"}</h2>
               <p>Jobs uses the same photo as your SMAJ PI HUB account.</p>
+              <div className="jobs-avatar-confirm-feedback" role="status" aria-live="polite">
+                {avatarConfirmationState === "saving" ? (
+                  <>
+                    <i /> Saving…
+                  </>
+                ) : null}
+                {avatarConfirmationState === "saved" ? "✓ Saved" : null}
+                {avatarConfirmationState === "error" ? "Could not save. Please try again." : null}
+              </div>
               <div>
                 {currentAvatar ? (
-                  <button type="button" onClick={() => void updateAvatarConfirmation("confirmed")}>
-                    Yes
+                  <button
+                    type="button"
+                    disabled={avatarConfirmationState === "saving" || avatarConfirmationState === "saved"}
+                    onClick={() => void updateAvatarConfirmation("confirmed")}
+                  >
+                    {avatarConfirmationState === "saving"
+                      ? "Saving…"
+                      : avatarConfirmationState === "saved"
+                        ? "Saved"
+                        : "Yes"}
                   </button>
                 ) : null}
                 <Link to="/profile?edit=1&returnTo=%2Fservices%2Fjobs%2Fprofile">
@@ -1069,6 +1111,78 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
                 ))}
             </div>
+          </section>
+        ) : kind === "activity" ? (
+          <section className="jobs-activity-page">
+            <header>
+              <h1>Activity on profile</h1>
+              <small>Since last 3 months</small>
+            </header>
+            <nav>
+              <button
+                className={activityTab === "appearances" ? "active" : ""}
+                onClick={() => setActivityTab("appearances")}
+              >
+                Search Appearances
+              </button>
+              <button className={activityTab === "actions" ? "active" : ""} onClick={() => setActivityTab("actions")}>
+                Employer Actions <sup>New</sup>
+              </button>
+            </nav>
+            {activityTab === "appearances" ? (
+              <>
+                <div className="jobs-activity-periods">
+                  {[7, 30, 90].map(days => (
+                    <button
+                      className={activityDays === days ? "active" : ""}
+                      onClick={() => setActivityDays(days)}
+                      key={days}
+                    >
+                      LAST {days} DAYS ({activity?.totalAppearances || 0})
+                    </button>
+                  ))}
+                </div>
+                <p className="jobs-activity-total">
+                  <b>{String(activity?.totalAppearances || 0).padStart(2, "0")}</b> times your profile appeared in
+                  employer search results.
+                </p>
+                <div className="jobs-activity-chart">
+                  <h2>Searches on Your Profile</h2>
+                  <div>
+                    {(activity?.appearances || []).slice(-7).map(point => (
+                      <span key={point.date}>
+                        <i style={{ height: `${Math.max(2, point.count * 8)}px` }} />
+                        <small>{new Date(point.date).toLocaleDateString(undefined, { weekday: "short" })}</small>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="jobs-employer-actions">
+                {activity?.employerActions.length ? (
+                  activity.employerActions.map(action => (
+                    <article key={`${action.at}-${action.jobTitle}`}>
+                      <b>{action.company}</b>
+                      <p>
+                        {action.status} your application for {action.jobTitle}
+                      </p>
+                      <small>{new Date(action.at).toLocaleDateString()}</small>
+                    </article>
+                  ))
+                ) : (
+                  <div>
+                    <h2>Your profile has no Employer Actions!</h2>
+                    <p>Keep your profile updated with relevant information.</p>
+                    <Link to="/services/jobs/profile">VIEW AND UPDATE PROFILE</Link>
+                  </div>
+                )}
+              </div>
+            )}
+            <footer>
+              <Link to="/services/jobs/profile">Feature your profile</Link>
+              <p>Complete your profile so verified employers can discover relevant talent.</p>
+            </footer>
           </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
           <section className="jobs-workspace">
