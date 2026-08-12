@@ -194,6 +194,8 @@ export const createMemoryCollections = () => ({
   jobCompanyCollection: new MemoryCollection(),
   jobSavedCollection: new MemoryCollection(),
   jobApplicationCollection: new MemoryCollection(),
+  jobProfileCollection: new MemoryCollection(),
+  jobAuditCollection: new MemoryCollection(),
   transportBookingCollection: new MemoryCollection(),
   transportDriverCollection: new MemoryCollection(),
   transportVehicleCollection: new MemoryCollection(),

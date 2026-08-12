@@ -347,6 +347,8 @@ app.locals.jobCollection = db.collection("jobs");
        app.locals.jobCompanyCollection = db.collection("job_companies");
        app.locals.jobSavedCollection = db.collection("job_saved");
        app.locals.jobApplicationCollection = db.collection("job_applications");
+       app.locals.jobProfileCollection = db.collection("job_profiles");
+       app.locals.jobAuditCollection = db.collection("job_audit_log");
        app.locals.sessionCollection = db.collection("user_sessions");
        app.locals.transportBookingCollection = db.collection("transport_bookings");
        app.locals.transportDriverCollection = db.collection("transport_drivers");
@@ -420,9 +422,15 @@ app.locals.jobCollection = db.collection("jobs");
         app.locals.streamReviewCollection.createIndex({ status: 1, popularityScore: -1, createdAt: -1 }),
         app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),
         app.locals.jobCollection.createIndex({ status: 1, category: 1, createdAt: -1 }),
+        app.locals.jobCollection.createIndex({ moderationStatus: 1, expiresAt: 1, mode: 1 }),
+        app.locals.jobCollection.createIndex({ employerId: 1, createdAt: -1 }),
         app.locals.jobCompanyCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.jobCompanyCollection.createIndex({ ownerId: 1 }, { unique: true, sparse: true }),
         app.locals.jobSavedCollection.createIndex({ userId: 1, jobId: 1 }, { unique: true }),
         app.locals.jobApplicationCollection.createIndex({ candidateId: 1, jobId: 1 }, { unique: true }),
+        app.locals.jobApplicationCollection.createIndex({ employerId: 1, status: 1, createdAt: -1 }),
+        app.locals.jobProfileCollection.createIndex({ userId: 1 }, { unique: true }),
+        app.locals.jobAuditCollection.createIndex({ targetId: 1, createdAt: -1 }),
         app.locals.streamContentCollection.createIndex(
           { cloudflareUid: 1 },
           { unique: true },

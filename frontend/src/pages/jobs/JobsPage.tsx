@@ -11,15 +11,24 @@ import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import AppLayout from "../../layouts/AppLayout";
 import {
   applyToJob,
+  createJobCompany,
   createJob,
+  enrollEmployer,
+  getEmployerDashboard,
   getJobApplications,
   getJobCompanies,
   getJobs,
+  getJobsMetrics,
+  getJobsProfile,
   getSavedJobs,
+  saveJobsProfile,
   toggleSavedJob,
+  updateEmployerApplication,
   type JobsApiApplication,
   type JobsApiCompany,
   type JobsApiJob,
+  type JobsMetrics,
+  type JobsProfile,
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import "./JobsPage.css";
@@ -160,6 +169,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
 
 const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [query, setQuery] = useState("");
+  const [location, setLocation] = useState("");
   const [category, setCategory] = useState("All");
   const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
@@ -169,24 +179,60 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [profile, setProfile] = useState<JobsProfile | null>(null);
+  const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
+  const [loading, setLoading] = useState(true);
+  const [offline, setOffline] = useState(false);
+  const [error, setError] = useState("");
+  const [employerApplications, setEmployerApplications] = useState<JobsApiApplication[]>([]);
+  const [employerCompanies, setEmployerCompanies] = useState<JobsApiCompany[]>([]);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([getJobs(), getJobCompanies(), getSavedJobs().catch(() => []), getJobApplications().catch(() => [])])
-      .then(([nextJobs, nextCompanies, savedJobs, nextApplications]) => {
+    Promise.all([
+      getJobs({
+        search: searchParams.get("q") || undefined,
+        location: searchParams.get("location") || undefined,
+        category,
+        freelance: kind === "freelance",
+        page,
+      }),
+      getJobCompanies(),
+      getJobsMetrics(),
+      getSavedJobs().catch(() => []),
+      getJobApplications().catch(() => []),
+      getJobsProfile().catch(() => null),
+      getEmployerDashboard().catch(() => null),
+    ])
+      .then(([jobsResponse, nextCompanies, nextMetrics, savedJobs, nextApplications, nextProfile, dashboard]) => {
         if (controller.signal.aborted) return;
-        if (nextJobs.length) setJobs(nextJobs);
+        if (jobsResponse.jobs.length) setJobs(jobsResponse.jobs);
+        else setJobs([]);
+        setPages(Math.max(1, jobsResponse.pagination.pages));
         if (nextCompanies.length) setCompanies(nextCompanies);
+        setMetrics(nextMetrics);
         setSaved(new Set(savedJobs.map(job => job.id)));
         setApplications(nextApplications);
+        setProfile(nextProfile);
+        if (dashboard) {
+          setEmployerApplications(dashboard.applications);
+          setEmployerCompanies(dashboard.companies);
+        }
+        setLoading(false);
       })
       .catch(() => {
-        // The built-in catalog keeps Jobs usable while the backend wakes up.
+        setOffline(true);
+        setLoading(false);
+        setError(
+          "Live Jobs data is temporarily unavailable. Showing a limited offline catalog; account actions may not work."
+        );
       });
     return () => controller.abort();
-  }, []);
+  }, [searchParams, category, kind, page]);
   const effectiveQuery = query || searchParams.get("q") || "";
   const visibleJobs = useMemo(
     () =>
@@ -219,19 +265,27 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const created = await createJob({
-      title: String(data.get("title") || ""),
-      company: String(data.get("company") || ""),
-      location: String(data.get("location") || ""),
-      type: String(data.get("type") || ""),
-      mode: String(data.get("mode") || "Remote"),
-      category: String(data.get("category") || "Other"),
-      skills: String(data.get("skills") || "").split(",").map(skill => skill.trim()).filter(Boolean),
-      salary: String(data.get("salary") || ""),
-      summary: String(data.get("summary") || ""),
-    });
-    setJobs(current => [created, ...current]);
-    navigate(`/services/jobs/job/${created.id}`);
+    try {
+      const created = await createJob({
+        title: String(data.get("title") || ""),
+        companyId: String(data.get("companyId") || ""),
+        location: String(data.get("location") || ""),
+        type: String(data.get("type") || ""),
+        mode: String(data.get("mode") || "Remote"),
+        category: String(data.get("category") || "Other"),
+        skills: String(data.get("skills") || "")
+          .split(",")
+          .map(skill => skill.trim())
+          .filter(Boolean),
+        salary: String(data.get("salary") || ""),
+        summary: String(data.get("summary") || ""),
+      });
+      setJobs(current => [created, ...current]);
+      setActionMessage("Job submitted for moderation.");
+      navigate(`/services/jobs/employer`);
+    } catch {
+      setActionMessage("The job could not be submitted. Confirm your employer account and company ownership.");
+    }
   };
   const submitApplication = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -246,16 +300,64 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("This application could not be submitted. Sign in or check whether you already applied.");
     }
   };
-  const saveProfile = (event: FormEvent<HTMLFormElement>) => {
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    localStorage.setItem("smaj_jobs_profile", JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))));
-    setProfileSaved(true);
+    const data = Object.fromEntries(new FormData(event.currentTarget));
+    try {
+      const next = await saveJobsProfile({
+        title: String(data.title || ""),
+        skills: String(data.skills || ""),
+        location: String(data.location || ""),
+        availability: String(data.availability || ""),
+        portfolio: String(data.portfolio || ""),
+        summary: String(data.summary || ""),
+      });
+      setProfile(next);
+      setProfileSaved(true);
+      setError("");
+    } catch {
+      setError("Your profile could not be saved. Please sign in and try again.");
+    }
+  };
+  const createCompany = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    try {
+      await enrollEmployer();
+      const company = await createJobCompany({
+        name: String(data.get("name") || ""),
+        field: String(data.get("field") || ""),
+      });
+      setEmployerCompanies(current => [...current, company]);
+      setActionMessage("Company submitted for moderation.");
+      event.currentTarget.reset();
+    } catch {
+      setActionMessage("Employer enrollment or company creation failed. Please sign in and try again.");
+    }
+  };
+  const changeApplicationStatus = async (applicationId: string, status: string) => {
+    try {
+      await updateEmployerApplication(applicationId, status);
+      setEmployerApplications(current => current.map(item => (item.id === applicationId ? { ...item, status } : item)));
+    } catch {
+      setActionMessage("Application status could not be updated.");
+    }
   };
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="jobs-page">
         <JobsHeader query={query} onQueryChange={setQuery} />
+        {loading ? (
+          <p className="jobs-status" role="status">
+            Loading live opportunities…
+          </p>
+        ) : null}
+        {error ? (
+          <p className={`jobs-status ${offline ? "offline" : "error"}`} role="alert">
+            {error}
+          </p>
+        ) : null}
         {kind === "home" ? (
           <>
             <section className="jobs-hero">
@@ -276,22 +378,30 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     <LocationOnOutlinedIcon />
-                    <input placeholder="City or Remote" />
+                    <input
+                      value={location}
+                      onChange={event => setLocation(event.target.value)}
+                      placeholder="City or Remote"
+                    />
                   </label>
-                  <Link to={`/services/jobs/search${query ? `?q=${encodeURIComponent(query)}` : ""}`}>Search jobs</Link>
+                  <Link
+                    to={`/services/jobs/search?${new URLSearchParams({ ...(query ? { q: query } : {}), ...(location ? { location } : {}) }).toString()}`}
+                  >
+                    Search jobs
+                  </Link>
                 </form>
                 <small>Popular: React · Design · Marketing · Customer support</small>
               </div>
               <aside>
                 <span>OPPORTUNITY SNAPSHOT</span>
-                <strong>1,240+</strong>
+                <strong>{metrics.opportunities}</strong>
                 <p>active opportunities</p>
                 <div>
-                  <b>420</b>
+                  <b>{metrics.verifiedEmployers}</b>
                   <small>Verified employers</small>
                 </div>
                 <div>
-                  <b>68%</b>
+                  <b>{metrics.remotePercent}%</b>
                   <small>Remote friendly</small>
                 </div>
                 <div>
@@ -473,7 +583,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <label>
                   Company
-                  <input name="company" required placeholder="Your company" />
+                  <select name="companyId" required defaultValue="">
+                    <option value="" disabled>
+                      Select your approved company
+                    </option>
+                    {employerCompanies.map(company => (
+                      <option value={company.id} key={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <div>
                   <label>
@@ -491,12 +610,28 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     Work mode
-                    <select name="mode"><option>Remote</option><option>Hybrid</option><option>On-site</option></select>
+                    <select name="mode">
+                      <option>Remote</option>
+                      <option>Hybrid</option>
+                      <option>On-site</option>
+                    </select>
                   </label>
                 </div>
                 <div>
-                  <label>Category<select name="category"><option>Engineering</option><option>Design</option><option>Marketing</option><option>Operations</option><option>Other</option></select></label>
-                  <label>Skills<input name="skills" required placeholder="React, Research, Communication" /></label>
+                  <label>
+                    Category
+                    <select name="category">
+                      <option>Engineering</option>
+                      <option>Design</option>
+                      <option>Marketing</option>
+                      <option>Operations</option>
+                      <option>Other</option>
+                    </select>
+                  </label>
+                  <label>
+                    Skills
+                    <input name="skills" required placeholder="React, Research, Communication" />
+                  </label>
                 </div>
                 <label>
                   Description
@@ -530,20 +665,97 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </div>
             ) : kind === "profile" ? (
               <form className="job-form" onSubmit={saveProfile}>
-                <label>Professional title<input name="title" required placeholder="e.g. Frontend Engineer" /></label>
-                <label>Skills<input name="skills" required placeholder="React, TypeScript, product design" /></label>
-                <div><label>Location<input name="location" placeholder="City or Remote" /></label><label>Availability<select name="availability"><option>Available now</option><option>Open to offers</option><option>Not available</option></select></label></div>
-                <label>Portfolio URL<input name="portfolio" type="url" placeholder="https://..." /></label>
-                <label>Professional summary<textarea name="summary" required minLength={30} rows={6} /></label>
+                <label>
+                  Professional title
+                  <input name="title" defaultValue={profile?.title} required placeholder="e.g. Frontend Engineer" />
+                </label>
+                <label>
+                  Skills
+                  <input
+                    name="skills"
+                    defaultValue={Array.isArray(profile?.skills) ? profile.skills.join(", ") : profile?.skills}
+                    required
+                    placeholder="React, TypeScript, product design"
+                  />
+                </label>
+                <div>
+                  <label>
+                    Location
+                    <input name="location" defaultValue={profile?.location} placeholder="City or Remote" />
+                  </label>
+                  <label>
+                    Availability
+                    <select name="availability" defaultValue={profile?.availability || "Open to offers"}>
+                      <option>Available now</option>
+                      <option>Open to offers</option>
+                      <option>Not available</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  Portfolio URL
+                  <input name="portfolio" defaultValue={profile?.portfolio} type="url" placeholder="https://..." />
+                </label>
+                <label>
+                  Professional summary
+                  <textarea name="summary" defaultValue={profile?.summary} required minLength={30} rows={6} />
+                </label>
                 <button type="submit">Save profile</button>
                 {profileSaved ? <p className="jobs-action-message">Profile saved on this device.</p> : null}
               </form>
             ) : kind === "employer" ? (
               <div className="jobs-employer-dashboard">
-                <article><strong>{jobs.length}</strong><span>Active opportunities</span></article>
-                <article><strong>{applications.length}</strong><span>Applications</span></article>
-                <article><strong>{companies.length}</strong><span>Verified companies</span></article>
+                <article>
+                  <strong>
+                    {jobs.filter(job => employerCompanies.some(company => company.id === job.companyId)).length}
+                  </strong>
+                  <span>Your opportunities</span>
+                </article>
+                <article>
+                  <strong>{employerApplications.length}</strong>
+                  <span>Candidate applications</span>
+                </article>
+                <article>
+                  <strong>{employerCompanies.length}</strong>
+                  <span>Your companies</span>
+                </article>
                 <Link to="/services/jobs/post">Post another job</Link>
+                <form className="job-form" onSubmit={createCompany}>
+                  <h2>Register an employer company</h2>
+                  <label>
+                    Company name
+                    <input name="name" required />
+                  </label>
+                  <label>
+                    Industry
+                    <input name="field" required />
+                  </label>
+                  <button type="submit">Submit company for review</button>
+                </form>
+                {actionMessage ? <p className="jobs-action-message">{actionMessage}</p> : null}
+                <div className="jobs-application-list">
+                  {employerApplications.map(application => (
+                    <article key={application.id}>
+                      <div>
+                        <h2>{application.jobTitle}</h2>
+                        <p>
+                          {application.profileSnapshot?.title || "Candidate"} · {application.company}
+                        </p>
+                      </div>
+                      <select
+                        aria-label={`Status for ${application.jobTitle}`}
+                        value={application.status}
+                        onChange={event => void changeApplicationStatus(application.id, event.target.value)}
+                      >
+                        <option>submitted</option>
+                        <option>reviewing</option>
+                        <option>shortlisted</option>
+                        <option>rejected</option>
+                        <option>hired</option>
+                      </select>
+                    </article>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="workspace-empty">
@@ -573,7 +785,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <aside>
                 <b>Filter jobs</b>
                 {["All", "Engineering", "Design", "Marketing", "Operations"].map(item => (
-                  <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>
+                  <button
+                    className={category === item ? "active" : ""}
+                    onClick={() => {
+                      setCategory(item);
+                      setPage(1);
+                    }}
+                    key={item}
+                  >
                     {item}
                   </button>
                 ))}
@@ -588,6 +807,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <h2>No opportunities found</h2>
                     <p>Try another search or category.</p>
                   </div>
+                ) : null}
+                {pages > 1 ? (
+                  <nav className="jobs-pagination" aria-label="Jobs pages">
+                    <button type="button" disabled={page <= 1} onClick={() => setPage(value => value - 1)}>
+                      Previous
+                    </button>
+                    <span>
+                      Page {page} of {pages}
+                    </span>
+                    <button type="button" disabled={page >= pages} onClick={() => setPage(value => value + 1)}>
+                      Next
+                    </button>
+                  </nav>
                 ) : null}
               </div>
             </div>
