@@ -22,7 +22,7 @@ const employerPlans = [
   { id: "monthly", name: "Monthly employer plan", priceUsdt: 299 },
 ].map(plan => ({ ...plan, pricePi: piFromUsdt(plan.priceUsdt), piRateUsed: PI_USDT_RATE }));
 
-const seedJobs = [
+const seedJobCatalog = [
   {
     slug: "product-designer",
     title: "Senior Product Designer",
@@ -88,6 +88,26 @@ const seedJobs = [
     skills: ["UX audit", "Mobile", "Accessibility"],
   },
 ];
+
+const seedCompensation: Record<string, { minimum: number; maximum: number; period: string }> = {
+  "product-designer": { minimum: 1800, maximum: 2400, period: "mo" },
+  "react-engineer": { minimum: 2200, maximum: 3000, period: "mo" },
+  "community-lead": { minimum: 900, maximum: 1200, period: "mo" },
+  "mobile-audit": { minimum: 350, maximum: 350, period: "project" },
+};
+const formatSeedPi = (value: number) =>
+  `π ${piFromUsdt(value).toFixed(5).replace(/\.?0+$/, "")}`;
+const seedJobs = seedJobCatalog.map((job) => {
+  const compensation = seedCompensation[job.slug];
+  return {
+    ...job,
+    compensationMinUsdt: compensation.minimum,
+    compensationMaxUsdt: compensation.maximum,
+    compensationPeriod: compensation.period,
+    piRateUsed: PI_USDT_RATE,
+    salary: `${formatSeedPi(compensation.minimum)}${compensation.maximum > compensation.minimum ? `–${formatSeedPi(compensation.maximum).replace("π ", "")}` : ""} / ${compensation.period}`,
+  };
+});
 
 const ecosystemCompanyNames = [
   "SMAJ PI HUB",
@@ -273,6 +293,22 @@ const ensureSeedData = async (req: Request) => {
         updatedAt: now.toISOString(),
       })),
     );
+  await Promise.all(
+    seedJobs.map((job) =>
+      req.app.locals.jobCollection.updateOne(
+        { slug: job.slug },
+        {
+          $set: {
+            salary: job.salary,
+            compensationMinUsdt: job.compensationMinUsdt,
+            compensationMaxUsdt: job.compensationMaxUsdt,
+            compensationPeriod: job.compensationPeriod,
+            piRateUsed: PI_USDT_RATE,
+          },
+        },
+      ),
+    ),
+  );
   const seededSlugs = seedCompanies.map((company) => company.slug);
   const existingSeedCompanies = await req.app.locals.jobCompanyCollection
     .find({ slug: { $in: seededSlugs } })

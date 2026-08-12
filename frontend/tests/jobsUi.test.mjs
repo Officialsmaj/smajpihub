@@ -5,6 +5,7 @@ const page = readFileSync(new URL("../src/pages/jobs/JobsPage.tsx", import.meta.
 const api = readFileSync(new URL("../src/lib/jobsApi.ts", import.meta.url), "utf8");
 const header = readFileSync(new URL("../src/pages/jobs/JobsHeader.tsx", import.meta.url), "utf8");
 const preferences = readFileSync(new URL("../src/pages/jobs/JobPreferencesPanel.tsx", import.meta.url), "utf8");
+const styles = readFileSync(new URL("../src/pages/jobs/JobsPage.css", import.meta.url), "utf8");
 
 assert.match(page, /Loading live opportunities/);
 assert.match(page, /limited offline catalog/);
@@ -47,6 +48,8 @@ assert.match(page, /locationSuggestions/);
 assert.match(page, /Your location/);
 assert.match(page, /Search city, country, or remote/);
 assert.match(page, /formatJobCompensation/);
+assert.match(page, /salaryFromUsdt\(2200, 3000, "mo"\)/);
+assert.match(styles, /--green: #6d3df5/);
 assert.match(page, /Post your first job/);
 assert.match(page, /jobs-search-employer-cta/);
 assert.match(preferences, /How do you want to use SMAJ PI Jobs/);

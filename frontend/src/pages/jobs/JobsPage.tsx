@@ -59,6 +59,10 @@ export type JobsPageKind =
 
 type Job = JobsApiJob;
 
+const formatJobsPi = (value: number) => `π ${value.toFixed(5).replace(/\.?0+$/, "")}`;
+const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
+  `${formatJobsPi(piFromUsdt(minimum))}${maximum > minimum ? `–${formatJobsPi(piFromUsdt(maximum)).replace("π ", "")}` : ""} / ${period}`;
+
 const fallbackJobs: Job[] = [
   {
     id: "product-designer",
@@ -67,7 +71,7 @@ const fallbackJobs: Job[] = [
     location: "Remote",
     type: "Full time",
     mode: "Remote",
-    salary: "1,800–2,400 Pi / mo",
+    salary: salaryFromUsdt(1800, 2400, "mo"),
     category: "Design",
     featured: true,
     summary: "Shape trusted marketplace experiences used by a growing global Pi community.",
@@ -80,7 +84,7 @@ const fallbackJobs: Job[] = [
     location: "Lagos, Nigeria",
     type: "Full time",
     mode: "Hybrid",
-    salary: "2,200–3,000 Pi / mo",
+    salary: salaryFromUsdt(2200, 3000, "mo"),
     category: "Engineering",
     featured: true,
     summary: "Build fast, accessible commerce tools for merchants and customers.",
@@ -93,7 +97,7 @@ const fallbackJobs: Job[] = [
     location: "Accra, Ghana",
     type: "Contract",
     mode: "Remote",
-    salary: "900–1,200 Pi / mo",
+    salary: salaryFromUsdt(900, 1200, "mo"),
     category: "Marketing",
     summary: "Grow a welcoming community through partnerships, events and content.",
     skills: ["Community", "Content", "Analytics"],
@@ -105,7 +109,7 @@ const fallbackJobs: Job[] = [
     location: "Remote",
     type: "Project",
     mode: "Remote",
-    salary: "350 Pi fixed",
+    salary: salaryFromUsdt(350, 350, "project"),
     category: "Design",
     freelance: true,
     summary: "Review an existing health app and deliver an actionable UX report.",
@@ -118,7 +122,7 @@ const fallbackJobs: Job[] = [
     location: "Remote",
     type: "Project",
     mode: "Remote",
-    salary: "600 Pi fixed",
+    salary: salaryFromUsdt(600, 600, "project"),
     category: "Engineering",
     freelance: true,
     summary: "Connect a marketplace checkout to a documented payment API.",
@@ -131,7 +135,7 @@ const fallbackJobs: Job[] = [
     location: "Dakar, Senegal",
     type: "Part time",
     mode: "Hybrid",
-    salary: "650–850 Pi / mo",
+    salary: salaryFromUsdt(650, 850, "mo"),
     category: "Operations",
     summary: "Help customers and providers complete their service journeys.",
     skills: ["Support", "French", "English"],
