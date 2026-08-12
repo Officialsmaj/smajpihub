@@ -35,7 +35,6 @@ import {
   type StreamAdminOverview,
   type StreamAdminSettings,
 } from "../../lib/streamAdmin";
-import { formatPiRate } from "../../lib/piPricing";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { streamCategories } from "../../lib/streamCategories";
 import { getTitleStreamReviews, saveTitleStreamReview, type StreamReview } from "../../lib/streamReviews";
@@ -56,12 +55,15 @@ import {
 } from "../../lib/streamCatalog";
 import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
 import {
+  approveStreamSubscriptionPayment,
+  completeStreamSubscriptionPayment,
   getStreamSubscription,
   startStreamSubscriptionCheckout,
   type StreamPlan,
   type StreamPlanId,
   type StreamSubscription,
 } from "../../lib/streamSubscription";
+import { requestPiBrowserHandoff } from "../../lib/piBrowserHandoff";
 
 export type StreamPageKind =
   | "movies"
@@ -957,13 +959,36 @@ const StreamPlansPanel = () => {
       setBusyPlan(plan);
       setMessage("");
       const result = await startStreamSubscriptionCheckout(plan);
-      setSubscription(result.subscription);
-      setMessage(result.message);
-      setState("ready");
+      if (result.subscription) {
+        setSubscription(result.subscription);
+        setMessage(result.message);
+        setState("ready");
+        return;
+      }
+      if (!window.Pi) {
+        requestPiBrowserHandoff("Pi payment required");
+        throw new Error("Open SMAJ PI HUB in Pi Browser to pay with Pi.");
+      }
+      await window.Pi.authenticate(["payments"], () => console.info("Incomplete Stream Pi payment found."));
+      await window.Pi.createPayment(
+        { amount: result.checkout.amountPi, memo: result.checkout.memo, metadata: { service: "stream", plan: result.checkout.plan } },
+        {
+          onReadyForServerApproval: async paymentId => { await approveStreamSubscriptionPayment(result.checkout.plan, paymentId); },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            const completed = await completeStreamSubscriptionPayment(result.checkout.plan, paymentId, txid);
+            setSubscription(completed.subscription);
+            setMessage(completed.message);
+            setState("ready");
+          },
+          onCancel: () => { setMessage("Pi payment was cancelled. Your plan was not changed."); setState("ready"); },
+          onError: error => { setMessage(error.message || "Pi payment failed. Your plan was not changed."); setState("error"); },
+        },
+      );
     } catch (error) {
       setState("error");
       setMessage(
         (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+          (error instanceof Error ? error.message : "") ||
           "Stream subscription could not be updated."
       );
     } finally {
@@ -1000,11 +1025,10 @@ const StreamPlansPanel = () => {
                   <h2>{plan.name}</h2>
                   <strong className="sw-plan-pi-price">
                     {formatPiAmount(plan.pricePi)}
-                    <small>{plan.priceUsd > 0 ? "/month" : " ongoing"}</small>
+                    <small>{plan.priceUsd > 0 ? "/ month" : "ongoing"}</small>
                   </strong>
                   <em>{formatUsdAmount(plan.priceUsd)} USD equivalent</em>
                   <p>{plan.features.join("  -  ")}</p>
-                  <small>{formatPiRate()}</small>
                   <button type="button" disabled={current || state === "saving"} onClick={() => void choosePlan(plan.id)}>
                     {busyPlan === plan.id ? "Activating..." : current ? "Current plan" : plan.priceUsd > 0 ? "Pay with Pi" : "Choose Free"}
                   </button>

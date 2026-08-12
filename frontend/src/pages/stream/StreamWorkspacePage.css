@@ -1353,7 +1353,7 @@
   color: #b8afc0;
 }
 .sw-plans article>em{display:block;margin:-7px 0 13px;color:#9d94a4;font-size:12px;font-style:normal}
-.sw-plans .sw-plan-pi-price{color:#d8b9ff;font-size:29px}
+.sw-plans .sw-plan-pi-price{display:flex;align-items:baseline;gap:7px;color:#d8b9ff;font-size:29px;white-space:nowrap}
 .sw-plans .sw-plan-pi-price small{color:#aaa1b2}
 .sw-plans button {
   width: 100%;

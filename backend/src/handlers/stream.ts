@@ -3,6 +3,7 @@ import axios from "axios";
 import { ObjectId } from "mongodb";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
+import { platformAPIKeyClient } from "../services/platformAPIClient";
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -393,26 +394,75 @@ const mountStreamEndpoints = (router: Router) => {
     const plan = String(req.body?.plan || "free") as StreamPlanId;
     if (!(plan in streamPlans)) return res.status(400).json({ error: "invalid_plan", message: "Choose a valid Stream plan." });
     const selected = streamPlans[plan];
-    const now = new Date();
-    const expiresAt = selected.priceUsd > 0 ? new Date(now) : null;
-    if (expiresAt) expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 1);
     const pricing = streamPlanPrice(selected.priceUsd);
+    if (selected.priceUsd > 0) {
+      const checkout = { plan, amountPi: pricing.pricePi, memo: `SMAJ Stream ${selected.name} monthly plan`, createdAt: new Date() };
+      await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { pendingStreamSubscription: checkout } });
+      return res.status(201).json({ checkout: { plan, amountPi: pricing.pricePi, memo: checkout.memo } });
+    }
+    const now = new Date();
     const subscription = {
       plan,
       status: "active",
       startedAt: now,
-      expiresAt,
+      expiresAt: null,
       priceUsd: pricing.priceUsd,
       pricePi: pricing.pricePi,
       piRateUsed: pricing.piRateUsed,
-      paymentStatus: selected.priceUsd > 0 ? "pending_pi_integration" : "free",
+      paymentStatus: "free",
       updatedAt: now,
     };
     await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription } });
     return res.status(201).json({
       subscription: normalizeStreamSubscription(subscription),
-      message: selected.priceUsd > 0 ? "Monthly Stream plan activated. Pi checkout can be connected here next." : "Free Stream plan activated.",
+      message: "Free Stream plan activated.",
     });
+  });
+
+  router.post("/subscription/payment/approve", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const paymentId = String(req.body?.paymentId || "").trim();
+    const plan = String(req.body?.plan || "") as StreamPlanId;
+    if (!paymentId || !(plan in streamPlans) || streamPlans[plan].priceUsd <= 0) return res.status(400).json({ error: "invalid_payment", message: "A valid paid Stream plan and Pi payment are required." });
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const pending = stored?.pendingStreamSubscription;
+    const expectedAmount = streamPlanPrice(streamPlans[plan].priceUsd).pricePi;
+    if (!pending || pending.plan !== plan || Math.abs(Number(pending.amountPi) - expectedAmount) > 0.00000001) return res.status(409).json({ error: "checkout_mismatch", message: "Start this Stream checkout again." });
+    try {
+      const remote = await platformAPIKeyClient.get(`/v2/payments/${encodeURIComponent(paymentId)}`);
+      const payment = remote.data;
+      if (payment?.metadata?.plan !== plan || Math.abs(Number(payment?.amount) - expectedAmount) > 0.00000001 || (payment?.user_uid && user.uid && payment.user_uid !== user.uid))
+        return res.status(409).json({ error: "payment_mismatch", message: "This Pi payment does not match the selected Stream plan." });
+      await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/approve`);
+      await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { "pendingStreamSubscription.paymentId": paymentId, "pendingStreamSubscription.approvedAt": new Date() } });
+      return res.json({ approved: true });
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      return res.status(status).json({ error: "pi_approval_failed", message: "Pi could not approve this Stream payment." });
+    }
+  });
+
+  router.post("/subscription/payment/complete", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const paymentId = String(req.body?.paymentId || "").trim();
+    const txid = String(req.body?.txid || "").trim();
+    const plan = String(req.body?.plan || "") as StreamPlanId;
+    const stored = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const pending = stored?.pendingStreamSubscription;
+    if (!paymentId || !txid || !(plan in streamPlans) || !pending || pending.plan !== plan || pending.paymentId !== paymentId)
+      return res.status(409).json({ error: "payment_mismatch", message: "This Pi payment does not match an approved Stream checkout." });
+    try {
+      await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+      const now = new Date();
+      const expiresAt = new Date(now); expiresAt.setUTCMonth(expiresAt.getUTCMonth() + 1);
+      const pricing = streamPlanPrice(streamPlans[plan].priceUsd);
+      const subscription = { plan, status: "active", startedAt: now, expiresAt, priceUsd: pricing.priceUsd, pricePi: pricing.pricePi, piRateUsed: pricing.piRateUsed, paymentStatus: "paid", paymentId, paymentTxid: txid, updatedAt: now };
+      await req.app.locals.userCollection.updateOne({ _id: user._id }, { $set: { streamSubscription: subscription }, $unset: { pendingStreamSubscription: "" } });
+      return res.json({ subscription: normalizeStreamSubscription(subscription), message: `${streamPlans[plan].name} is active for one month.` });
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      return res.status(status).json({ error: "pi_completion_failed", message: "Pi could not complete this Stream payment." });
+    }
   });
 
   router.post("/subscription/cancel", async (req, res) => {
