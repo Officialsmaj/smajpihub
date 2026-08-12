@@ -681,7 +681,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     }
   };
   const toggleDownloaded = async () => {
-    if (!id) return;
+    if (!id || !playbackId) return;
     setDownloading(true);
     try {
       if (downloaded) await removeStreamDownload(type, id);
@@ -755,8 +755,15 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               <button className="sw-detail-list-action" type="button" disabled={saving} onClick={() => void toggleSaved()}>
                 <BookmarkRoundedIcon /> {saving ? "Saving..." : saved ? "In My List" : "Add to List"}
               </button>
-              <button className="sw-detail-download-action" type="button" disabled={downloading} onClick={() => void toggleDownloaded()}>
-                <DownloadRoundedIcon /> {downloading ? "Downloading..." : downloaded ? "Downloaded" : "Download"}
+              <button
+                className={`sw-detail-download-action ${downloaded ? "downloaded" : ""}`}
+                type="button"
+                disabled={!playbackId || downloading}
+                onClick={() => void toggleDownloaded()}
+                aria-label={!playbackId ? "Download unavailable" : downloading ? "Downloading" : downloaded ? "Remove download" : "Download"}
+                title={!playbackId ? "Download unavailable" : downloaded ? "Downloaded" : "Download"}
+              >
+                <DownloadRoundedIcon />
               </button>
             </div>
             {!playbackId ? (
