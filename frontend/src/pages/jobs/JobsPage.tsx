@@ -216,6 +216,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
+  const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
     try {
       return JSON.parse(window.localStorage.getItem("smaj_jobs_recent_searches") || "[]");
@@ -245,6 +246,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const term = query.trim().toLowerCase();
     return [...new Set(available)].filter(item => !term || item.toLowerCase().includes(term)).slice(0, 10);
   }, [jobs, query, recentJobSearches]);
+  const locationSuggestions = useMemo(() => {
+    const accountLocation = user?.country?.trim();
+    const available = ["Remote", ...jobs.map(job => job.location), ...JOB_COUNTRIES.map(country => country.label)];
+    const term = location.trim().toLowerCase();
+    return {
+      accountLocation,
+      results: [...new Set(available)].filter(item => !term || item.toLowerCase().includes(term)).slice(0, 14),
+    };
+  }, [jobs, location, user?.country]);
   const runJobSearch = (term = query) => {
     const cleanTerm = term.trim();
     const params = new URLSearchParams({
@@ -257,16 +267,24 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       window.localStorage.setItem("smaj_jobs_recent_searches", JSON.stringify(nextRecent));
     }
     setSearchSheetOpen(false);
+    setLocationSheetOpen(false);
     navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
   };
+  const selectLocation = (nextLocation: string) => {
+    setLocation(nextLocation);
+    setLocationSheetOpen(false);
+  };
   useEffect(() => {
-    if (!searchSheetOpen) return;
+    if (!searchSheetOpen && !locationSheetOpen) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSearchSheetOpen(false);
+      if (event.key === "Escape") {
+        setSearchSheetOpen(false);
+        setLocationSheetOpen(false);
+      }
     };
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
-  }, [searchSheetOpen]);
+  }, [searchSheetOpen, locationSheetOpen]);
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -554,6 +572,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     onChange={event => setLocation(event.target.value)}
                     placeholder="Country, city or remote"
                     aria-label="Country, city or remote"
+                    onFocus={() => setLocationSheetOpen(true)}
                   />
                 </label>
                 <button type="submit">Search</button>
@@ -600,6 +619,58 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                         </button>
                       ))}
                       {!jobSearchSuggestions.length ? <p>No matching suggestions. Search for “{query}”.</p> : null}
+                    </div>
+                    <footer>
+                      <button type="button" onClick={() => runJobSearch()}>
+                        Search
+                      </button>
+                    </footer>
+                  </section>
+                </div>
+              ) : null}
+              {locationSheetOpen ? (
+                <div className="jobs-search-sheet-layer">
+                  <button
+                    className="jobs-search-sheet-overlay"
+                    type="button"
+                    aria-label="Close location search"
+                    onClick={() => setLocationSheetOpen(false)}
+                  />
+                  <section className="jobs-search-sheet" role="dialog" aria-modal="true" aria-label="Search location">
+                    <header>
+                      <button type="button" onClick={() => setLocationSheetOpen(false)} aria-label="Back">
+                        <ArrowBackRoundedIcon />
+                      </button>
+                      <label>
+                        <LocationOnOutlinedIcon />
+                        <input
+                          autoFocus
+                          value={location}
+                          onChange={event => setLocation(event.target.value)}
+                          onKeyDown={event => {
+                            if (event.key === "Enter") runJobSearch();
+                          }}
+                          placeholder='City, country, or "remote"'
+                          aria-label="Search city, country, or remote"
+                        />
+                      </label>
+                    </header>
+                    <div className="jobs-search-suggestions jobs-location-suggestions">
+                      {locationSuggestions.accountLocation ? (
+                        <button type="button" onClick={() => selectLocation(locationSuggestions.accountLocation || "")}>
+                          <HomeRoundedIcon />
+                          <span>
+                            <b>Your location</b>
+                            <small>{locationSuggestions.accountLocation}</small>
+                          </span>
+                        </button>
+                      ) : null}
+                      {locationSuggestions.results.map(suggestion => (
+                        <button type="button" key={suggestion} onClick={() => selectLocation(suggestion)}>
+                          <LocationOnOutlinedIcon /> <span>{suggestion}</span>
+                        </button>
+                      ))}
+                      {!locationSuggestions.results.length ? <p>No matching locations found.</p> : null}
                     </div>
                     <footer>
                       <button type="button" onClick={() => runJobSearch()}>

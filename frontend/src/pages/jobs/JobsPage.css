@@ -233,6 +233,14 @@
   color: #17221e;
   font-size: 18px;
 }
+.jobs-location-suggestions > button > span {
+  display: grid;
+  gap: 2px;
+}
+.jobs-location-suggestions > button small {
+  color: #708079;
+  font-size: 11px;
+}
 .jobs-search-sheet > footer {
   padding-top: 12px;
   border-top: 1px solid #e4eae7;
