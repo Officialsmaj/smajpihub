@@ -62,6 +62,8 @@ type Job = JobsApiJob;
 const formatJobsPi = (value: number) => `π ${value.toFixed(5).replace(/\.?0+$/, "")}`;
 const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
   `${formatJobsPi(piFromUsdt(minimum))}${maximum > minimum ? `–${formatJobsPi(piFromUsdt(maximum)).replace("π ", "")}` : ""} / ${period}`;
+const normalizeJobLocation = (value: string) =>
+  JOB_COUNTRIES.find(country => country.label === value)?.name || value.trim();
 
 const fallbackJobs: Job[] = [
   {
@@ -214,6 +216,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [employerCompanies, setEmployerCompanies] = useState<JobsApiCompany[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [resultsTotal, setResultsTotal] = useState(0);
   const [postCategory, setPostCategory] = useState("");
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
@@ -263,7 +266,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const cleanTerm = term.trim();
     const params = new URLSearchParams({
       ...(cleanTerm ? { q: cleanTerm } : {}),
-      ...(location ? { location } : {}),
+      ...(location ? { location: normalizeJobLocation(location) } : {}),
     });
     if (cleanTerm) {
       const nextRecent = [cleanTerm, ...recentJobSearches.filter(item => item !== cleanTerm)].slice(0, 6);
@@ -311,6 +314,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         if (jobsResponse.jobs.length) setJobs(jobsResponse.jobs);
         else setJobs([]);
         setPages(Math.max(1, jobsResponse.pagination.pages));
+        setResultsTotal(jobsResponse.pagination.total);
         if (nextCompanies.length) setCompanies(nextCompanies);
         setMetrics(nextMetrics);
         setSaved(new Set(savedJobs.map(job => job.id)));
@@ -338,13 +342,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       .catch(() => setBillingPlans([]));
   }, []);
   const effectiveQuery = query || searchParams.get("q") || "";
+  const effectiveLocation = searchParams.get("location") || "";
   const visibleJobs = useMemo(
     () =>
       jobs.filter(job => {
         const text = `${job.title} ${job.company} ${job.location} ${job.skills.join(" ")}`.toLowerCase();
-        return text.includes(effectiveQuery.toLowerCase()) && (category === "All" || job.category === category);
+        const locationMatch =
+          !effectiveLocation || job.location.toLowerCase().includes(effectiveLocation.toLowerCase());
+        return (
+          text.includes(effectiveQuery.toLowerCase()) &&
+          locationMatch &&
+          (category === "All" || job.category === category)
+        );
       }),
-    [jobs, effectiveQuery, category]
+    [jobs, effectiveQuery, effectiveLocation, category]
   );
   const toggleSaved = (jobId: string) =>
     setSaved(current => {
@@ -1361,9 +1372,18 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     : "DISCOVER OPPORTUNITIES"}
               </span>
               <h1>
-                {kind === "freelance" ? "Freelance projects" : kind === "saved" ? "Saved jobs" : "Find your next role"}
+                {kind === "freelance"
+                  ? "Freelance projects"
+                  : kind === "saved"
+                    ? "Saved jobs"
+                    : effectiveLocation
+                      ? `Jobs in ${effectiveLocation}`
+                      : "Find your next role"}
               </h1>
-              <p>{listings.length} opportunities match your search.</p>
+              <p>
+                {kind === "search" ? resultsTotal : listings.length} available{" "}
+                {kind === "search" && effectiveLocation ? `in ${effectiveLocation}` : "opportunities"}.
+              </p>
             </div>
             <div className="jobs-results-layout">
               <aside>
@@ -1388,8 +1408,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 {!listings.length ? (
                   <div className="workspace-empty">
                     <SearchRoundedIcon />
-                    <h2>No opportunities found</h2>
-                    <p>Try another search or category.</p>
+                    <h2>
+                      {effectiveLocation ? `No jobs available in ${effectiveLocation}` : "No opportunities found"}
+                    </h2>
+                    <p>
+                      {effectiveLocation
+                        ? "Try another nearby location, choose Remote, or broaden your search."
+                        : "Try another search or category."}
+                    </p>
                   </div>
                 ) : null}
                 {pages > 1 ? (
