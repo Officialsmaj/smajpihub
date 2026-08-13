@@ -92,6 +92,12 @@ const employerJobTitleSuggestions = [
   "Product Designer",
   "Marketing Manager",
 ];
+const employerLocationTypes = [
+  { id: "in-person", title: "In person", detail: "Work from a set location", mode: "On-site", icon: "building" },
+  { id: "on-the-road", title: "On the road", detail: "Travel to different sites", mode: "On-site", icon: "truck" },
+  { id: "remote", title: "Remote", detail: "No on-site work required", mode: "Remote", icon: "home" },
+  { id: "hybrid", title: "Hybrid", detail: "Some on-site work required", mode: "Hybrid", icon: "group" },
+] as const;
 
 const fallbackJobs: Job[] = [
   {
@@ -254,8 +260,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       return [];
     }
   });
-  const [postStep, setPostStep] = useState<"contact" | "title" | "details">("contact");
+  const [postStep, setPostStep] = useState<"contact" | "title" | "location" | "details">("contact");
   const [postJobTitle, setPostJobTitle] = useState("");
+  const [postLocationType, setPostLocationType] = useState<(typeof employerLocationTypes)[number]["id"]>("in-person");
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -277,6 +284,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       .filter(title => (typed ? title.toLowerCase().includes(typed) : true))
       .slice(0, 5);
   }, [jobs, postJobTitle]);
+  const selectedPostLocationType =
+    employerLocationTypes.find(item => item.id === postLocationType) || employerLocationTypes[0];
   useEffect(() => {
     if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
   }, [kind, searchParams]);
@@ -1433,7 +1442,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-title-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  if (postJobTitle.trim()) setPostStep("details");
+                  if (postJobTitle.trim()) setPostStep("location");
                 }}
               >
                 <header>
@@ -1465,6 +1474,42 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <footer>
                   <button type="submit" disabled={!postJobTitle.trim()}>
+                    Continue <ArrowForwardRoundedIcon />
+                  </button>
+                </footer>
+              </form>
+            ) : kind === "post" && postStep === "location" ? (
+              <form
+                className="jobs-employer-location-form"
+                onSubmit={event => {
+                  event.preventDefault();
+                  setPostStep("details");
+                }}
+              >
+                <h2>Location type *</h2>
+                <div className="jobs-location-type-options" role="radiogroup" aria-label="Location type">
+                  {employerLocationTypes.map(option => (
+                    <button
+                      type="button"
+                      key={option.id}
+                      className={postLocationType === option.id ? "active" : ""}
+                      onClick={() => setPostLocationType(option.id)}
+                      role="radio"
+                      aria-checked={postLocationType === option.id}
+                    >
+                      <span className={`jobs-location-type-icon ${option.icon}`} aria-hidden="true" />
+                      <span>
+                        <b>{option.title}</b>
+                        <small>{option.detail}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <footer>
+                  <button type="button" onClick={() => setPostStep("title")}>
+                    ← Back
+                  </button>
+                  <button type="submit">
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
@@ -1556,7 +1601,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     Work mode
-                    <select name="mode">
+                    <select name="mode" defaultValue={selectedPostLocationType.mode}>
                       <option>Remote</option>
                       <option>Hybrid</option>
                       <option>On-site</option>
