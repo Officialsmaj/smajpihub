@@ -229,6 +229,136 @@
 .jobs-recommended h2 {
   margin: 0 0 14px;
 }
+.jobs-employer-home {
+  min-height: 720px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #f7f1e8 0 62%, #fff 62%);
+}
+.jobs-employer-hero {
+  min-height: 380px;
+  padding: 42px 20px 110px;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  color: #fff;
+  text-align: center;
+  background:
+    linear-gradient(rgb(23 22 22 / 58%), rgb(23 22 22 / 58%)),
+    linear-gradient(135deg, #504033, #262a33 55%, #5c332d);
+}
+.jobs-employer-hero span {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+.jobs-employer-hero h1 {
+  max-width: 620px;
+  margin: 10px 0 18px;
+  font-size: clamp(36px, 8vw, 58px);
+  line-height: 1.08;
+  font-weight: 500;
+}
+.jobs-employer-hero a {
+  padding: 15px 22px;
+  border-radius: 8px;
+  color: #064fbb;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 800;
+}
+.jobs-employer-hero > button {
+  width: 36px;
+  height: 36px;
+  position: absolute;
+  right: 18px;
+  bottom: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #3d3a37;
+  background: #fff;
+}
+.jobs-employer-search-card {
+  width: min(520px, calc(100% - 56px));
+  margin: -74px 0 0 0;
+  padding: 34px 34px 30px;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  color: #fff;
+  background: #194f42;
+}
+.jobs-employer-search-card h2 {
+  max-width: 360px;
+  margin: 0 0 6px;
+  font-size: 27px;
+  line-height: 1.15;
+  font-weight: 500;
+}
+.jobs-employer-search-card label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+.jobs-employer-search-card input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 8px;
+  outline: 0;
+  background: #fff;
+  font: inherit;
+}
+.jobs-employer-search-card button {
+  width: max-content;
+  min-height: 46px;
+  margin-top: 4px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 10px;
+  color: #164a3d;
+  background: #9b9670;
+  font-weight: 800;
+}
+.jobs-employer-map-preview {
+  width: 155px;
+  height: 255px;
+  position: absolute;
+  right: 0;
+  bottom: 38px;
+  background:
+    linear-gradient(90deg, #75d9df 0 24%, transparent 24%),
+    linear-gradient(135deg, #dff6e8, #d3faf7 45%, #f9ead9);
+}
+.jobs-employer-map-preview:before,
+.jobs-employer-map-preview:after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: #408b78;
+}
+.jobs-employer-map-preview:before {
+  width: 80px;
+  height: 3px;
+  top: 78px;
+  left: 46px;
+  transform: rotate(-22deg);
+}
+.jobs-employer-map-preview:after {
+  width: 58px;
+  height: 3px;
+  right: 20px;
+  bottom: 58px;
+  transform: rotate(28deg);
+}
+.jobs-employer-home-list {
+  padding-top: 42px;
+}
 .jobs-search-sheet-layer {
   position: fixed;
   z-index: 2147483000;

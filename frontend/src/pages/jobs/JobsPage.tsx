@@ -663,7 +663,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           workspaceMode={activeWorkspaceMode}
           onWorkspaceModeChange={mode => {
             setWorkspaceMode(mode);
-            navigate(mode === "candidate" ? "/services/jobs" : "/services/jobs/employer");
+            navigate("/services/jobs");
           }}
         />
         {showAvatarConfirmation ? (
@@ -729,6 +729,64 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </p>
         ) : null}
         {kind === "home" ? (
+          activeWorkspaceMode === "employer" ? (
+            <>
+              <section className="jobs-employer-home">
+                <div className="jobs-employer-hero">
+                  <span>INDEED FOR EMPLOYERS</span>
+                  <h1>Hiring that's simpler, faster, and more human</h1>
+                  <Link to="/services/jobs/post">Post a job</Link>
+                  <button type="button" aria-label="Play employer story">
+                    <ArrowForwardRoundedIcon />
+                  </button>
+                </div>
+                <form
+                  className="jobs-employer-search-card"
+                  onSubmit={event => {
+                    event.preventDefault();
+                    navigate("/services/jobs/post");
+                  }}
+                >
+                  <h2>The people you're looking for are here</h2>
+                  <label>
+                    What job title are you hiring for?
+                    <input name="title" placeholder="Job title or role" />
+                  </label>
+                  <label>
+                    Where are you hiring?
+                    <input name="location" placeholder="City, State, or ZIP" />
+                  </label>
+                  <button type="submit">Search</button>
+                </form>
+                <div className="jobs-employer-map-preview" aria-hidden="true" />
+              </section>
+              <section className="jobs-section jobs-employer-home-list">
+                <header>
+                  <div>
+                    <span className="jobs-kicker">HIRING WORKSPACE</span>
+                    <h2>Manage hiring in one place</h2>
+                  </div>
+                  <Link to="/services/jobs/employer">
+                    Manage jobs <ArrowForwardRoundedIcon />
+                  </Link>
+                </header>
+                <div className="jobs-employer-dashboard">
+                  <article>
+                    <strong>{employerCompanies.length}</strong>
+                    <span>Companies</span>
+                  </article>
+                  <article>
+                    <strong>{employerApplications.length}</strong>
+                    <span>Candidates</span>
+                  </article>
+                  <article>
+                    <strong>{jobs.filter(job => employerCompanies.some(company => company.id === job.companyId)).length}</strong>
+                    <span>Posted jobs</span>
+                  </article>
+                </div>
+              </section>
+            </>
+          ) : (
           <>
             <section className="jobs-home-dashboard">
               <form
@@ -884,7 +942,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     }));
                     if (preferences.jobsMode === "employer") {
                       setWorkspaceMode("employer");
-                      navigate("/services/jobs/employer");
+                      navigate("/services/jobs");
                     }
                   }}
                 />
@@ -979,6 +1037,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </Link>
             </section>
           </>
+          )
         ) : kind === "companies" ? (
           <section className="jobs-directory">
             <div className="jobs-page-heading">
