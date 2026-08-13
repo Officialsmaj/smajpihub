@@ -76,6 +76,22 @@ const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
   `${formatJobsPi(piFromUsdt(minimum))}${maximum > minimum ? `–${formatJobsPi(piFromUsdt(maximum)).replace("π ", "")}` : ""} / ${period}`;
 const normalizeJobLocation = (value: string) =>
   JOB_COUNTRIES.find(country => country.label === value)?.name || value.trim();
+const employerJobTitleSuggestions = [
+  "Cashier",
+  "Sales Associate",
+  "Delivery Driver",
+  "Driver",
+  "Line Cook",
+  "Janitor",
+  "Janitorial Worker",
+  "Lube Technician",
+  "Customer Support Specialist",
+  "Frontend Developer",
+  "Graphic Designer",
+  "Software Engineer",
+  "Product Designer",
+  "Marketing Manager",
+];
 
 const fallbackJobs: Job[] = [
   {
@@ -238,6 +254,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       return [];
     }
   });
+  const [postStep, setPostStep] = useState<"contact" | "title" | "details">("contact");
+  const [postJobTitle, setPostJobTitle] = useState("");
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -253,6 +271,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
+  const filteredEmployerJobTitles = useMemo(() => {
+    const typed = postJobTitle.trim().toLowerCase();
+    return [...new Set([...employerJobTitleSuggestions, ...jobs.map(job => job.title)])]
+      .filter(title => (typed ? title.toLowerCase().includes(typed) : true))
+      .slice(0, 5);
+  }, [jobs, postJobTitle]);
   useEffect(() => {
     if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
   }, [kind, searchParams]);
@@ -733,6 +757,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <>
               <section className="jobs-employer-home">
                 <div className="jobs-employer-hero">
+                  <video className="jobs-employer-hero-video" autoPlay muted loop playsInline aria-hidden="true">
+                    <source src="/videos/jobs-employer-hero.webm" type="video/webm" />
+                    <source src="/videos/jobs-employer-hero.mp4" type="video/mp4" />
+                  </video>
                   <span>INDEED FOR EMPLOYERS</span>
                   <h1>Hiring that's simpler, faster, and more human</h1>
                   <Link to="/services/jobs/post">Post a job</Link>
@@ -1327,11 +1355,131 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </h1>
               <p>Everything you need to manage your next step in the Pi economy.</p>
             </div> : null}
-            {kind === "post" ? (
+            {kind === "post" && postStep === "contact" ? (
+              <form
+                className="jobs-employer-contact-form"
+                onSubmit={event => {
+                  event.preventDefault();
+                  setPostStep("title");
+                }}
+              >
+                <label>
+                  Company name *
+                  <input name="companyName" required />
+                </label>
+                <label>
+                  Company website (optional)
+                  <input name="companyWebsite" type="url" placeholder="https://www.example.com" />
+                </label>
+                <label>
+                  First name *
+                  <input
+                    name="firstName"
+                    required
+                    defaultValue={(user?.displayName || "").split(" ")[0]?.toUpperCase()}
+                  />
+                </label>
+                <label>
+                  Last name *
+                  <input
+                    name="lastName"
+                    required
+                    defaultValue={(user?.displayName || "").split(" ").slice(1).join(" ").toUpperCase()}
+                  />
+                </label>
+                <label>
+                  Phone number
+                  <small>For account management communication. Not visible to job seekers.</small>
+                  <span className="jobs-phone-input">
+                    <select name="phoneCountry" defaultValue="+234" aria-label="Phone country code">
+                      <option value="+234">NG +234</option>
+                      <option value="+971">AE +971</option>
+                      <option value="+1">US +1</option>
+                      <option value="+44">GB +44</option>
+                      <option value="+91">IN +91</option>
+                    </select>
+                    <input name="phoneNumber" type="tel" placeholder="806-161-7175" defaultValue={user?.contactPhone} />
+                  </span>
+                </label>
+                <label>
+                  How did you hear about us?
+                  <select name="referralSource" defaultValue="">
+                    <option value="" disabled>
+                      Select an option
+                    </option>
+                    <option>Pi Network community</option>
+                    <option>SMAJ PI HUB</option>
+                    <option>Friend or colleague</option>
+                    <option>Social media</option>
+                    <option>Search engine</option>
+                  </select>
+                </label>
+                <label className="jobs-employer-consent">
+                  <input type="checkbox" name="marketingConsent" />
+                  <span>
+                    By clicking this box and providing your telephone or wireless number, you agree to receive marketing
+                    and informational calls and texts from SMAJ PI HUB Jobs at the telephone or wireless number
+                    provided. Your agreement to this is not required to obtain any product or service.
+                  </span>
+                </label>
+                <footer>
+                  <button type="submit">
+                    Continue <ArrowForwardRoundedIcon />
+                  </button>
+                </footer>
+              </form>
+            ) : kind === "post" && postStep === "title" ? (
+              <form
+                className="jobs-employer-title-form"
+                onSubmit={event => {
+                  event.preventDefault();
+                  if (postJobTitle.trim()) setPostStep("details");
+                }}
+              >
+                <header>
+                  <h2>Job title *</h2>
+                  <p>Job post will be in <b>English</b> in</p>
+                  <button type="button">United States <span aria-hidden="true">✎</span></button>
+                </header>
+                <label>
+                  Job title *
+                  <div className="jobs-title-suggest-wrap">
+                    {filteredEmployerJobTitles.length ? (
+                      <div className="jobs-title-suggestions">
+                        {filteredEmployerJobTitles.map(title => (
+                          <button type="button" key={title} onClick={() => setPostJobTitle(title)}>
+                            {title}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                    <input
+                      name="jobTitle"
+                      required
+                      autoFocus
+                      value={postJobTitle}
+                      onChange={event => setPostJobTitle(event.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                </label>
+                <footer>
+                  <button type="submit" disabled={!postJobTitle.trim()}>
+                    Continue <ArrowForwardRoundedIcon />
+                  </button>
+                </footer>
+              </form>
+            ) : kind === "post" ? (
               <form className="job-form" onSubmit={event => void submitJob(event)}>
                 <label>
                   Job title
-                  <input name="title" required placeholder="e.g. Product Designer" />
+                  <input
+                    name="title"
+                    required
+                    placeholder="e.g. Product Designer"
+                    value={postJobTitle}
+                    onChange={event => setPostJobTitle(event.target.value)}
+                  />
                 </label>
                 <label>
                   Company
