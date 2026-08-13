@@ -98,6 +98,14 @@ const employerLocationTypes = [
   { id: "remote", title: "Remote", detail: "No on-site work required", mode: "Remote", icon: "home" },
   { id: "hybrid", title: "Hybrid", detail: "Some on-site work required", mode: "Hybrid", icon: "group" },
 ] as const;
+const hiringTimeframes = ["1 to 3 days", "3 to 7 days", "1 to 2 weeks", "2 to 4 weeks", "More than 4 weeks"] as const;
+const employerJobTypes = ["Contract", "Part-time", "Full-time", "Temporary", "Internship"] as const;
+const employerBenefits = ["401(k)", "Vision insurance", "Health insurance", "403(b)", "Paid time off", "Dental insurance"] as const;
+const sponsorPlans = [
+  { id: "premium-plus", title: "Premium Plus", price: "$140 daily average", detail: "Auto-invites up to 30 matches per day" },
+  { id: "premium", title: "Premium", price: "$90 daily average", detail: "Appear higher in search results" },
+  { id: "standard", title: "Standard", price: "$46 daily average", detail: "Visibility boost and automatic replies" },
+] as const;
 
 const fallbackJobs: Job[] = [
   {
@@ -260,9 +268,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       return [];
     }
   });
-  const [postStep, setPostStep] = useState<"contact" | "title" | "location" | "details">("contact");
+  const [postStep, setPostStep] = useState<
+    "contact" | "title" | "location" | "hires" | "timeframe" | "type" | "salary" | "benefits" | "description" | "review" | "sponsor" | "details"
+  >("contact");
   const [postJobTitle, setPostJobTitle] = useState("");
   const [postLocationType, setPostLocationType] = useState<(typeof employerLocationTypes)[number]["id"]>("in-person");
+  const [postHires, setPostHires] = useState(0);
+  const [postHiringTimeframe, setPostHiringTimeframe] = useState<(typeof hiringTimeframes)[number]>("1 to 3 days");
+  const [postJobType, setPostJobType] = useState("Full-time");
+  const [postBenefits, setPostBenefits] = useState<string[]>([]);
+  const [postDescription, setPostDescription] = useState("");
+  const [postSponsorPlan, setPostSponsorPlan] = useState("none");
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -1483,7 +1499,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-location-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  setPostStep("details");
+                  setPostStep("hires");
                 }}
               >
                 <h2>Location type *</h2>
@@ -1513,6 +1529,111 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
+              </form>
+            ) : kind === "post" && postStep === "hires" ? (
+              <form className="jobs-employer-step-form jobs-hires-step" onSubmit={event => { event.preventDefault(); setPostStep("timeframe"); }}>
+                <h2>Number of hires *</h2>
+                <div className="jobs-hires-control">
+                  <button type="button" aria-label="Decrease hires" onClick={() => setPostHires(value => Math.max(0, value - 1))}>-</button>
+                  <input value={postHires} onChange={event => setPostHires(Math.max(0, Number(event.target.value) || 0))} inputMode="numeric" aria-label="Number of hires" />
+                  <button type="button" aria-label="Increase hires" onClick={() => setPostHires(value => value + 1)}>+</button>
+                </div>
+                <footer><button type="button" onClick={() => setPostStep("location")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "timeframe" ? (
+              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("type"); }}>
+                <h2>Hiring timeframe *</h2>
+                <div className="jobs-post-option-stack">
+                  {hiringTimeframes.map(item => (
+                    <button type="button" key={item} className={postHiringTimeframe === item ? "active" : ""} onClick={() => setPostHiringTimeframe(item)}>
+                      <b>{item}</b>
+                    </button>
+                  ))}
+                </div>
+                <footer><button type="button" onClick={() => setPostStep("hires")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "type" ? (
+              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("salary"); }}>
+                <h2>Job type *</h2>
+                <div className="jobs-post-option-stack">
+                  {employerJobTypes.map(item => (
+                    <button type="button" key={item} className={postJobType === item ? "active" : ""} onClick={() => setPostJobType(item)}>
+                      <span>+ {item}</span>
+                    </button>
+                  ))}
+                </div>
+                <button className="jobs-show-more" type="button">Show 1 more⌄</button>
+                <footer><button type="button" onClick={() => setPostStep("timeframe")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "salary" ? (
+              <form className="jobs-employer-step-form jobs-salary-step" onSubmit={event => { event.preventDefault(); setPostStep("benefits"); }}>
+                <h2>Salary *</h2>
+                <section>
+                  <h3>Pay</h3>
+                  <p>Review the pay we estimated for your job and adjust as needed. Check your local minimum wage.</p>
+                  <b>Show pay by</b>
+                  <div className="jobs-pill-row"><button type="button" className="active">Range</button><button type="button">Starting amount</button><button type="button">Maximum amount</button><button type="button">Exact amount</button></div>
+                  <div className="jobs-salary-inputs">
+                    <label>Minimum<input value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="$ 25.71" inputMode="decimal" /></label>
+                    <span>to</span>
+                    <label>Maximum<input value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="$ 30.96" inputMode="decimal" /></label>
+                  </div>
+                  <b>Rate</b>
+                  <div className="jobs-pill-row"><button type="button" className="active">per hour</button><button type="button">per day</button><button type="button">per week</button><button type="button">per month</button><button type="button">per year</button></div>
+                </section>
+                <footer><button type="button" onClick={() => setPostStep("type")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "benefits" ? (
+              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("description"); }}>
+                <h2>Benefits</h2>
+                <div className="jobs-post-option-stack">
+                  {employerBenefits.slice(0, 4).map(item => (
+                    <button type="button" key={item} className={postBenefits.includes(item) ? "active" : ""} onClick={() => setPostBenefits(current => current.includes(item) ? current.filter(value => value !== item) : [...current, item])}>
+                      <span>+ {item}</span>
+                    </button>
+                  ))}
+                </div>
+                <button className="jobs-show-more" type="button">Show 19 more⌄</button>
+                <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "description" ? (
+              <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("review"); }}>
+                <h2>Job description *</h2>
+                <p>This is a SMAJ PI HUB-assisted job description. You can edit or replace it.</p>
+                <div className="jobs-description-editor">
+                  <div><b>B</b><i>I</i><span>☷</span><button type="button">?</button></div>
+                  <textarea required value={postDescription} onChange={event => setPostDescription(event.target.value)} placeholder={`Overview\n\nJoin our dynamic team as a ${postJobTitle || "team member"} and help customers in the Pi economy.`} />
+                </div>
+                <footer><button type="button" onClick={() => setPostStep("benefits")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "review" ? (
+              <form className="jobs-employer-step-form jobs-review-step" onSubmit={event => { event.preventDefault(); setPostStep("sponsor"); }}>
+                <h2>Review</h2>
+                <p>By selecting Confirm, you agree that this job post reflects your requirements and will be submitted through SMAJ PI HUB Jobs.</p>
+                <section>
+                  <h3>Job details</h3>
+                  {[["Job title", postJobTitle, "title"], ["Location type", selectedPostLocationType.title, "location"], ["Number of hires", String(postHires), "hires"], ["Hiring timeframe", postHiringTimeframe, "timeframe"], ["Job type", postJobType, "type"], ["Benefits", postBenefits.join(", ") || "None selected", "benefits"]].map(([label, value, step]) => (
+                    <div key={label}><small>{label}</small><span>{value}</span><button type="button" onClick={() => setPostStep(step as typeof postStep)}>Edit</button></div>
+                  ))}
+                </section>
+                <footer><button type="button" onClick={() => setPostStep("description")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "sponsor" ? (
+              <form className="jobs-employer-step-form jobs-sponsor-step" onSubmit={event => { event.preventDefault(); setPostStep("details"); }}>
+                <h2>Sponsor job</h2>
+                <h3>Choose a plan</h3>
+                <div className="jobs-sponsor-plans">
+                  {sponsorPlans.map(plan => (
+                    <button type="button" key={plan.id} className={postSponsorPlan === plan.id ? "active" : ""} onClick={() => setPostSponsorPlan(plan.id)}>
+                      <b>{plan.title}</b><span>{plan.price}</span><small>{plan.detail}</small>
+                    </button>
+                  ))}
+                </div>
+                <button className="jobs-show-more" type="button">Switch to a custom budget</button>
+                <label>Plan duration<select defaultValue="continuous"><option value="continuous">Runs continuously</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
+                <p><b>Max budget:</b> $675.00 per week</p>
+                <button type="button" className="jobs-no-thanks" onClick={() => { setPostSponsorPlan("none"); setPostStep("details"); }}>No thanks</button>
+                <footer><button type="submit">Save and continue</button></footer>
               </form>
             ) : kind === "post" ? (
               <form className="job-form" onSubmit={event => void submitJob(event)}>
@@ -1592,10 +1713,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     Job type
-                    <select name="type">
-                      <option>Full time</option>
-                      <option>Part time</option>
+                    <select name="type" defaultValue={postJobType}>
+                      <option>Full-time</option>
+                      <option>Part-time</option>
                       <option>Contract</option>
+                      <option>Temporary</option>
                       <option>Project</option>
                     </select>
                   </label>
@@ -1650,6 +1772,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     required
                     minLength={30}
                     rows={6}
+                    defaultValue={postDescription}
                     placeholder="Describe the opportunity, responsibilities and requirements"
                   />
                 </label>
@@ -1669,7 +1792,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                         required
                         value={payMin}
                         onChange={event => setPayMin(event.target.value)}
-                        placeholder="e.g. 3000"
+                        placeholder="e.g. 25.71"
                       />
                     </label>
                     <label>
@@ -1681,7 +1804,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                         step="0.01"
                         value={payMax}
                         onChange={event => setPayMax(event.target.value)}
-                        placeholder="e.g. 4500"
+                        placeholder="e.g. 30.96"
                       />
                     </label>
                     <label>
