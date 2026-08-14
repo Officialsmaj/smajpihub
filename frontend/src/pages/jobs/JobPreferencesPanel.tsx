@@ -27,7 +27,7 @@ const JobPreferencesPanel = ({
   jobs: JobsApiJob[];
   onSaved: (preferences: JobsPreferences) => void;
 }) => {
-  const hydratedProfile = profile ? { ...defaults, ...profile } : { ...defaults, jobsMode: "candidate" };
+  const hydratedProfile: JobsPreferences = { ...defaults, ...(profile ?? {}) };
   const [editor, setEditor] = useState<Editor>("");
   const [preferences, setPreferences] = useState<JobsPreferences>(hydratedProfile);
   const recommendations = useMemo(
