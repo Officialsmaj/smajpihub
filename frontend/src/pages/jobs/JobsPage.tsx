@@ -928,7 +928,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const data = new FormData(event.currentTarget);
     setPostSubmitting(true);
     try {
-      let companyId = String(data.get("companyId") || "");
+      let companyId = String(data.get("companyId") || postCompanyId);
       if (companyId === "__add__") {
         await enrollEmployer();
         const company = await createJobCompany({
@@ -941,23 +941,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         companyId = company.id;
       }
       const created = await createJob({
-        title: String(data.get("title") || ""),
+        title: String(data.get("title") || postJobTitle),
         companyId,
-        location: String(data.get("country") || ""),
-        type: String(data.get("type") || ""),
-        mode: String(data.get("mode") || "Remote"),
+        location: String(data.get("country") || selectedPostLocationType.title),
+        type: String(data.get("type") || postJobType),
+        mode: String(data.get("mode") || selectedPostLocationType.mode || "Remote"),
         category: String(
-          data.get("category") === "Other" ? data.get("customCategory") : data.get("category") || "Other"
+          data.get("category") === "Other" ? data.get("customCategory") : data.get("category") || postCategory || "Other"
         ),
         skills: String(data.get("skills") || "")
           .split(",")
           .map(skill => skill.trim())
           .filter(Boolean),
-        salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin"))))}${Number(data.get("compensationMax")) > Number(data.get("compensationMin")) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax"))))}` : ""} / ${String(data.get("compensationPeriod") || "month")}`,
-        compensationMinUsdt: Number(data.get("compensationMin")),
-        compensationMaxUsdt: Number(data.get("compensationMax")) || Number(data.get("compensationMin")),
+        salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin") || payMin)))}${Number(data.get("compensationMax") || payMax) > Number(data.get("compensationMin") || payMin) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax") || payMax)))}` : ""} / ${String(data.get("compensationPeriod") || "month")}`,
+        compensationMinUsdt: Number(data.get("compensationMin") || payMin),
+        compensationMaxUsdt: Number(data.get("compensationMax") || payMax) || Number(data.get("compensationMin") || payMin),
         compensationPeriod: String(data.get("compensationPeriod") || "month"),
-        summary: String(data.get("summary") || ""),
+        summary: String(data.get("summary") || postDescription),
       });
       setJobs(current => [created, ...current]);
       setActionMessage(`Job posted at ${formatJobDateTime(created.postedAt || created.createdAt)} and is pending review.`);
@@ -1338,8 +1338,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     playsInline
                     aria-hidden="true"
                   >
-                    <source src="/videos/jobs-employer-hero.webm" type="video/webm" />
                     <source src="/videos/jobs-employer-hero.mp4" type="video/mp4" />
+                    <source src="/videos/jobs-employer-hero.webm" type="video/webm" />
                   </video>
                   <span>SMAJ FOR EMPLOYERS</span>
                   <h1>Hiring trusted Pi talent is simpler, faster, and more human</h1>
@@ -2527,7 +2527,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>By selecting Confirm, you agree that this job post reflects your requirements and will be submitted through SMAJ PI HUB Jobs.</p>
                 <section>
                   <h3>Job details</h3>
-                  {[["Job title", postJobTitle, "title"], ["Location type", selectedPostLocationType.title, "location"], ["Number of hires", String(postHires), "hires"], ["Hiring timeframe", postHiringTimeframe, "timeframe"], ["Job type", postJobType, "type"], ["Benefits", postBenefits.join(", ") || "None selected", "benefits"]].map(([label, value, step]) => (
+                  {[
+                    ["Company", companies.find(company => company.id === postCompanyId)?.name || "Select company", "details"],
+                    ["Job title", postJobTitle, "title"],
+                    ["Location type", selectedPostLocationType.title, "location"],
+                    ["Work mode", selectedPostLocationType.mode, "location"],
+                    ["Number of hires", String(postHires), "hires"],
+                    ["Hiring timeframe", postHiringTimeframe, "timeframe"],
+                    ["Job type", postJobType, "type"],
+                    ["Salary", `${formatUsdAmount(Number(payMin) || 0)}${Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} / month`, "salary"],
+                    ["Pi equivalent", `${formatPiAmount(piFromUsdt(Number(payMin) || 0))}${Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}`, "salary"],
+                    ["Benefits", postBenefits.join(", ") || "None selected", "benefits"],
+                    ["Description", postDescription ? `${postDescription.slice(0, 80)}${postDescription.length > 80 ? "…" : ""}` : "Add description", "description"],
+                    ["Sponsor plan", postSponsorPlan === "none" ? "No sponsor plan" : postSponsorPlan, "sponsor"],
+                  ].map(([label, value, step]) => (
                     <div key={label}><small>{label}</small><span>{value}</span><button type="button" onClick={() => setPostStep(step as typeof postStep)}>Edit</button></div>
                   ))}
                 </section>

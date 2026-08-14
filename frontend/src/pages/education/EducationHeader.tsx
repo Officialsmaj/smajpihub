@@ -75,7 +75,6 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
               {label}
             </NavLink>
           ))}
-          <Link to="/app/services">Back to SMAJ Hub</Link>
         </div>
       ) : null}
     </header>
