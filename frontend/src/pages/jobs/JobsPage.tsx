@@ -2372,7 +2372,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             ) : null}
           </section>
         )}
-        <nav className="jobs-mobile-nav">
+        {kind !== "post" ? <nav className="jobs-mobile-nav">
           <NavLink end to="/services/jobs">
             <HomeRoundedIcon />
             <span>Home</span>
@@ -2416,7 +2416,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </NavLink>
             </>
           )}
-        </nav>
+        </nav> : null}
       </main>
     </AppLayout>
   );

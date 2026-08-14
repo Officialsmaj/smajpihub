@@ -1250,7 +1250,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
+  z-index: 120;
   background: #fff;
   box-shadow: 0 -10px 22px rgb(0 0 0 / 8%);
 }
@@ -1356,7 +1356,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
+  z-index: 120;
   background: #fff;
   box-shadow: 0 -10px 22px rgb(0 0 0 / 8%);
 }
@@ -1501,7 +1501,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
+  z-index: 120;
   display: grid;
   grid-template-columns: minmax(96px, 0.7fr) minmax(150px, 1.3fr);
   gap: 10px;
@@ -1585,7 +1585,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
+  z-index: 120;
   display: grid;
   grid-template-columns: minmax(96px, 0.7fr) minmax(150px, 1.3fr);
   gap: 10px;

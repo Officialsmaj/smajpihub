@@ -9,6 +9,7 @@ const styles = readFileSync(new URL("../src/pages/jobs/JobsPage.css", import.met
 
 assert.match(page, /Loading live opportunities/);
 assert.match(page, /loading && kind !== "home"/);
+assert.match(page, /kind !== "post" \? <nav className="jobs-mobile-nav">/);
 assert.match(page, /limited offline catalog/);
 assert.match(page, /URLSearchParams/);
 assert.match(api, /location\?: string/);
