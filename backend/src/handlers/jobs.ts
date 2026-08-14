@@ -2,7 +2,9 @@ import type { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
+import { platformAPIKeyClient } from "../services/platformAPIClient";
 import { createNotification } from "../services/notifications";
+import env from "../environments";
 
 const ACTIVE = {
   status: "active",
@@ -715,9 +717,111 @@ export default function mountJobsEndpoints(router: Router) {
   router.post("/billing/intents", async (req, res) => {
     const user = await requireEmployer(req, res); if (!user) return;
     const plan = employerPlans.find(item => item.id === req.body?.planId); if (!plan) return res.status(400).json({ error: "invalid_plan" });
-    const intent = { billingId: `job-billing-${Date.now().toString(36)}`, employerId: userId(user), ...plan, status: "pending_payment", createdAt: new Date().toISOString() };
-    await req.app.locals.jobBillingCollection.insertOne(intent); await audit(req, user, "billing.intent_created", intent.billingId, { planId: plan.id });
-    res.status(201).json({ intent, paymentEnabled: false, message: "Pi payment activation is pending platform payment configuration." });
+    const jobId = String(req.body?.jobId || "").trim();
+    if (jobId) {
+      const job = await req.app.locals.jobCollection.findOne({ slug: jobId, employerId: userId(user) });
+      if (!job) return res.status(403).json({ error: "job_forbidden", message: "You may only sponsor a job you posted." });
+    }
+    const paymentEnabled = Boolean(env.pi_api_key);
+    const intent = {
+      billingId: `job-billing-${Date.now().toString(36)}`,
+      employerId: userId(user),
+      ...(jobId ? { jobId } : {}),
+      ...plan,
+      status: "pending_payment",
+      createdAt: new Date().toISOString(),
+    };
+    await req.app.locals.jobBillingCollection.insertOne(intent);
+    await audit(req, user, "billing.intent_created", intent.billingId, { planId: plan.id, jobId: jobId || undefined });
+    res.status(201).json({
+      intent,
+      paymentEnabled,
+      message: paymentEnabled ? undefined : "Pi payment activation is pending platform payment configuration.",
+    });
+  });
+  router.post("/billing/approve", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const { billingId, paymentId } = req.body || {};
+    if (!billingId || !paymentId)
+      return res.status(400).json({ error: "bad_request", message: "Missing billingId or paymentId." });
+    const intent = await req.app.locals.jobBillingCollection.findOne({ billingId, employerId: userId(user) });
+    if (!intent) return res.status(404).json({ error: "not_found", message: "Billing request not found." });
+    if (intent.status !== "pending_payment")
+      return res.status(400).json({ error: "bad_request", message: "Only pending billing requests can be approved." });
+    if (!env.pi_api_key)
+      return res.status(503).json({ error: "payments_unavailable", message: "Pi payment activation is pending platform payment configuration." });
+    await platformAPIKeyClient.post(`/v2/payments/${paymentId}/approve`);
+    await req.app.locals.jobBillingCollection.updateOne(
+      { billingId },
+      { $set: { paymentId, status: "processing", updatedAt: new Date().toISOString() } }
+    );
+    await audit(req, user, "billing.payment_approved", billingId, { paymentId });
+    res.json({ message: "Payment approved.", paymentId });
+  });
+  router.post("/billing/complete", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const { billingId, paymentId, txid } = req.body || {};
+    if (!billingId || !paymentId || !txid)
+      return res.status(400).json({ error: "bad_request", message: "Missing billingId, paymentId, or txid." });
+    const intent = await req.app.locals.jobBillingCollection.findOne({ billingId, employerId: userId(user) });
+    if (!intent) return res.status(404).json({ error: "not_found", message: "Billing request not found." });
+    if (intent.status !== "processing" && intent.status !== "pending_payment")
+      return res.status(400).json({ error: "bad_request", message: "Only pending billing requests can be completed." });
+    if (!env.pi_api_key)
+      return res.status(503).json({ error: "payments_unavailable", message: "Pi payment activation is pending platform payment configuration." });
+    await platformAPIKeyClient.post(`/v2/payments/${paymentId}/complete`, { txid });
+    const paidAt = new Date().toISOString();
+    await req.app.locals.jobBillingCollection.updateOne(
+      { billingId },
+      { $set: { status: "paid", paymentId, paymentTxid: txid, paidAt, updatedAt: paidAt } }
+    );
+    let job: any = null;
+    if (intent.jobId) {
+      const perk =
+        intent.id === "featured"
+          ? { featured: true }
+          : intent.id === "monthly"
+            ? { featured: true, sponsoredUntil: new Date(Date.now() + 30 * 86_400_000).toISOString() }
+            : {};
+      if (Object.keys(perk).length)
+        await req.app.locals.jobCollection.updateOne(
+          { slug: intent.jobId, employerId: userId(user) },
+          { $set: { ...perk, updatedAt: paidAt } }
+        );
+      job = await req.app.locals.jobCollection.findOne({ slug: intent.jobId });
+    } else if (intent.id === "monthly") {
+      await req.app.locals.userCollection.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            jobsEmployerPlan: "monthly",
+            jobsEmployerPlanExpiresAt: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+          },
+        }
+      );
+    }
+    await audit(req, user, "billing.payment_completed", billingId, { paymentId, txid, planId: intent.id });
+    await createNotification(req.app, {
+      userId: userId(user),
+      type: "jobs_billing_paid",
+      title: "Employer plan activated",
+      message: `${intent.name} is now active${job ? ` for ${job.title}` : ""}.`,
+      relatedId: billingId,
+    });
+    res.json({ message: "Payment completed.", paymentId, txid, job: job ? serializeJobDocument(job) : undefined });
+  });
+  router.post("/billing/cancelled_payment", async (req, res) => {
+    const user = await requireEmployer(req, res); if (!user) return;
+    const { billingId, paymentId } = req.body || {};
+    if (!billingId) return res.status(400).json({ error: "bad_request", message: "Missing billingId." });
+    const intent = await req.app.locals.jobBillingCollection.findOne({ billingId, employerId: userId(user) });
+    if (!intent) return res.status(404).json({ error: "not_found", message: "Billing request not found." });
+    await req.app.locals.jobBillingCollection.updateOne(
+      { billingId },
+      { $set: { status: "cancelled", paymentId, updatedAt: new Date().toISOString() } }
+    );
+    await audit(req, user, "billing.payment_cancelled", billingId, { paymentId });
+    res.json({ message: "Payment cancelled." });
   });
   router.put("/profile", async (req, res) => {
     const user = await requireUser(req, res);

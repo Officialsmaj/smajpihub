@@ -112,10 +112,20 @@ export const getJobs = async (
 export const getJobsMetrics = async () =>
   (await axiosClient.get<{ metrics: JobsMetrics }>("/jobs/metrics")).data.metrics;
 
+export const getJobById = async (id: string) =>
+  (await axiosClient.get<{ job: JobsApiJob }>(`/jobs/jobs/${encodeURIComponent(id)}`)).data.job;
+
 export const getJobCompanies = async () => {
   const response = await axiosClient.get<{ companies: JobsApiCompany[] }>("/jobs/companies");
   return response.data.companies;
 };
+
+export const getCompanyById = async (id: string) =>
+  (
+    await axiosClient.get<{ company: JobsApiCompany; jobs: JobsApiJob[] }>(
+      `/jobs/companies/${encodeURIComponent(id)}`
+    )
+  ).data;
 
 export const toggleSavedJob = async (jobId: string) => {
   const response = await axiosClient.put<{ saved: boolean }>(`/jobs/saved/${encodeURIComponent(jobId)}`);
@@ -211,7 +221,25 @@ export const requestCandidateVerification = async (evidence: {
   notes: string;
 }) => (await axiosClient.post("/jobs/profile/verification-request", evidence)).data;
 export type JobsBillingPlan = { id: string; name: string; priceUsdt: number; pricePi: number; piRateUsed: number };
+export type JobsBillingIntent = JobsBillingPlan & {
+  billingId: string;
+  employerId: string;
+  jobId?: string;
+  status: string;
+  createdAt: string;
+};
 export const getJobsBillingPlans = async () =>
   (await axiosClient.get<{ plans: JobsBillingPlan[] }>("/jobs/billing/plans")).data.plans;
-export const createJobsBillingIntent = async (planId: string) =>
-  (await axiosClient.post("/jobs/billing/intents", { planId })).data;
+export const createJobsBillingIntent = async (planId: string, jobId?: string) =>
+  (
+    await axiosClient.post<{ intent: JobsBillingIntent; paymentEnabled: boolean; message?: string }>(
+      "/jobs/billing/intents",
+      { planId, jobId }
+    )
+  ).data;
+export const approveJobsBillingPayment = async (billingId: string, paymentId: string) =>
+  (await axiosClient.post("/jobs/billing/approve", { billingId, paymentId })).data;
+export const completeJobsBillingPayment = async (billingId: string, paymentId: string, txid: string) =>
+  (await axiosClient.post<{ job?: JobsApiJob }>("/jobs/billing/complete", { billingId, paymentId, txid })).data;
+export const cancelJobsBillingPayment = async (billingId: string, paymentId: string) =>
+  (await axiosClient.post("/jobs/billing/cancelled_payment", { billingId, paymentId })).data;

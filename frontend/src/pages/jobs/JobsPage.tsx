@@ -27,8 +27,10 @@ import {
   confirmJobsProfileAvatar,
   deleteJobsCv,
   enrollEmployer,
+  getCompanyById,
   getEmployerDashboard,
   getJobApplications,
+  getJobById,
   getJobCompanies,
   getJobs,
   getJobsMetrics,
@@ -58,6 +60,7 @@ import { JOB_CATEGORIES, JOB_COUNTRIES } from "../../content/jobOptions";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { PI_USDT_RATE, piFromUsdt } from "../../lib/piPricing";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { useJobsBillingPayment } from "../../hooks/useJobsBillingPayment";
 import { axiosClient } from "../../lib/axiosClient";
 import JobPreferencesPanel from "./JobPreferencesPanel";
 
@@ -344,6 +347,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [error, setError] = useState("");
   const [employerApplications, setEmployerApplications] = useState<JobsApiApplication[]>([]);
   const [employerCompanies, setEmployerCompanies] = useState<JobsApiCompany[]>([]);
+  const [employerJobs, setEmployerJobs] = useState<JobsApiJob[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [postCategory, setPostCategory] = useState("");
@@ -351,6 +355,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [payMax, setPayMax] = useState("");
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
+  const [billingPlanJobId, setBillingPlanJobId] = useState<Record<string, string>>({});
+  const [billingSubmittingPlanId, setBillingSubmittingPlanId] = useState("");
+  const [fetchedJob, setFetchedJob] = useState<Job | null>(null);
+  const [fetchedCompany, setFetchedCompany] = useState<{ company: JobsApiCompany; jobs: Job[] } | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [activity, setActivity] = useState<JobsActivity | null>(null);
   const [activityTab, setActivityTab] = useState<"appearances" | "actions">("appearances");
   const [activityDays, setActivityDays] = useState(7);
@@ -412,6 +421,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isPaying: billingPaying, payBilling } = useJobsBillingPayment();
   const homeTab = kind === "home" ? searchParams.get("tab") || "" : "";
   const filteredEmployerJobTitles = useMemo(() => {
     const typed = postJobTitle.trim().toLowerCase();
@@ -810,6 +820,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         if (dashboard) {
           setEmployerApplications(dashboard.applications);
           setEmployerCompanies(dashboard.companies);
+          setEmployerJobs(dashboard.jobs || []);
         }
         setLoading(false);
       })
@@ -920,8 +931,62 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   }, [jobs, profile]);
   const jobAlertsCount = Math.min(9, recommendedJobs.length || metrics.opportunities);
   const jobAlertsLabel = jobAlertsCount >= 9 ? "9+" : String(jobAlertsCount);
-  const selectedJob = jobs.find(job => job.id === id);
-  const selectedCompany = companies.find(company => company.id === id);
+  const selectedJob = jobs.find(job => job.id === id) || fetchedJob || undefined;
+  const selectedCompany = companies.find(company => company.id === id) || fetchedCompany?.company || undefined;
+  const selectedCompanyJobs =
+    fetchedCompany?.jobs || jobs.filter(job => selectedCompany && job.company === selectedCompany.name);
+  useEffect(() => {
+    if (kind !== "job" || !id) {
+      setFetchedJob(null);
+      return;
+    }
+    if (jobs.some(job => job.id === id)) {
+      setFetchedJob(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    getJobById(id)
+      .then(job => {
+        if (!cancelled) setFetchedJob(job);
+      })
+      .catch(() => {
+        if (!cancelled) setFetchedJob(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, id]);
+  useEffect(() => {
+    if (kind !== "company" || !id) {
+      setFetchedCompany(null);
+      return;
+    }
+    if (companies.some(company => company.id === id)) {
+      setFetchedCompany(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    getCompanyById(id)
+      .then(result => {
+        if (!cancelled) setFetchedCompany(result);
+      })
+      .catch(() => {
+        if (!cancelled) setFetchedCompany(null);
+      })
+      .finally(() => {
+        if (!cancelled) setDetailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, id]);
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (postSubmitting) return;
@@ -1057,11 +1122,36 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     }
   };
   const startBilling = async (planId: string) => {
+    if (billingSubmittingPlanId) return;
+    setBillingSubmittingPlanId(planId);
     try {
-      const result = await createJobsBillingIntent(planId);
-      setActionMessage(result.message || "Billing request created.");
+      const jobId = billingPlanJobId[planId] || undefined;
+      const { intent, paymentEnabled, message } = await createJobsBillingIntent(planId, jobId);
+      if (!paymentEnabled) {
+        setActionMessage(message || "Billing request created.");
+        return;
+      }
+      await payBilling(intent.billingId, intent.pricePi, `SMAJ Jobs — ${intent.name}`, {
+        onReady: () => setActionMessage("Payment approved. Waiting for confirmation..."),
+        onComplete: result => {
+          setActionMessage(
+            result.job
+              ? `Payment confirmed. ${intent.name} is now active for ${result.job.title}.`
+              : `Payment confirmed. ${intent.name} is now active.`
+          );
+          if (result.job) {
+            const paidJob = result.job;
+            setJobs(current => current.map(job => (job.id === paidJob.id ? { ...job, ...paidJob } : job)));
+            setEmployerJobs(current => current.map(job => (job.id === paidJob.id ? { ...job, ...paidJob } : job)));
+          }
+        },
+        onCancel: () => setActionMessage("Payment was cancelled."),
+        onError: errorMessage => setActionMessage(errorMessage || "Payment failed."),
+      });
     } catch {
       setActionMessage("Billing request could not be created.");
+    } finally {
+      setBillingSubmittingPlanId("");
     }
   };
 
@@ -1789,6 +1879,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </aside>
             </div>
           </section>
+        ) : kind === "job" && detailLoading ? (
+          <section className="job-detail jobs-detail-loading" aria-busy="true">
+            <Link to="/services/jobs/search">← Back to jobs</Link>
+            <p>Loading job…</p>
+          </section>
+        ) : kind === "job" ? (
+          <section className="job-detail jobs-detail-not-found">
+            <Link to="/services/jobs/search">← Back to jobs</Link>
+            <h1>Job not found</h1>
+            <p>This opportunity may have expired, been removed, or is no longer available.</p>
+          </section>
         ) : kind === "company" && selectedCompany ? (
           <section className="jobs-directory">
             <div className="company-hero">
@@ -1813,12 +1914,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <h2>Open opportunities</h2>
             </div>
             <div className="jobs-list">
-              {jobs
-                .filter(job => job.company === selectedCompany.name)
-                .map(job => (
-                  <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
-                ))}
+              {selectedCompanyJobs.map(job => (
+                <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
+              ))}
             </div>
+          </section>
+        ) : kind === "company" && detailLoading ? (
+          <section className="jobs-directory jobs-detail-loading" aria-busy="true">
+            <p>Loading company…</p>
+          </section>
+        ) : kind === "company" ? (
+          <section className="jobs-directory jobs-detail-not-found">
+            <Link to="/services/jobs/companies">← Back to companies</Link>
+            <h1>Company not found</h1>
+            <p>This company profile may have been removed or is not yet approved.</p>
           </section>
         ) : kind === "activity" ? (
           <section className="jobs-activity-page">
@@ -3194,8 +3303,36 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       <h3>{plan.name}</h3>
                       <strong>{formatPiAmount(plan.pricePi)}</strong>
                       <small>{formatUsdAmount(plan.priceUsdt)} at the configured store rate</small>
-                      <button type="button" onClick={() => void startBilling(plan.id)}>
-                        Create billing request
+                      {plan.id === "featured" && employerJobs.length ? (
+                        <label>
+                          Job to feature
+                          <select
+                            aria-label={`Job to feature for ${plan.name}`}
+                            value={billingPlanJobId[plan.id] || ""}
+                            onChange={event =>
+                              setBillingPlanJobId(current => ({ ...current, [plan.id]: event.target.value }))
+                            }
+                          >
+                            <option value="">Select a job you posted</option>
+                            {employerJobs.map(job => (
+                              <option key={job.id} value={job.id}>
+                                {job.title}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={
+                          Boolean(billingSubmittingPlanId) ||
+                          billingPaying ||
+                          (plan.id === "featured" && employerJobs.length > 0 && !billingPlanJobId[plan.id])
+                        }
+                        aria-busy={billingSubmittingPlanId === plan.id}
+                        onClick={() => void startBilling(plan.id)}
+                      >
+                        {billingSubmittingPlanId === plan.id ? "Processing payment…" : "Pay with Pi"}
                       </button>
                     </article>
                   ))}
