@@ -1175,7 +1175,10 @@ const mountStreamEndpoints = (router: Router) => {
         responseType: "stream",
         timeout: 20_000,
         maxRedirects: 5,
-        headers: req.headers.range ? { Range: req.headers.range } : {},
+        headers: {
+          ...(req.headers.range ? { Range: req.headers.range } : {}),
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        },
         validateStatus: status => status === 200 || status === 206,
       });
       res.status(upstream.status);
@@ -1188,8 +1191,10 @@ const mountStreamEndpoints = (router: Router) => {
       upstream.data.on("error", () => res.end());
       upstream.data.pipe(res);
     } catch (error) {
-      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
-      if (!res.headersSent) return res.status(status).json({ error: "archive_stream_failed", message: "Unable to stream this video." });
+      const axiosError = error as { response?: { status?: number; statusText?: string }; code?: string; message?: string };
+      console.error("[archive-media]", uid, axiosError.response?.status, axiosError.response?.statusText, axiosError.code, axiosError.message);
+      const status = Number(axiosError.response?.status || 502);
+      if (!res.headersSent) return res.status(status).json({ error: "archive_stream_failed", message: "Unable to stream this video.", detail: `${axiosError.code || ""} ${axiosError.response?.status || ""} ${axiosError.message || ""}`.trim() });
       res.end();
     }
   });
