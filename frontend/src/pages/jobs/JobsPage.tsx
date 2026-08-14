@@ -2203,20 +2203,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </fieldset>
                 <button type="submit">Publish job</button>
               </form>
-            ) : kind === "applications" && applications.length ? (
-              <div className="jobs-application-list">
-                {applications.map(application => (
-                  <article key={application.id}>
-                    <CheckCircleRoundedIcon />
-                    <div>
-                      <h2>{application.jobTitle}</h2>
-                      <p>{application.company}</p>
-                      <small>{new Date(application.createdAt).toLocaleDateString()}</small>
-                    </div>
-                    <b>{application.status}</b>
-                  </article>
-                ))}
-              </div>
             ) : kind === "profile" ? (
               <div className="jobs-profile-workspace">
                 <section className="jobs-profile-overview">
@@ -2661,18 +2647,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <span className="jobs-kicker">
                 {kind === "freelance"
                   ? "PROJECT-BASED WORK"
-                  : kind === "saved"
-                    ? "YOUR SHORTLIST"
-                    : "DISCOVER OPPORTUNITIES"}
+                  : "DISCOVER OPPORTUNITIES"}
               </span>
               <h1>
                 {kind === "freelance"
                   ? "Freelance projects"
-                  : kind === "saved"
-                    ? "Saved jobs"
-                    : effectiveLocation
-                      ? `Jobs in ${effectiveLocation}`
-                      : "Find your next role"}
+                  : effectiveLocation
+                    ? `Jobs in ${effectiveLocation}`
+                    : "Find your next role"}
               </h1>
               <p>
                 {kind === "search" ? resultsTotal : listings.length} available{" "}
@@ -2748,17 +2730,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </NavLink>
           {activeWorkspaceMode === "candidate" ? (
             <>
-              <NavLink to="/services/jobs?tab=messages">
-                <ChatBubbleOutlineRoundedIcon />
-                <span>Messages</span>
+              <NavLink to="/services/jobs/search">
+                <SearchRoundedIcon />
+                <span>Search</span>
               </NavLink>
               <NavLink to="/services/jobs/saved">
                 <BookmarkBorderRoundedIcon />
                 <span>My Jobs</span>
               </NavLink>
-              <NavLink to="/services/jobs/applications">
-                <WorkOutlineRoundedIcon />
-                <span>Applications</span>
+              <NavLink to="/services/jobs?tab=messages">
+                <ChatBubbleOutlineRoundedIcon />
+                <span>Messages</span>
               </NavLink>
               <NavLink to="/services/jobs/profile">
                 <PersonOutlineRoundedIcon />
