@@ -1843,17 +1843,28 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </section>
         ) : kind === "candidates" ? (
           <section className="jobs-candidates-page">
-            <div className="jobs-page-heading">
-              <span className="jobs-kicker">HIRING PIPELINE</span>
+            <div className="jobs-candidates-title">
               <h1>Candidates</h1>
-              <p>Review applicants, move candidates through stages, and keep hiring activity in one place.</p>
             </div>
-            <div className="jobs-candidate-stats">
-              <article><strong>{employerApplications.length}</strong><span>Total candidates</span></article>
-              <article><strong>{employerApplications.filter(item => candidateStageForStatus(item.status) === "New").length}</strong><span>New</span></article>
-              <article><strong>{employerApplications.filter(item => candidateStageForStatus(item.status) === "Interview").length}</strong><span>Interviews</span></article>
-              <article><strong>{employerApplications.filter(item => candidateStageForStatus(item.status) === "Hired").length}</strong><span>Hired</span></article>
-            </div>
+            <nav className="jobs-candidate-tabs" aria-label="Candidate stages">
+              {(["All", ...candidateStages] as Array<"All" | (typeof candidateStages)[number]>).map(stage => {
+                const count =
+                  stage === "All"
+                    ? employerApplications.length
+                    : employerApplications.filter(item => candidateStageForStatus(item.status) === stage).length;
+                return (
+                  <button
+                    type="button"
+                    key={stage}
+                    className={candidateStageFilter === stage ? "active" : ""}
+                    onClick={() => setCandidateStageFilter(stage)}
+                  >
+                    <span>{stage}</span>
+                    <b>{count}</b>
+                  </button>
+                );
+              })}
+            </nav>
             <div className="jobs-candidate-toolbar">
               <label>
                 <SearchRoundedIcon />

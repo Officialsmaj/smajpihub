@@ -2571,24 +2571,54 @@
 .jobs-candidates-page {
   max-width: 1200px;
   margin: auto;
-  padding: 42px 22px 96px;
+  padding: 22px 16px 96px;
 }
-.jobs-candidate-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin: 22px 0;
+.jobs-candidates-title h1 {
+  margin: 0 0 14px;
+  font-size: clamp(1.7rem, 7vw, 2.2rem);
+  letter-spacing: -0.04em;
 }
-.jobs-candidate-stats article {
-  padding: 18px;
-  border: 1px solid #dfe8e3;
-  border-radius: 8px;
+.jobs-candidate-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 14px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.jobs-candidate-tabs::-webkit-scrollbar {
+  display: none;
+}
+.jobs-candidate-tabs button {
+  min-height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  border: 1px solid #e4e1df;
+  border-radius: 999px;
+  color: #303030;
   background: #fff;
+  font-size: 0.82rem;
+  font-weight: 850;
 }
-.jobs-candidate-stats strong {
-  display: block;
-  color: var(--green);
-  font-size: 28px;
+.jobs-candidate-tabs button.active {
+  border-color: #2d2d2d;
+  color: #fff;
+  background: #2d2d2d;
+}
+.jobs-candidate-tabs b {
+  min-width: 20px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #303030;
+  background: #f1f1f1;
+  font-size: 0.75rem;
 }
 .jobs-candidate-toolbar {
   display: grid;
