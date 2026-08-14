@@ -50,6 +50,8 @@ assert.match(header, /Find work/);
 assert.match(header, /Hire talent/);
 assert.match(page, /SMAJ FOR EMPLOYERS/);
 assert.match(page, /Switching to \{workspaceSwitchingTo === "candidate" \? "Find work" : "Hire talent"\}/);
+assert.match(page, /postAfterWorkspaceSwitch/);
+assert.match(page, /openEmployerPostFlow/);
 assert.match(page, /3000/);
 assert.match(page, /Hiring trusted Pi talent is simpler, faster, and more human/);
 assert.match(page, /The people you're looking for are here/);

@@ -1042,15 +1042,18 @@
 .jobs-cta p {
   color: #b7d0c6;
 }
-.jobs-cta > a {
+.jobs-cta > a,
+.jobs-cta > button {
   padding: 15px 19px;
   display: flex;
   align-items: center;
   gap: 8px;
+  border: 0;
   border-radius: 11px;
   color: #0d3426;
   background: #fff;
   font-weight: 850;
+  font: inherit;
   text-decoration: none;
 }
 .jobs-search-employer-cta {
@@ -3291,7 +3294,8 @@
     padding: 30px;
     display: block;
   }
-  .jobs-cta > a {
+  .jobs-cta > a,
+  .jobs-cta > button {
     margin-top: 20px;
     justify-content: center;
   }

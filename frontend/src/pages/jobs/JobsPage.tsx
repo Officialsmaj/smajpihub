@@ -310,6 +310,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
   const [employerHeroVideoPaused, setEmployerHeroVideoPaused] = useState(false);
   const [workspaceSwitchingTo, setWorkspaceSwitchingTo] = useState<"candidate" | "employer" | "">("");
+  const [postAfterWorkspaceSwitch, setPostAfterWorkspaceSwitch] = useState(false);
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateStageFilter, setCandidateStageFilter] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [candidateView, setCandidateView] = useState<"pipeline" | "list">("pipeline");
@@ -371,10 +372,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const timer = window.setTimeout(() => {
       setWorkspaceMode(workspaceSwitchingTo);
       setWorkspaceSwitchingTo("");
-      navigate("/services/jobs");
+      navigate(postAfterWorkspaceSwitch && workspaceSwitchingTo === "employer" ? "/services/jobs/post" : "/services/jobs");
+      setPostAfterWorkspaceSwitch(false);
     }, 3000);
     return () => window.clearTimeout(timer);
-  }, [navigate, workspaceSwitchingTo]);
+  }, [navigate, postAfterWorkspaceSwitch, workspaceSwitchingTo]);
+  const openEmployerPostFlow = () => {
+    if (activeWorkspaceMode === "employer") {
+      navigate("/services/jobs/post");
+      return;
+    }
+    setPostAfterWorkspaceSwitch(true);
+    setWorkspaceSwitchingTo("employer");
+  };
   const activeWorkspaceMode =
     kind === "employer" || kind === "post" || kind === "candidates"
       ? "employer"
@@ -1238,9 +1248,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <h2>Meet talent that is ready to build.</h2>
                 <p>Publish a role, review verified profiles and manage candidates in one place.</p>
               </div>
-              <Link to="/services/jobs/post">
+              <button type="button" onClick={openEmployerPostFlow}>
                 Post your first job <ArrowForwardRoundedIcon />
-              </Link>
+              </button>
             </section>
           </>
           )
@@ -2748,9 +2758,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <h2>Meet talent that is ready to build.</h2>
                   <p>Publish a role, review verified profiles and manage candidates in one place.</p>
                 </div>
-                <Link to="/services/jobs/post">
+                <button type="button" onClick={openEmployerPostFlow}>
                   Post your first job <ArrowForwardRoundedIcon />
-                </Link>
+                </button>
               </section>
             ) : null}
           </section>
