@@ -358,6 +358,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateStageFilter, setCandidateStageFilter] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [candidateView, setCandidateView] = useState<"pipeline" | "list">("list");
+  const [employerApplicationQuery, setEmployerApplicationQuery] = useState("");
+  const [employerApplicationStage, setEmployerApplicationStage] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [selectedCandidate, setSelectedCandidate] = useState<JobsApiApplication | null>(null);
   const [candidateDrawerTab, setCandidateDrawerTab] = useState<(typeof candidateDrawerTabs)[number]>("Profile");
   const [managedJobApplication, setManagedJobApplication] = useState<JobsApiApplication | null>(null);
@@ -416,6 +418,27 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       return (!term || profileText.includes(term)) && (candidateStageFilter === "All" || stage === candidateStageFilter);
     });
   }, [candidateQuery, candidateStageFilter, employerApplications]);
+  const filteredEmployerApplications = useMemo(() => {
+    const query = employerApplicationQuery.trim().toLowerCase();
+    return employerApplications.filter(application => {
+      const stage = candidateStageForStatus(application.status);
+      const matchesStage = employerApplicationStage === "All" || stage === employerApplicationStage;
+      const haystack = [
+        application.jobTitle,
+        application.company,
+        application.status,
+        application.profileSnapshot?.title,
+        application.profileSnapshot?.location,
+        Array.isArray(application.profileSnapshot?.skills)
+          ? application.profileSnapshot.skills.join(" ")
+          : application.profileSnapshot?.skills,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return matchesStage && (!query || haystack.includes(query));
+    });
+  }, [employerApplicationQuery, employerApplicationStage, employerApplications]);
   const filteredCompanies = useMemo(() => {
     const term = companyQuery.trim().toLowerCase();
     if (!term) return companies;
@@ -1182,37 +1205,96 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <div className="jobs-page-heading">
               <h1>Applications</h1>
             </div>
+            <div className="jobs-candidate-toolbar jobs-employer-applications-toolbar">
+              <label>
+                <SearchRoundedIcon />
+                <input value={employerApplicationQuery} onChange={event => setEmployerApplicationQuery(event.target.value)} placeholder="Search applications, jobs, candidates" />
+              </label>
+              <select value={employerApplicationStage} onChange={event => setEmployerApplicationStage(event.target.value as typeof employerApplicationStage)}>
+                <option value="All">All stages</option>
+                {candidateStages.map(stage => <option key={stage}>{stage}</option>)}
+              </select>
+            </div>
+            <nav className="jobs-candidate-tabs jobs-employer-application-tabs" aria-label="Application stages">
+              {(["All", ...candidateStages] as Array<"All" | (typeof candidateStages)[number]>).map(stage => {
+                const count =
+                  stage === "All"
+                    ? employerApplications.length
+                    : employerApplications.filter(item => candidateStageForStatus(item.status) === stage).length;
+                return (
+                  <button
+                    type="button"
+                    key={stage}
+                    className={employerApplicationStage === stage ? "active" : ""}
+                    onClick={() => setEmployerApplicationStage(stage)}
+                  >
+                    <span>{stage}</span>
+                    <b>{count}</b>
+                  </button>
+                );
+              })}
+            </nav>
             <div className="jobs-application-list">
-              {employerApplications.map(application => (
-                <article key={application.id}>
-                  <div>
+              {filteredEmployerApplications.map(application => {
+                const stage = candidateStageForStatus(application.status);
+                return (
+                <article key={application.id} className="jobs-employer-application-card">
+                  {renderCandidateAvatar(application)}
+                  <div className="jobs-employer-application-main">
                     <h2>{application.jobTitle}</h2>
                     <p>
                       {application.profileSnapshot?.title || "Candidate"} · {application.company}
                     </p>
+                    <small>{application.profileSnapshot?.location || "Location not added"}</small>
                   </div>
-                  <select
-                    aria-label={`Status for ${application.jobTitle}`}
-                    value={application.status}
-                    onChange={event => void changeApplicationStatus(application.id, event.target.value)}
-                  >
-                    <option>submitted</option>
-                    <option>reviewing</option>
-                    <option>shortlisted</option>
-                    <option>rejected</option>
-                    <option>hired</option>
-                  </select>
+                  <div className="jobs-employer-application-actions">
+                    <b>{stage}</b>
+                    <button type="button" onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>Review</button>
+                  </div>
                 </article>
-              ))}
-              {!employerApplications.length ? (
+              );})}
+              {!filteredEmployerApplications.length ? (
                 <div className="workspace-empty">
                   <WorkOutlineRoundedIcon />
-                  <h2>No applications yet</h2>
-                  <p>Applications for your posted jobs will appear here.</p>
-                  <Link to="/services/jobs/post">Post a job</Link>
+                  <h2>{employerApplications.length ? "No matching applications" : "No applications yet"}</h2>
+                  <p>{employerApplications.length ? "Try another search or stage filter." : "Applications for your posted jobs will appear here."}</p>
+                  <Link to={employerApplications.length ? "/services/jobs/candidates" : "/services/jobs/post"}>{employerApplications.length ? "View candidates" : "Post a job"}</Link>
                 </div>
               ) : null}
             </div>
+            {selectedCandidate ? (
+              <aside className="jobs-candidate-drawer" role="dialog" aria-modal="true" aria-label="Candidate profile">
+                <button type="button" aria-label="Close candidate profile" onClick={() => setSelectedCandidate(null)}>x</button>
+                <header>
+                  {renderCandidateAvatar(selectedCandidate)}
+                  <div>
+                    <h2>{selectedCandidate.profileSnapshot?.title || "Candidate profile"}</h2>
+                    <p>{selectedCandidate.jobTitle} Â· {candidateStageForStatus(selectedCandidate.status)}</p>
+                  </div>
+                </header>
+                <nav>
+                  {candidateDrawerTabs.map(tab => <button type="button" key={tab} className={candidateDrawerTab === tab ? "active" : ""} onClick={() => setCandidateDrawerTab(tab)}>{tab}</button>)}
+                </nav>
+                {candidateDrawerTab === "Profile" ? (
+                  <div className="jobs-candidate-profile-grid">
+                    <article><span>Professional title</span><b>{selectedCandidate.profileSnapshot?.title || "Not added"}</b></article>
+                    <article><span>Location</span><b>{selectedCandidate.profileSnapshot?.location || "Not added"}</b></article>
+                    <article><span>Availability</span><b>{selectedCandidate.profileSnapshot?.availability || "Not added"}</b></article>
+                    <article><span>Skills</span><p>{Array.isArray(selectedCandidate.profileSnapshot?.skills) ? selectedCandidate.profileSnapshot?.skills.join(", ") : selectedCandidate.profileSnapshot?.skills || "Not added"}</p></article>
+                    <article className="wide"><span>Summary</span><p>{selectedCandidate.profileSnapshot?.summary || selectedCandidate.coverNote || "No summary yet."}</p></article>
+                  </div>
+                ) : candidateDrawerTab === "Messages" ? (
+                  <div className="jobs-candidate-message-start">
+                    <p>Start a private Jobs conversation about this application.</p>
+                    <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
+                  </div>
+                ) : (
+                  <div className="jobs-candidate-profile-grid">
+                    <article className="wide"><span>{candidateDrawerTab}</span><p>{candidateDrawerTab === "Application" ? selectedCandidate.coverNote || "No cover note attached." : "No activity yet."}</p></article>
+                  </div>
+                )}
+              </aside>
+            ) : null}
           </section>
         ) : kind === "home" ? (
           activeWorkspaceMode === "employer" ? (

@@ -2133,6 +2133,13 @@
   display: grid;
   gap: 14px;
 }
+.jobs-employer-applications-toolbar {
+  grid-template-columns: 1fr auto;
+  margin-bottom: 12px;
+}
+.jobs-employer-application-tabs {
+  margin-bottom: 16px;
+}
 .jobs-application-list article {
   padding: 20px;
   display: grid;
@@ -2160,6 +2167,33 @@
   border-radius: 999px;
   background: #eee8ff;
   text-transform: capitalize;
+}
+.jobs-employer-application-card {
+  box-shadow: 0 12px 28px rgba(31, 23, 51, 0.05);
+}
+.jobs-employer-application-main {
+  min-width: 0;
+}
+.jobs-employer-application-main h2 {
+  font-size: 1.02rem;
+  line-height: 1.18;
+}
+.jobs-employer-application-actions {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.jobs-employer-application-actions b {
+  color: #6d3df5;
+}
+.jobs-employer-application-actions button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: #6d3df5;
+  font-weight: 850;
 }
 .jobs-my-jobs-page {
   min-height: 76vh;
@@ -3862,7 +3896,19 @@
     grid-template-columns: 1fr;
   }
   .jobs-application-list article {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .jobs-employer-applications-toolbar {
     grid-template-columns: 1fr;
+  }
+  .jobs-employer-application-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 @media (max-width: 480px) {
