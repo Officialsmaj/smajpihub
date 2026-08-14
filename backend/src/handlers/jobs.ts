@@ -2,6 +2,7 @@ import type { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
+import { createNotification } from "../services/notifications";
 
 const ACTIVE = {
   status: "active",
@@ -866,6 +867,18 @@ export default function mountJobsEndpoints(router: Router) {
     const result =
       await req.app.locals.jobApplicationCollection.insertOne(application);
     await audit(req, user, "application.created", req.params.jobId);
+    const employer = ObjectId.isValid(job.employerId) && req.app.locals.userCollection
+      ? await req.app.locals.userCollection.findOne({ _id: new ObjectId(job.employerId) })
+      : null;
+    if (employer) {
+      await createNotification(req.app, {
+        userId: employer.uid,
+        type: "jobs_new_application",
+        title: "New application received",
+        message: `${profile.title || user.displayName || user.username || "A candidate"} applied for ${job.title}.`,
+        relatedId: result.insertedId.toString(),
+      });
+    }
     res.status(201).json({
       application: serializeJobDocument({
         ...application,
@@ -1001,6 +1014,18 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, "application.status_changed", req.params.id, {
       status,
     });
+    const candidate = ObjectId.isValid(application.candidateId) && req.app.locals.userCollection
+      ? await req.app.locals.userCollection.findOne({ _id: new ObjectId(application.candidateId) })
+      : null;
+    if (candidate) {
+      await createNotification(req.app, {
+        userId: candidate.uid,
+        type: "jobs_application_status",
+        title: "Application update",
+        message: `Your application for ${application.jobTitle} is now "${status}".`,
+        relatedId: application._id.toString(),
+      });
+    }
     res.json({ status });
   });
   router.patch("/admin/jobs/:id/moderate", async (req, res) => {
