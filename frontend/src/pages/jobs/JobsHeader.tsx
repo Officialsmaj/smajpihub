@@ -8,7 +8,6 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 const candidateLinks = [
   ["activity", "Activity on profile"],
   ["activity?tab=actions", "Employer invites"],
-  ["search#alerts", "Job alerts"],
   ["companies", "Companies"],
   ["settings", "Settings"],
 ] as const;

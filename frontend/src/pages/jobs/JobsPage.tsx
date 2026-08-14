@@ -95,6 +95,22 @@ type JobsConversation = {
 const formatJobsPi = (value: number) => `π ${value.toFixed(5).replace(/\.?0+$/, "")}`;
 const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
   `${formatJobsPi(piFromUsdt(minimum))}${maximum > minimum ? `–${formatJobsPi(piFromUsdt(maximum)).replace("π ", "")}` : ""} / ${period}`;
+const displayJobSalary = (job: Job) => {
+  if (Number.isFinite(job.compensationMinUsdt) && Number(job.compensationMinUsdt) > 0) {
+    return salaryFromUsdt(
+      Number(job.compensationMinUsdt),
+      Number(job.compensationMaxUsdt) || Number(job.compensationMinUsdt),
+      job.compensationPeriod || "month",
+    );
+  }
+  const legacyPi = job.salary?.trim().match(/^([\d,.]+)(?:[–-]([\d,.]+))?\s*Pi(?:\s*\/\s*([^\s]+)|\s+(fixed))?$/i);
+  if (legacyPi) {
+    const minimum = Number(legacyPi[1].replace(/,/g, ""));
+    const maximum = Number((legacyPi[2] || legacyPi[1]).replace(/,/g, ""));
+    return salaryFromUsdt(minimum, maximum, legacyPi[4] ? "project" : legacyPi[3] || "month");
+  }
+  return job.salary?.trim() || "Compensation not specified";
+};
 const normalizeJobLocation = (value: string) =>
   JOB_COUNTRIES.find(country => country.label === value)?.name || value.trim();
 const employerJobTitleSuggestions = [
@@ -256,7 +272,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
       <p>
         <LocationOnOutlinedIcon /> {job.location} · {job.mode} · {job.type}
       </p>
-      <strong className="job-card-salary">{job.salary?.trim() || "Compensation not specified"}</strong>
+      <strong className="job-card-salary">{displayJobSalary(job)}</strong>
       <div>
         {job.skills.map(skill => (
           <span key={skill}>{skill}</span>
@@ -276,6 +292,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [category, setCategory] = useState("All");
   const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
+  const [companyQuery, setCompanyQuery] = useState("");
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [applications, setApplications] = useState<JobsApiApplication[]>([]);
   const [readApplicationUpdates, setReadApplicationUpdates] = useState<Set<string>>(() => {
@@ -392,6 +409,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       return (!term || profileText.includes(term)) && (candidateStageFilter === "All" || stage === candidateStageFilter);
     });
   }, [candidateQuery, candidateStageFilter, employerApplications]);
+  const filteredCompanies = useMemo(() => {
+    const term = companyQuery.trim().toLowerCase();
+    if (!term) return companies;
+    return companies.filter(company =>
+      [company.name, company.field].some(value => value.toLowerCase().includes(term)),
+    );
+  }, [companies, companyQuery]);
   useEffect(() => {
     if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
   }, [kind, searchParams]);
@@ -1333,11 +1357,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </aside>
             </section> : null}
             <section className="jobs-section">
-              <header>
-                <div>
-                  <span className="jobs-kicker">CURATED FOR YOU</span>
-                  <h2>Featured opportunities</h2>
-                </div>
+              <header className="jobs-featured-header">
+                <h2>Featured opportunities</h2>
                 <Link to="/services/jobs/search">
                   View all <ArrowForwardRoundedIcon />
                 </Link>
@@ -1382,12 +1403,21 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : kind === "companies" ? (
           <section className="jobs-directory">
             <div className="jobs-page-heading">
-              <span className="jobs-kicker">TRUSTED ORGANIZATIONS</span>
               <h1>Explore companies</h1>
               <p>Discover verified teams building products and services across the Pi ecosystem.</p>
             </div>
+            <label className="jobs-company-search">
+              <SearchRoundedIcon />
+              <input
+                type="search"
+                value={companyQuery}
+                onChange={event => setCompanyQuery(event.target.value)}
+                placeholder="Search companies or industries"
+                aria-label="Search companies"
+              />
+            </label>
             <div className="company-grid">
-              {companies.map(company => (
+              {filteredCompanies.map(company => (
                 <Link to={`/services/jobs/company/${company.id}`} key={company.id}>
                   <span>{company.mark}</span>
                   <h2>
@@ -1401,6 +1431,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </Link>
               ))}
             </div>
+            {!filteredCompanies.length ? (
+              <div className="workspace-empty jobs-company-empty">
+                <SearchRoundedIcon />
+                <h2>No companies found</h2>
+                <p>Try another company name or industry.</p>
+              </div>
+            ) : null}
           </section>
         ) : kind === "job" && selectedJob ? (
           <section className="job-detail">
@@ -1413,7 +1450,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <LocationOnOutlinedIcon /> {selectedJob.location} · {selectedJob.mode} · {selectedJob.type}
                 </p>
                 <strong className="job-detail-salary">
-                  {selectedJob.salary?.trim() || "Compensation not specified"}
+                  {displayJobSalary(selectedJob)}
                 </strong>
                 <div className="job-detail-actions">
                   <button onClick={() => setApplyOpen(value => !value)}>Apply now</button>
@@ -1485,7 +1522,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>Paid through the Pi ecosystem</p>
                 <hr />
                 <span>Compensation</span>
-                <b>{selectedJob.salary?.trim() || "Not specified"}</b>
+                <b>{displayJobSalary(selectedJob)}</b>
                 <span>Category</span>
                 <strong>{selectedJob.category}</strong>
                 <span>Work type</span>

@@ -9,6 +9,10 @@ export type JobsApiJob = {
   type: string;
   mode: string;
   salary: string;
+  compensationMinUsdt?: number;
+  compensationMaxUsdt?: number;
+  compensationPeriod?: string;
+  piRateUsed?: number;
   category: string;
   featured?: boolean;
   freelance?: boolean;

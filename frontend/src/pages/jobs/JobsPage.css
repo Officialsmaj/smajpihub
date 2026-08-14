@@ -899,6 +899,18 @@
 .jobs-section > header > a svg {
   font-size: 18px;
 }
+.jobs-section > .jobs-featured-header {
+  align-items: center;
+  gap: 14px;
+}
+.jobs-section > .jobs-featured-header h2 {
+  margin: 0;
+  font-size: clamp(21px, 6vw, 30px);
+}
+.jobs-section > .jobs-featured-header > a {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 .jobs-list {
   display: grid;
   gap: 14px;
@@ -1106,6 +1118,31 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+.jobs-company-search {
+  min-height: 50px;
+  margin: 0 0 22px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dfe8e3;
+  border-radius: 14px;
+  background: #fff;
+}
+.jobs-company-search svg {
+  color: #6d3df5;
+}
+.jobs-company-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+}
+.jobs-company-empty {
+  margin-top: 16px;
 }
 .company-grid > a {
   padding: 27px;
