@@ -446,7 +446,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   };
   const renderCandidateAvatar = (application: JobsApiApplication) => {
     const snapshot = application.profileSnapshot;
-    const avatar = snapshot?.avatarConfirmationValue || "";
+    const avatar = snapshot?.avatar || snapshot?.avatarConfirmationValue || "";
     const label = snapshot?.title || application.jobTitle || "Candidate";
     return (
       <span className="jobs-candidate-avatar">

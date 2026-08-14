@@ -809,6 +809,8 @@ export default function mountJobsEndpoints(router: Router) {
         location: profile.location,
         portfolio: profile.portfolio,
         summary: profile.summary,
+        avatar: user.avatar || profile.avatarConfirmationValue || "",
+        avatarConfirmationValue: profile.avatarConfirmationValue || user.avatar || "",
         ...(shareCv ? { cv: profile.cv } : {}),
       },
       status: "submitted",

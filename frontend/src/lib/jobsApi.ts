@@ -54,6 +54,7 @@ export type JobsProfile = {
   verificationStatus?: "unverified" | "pending" | "verified" | "rejected";
   avatarConfirmationStatus?: "confirmed" | "deferred";
   avatarConfirmationValue?: string;
+  avatar?: string;
   cv?: {
     url: string;
     name: string;
