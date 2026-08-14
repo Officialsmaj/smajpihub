@@ -67,6 +67,8 @@ assert.match(page, /candidateDrawerTabs/);
 assert.match(page, /Messages/);
 assert.match(page, /jobs-messages-page/);
 assert.match(page, /No messages yet/);
+assert.doesNotMatch(page, /Your conversations/);
+assert.doesNotMatch(page, /Employer chats, candidate replies/);
 assert.match(page, /to="\/services\/jobs\?tab=messages"/);
 assert.match(page, /to="\/services\/jobs\?tab=employer-applications"/);
 assert.match(page, /jobs-my-jobs-page/);

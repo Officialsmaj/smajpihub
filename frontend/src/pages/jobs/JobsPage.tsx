@@ -848,9 +848,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         {kind === "home" && homeTab === "messages" ? (
           <section className="jobs-messages-page">
             <div className="jobs-page-heading">
-              <span className="jobs-kicker">MESSAGES</span>
-              <h1>Your conversations</h1>
-              <p>Employer chats, candidate replies, interview notes, and SMAJ PI HUB updates will appear here.</p>
+              <h1>Messages</h1>
             </div>
             <div className="jobs-message-tabs" aria-label="Message filters">
               <button type="button" className="active">All</button>
@@ -869,9 +867,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : kind === "home" && homeTab === "employer-applications" ? (
           <section className="jobs-candidates-page jobs-employer-applications-page">
             <div className="jobs-page-heading">
-              <span className="jobs-kicker">APPLICATIONS</span>
-              <h1>Employer applications</h1>
-              <p>Review candidate submissions for your posted SMAJ PI HUB roles.</p>
+              <h1>Applications</h1>
             </div>
             <div className="jobs-application-list">
               {employerApplications.map(application => (
