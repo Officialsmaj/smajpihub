@@ -240,6 +240,50 @@ const userId = (user: any) => user._id?.toString() || user.uid;
 const isAdmin = (user: any) => user.role === "admin";
 const isEmployer = (user: any) =>
   isAdmin(user) || user.role === "seller" || user.jobsRole === "employer";
+const validObjectIds = (ids: string[]) =>
+  ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id));
+const enrichApplicationsWithCandidateProfiles = async (req: Request, applications: any[]) => {
+  const candidateIds = Array.from(new Set(applications.map((application) => application.candidateId).filter(Boolean)));
+  if (!candidateIds.length) return applications;
+  const profiles = await req.app.locals.jobProfileCollection
+    .find({ userId: { $in: candidateIds } })
+    .toArray();
+  const profileByUserId = new Map(profiles.map((profile: any) => [profile.userId, profile]));
+  const userObjectIds = validObjectIds(candidateIds);
+  const users = req.app.locals.userCollection
+    ? await req.app.locals.userCollection
+        .find({
+          $or: [
+            { uid: { $in: candidateIds } },
+            ...(userObjectIds.length ? [{ _id: { $in: userObjectIds } }] : []),
+          ],
+        })
+        .toArray()
+    : [];
+  const userById = new Map(
+    users.flatMap((user: any) =>
+      [user.uid, user._id?.toString()].filter(Boolean).map((id) => [id, user]),
+    ),
+  );
+  return applications.map((application) => {
+    const profile: any = profileByUserId.get(application.candidateId);
+    const candidate: any = userById.get(application.candidateId);
+    const avatar =
+      candidate?.avatar ||
+      profile?.avatar ||
+      profile?.avatarConfirmationValue ||
+      application.profileSnapshot?.avatar ||
+      application.profileSnapshot?.avatarConfirmationValue ||
+      "";
+    return {
+      ...application,
+      profileSnapshot: {
+        ...(application.profileSnapshot || {}),
+        ...(avatar ? { avatar, avatarConfirmationValue: avatar } : {}),
+      },
+    };
+  });
+};
 const requireUser = async (req: Request, res: Response) => {
   const user = await resolveCurrentUser(req);
   if (!user)
@@ -920,12 +964,13 @@ export default function mountJobsEndpoints(router: Router) {
       .find(isAdmin(user) ? {} : { employerId: owner })
       .sort({ createdAt: -1 })
       .toArray();
+    const enrichedApplications = await enrichApplicationsWithCandidateProfiles(req, applications);
     const companies = await req.app.locals.jobCompanyCollection
       .find(isAdmin(user) ? {} : { ownerId: owner })
       .toArray();
     res.json({
       jobs: jobs.map(serializeJobDocument),
-      applications: applications.map(serializeJobDocument),
+      applications: enrichedApplications.map(serializeJobDocument),
       companies: companies.map(serializeJobDocument),
     });
   });
