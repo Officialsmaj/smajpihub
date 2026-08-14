@@ -6,6 +6,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -31,6 +32,7 @@ const links = [
   ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],
   ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
+  ["/admin/jobs", "Jobs Review", <WorkOutlineOutlinedIcon />],
   ["/admin/reports", "Reports", <ReportProblemOutlinedIcon />],
   ["/admin/stream", "Stream", <LiveTvOutlinedIcon />],
   ["/admin/stream/moderation", "Stream Review", <ShieldOutlinedIcon />],

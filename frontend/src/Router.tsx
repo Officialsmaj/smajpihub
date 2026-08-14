@@ -55,6 +55,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminHeroBannersPage from "./pages/admin/AdminHeroBannersPage";
 import {
   AdminDashboardPage,
+  AdminJobsReviewPage,
   AdminOnboardingPage,
   AdminOrdersPage,
   AdminProductsPage,
@@ -1034,6 +1035,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminHeroBannersPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/jobs",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminJobsReviewPage />
         </AdminLayout>
       </ProtectedRoute>
     ),

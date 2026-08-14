@@ -243,3 +243,33 @@ export const completeJobsBillingPayment = async (billingId: string, paymentId: s
   (await axiosClient.post<{ job?: JobsApiJob }>("/jobs/billing/complete", { billingId, paymentId, txid })).data;
 export const cancelJobsBillingPayment = async (billingId: string, paymentId: string) =>
   (await axiosClient.post("/jobs/billing/cancelled_payment", { billingId, paymentId })).data;
+
+export type JobsAdminReviewJob = JobsApiJob & { employerId?: string };
+export type JobsAdminReviewCompany = JobsApiCompany & {
+  verificationEvidence?: { registrationNumber?: string; businessEmail?: string; representativeRole?: string; notes?: string };
+  verificationRequestedAt?: string;
+};
+export type JobsAdminReviewProfile = {
+  id: string;
+  userId: string;
+  candidateName: string;
+  candidateAvatar?: string;
+  title?: string;
+  portfolio?: string;
+  verificationEvidence?: { portfolio?: string; credential?: string; notes?: string };
+  verificationRequestedAt?: string;
+};
+export const getJobsAdminReview = async () =>
+  (
+    await axiosClient.get<{ jobs: JobsAdminReviewJob[]; companies: JobsAdminReviewCompany[]; profiles: JobsAdminReviewProfile[] }>(
+      "/jobs/admin/review"
+    )
+  ).data;
+export const moderateJobPosting = async (id: string, status: "approved" | "rejected") =>
+  (await axiosClient.patch<{ moderationStatus: string; status: string }>(`/jobs/admin/jobs/${encodeURIComponent(id)}/moderate`, { status })).data;
+export const moderateJobCompany = async (id: string, status: "approved" | "rejected") =>
+  (await axiosClient.patch<{ moderationStatus: string }>(`/jobs/admin/companies/${encodeURIComponent(id)}/moderate`, { status })).data;
+export const verifyJobsCompany = async (id: string, status: "verified" | "pi_kyb" | "rejected") =>
+  (await axiosClient.patch<{ verificationStatus: string }>(`/jobs/admin/companies/${encodeURIComponent(id)}/verify`, { status })).data;
+export const verifyJobsCandidate = async (userId: string, status: "verified" | "rejected") =>
+  (await axiosClient.patch<{ verificationStatus: string }>(`/jobs/admin/profiles/${encodeURIComponent(userId)}/verify`, { status })).data;

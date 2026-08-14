@@ -9,6 +9,16 @@ import type { User } from "../../types/pi";
 import { getStreamAdminOverview, type StreamAdminOverview } from "../../lib/streamAdmin";
 import ActionDialog from "../../components/ActionDialog";
 import { showFeedback } from "../../lib/feedback";
+import {
+  getJobsAdminReview,
+  moderateJobPosting,
+  moderateJobCompany,
+  verifyJobsCompany,
+  verifyJobsCandidate,
+  type JobsAdminReviewJob,
+  type JobsAdminReviewCompany,
+  type JobsAdminReviewProfile,
+} from "../../lib/jobsApi";
 
 const PI_USER_STORAGE_KEY = "smaj_pi_user";
 
@@ -104,6 +114,7 @@ export const AdminDashboardPage = () => {
     ["Seller applications", stats?.pendingOnboarding || 0, "/admin/onboarding"],
     ["Open reports", stats?.unreadReports || 0, "/admin/reports"],
     ["Failed or cancelled payments", stats?.failedCancelledPayments || 0, "/admin/orders"],
+    ["Jobs moderation", stats?.pendingJobsModeration || 0, "/admin/jobs"],
     ["Stream moderation", streamOverview?.stats.pendingVideos || 0, "/admin/stream/moderation"],
   ] as const;
   const updatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not loaded";
@@ -226,6 +237,110 @@ export const AdminOnboardingPage = () => {
           <div className="row-actions"><button onClick={() => void update(item._id, "contacted")}>Contacted</button><button onClick={() => void update(item._id, "approved")}>Approve</button><button className="danger" onClick={() => void update(item._id, "rejected")}>Reject</button></div>
         </article>
       ))}</div> : <div className="private-state"><h2>No onboarding applications</h2><p>Try another filter or wait for new public applications.</p></div>}
+    </main>
+  );
+};
+
+export const AdminJobsReviewPage = () => {
+  const [jobs, setJobs] = useState<JobsAdminReviewJob[]>([]);
+  const [companies, setCompanies] = useState<JobsAdminReviewCompany[]>([]);
+  const [profiles, setProfiles] = useState<JobsAdminReviewProfile[]>([]);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    const data = await getJobsAdminReview();
+    setJobs(data.jobs);
+    setCompanies(data.companies);
+    setProfiles(data.profiles);
+  }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  const reportError = (error: unknown, fallback: string) =>
+    showFeedback((error as { response?: { data?: { message?: string } } }).response?.data?.message || fallback, "error");
+  const decideJob = async (id: string, status: "approved" | "rejected") => {
+    try {
+      await moderateJobPosting(id, status);
+      setMessage(`Job ${status}.`);
+      await load();
+    } catch (error) {
+      reportError(error, "Job could not be updated.");
+    }
+  };
+  const decideCompany = async (id: string, status: "verified" | "rejected") => {
+    try {
+      await Promise.all([
+        verifyJobsCompany(id, status),
+        moderateJobCompany(id, status === "verified" ? "approved" : "rejected"),
+      ]);
+      setMessage(`Company ${status === "verified" ? "verified and listed" : "rejected"}.`);
+      await load();
+    } catch (error) {
+      reportError(error, "Company could not be updated.");
+    }
+  };
+  const decideCandidate = async (userId: string, status: "verified" | "rejected") => {
+    try {
+      await verifyJobsCandidate(userId, status);
+      setMessage(`Candidate ${status === "verified" ? "verified" : "rejected"}.`);
+      await load();
+    } catch (error) {
+      reportError(error, "Candidate could not be updated.");
+    }
+  };
+
+  return (
+    <main className="private-page">
+      <Head title="Jobs Review" description="Approve job postings and review employer and candidate verification requests." />
+      <Notice text={message} />
+
+      <section className="admin-filter-bar"><span>{jobs.length} job postings pending review</span></section>
+      {jobs.length ? <div className="management-list">{jobs.map((job) => (
+        <article className="report-card" key={job.id}>
+          <div>
+            <span>{job.category} · {job.type}</span>
+            <h3>{job.title}</h3>
+            <p>{job.company} · {job.location}</p>
+            <small>{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</small>
+          </div>
+          <div className="row-actions">
+            <button onClick={() => void decideJob(job.id, "approved")}>Approve</button>
+            <button className="danger" onClick={() => void decideJob(job.id, "rejected")}>Reject</button>
+          </div>
+        </article>
+      ))}</div> : <div className="private-state"><h2>No job postings awaiting review</h2><p>New postings will show here until approved.</p></div>}
+
+      <section className="admin-filter-bar"><span>{companies.length} company verification requests</span></section>
+      {companies.length ? <div className="management-list">{companies.map((company) => (
+        <article className="report-card" key={company.id}>
+          <div>
+            <span>{company.field}</span>
+            <h3>{company.name}</h3>
+            <p>{company.website || "No website provided"}</p>
+            {company.verificationEvidence ? (
+              <p>Reg. {company.verificationEvidence.registrationNumber || "—"} · {company.verificationEvidence.businessEmail || "—"}</p>
+            ) : null}
+            <small>{company.verificationRequestedAt ? new Date(company.verificationRequestedAt).toLocaleString() : ""}</small>
+          </div>
+          <div className="row-actions">
+            <button onClick={() => void decideCompany(company.id, "verified")}>Verify</button>
+            <button className="danger" onClick={() => void decideCompany(company.id, "rejected")}>Reject</button>
+          </div>
+        </article>
+      ))}</div> : <div className="private-state"><h2>No company verification requests</h2><p>Employer verification submissions will show here.</p></div>}
+
+      <section className="admin-filter-bar"><span>{profiles.length} candidate verification requests</span></section>
+      {profiles.length ? <div className="management-list">{profiles.map((profile) => (
+        <article className="report-card" key={profile.userId}>
+          <div>
+            <span>{profile.title || "Candidate"}</span>
+            <h3>{profile.candidateName}</h3>
+            {profile.verificationEvidence ? <p>{profile.verificationEvidence.credential || "No credential provided"}</p> : null}
+            <small>{profile.verificationRequestedAt ? new Date(profile.verificationRequestedAt).toLocaleString() : ""}</small>
+          </div>
+          <div className="row-actions">
+            <button onClick={() => void decideCandidate(profile.userId, "verified")}>Verify</button>
+            <button className="danger" onClick={() => void decideCandidate(profile.userId, "rejected")}>Reject</button>
+          </div>
+        </article>
+      ))}</div> : <div className="private-state"><h2>No candidate verification requests</h2><p>Candidate verification submissions will show here.</p></div>}
     </main>
   );
 };

@@ -1132,6 +1132,44 @@ export default function mountJobsEndpoints(router: Router) {
     }
     res.json({ status });
   });
+  router.get("/admin/review", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user || !isAdmin(user))
+      return user
+        ? res.status(403).json({ error: "admin_required" })
+        : undefined;
+    const [jobs, companies, profiles] = await Promise.all([
+      req.app.locals.jobCollection
+        .find({ moderationStatus: "pending" })
+        .sort({ createdAt: -1 })
+        .toArray(),
+      req.app.locals.jobCompanyCollection
+        .find({ verificationStatus: "pending" })
+        .sort({ verificationRequestedAt: -1 })
+        .toArray(),
+      req.app.locals.jobProfileCollection
+        .find({ verificationStatus: "pending" })
+        .sort({ verificationRequestedAt: -1 })
+        .toArray(),
+    ]);
+    const profileUserIds = validObjectIds(profiles.map((profile: any) => profile.userId).filter(Boolean));
+    const profileUsers = profileUserIds.length && req.app.locals.userCollection
+      ? await req.app.locals.userCollection.find({ _id: { $in: profileUserIds } }).toArray()
+      : [];
+    const userById = new Map(profileUsers.map((candidate: any) => [candidate._id.toString(), candidate]));
+    res.json({
+      jobs: jobs.map(serializeJobDocument),
+      companies: companies.map(serializeJobDocument),
+      profiles: profiles.map((profile: any) => {
+        const candidate: any = userById.get(profile.userId);
+        return serializeJobDocument({
+          ...profile,
+          candidateName: candidate?.displayName || candidate?.username || profile.title || "Candidate",
+          candidateAvatar: candidate?.avatar || profile.avatarConfirmationValue || "",
+        });
+      }),
+    });
+  });
   router.patch("/admin/jobs/:id/moderate", async (req, res) => {
     const user = await requireEmployer(req, res);
     if (!user || !isAdmin(user))

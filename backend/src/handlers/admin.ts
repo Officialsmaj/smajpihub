@@ -170,7 +170,7 @@ export default function mountAdminEndpoints(router: Router) {
 
   router.get("/stats", async (req, res) => {
     try {
-      const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, notificationCollection } = req.app.locals;
+      const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, notificationCollection, jobCollection, jobCompanyCollection, jobProfileCollection } = req.app.locals;
       const sellerQuery = { $or: [{ role: "seller" }, { sellerActive: true }] };
       const activeProductQuery = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
       const pendingProductQuery = { hidden: { $ne: true }, $or: [{ reviewStatus: "pending" }, { approved: false, reviewStatus: { $ne: "rejected" } }] };
@@ -201,6 +201,9 @@ export default function mountAdminEndpoints(router: Router) {
         pendingOnboarding,
         notifications,
         unreadNotifications,
+        pendingJobs,
+        pendingJobCompanies,
+        pendingJobProfiles,
       ] = await Promise.all([
         safeCount(userCollection),
         safeCount(userCollection, { blocked: { $ne: true } }),
@@ -225,8 +228,12 @@ export default function mountAdminEndpoints(router: Router) {
         safeCount(onboardingCollection, { status: "pending" }),
         safeCount(notificationCollection),
         safeCount(notificationCollection, { read: false }),
+        safeCount(jobCollection, { moderationStatus: "pending" }),
+        safeCount(jobCompanyCollection, { verificationStatus: "pending" }),
+        safeCount(jobProfileCollection, { verificationStatus: "pending" }),
       ]);
       const reports = marketplaceReports + supportRequests;
+      const pendingJobsModeration = pendingJobs + pendingJobCompanies + pendingJobProfiles;
     const unreadReports = unreadMarketplaceReports + unreadSupportRequests;
     return res.status(200).json({
       stats: {
@@ -256,6 +263,10 @@ export default function mountAdminEndpoints(router: Router) {
         notifications,
         unreadNotifications,
         reportedProducts: unreadMarketplaceReports,
+        pendingJobs,
+        pendingJobCompanies,
+        pendingJobProfiles,
+        pendingJobsModeration,
       },
       updatedAt: new Date().toISOString(),
     });
