@@ -104,10 +104,17 @@ export default function mountMessageEndpoints(router: Router) {
     const conversations = await req.app.locals.conversationCollection.find({
       participants: uid,
       deletedBy: { $ne: uid },
-      ...(contextType === "jobs" ? { contextType: "jobs" } : { contextType: { $ne: "jobs" } }),
+      ...(contextType === "jobs"
+        ? { contextType: "jobs", applicationId: { $exists: true, $ne: "" }, jobId: { $exists: true, $ne: "" } }
+        : { contextType: { $ne: "jobs" } }),
     }).sort({ updatedAt: -1 }).toArray();
+    const visibleConversations = contextType === "jobs"
+      ? conversations.filter((conversation: Record<string, any>) =>
+        conversation.sellerId === uid || Boolean(conversation.lastMessage),
+      )
+      : conversations;
     const grouped = new Map<string, Array<Record<string, any>>>();
-    conversations.forEach((conversation: Record<string, any>) => {
+    visibleConversations.forEach((conversation: Record<string, any>) => {
       const key = conversation.pairKey || pairKeyFor(conversation.buyerId, conversation.sellerId);
       grouped.set(key, [...(grouped.get(key) || []), conversation]);
     });
@@ -126,9 +133,9 @@ export default function mountMessageEndpoints(router: Router) {
     const pairKey = pairKeyFor(user.uid, product.sellerId);
     const pairConversations = await req.app.locals.conversationCollection.find({
       $or: [
-        { pairKey },
-        { buyerId: user.uid, sellerId: product.sellerId },
-        { buyerId: product.sellerId, sellerId: user.uid },
+        { pairKey, contextType: { $ne: "jobs" } },
+        { buyerId: user.uid, sellerId: product.sellerId, contextType: { $ne: "jobs" } },
+        { buyerId: product.sellerId, sellerId: user.uid, contextType: { $ne: "jobs" } },
       ],
     }).sort({ updatedAt: -1 }).toArray();
     let conversation: Record<string, any> | null = await mergePairConversations(req, pairConversations);
@@ -171,6 +178,12 @@ export default function mountMessageEndpoints(router: Router) {
     const uid = currentUser.uid;
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: uid, deletedBy: { $ne: uid } });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    if (conversation.contextType === "jobs") {
+      if (!conversation.applicationId || !conversation.jobId)
+        return res.status(404).json({ error: "not_found", message: "Jobs conversation not found" });
+      if (!conversation.lastMessage && conversation.sellerId !== uid)
+        return res.status(403).json({ error: "employer_message_required", message: "The employer must send the first Jobs message." });
+    }
     await req.app.locals.messageCollection.updateMany({ conversationId: req.params.id, senderId: { $ne: uid }, readAt: { $exists: false } }, { $set: { readAt: new Date() } });
     const messages = (await req.app.locals.messageCollection.find({ conversationId: req.params.id }).sort({ createdAt: 1 }).toArray())
       .filter((message: Record<string, any>) => !Array.isArray(message.hiddenFor) || !message.hiddenFor.includes(uid));
