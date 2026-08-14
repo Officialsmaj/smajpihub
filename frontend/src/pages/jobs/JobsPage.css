@@ -1066,6 +1066,9 @@
 .jobs-page-heading > p {
   color: var(--muted);
 }
+.jobs-directory.jobs-directory-filtered {
+  padding-top: 16px;
+}
 .jobs-results-layout {
   display: grid;
   grid-template-columns: 210px 1fr;
@@ -2121,9 +2124,9 @@
   text-decoration: none;
 }
 .jobs-my-jobs-header a.active {
-  border-color: #2d2d2d;
+  border-color: var(--green);
   color: #fff;
-  background: #2d2d2d;
+  background: var(--green);
 }
 .jobs-my-jobs-header a b {
   min-width: 20px;

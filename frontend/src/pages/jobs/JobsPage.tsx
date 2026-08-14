@@ -278,7 +278,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [employerCompanies, setEmployerCompanies] = useState<JobsApiCompany[]>([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
-  const [resultsTotal, setResultsTotal] = useState(0);
   const [postCategory, setPostCategory] = useState("");
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
@@ -573,7 +572,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         if (jobsResponse.jobs.length) setJobs(jobsResponse.jobs);
         else setJobs([]);
         setPages(Math.max(1, jobsResponse.pagination.pages));
-        setResultsTotal(jobsResponse.pagination.total);
         if (nextCompanies.length) setCompanies(nextCompanies);
         setMetrics(nextMetrics);
         setSaved(new Set(savedJobs.map(job => job.id)));
@@ -2683,25 +2681,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             )}
           </section>
         ) : (
-          <section className="jobs-directory">
-            <div className="jobs-page-heading">
-              <span className="jobs-kicker">
-                {kind === "freelance"
-                  ? "PROJECT-BASED WORK"
-                  : "DISCOVER OPPORTUNITIES"}
-              </span>
-              <h1>
-                {kind === "freelance"
-                  ? "Freelance projects"
-                  : effectiveLocation
-                    ? `Jobs in ${effectiveLocation}`
-                    : "Find your next role"}
-              </h1>
-              <p>
-                {kind === "search" ? resultsTotal : listings.length} available{" "}
-                {kind === "search" && effectiveLocation ? `in ${effectiveLocation}` : "opportunities"}.
-              </p>
-            </div>
+          <section className={`jobs-directory${kind === "freelance" ? "" : " jobs-directory-filtered"}`}>
+            {kind === "freelance" ? (
+              <div className="jobs-page-heading">
+                <span className="jobs-kicker">PROJECT-BASED WORK</span>
+                <h1>Freelance projects</h1>
+                <p>{listings.length} available opportunities.</p>
+              </div>
+            ) : null}
             <div className="jobs-results-layout">
               <aside>
                 <b>Filter jobs</b>
@@ -2782,7 +2769,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <BookmarkBorderRoundedIcon />
                 <span>My Jobs</span>
               </NavLink>
-              <NavLink to="/services/jobs?tab=messages">
+              <NavLink
+                to="/services/jobs?tab=messages"
+                className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
+              >
                 <ChatOutlinedIcon />
                 <span>Messages</span>
               </NavLink>
@@ -2793,7 +2783,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             </>
           ) : (
             <>
-              <NavLink to="/services/jobs?tab=messages">
+              <NavLink
+                to="/services/jobs?tab=messages"
+                className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
+              >
                 <ChatOutlinedIcon />
                 <span>Messages</span>
               </NavLink>
