@@ -2769,13 +2769,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <BookmarkBorderRoundedIcon />
                 <span>My Jobs</span>
               </NavLink>
-              <NavLink
+              <Link
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
               >
                 <ChatOutlinedIcon />
                 <span>Messages</span>
-              </NavLink>
+              </Link>
               <NavLink to="/services/jobs/profile">
                 <PersonOutlineRoundedIcon />
                 <span>Profile</span>
@@ -2783,21 +2783,24 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             </>
           ) : (
             <>
-              <NavLink
+              <Link
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
               >
                 <ChatOutlinedIcon />
                 <span>Messages</span>
-              </NavLink>
+              </Link>
               <NavLink to="/services/jobs/candidates">
                 <PersonOutlineRoundedIcon />
                 <span>Candidates</span>
               </NavLink>
-              <NavLink to="/services/jobs?tab=employer-applications">
+              <Link
+                to="/services/jobs?tab=employer-applications"
+                className={kind === "home" && searchParams.get("tab") === "employer-applications" ? "active" : ""}
+              >
                 <WorkOutlineRoundedIcon />
                 <span>Applications</span>
-              </NavLink>
+              </Link>
               <NavLink to="/services/jobs/post">
                 <WorkOutlineRoundedIcon />
                 <span>Post job</span>
