@@ -1009,6 +1009,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     try {
       await updateEmployerApplication(applicationId, status);
       setEmployerApplications(current => current.map(item => (item.id === applicationId ? { ...item, status } : item)));
+      setSelectedCandidate(current => (current && current.id === applicationId ? { ...current, status } : current));
     } catch {
       setActionMessage("Application status could not be updated.");
     }
@@ -1316,9 +1317,27 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <p>Start a private Jobs conversation about this application.</p>
                     <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
                   </div>
+                ) : candidateDrawerTab === "Application" ? (
+                  <div className="jobs-candidate-profile-grid">
+                    <article>
+                      <span>Status</span>
+                      <select
+                        aria-label={`Status for ${selectedCandidate.jobTitle}`}
+                        value={selectedCandidate.status}
+                        onChange={event => void changeApplicationStatus(selectedCandidate.id, event.target.value)}
+                      >
+                        <option value="submitted">submitted</option>
+                        <option value="reviewing">reviewing</option>
+                        <option value="shortlisted">shortlisted</option>
+                        <option value="rejected">rejected</option>
+                        <option value="hired">hired</option>
+                      </select>
+                    </article>
+                    <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note attached."}</p></article>
+                  </div>
                 ) : (
                   <div className="jobs-candidate-profile-grid">
-                    <article className="wide"><span>{candidateDrawerTab}</span><p>{candidateDrawerTab === "Application" ? selectedCandidate.coverNote || "No cover note attached." : "No activity yet."}</p></article>
+                    <article className="wide"><span>{candidateDrawerTab}</span><p>No activity yet.</p></article>
                   </div>
                 )}
               </aside>
@@ -2063,7 +2082,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   {candidateDrawerTab === "Application" ? (
                     <div className="jobs-candidate-profile-grid">
                       <article><span>Applied for</span><b>{selectedCandidate.jobTitle}</b></article>
-                      <article><span>Status</span><b>{candidateStageForStatus(selectedCandidate.status)}</b></article>
+                      <article>
+                        <span>Status</span>
+                        <select
+                          aria-label={`Status for ${selectedCandidate.jobTitle}`}
+                          value={selectedCandidate.status}
+                          onChange={event => void changeApplicationStatus(selectedCandidate.id, event.target.value)}
+                        >
+                          <option value="submitted">submitted</option>
+                          <option value="reviewing">reviewing</option>
+                          <option value="shortlisted">shortlisted</option>
+                          <option value="rejected">rejected</option>
+                          <option value="hired">hired</option>
+                        </select>
+                      </article>
                       <article><span>Company</span><b>{selectedCandidate.company}</b></article>
                       <article><span>Applied on</span><b>{new Date(selectedCandidate.createdAt).toLocaleDateString()}</b></article>
                       <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note was provided."}</p></article>
