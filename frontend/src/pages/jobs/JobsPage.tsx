@@ -2777,7 +2777,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-location-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  if (postCountry.trim()) setPostStep("hires");
+                  setPostStep("hires");
                 }}
               >
                 <h2>Location type *</h2>
@@ -2799,30 +2799,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </button>
                   ))}
                 </div>
-                <label>
-                  Country or work location *
-                  <input
-                    name="country"
-                    required
-                    list="job-country-options"
-                    value={postCountry}
-                    onChange={event => setPostCountry(event.target.value)}
-                    placeholder="Search country"
-                    autoComplete="off"
-                  />
-                  <datalist id="job-country-options">
-                    <option value="🌐 Worldwide" />
-                    <option value="🏠 Remote" />
-                    {JOB_COUNTRIES.map(country => (
-                      <option key={country.code} value={country.label} />
-                    ))}
-                  </datalist>
-                </label>
                 <footer>
                   <button type="button" onClick={() => setPostStep("title")}>
                     ← Back
                   </button>
-                  <button type="submit" disabled={!postCountry.trim()}>
+                  <button type="submit">
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
@@ -2975,7 +2956,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     ["Job title", postJobTitle, "title"],
                     ["Location type", selectedPostLocationType.title, "location"],
                     ["Work mode", selectedPostLocationType.mode, "location"],
-                    ["Country", postCountry || "Not set", "location"],
+                    ["Country", postCountry || "Set on the next screen", "details"],
                     ["Number of hires", String(postHires), "hires"],
                     ["Hiring timeframe", postHiringTimeframe, "timeframe"],
                     ["Job type", postJobType, "type"],
