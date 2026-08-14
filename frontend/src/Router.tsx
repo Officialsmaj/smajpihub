@@ -69,6 +69,7 @@ import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
 import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
 import CourseDetailPage from "./pages/education/CourseDetailPage";
+import EducationCatalogPage from "./pages/education/EducationCatalogPage";
 import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
 import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
 import CartPage from "./pages/food-delivery/CartPage";
@@ -663,7 +664,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/services/education/courses",
-    element: <EducationPage />,
+    element: <EducationCatalogPage />,
+  },
+  {
+    path: "/services/education/categories/:categorySlug",
+    element: <EducationCatalogPage />,
   },
   {
     path: "/services/education/partners",

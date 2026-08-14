@@ -7,11 +7,7 @@ import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AppLayout from "../layouts/AppLayout";
 import EducationHeader from "./education/EducationHeader";
-import {
-  getEducationCategories,
-  getEducationCourses,
-  getEducationPartners,
-} from "../lib/educationApi";
+import { getEducationCategories, getEducationCourses, getEducationPartners } from "../lib/educationApi";
 import type { EducationCourse, EducationPartner } from "../types/education";
 import CategoryGrid from "../components/education/CategoryGrid";
 import CourseCard from "../components/education/CourseCard";
@@ -30,7 +26,6 @@ const EducationPage = () => {
   const [courses, setCourses] = useState<EducationCourse[]>([]);
   const [partners, setPartners] = useState<EducationPartner[]>([]);
   const [query, setQuery] = useState(() => searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,15 +67,15 @@ const EducationPage = () => {
 
   const filteredCourses = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return courses.filter((course) => {
-      const matchesQuery = !q ||
+    return courses.filter(course => {
+      const matchesQuery =
+        !q ||
         course.title.toLowerCase().includes(q) ||
         course.provider.toLowerCase().includes(q) ||
         course.category.toLowerCase().includes(q);
-      const matchesCategory = !selectedCategory || course.category === selectedCategory;
-      return matchesQuery && matchesCategory;
+      return matchesQuery;
     });
-  }, [courses, query, selectedCategory]);
+  }, [courses, query]);
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
@@ -91,8 +86,8 @@ const EducationPage = () => {
             <span className="education-kicker">SMAJ PI EDUCATION</span>
             <h1>Learn, apply, and pay with Pi.</h1>
             <p>
-              SMAJ Education brings online courses, verified tutors, certificates, and partner university access into one
-              Pi-powered learning marketplace.
+              SMAJ Education brings online courses, verified tutors, certificates, and partner university access into
+              one Pi-powered learning marketplace.
             </p>
             <div className="education-search" role="search">
               <SearchOutlinedIcon />
@@ -100,7 +95,7 @@ const EducationPage = () => {
                 type="search"
                 placeholder="Search universities, courses, tutors, certificates..."
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={event => setQuery(event.target.value)}
               />
               <Link to="/services/education/courses">Explore</Link>
             </div>
@@ -154,11 +149,7 @@ const EducationPage = () => {
               education partner is approved.
             </p>
           </div>
-          <CategoryGrid
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
+          <CategoryGrid categories={categories} />
         </section>
 
         <section className="education-section">
@@ -178,7 +169,7 @@ const EducationPage = () => {
             </div>
           ) : (
             <div className="education-course-grid">
-              {filteredCourses.map((course) => (
+              {filteredCourses.map(course => (
                 <CourseCard key={course.id} course={course} />
               ))}
             </div>
@@ -194,7 +185,7 @@ const EducationPage = () => {
             <div className="education-loading">Loading partners...</div>
           ) : (
             <div className="education-partner-list">
-              {partners.map((partner) => (
+              {partners.map(partner => (
                 <PartnerCard key={partner.id} partner={partner} />
               ))}
             </div>
@@ -215,7 +206,9 @@ const EducationPage = () => {
           <article>
             <SchoolOutlinedIcon />
             <h3>Learning Records</h3>
-            <p>Users can track courses, certificates, saved schools, and education payment history from their account.</p>
+            <p>
+              Users can track courses, certificates, saved schools, and education payment history from their account.
+            </p>
           </article>
         </section>
       </main>

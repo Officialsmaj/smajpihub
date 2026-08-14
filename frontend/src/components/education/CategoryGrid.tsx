@@ -1,24 +1,24 @@
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import { Link } from "react-router-dom";
 import type { EducationCategory } from "../../types/education";
+import { toEducationCategorySlug } from "../../utils/education";
 
 type CategoryGridProps = {
   categories: EducationCategory[];
   selected?: string;
-  onSelect?: (category: EducationCategory) => void;
 };
 
-const CategoryGrid = ({ categories, selected, onSelect }: CategoryGridProps) => (
+const CategoryGrid = ({ categories, selected }: CategoryGridProps) => (
   <div className="education-category-grid">
-    {categories.map((category) => (
-      <button
+    {categories.map(category => (
+      <Link
         key={category}
-        type="button"
+        to={`/services/education/categories/${toEducationCategorySlug(category)}`}
         className={`education-category-tile${selected === category ? " selected" : ""}`}
-        onClick={() => onSelect?.(category)}
       >
         <SchoolOutlinedIcon />
         <span>{category}</span>
-      </button>
+      </Link>
     ))}
   </div>
 );
