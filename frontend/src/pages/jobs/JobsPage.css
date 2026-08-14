@@ -969,6 +969,11 @@
 .job-card-main > p svg {
   font-size: 16px;
 }
+.job-card-main > .job-card-salary {
+  margin: 0 0 12px;
+  color: #5b2bd9;
+  font-size: 13px;
+}
 .job-card-main > div:last-of-type {
   display: flex;
   gap: 7px;
@@ -1195,6 +1200,12 @@
   display: flex;
   gap: 10px;
   margin: 25px 0;
+}
+.job-detail-salary {
+  display: block;
+  margin-top: 12px;
+  color: #5b2bd9;
+  font-size: 18px;
 }
 .job-detail-actions button,
 .job-form button {
@@ -2027,6 +2038,33 @@
 }
 .job-application-form h2 {
   margin: 0;
+}
+.job-application-profile {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  background: #fff;
+}
+.job-application-profile > div {
+  display: grid;
+  gap: 3px;
+}
+.job-application-profile span,
+.job-application-profile small {
+  color: #66746e;
+  font-size: 11px;
+}
+.job-application-profile strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+.job-application-profile > a {
+  width: fit-content;
+  color: #5b2bd9;
+  font-size: 12px;
+  font-weight: 800;
 }
 .job-application-form label {
   display: grid;

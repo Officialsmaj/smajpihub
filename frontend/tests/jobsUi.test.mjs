@@ -147,6 +147,8 @@ assert.match(page, /Your location/);
 assert.match(page, /Search city, country, or remote/);
 assert.match(page, /normalizeJobLocation/);
 assert.match(page, /jobs-directory-filtered/);
+assert.match(page, /job-card-salary/);
+assert.match(page, /Application profile and CV/);
 assert.match(page, /No jobs available in \$\{effectiveLocation\}/);
 assert.match(page, /Is this your current profile photo/);
 assert.match(page, /confirmJobsProfileAvatar/);

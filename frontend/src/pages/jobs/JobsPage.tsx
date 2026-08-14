@@ -240,6 +240,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
       <p>
         <LocationOnOutlinedIcon /> {job.location} · {job.mode} · {job.type}
       </p>
+      <strong className="job-card-salary">{job.salary?.trim() || "Compensation not specified"}</strong>
       <div>
         {job.skills.map(skill => (
           <span key={skill}>{skill}</span>
@@ -1285,6 +1286,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>
                   <LocationOnOutlinedIcon /> {selectedJob.location} · {selectedJob.mode} · {selectedJob.type}
                 </p>
+                <strong className="job-detail-salary">
+                  {selectedJob.salary?.trim() || "Compensation not specified"}
+                </strong>
                 <div className="job-detail-actions">
                   <button onClick={() => setApplyOpen(value => !value)}>Apply now</button>
                   <button onClick={() => saveJob(selectedJob.id)}>Save job</button>
@@ -1293,6 +1297,30 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 {applyOpen ? (
                   <form className="job-application-form" onSubmit={submitApplication}>
                     <h2>Apply for this role</h2>
+                    <section className="job-application-profile" aria-label="Application profile and CV">
+                      <div>
+                        <span>Applying as</span>
+                        <strong>{user?.displayName || user?.username || "Your SMAJ PI profile"}</strong>
+                        <small>
+                          {[profile?.title, profile?.location].filter(Boolean).join(" · ") ||
+                            "Complete your professional details before applying."}
+                        </small>
+                      </div>
+                      <div>
+                        <span>CV</span>
+                        <strong>{profile?.cv?.name || "No CV uploaded"}</strong>
+                        <small>
+                          {!profile?.cv
+                            ? "Add a CV to strengthen your application."
+                            : profile.cv.visibility === "applications"
+                              ? "This CV will be attached to your application."
+                              : profile.cv.visibility === "verified_employers"
+                                ? "This CV is shared only with verified employers."
+                                : "This CV is private and will not be attached."}
+                        </small>
+                      </div>
+                      <Link to="/services/jobs/profile">{profile?.cv ? "Review profile and CV" : "Add profile and CV"}</Link>
+                    </section>
                     <label>
                       Cover note
                       <textarea
@@ -1328,6 +1356,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <aside>
                 <p>Paid through the Pi ecosystem</p>
                 <hr />
+                <span>Compensation</span>
+                <b>{selectedJob.salary?.trim() || "Not specified"}</b>
                 <span>Category</span>
                 <strong>{selectedJob.category}</strong>
                 <span>Work type</span>
