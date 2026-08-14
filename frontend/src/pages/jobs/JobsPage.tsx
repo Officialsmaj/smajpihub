@@ -61,7 +61,7 @@ import {
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import "./JobsPage.css";
-import { JOB_CATEGORIES, JOB_COUNTRIES } from "../../content/jobOptions";
+import { JOB_CATEGORIES, JOB_COUNTRIES, JOB_LANGUAGES, JOB_PHONE_CODES } from "../../content/jobOptions";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { PI_USDT_RATE, piFromUsdt } from "../../lib/piPricing";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -388,6 +388,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     | "details"
   >("contact");
   const [postJobTitle, setPostJobTitle] = useState("");
+  const [postLanguage, setPostLanguage] = useState("English");
+  const [postPostingRegion, setPostPostingRegion] = useState("United States");
   const [postLocationType, setPostLocationType] = useState<(typeof employerLocationTypes)[number]["id"]>("in-person");
   const [postCountry, setPostCountry] = useState("");
   const [postHires, setPostHires] = useState(0);
@@ -446,7 +448,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const filteredEmployerJobTitles = useMemo(() => {
     const typed = postJobTitle.trim().toLowerCase();
     return [...new Set([...employerJobTitleSuggestions, ...jobs.map(job => job.title)])]
-      .filter(title => (typed ? title.toLowerCase().includes(typed) : true))
+      .filter(title => (typed ? title.toLowerCase().includes(typed) && title.toLowerCase() !== typed : true))
       .slice(0, 5);
   }, [jobs, postJobTitle]);
   const selectedPostLocationType =
@@ -2694,11 +2696,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <small>For account management communication. Not visible to job seekers.</small>
                   <span className="jobs-phone-input">
                     <select name="phoneCountry" defaultValue="+234" aria-label="Phone country code">
-                      <option value="+234">NG +234</option>
-                      <option value="+971">AE +971</option>
-                      <option value="+1">US +1</option>
-                      <option value="+44">GB +44</option>
-                      <option value="+91">IN +91</option>
+                      {JOB_PHONE_CODES.map(entry => (
+                        <option key={entry.code} value={entry.dialCode}>
+                          {entry.code} {entry.dialCode}
+                        </option>
+                      ))}
                     </select>
                     <input name="phoneNumber" type="tel" placeholder="806-161-7175" defaultValue={user?.contactPhone} />
                   </span>
@@ -2740,8 +2742,34 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               >
                 <header>
                   <h2>Job title *</h2>
-                  <p>Job post will be in <b>English</b> in</p>
-                  <button type="button">United States <span aria-hidden="true">✎</span></button>
+                  <p>
+                    Job post will be in{" "}
+                    <select
+                      className="jobs-title-inline-select"
+                      value={postLanguage}
+                      onChange={event => setPostLanguage(event.target.value)}
+                      aria-label="Job post language"
+                    >
+                      {JOB_LANGUAGES.map(language => (
+                        <option key={language} value={language}>
+                          {language}
+                        </option>
+                      ))}
+                    </select>{" "}
+                    in
+                  </p>
+                  <select
+                    className="jobs-title-inline-select jobs-title-region-select"
+                    value={postPostingRegion}
+                    onChange={event => setPostPostingRegion(event.target.value)}
+                    aria-label="Job post region"
+                  >
+                    {JOB_COUNTRIES.map(country => (
+                      <option key={country.code} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
                 </header>
                 <label>
                   Job title *

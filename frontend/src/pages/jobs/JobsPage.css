@@ -1406,6 +1406,25 @@
   margin-left: 8px;
   color: #0b5bdc;
 }
+.jobs-employer-title-form header select.jobs-title-inline-select {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px dashed currentColor;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.jobs-employer-title-form header p select.jobs-title-inline-select {
+  color: #333;
+  font-weight: 700;
+  font-size: 12px;
+}
+.jobs-employer-title-form header select.jobs-title-region-select {
+  width: max-content;
+  color: #0b5bdc;
+  font-weight: 800;
+}
 .jobs-employer-title-form label {
   display: grid;
   gap: 8px;
@@ -1458,22 +1477,30 @@
   bottom: 0;
   left: 0;
   z-index: 120;
+  display: grid;
+  grid-template-columns: minmax(96px, 0.7fr) minmax(150px, 1.3fr);
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
   background: #fff;
   box-shadow: 0 -10px 22px rgb(0 0 0 / 8%);
 }
 .jobs-employer-title-form footer button {
-  width: min(520px, 100%);
   min-height: 45px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 0;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  color: #fff;
-  background: #0b5bdc;
+  color: #0b5bdc;
+  background: #fff;
   font-weight: 900;
+}
+.jobs-employer-title-form footer button:last-child {
+  color: #fff;
+  border-color: #0b5bdc;
+  background: #0b5bdc;
 }
 .jobs-employer-title-form footer button:disabled {
   opacity: 0.55;
@@ -1705,8 +1732,7 @@
   background: #fff;
   font-weight: 900;
 }
-.jobs-employer-step-form footer button:last-child,
-.jobs-sponsor-step footer button {
+.jobs-employer-step-form footer button:last-child {
   color: #fff;
   border-color: #0b5bdc;
   background: #0b5bdc;
@@ -1834,9 +1860,6 @@
 .jobs-sponsor-plans span {
   font-weight: 800;
 }
-.jobs-sponsor-step footer {
-  grid-template-columns: 1fr;
-}
 .job-form label {
   display: grid;
   gap: 7px;
@@ -1860,6 +1883,26 @@
 }
 .job-form button {
   justify-self: start;
+}
+.job-form footer {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.7fr) minmax(150px, 1.3fr);
+  gap: 10px;
+}
+.job-form footer button {
+  min-height: 45px;
+  justify-self: stretch;
+  border: 1px solid #e0e0e0;
+  color: var(--green);
+  background: #fff;
+}
+.job-form footer button:last-child {
+  border-color: var(--green);
+  color: #fff;
+  background: var(--green);
+}
+.job-form footer button:disabled {
+  opacity: 0.55;
 }
 .job-form .jobs-profile-identity {
   padding: 14px;
