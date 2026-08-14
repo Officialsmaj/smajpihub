@@ -444,6 +444,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     setPostAfterWorkspaceSwitch(true);
     setWorkspaceSwitchingTo("employer");
   };
+  const renderCandidateAvatar = (application: JobsApiApplication) => {
+    const snapshot = application.profileSnapshot;
+    const avatar = snapshot?.avatarConfirmationValue || "";
+    const label = snapshot?.title || application.jobTitle || "Candidate";
+    return (
+      <span className="jobs-candidate-avatar">
+        {avatar ? <img src={avatar} alt="" /> : label.slice(0, 1).toUpperCase()}
+      </span>
+    );
+  };
   const activeWorkspaceMode =
     kind === "employer" || kind === "post" || kind === "candidates"
       ? "employer"
@@ -1886,9 +1896,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <h2>{stage} <span>{filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).length}</span></h2>
                     {filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).map(application => (
                       <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
-                        <b>{application.profileSnapshot?.title || "Candidate"}</b>
-                        <span>{application.jobTitle}</span>
-                        <small>{application.profileSnapshot?.location || application.company}</small>
+                        {renderCandidateAvatar(application)}
+                        <span>
+                          <b>{application.profileSnapshot?.title || "Candidate"}</b>
+                          <small>{application.jobTitle}</small>
+                          <small>{application.profileSnapshot?.location || application.company}</small>
+                        </span>
                       </button>
                     ))}
                   </section>
@@ -1898,6 +1911,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <div className="jobs-candidate-list">
                 {filteredCandidates.map(application => (
                   <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
+                    {renderCandidateAvatar(application)}
                     <span><b>{application.profileSnapshot?.title || "Candidate"}</b><small>{application.profileSnapshot?.location || "Location not added"}</small></span>
                     <span>{application.jobTitle}</span>
                     <b>{candidateStageForStatus(application.status)}</b>
@@ -1910,15 +1924,41 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <aside className="jobs-candidate-drawer" role="dialog" aria-modal="true" aria-label="Candidate profile">
                 <button type="button" aria-label="Close candidate profile" onClick={() => setSelectedCandidate(null)}>x</button>
                 <header>
-                  <h2>{selectedCandidate.profileSnapshot?.title || "Candidate profile"}</h2>
+                  {renderCandidateAvatar(selectedCandidate)}
+                  <div>
+                    <h2>{selectedCandidate.profileSnapshot?.title || "Candidate profile"}</h2>
                   <p>{selectedCandidate.jobTitle} · {candidateStageForStatus(selectedCandidate.status)}</p>
+                  </div>
                 </header>
                 <nav>
                   {candidateDrawerTabs.map(tab => <button type="button" key={tab} className={candidateDrawerTab === tab ? "active" : ""} onClick={() => setCandidateDrawerTab(tab)}>{tab}</button>)}
                 </nav>
                 <section>
-                  {candidateDrawerTab === "Profile" ? <p>{selectedCandidate.profileSnapshot?.summary || "No professional summary added."}</p> : null}
-                  {candidateDrawerTab === "Application" ? <p>{selectedCandidate.coverNote || "No cover note was provided."}</p> : null}
+                  {candidateDrawerTab === "Profile" ? (
+                    <div className="jobs-candidate-profile-grid">
+                      <article><span>Professional title</span><b>{selectedCandidate.profileSnapshot?.title || "Not added"}</b></article>
+                      <article><span>Location</span><b>{selectedCandidate.profileSnapshot?.location || "Not added"}</b></article>
+                      <article><span>Availability</span><b>{selectedCandidate.profileSnapshot?.availability || "Not added"}</b></article>
+                      <article>
+                        <span>Skills</span>
+                        <b>
+                          {Array.isArray(selectedCandidate.profileSnapshot?.skills)
+                            ? selectedCandidate.profileSnapshot?.skills.join(", ")
+                            : selectedCandidate.profileSnapshot?.skills || "Not added"}
+                        </b>
+                      </article>
+                      <article className="wide"><span>Summary</span><p>{selectedCandidate.profileSnapshot?.summary || "No professional summary added."}</p></article>
+                    </div>
+                  ) : null}
+                  {candidateDrawerTab === "Application" ? (
+                    <div className="jobs-candidate-profile-grid">
+                      <article><span>Applied for</span><b>{selectedCandidate.jobTitle}</b></article>
+                      <article><span>Status</span><b>{candidateStageForStatus(selectedCandidate.status)}</b></article>
+                      <article><span>Company</span><b>{selectedCandidate.company}</b></article>
+                      <article><span>Applied on</span><b>{new Date(selectedCandidate.createdAt).toLocaleDateString()}</b></article>
+                      <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note was provided."}</p></article>
+                    </div>
+                  ) : null}
                   {candidateDrawerTab === "Messages" ? (
                     <div className="jobs-candidate-message-start">
                       <p>Start a private Jobs conversation about this application.</p>

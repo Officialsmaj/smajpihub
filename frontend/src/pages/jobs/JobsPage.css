@@ -2690,13 +2690,19 @@
   width: 100%;
   padding: 14px;
   display: grid;
+  grid-template-columns: auto 1fr;
   gap: 5px;
+  align-items: start;
   border: 1px solid #dfe8e3;
   border-radius: 8px;
   color: var(--ink);
   background: #fff;
   text-align: left;
   font: inherit;
+}
+.jobs-candidate-pipeline section > button > span:not(.jobs-candidate-avatar) {
+  display: grid;
+  gap: 4px;
 }
 .jobs-candidate-pipeline section > button + button {
   margin-top: 10px;
@@ -2710,8 +2716,25 @@
   gap: 10px;
 }
 .jobs-candidate-list > button {
-  grid-template-columns: 1.2fr 1fr auto;
+  grid-template-columns: auto 1.2fr 1fr auto;
   align-items: center;
+}
+.jobs-candidate-avatar {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  background: #6d3df5;
+  font-weight: 900;
+}
+.jobs-candidate-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .jobs-candidate-drawer {
   width: min(420px, 100%);
@@ -2730,6 +2753,16 @@
   border: 0;
   background: transparent;
   font-size: 20px;
+}
+.jobs-candidate-drawer header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.jobs-candidate-drawer header h2,
+.jobs-candidate-drawer header p {
+  margin: 0 0 5px;
 }
 .jobs-candidate-drawer nav {
   display: flex;
@@ -2754,6 +2787,31 @@
   border: 1px solid #d7e2dd;
   border-radius: 8px;
   font: inherit;
+}
+.jobs-candidate-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.jobs-candidate-profile-grid article {
+  padding: 12px;
+  border: 1px solid #e1e9e5;
+  border-radius: 12px;
+  background: #f8fbf9;
+}
+.jobs-candidate-profile-grid article.wide {
+  grid-column: 1 / -1;
+}
+.jobs-candidate-profile-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.jobs-candidate-profile-grid b,
+.jobs-candidate-profile-grid p {
+  margin: 0;
+  color: var(--ink);
 }
 .jobs-profile-overview {
   max-width: 760px;

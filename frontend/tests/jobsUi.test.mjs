@@ -64,6 +64,8 @@ assert.match(page, /Play employer hero video/);
 assert.match(page, /navigate\("\/services\/jobs"\)/);
 assert.match(page, /jobs-candidates-page/);
 assert.match(page, /jobs-candidate-tabs/);
+assert.match(page, /jobs-candidate-avatar/);
+assert.match(page, /jobs-candidate-profile-grid/);
 assert.doesNotMatch(page, /HIRING PIPELINE/);
 assert.doesNotMatch(page, /Review applicants, move candidates through stages/);
 assert.match(page, /candidateStages/);
