@@ -20,6 +20,32 @@
   background: #fff4df;
   color: #6b4300;
 }
+.jobs-workspace-switching {
+  position: fixed;
+  z-index: 2147483000;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  color: #1b2e44;
+  background: rgb(255 255 255 / 88%);
+  text-align: center;
+  font-weight: 900;
+}
+.jobs-workspace-switching i {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+  border: 3px solid #ded6fb;
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: jobs-spin 0.85s linear infinite;
+}
+@keyframes jobs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .jobs-pagination {
   display: flex;
   justify-content: center;

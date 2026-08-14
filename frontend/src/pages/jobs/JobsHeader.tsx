@@ -10,7 +10,6 @@ const candidateLinks = [
   ["activity?tab=actions", "Employer invites"],
   ["search#alerts", "Job alerts"],
   ["companies", "Companies"],
-  ["freelance", "Freelance projects"],
   ["settings", "Settings"],
 ] as const;
 

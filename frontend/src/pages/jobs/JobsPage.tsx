@@ -282,6 +282,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postDescription, setPostDescription] = useState("");
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
   const [employerHeroVideoPaused, setEmployerHeroVideoPaused] = useState(false);
+  const [workspaceSwitchingTo, setWorkspaceSwitchingTo] = useState<"candidate" | "employer" | "">("");
   const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
@@ -309,6 +310,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   useEffect(() => {
     if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
   }, [kind, searchParams]);
+  useEffect(() => {
+    if (!workspaceSwitchingTo) return;
+    const timer = window.setTimeout(() => {
+      setWorkspaceMode(workspaceSwitchingTo);
+      setWorkspaceSwitchingTo("");
+      navigate("/services/jobs");
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [navigate, workspaceSwitchingTo]);
   const activeWorkspaceMode =
     kind === "employer" || kind === "post"
       ? "employer"
@@ -715,10 +725,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           onQueryChange={setQuery}
           workspaceMode={activeWorkspaceMode}
           onWorkspaceModeChange={mode => {
-            setWorkspaceMode(mode);
-            navigate("/services/jobs");
+            if (mode === activeWorkspaceMode) return;
+            setWorkspaceSwitchingTo(mode);
           }}
         />
+        {workspaceSwitchingTo ? (
+          <div className="jobs-workspace-switching" role="status" aria-live="polite">
+            <i />
+            <span>Switching to {workspaceSwitchingTo === "candidate" ? "Find work" : "Hire talent"}...</span>
+          </div>
+        ) : null}
         {showAvatarConfirmation ? (
           <div className="jobs-avatar-confirm-layer" role="dialog" aria-modal="true" aria-label="Confirm profile photo">
             <button
