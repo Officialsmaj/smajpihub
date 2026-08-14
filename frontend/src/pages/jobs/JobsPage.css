@@ -1061,10 +1061,6 @@
   font: inherit;
   text-decoration: none;
 }
-.jobs-search-employer-cta {
-  margin-top: 42px;
-  margin-bottom: 20px;
-}
 .jobs-page-heading {
   margin-bottom: 35px;
 }
@@ -2233,9 +2229,15 @@
   width: 12px;
   height: 12px;
   display: inline-block;
-  margin: 0 0 0 2px;
+  margin: 0;
   border-radius: 50%;
   background: #ad2870;
+}
+.jobs-application-status-line {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .jobs-my-job-menu {
   position: absolute;
@@ -2249,7 +2251,7 @@
 }
 .jobs-status-badge {
   width: max-content;
-  margin: 0 0 16px;
+  margin: 0;
   padding: 8px 14px;
   display: block;
   border-radius: 10px;
@@ -2424,8 +2426,8 @@
   background: rgba(0, 0, 0, 0.35);
 }
 .jobs-bottom-sheet {
-  width: min(100%, 720px);
-  padding: 30px 26px 110px;
+  width: min(100%, 560px);
+  padding: 22px 22px 28px;
   border-radius: 28px 28px 0 0;
   background: #fff;
   box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.14);
@@ -2435,13 +2437,13 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .jobs-bottom-sheet header h2 {
   max-width: 70%;
   margin: 0;
   color: #303030;
-  font-size: 1.55rem;
+  font-size: 1.25rem;
   text-align: center;
 }
 .jobs-bottom-sheet header button {
@@ -2449,21 +2451,29 @@
   right: 0;
   border: 0;
   background: transparent;
-  font-size: 2.2rem;
+  font-size: 1.8rem;
 }
 .jobs-bottom-sheet > button {
   width: 100%;
-  min-height: 70px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   border: 0;
   color: #303030;
   background: transparent;
   text-align: left;
-  font-size: 1.35rem;
+  font-size: 1rem;
   font-weight: 900;
 }
+.jobs-bottom-sheet > button svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
 .jobs-withdraw-sheet div {
-  margin: 24px 0;
-  padding: 18px;
+  margin: 14px 0;
+  padding: 13px;
   background: #e6e3e3;
 }
 .jobs-withdraw-sheet div h3,
@@ -2471,8 +2481,9 @@
   margin: 0 0 8px;
 }
 .jobs-withdraw-sheet > button {
-  min-height: 66px;
-  margin-top: 14px;
+  min-height: 50px;
+  margin-top: 8px;
+  justify-content: center;
   border: 2px solid #dfd9d4;
   border-radius: 12px;
   color: #075bd8;

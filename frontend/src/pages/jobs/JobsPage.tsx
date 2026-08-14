@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
@@ -9,6 +10,7 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -135,6 +137,7 @@ const getCandidateApplicationUi = (status: string) => {
   }
   return { badge: "Applied", tone: "applied", action: "none" };
 };
+const applicationUpdateKey = (application: JobsApiApplication) => `${application.id}:${application.status}`;
 
 const fallbackJobs: Job[] = [
   {
@@ -262,6 +265,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [applications, setApplications] = useState<JobsApiApplication[]>([]);
+  const [readApplicationUpdates, setReadApplicationUpdates] = useState<Set<string>>(() => {
+    try {
+      return new Set<string>(JSON.parse(window.localStorage.getItem("smaj_jobs_read_application_updates") || "[]") as string[]);
+    } catch {
+      return new Set<string>();
+    }
+  });
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
@@ -638,6 +648,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       ? visibleJobs.filter(job => job.freelance)
       : visibleJobs;
   const savedJobs = visibleJobs.filter(job => saved.has(job.id));
+  const markApplicationUpdateRead = (application: JobsApiApplication) => {
+    const updateKey = applicationUpdateKey(application);
+    setReadApplicationUpdates(current => {
+      if (current.has(updateKey)) return current;
+      const next = new Set(current).add(updateKey);
+      window.localStorage.setItem("smaj_jobs_read_application_updates", JSON.stringify([...next]));
+      return next;
+    });
+  };
   const myJobsTab =
     kind === "applications"
       ? "applied"
@@ -1655,7 +1674,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <div className="jobs-my-jobs-list">
                   {savedJobs.map(job => (
                     <article key={job.id} className="jobs-my-job-card">
-                      <span className="jobs-my-job-dot" />
                       <button type="button" className="jobs-my-job-menu" aria-label={`Manage ${job.title}`}>
                         ⋮
                       </button>
@@ -1686,13 +1704,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   const applicationUi = getCandidateApplicationUi(application.status);
                   return (
                     <article key={application.id} className="jobs-my-job-card applied">
-                      <span className="jobs-my-job-dot" />
-                      <span className={`jobs-status-badge ${applicationUi.tone}`}>{applicationUi.badge}</span>
+                      <div className="jobs-application-status-line">
+                        {!readApplicationUpdates.has(applicationUpdateKey(application)) ? (
+                          <span className="jobs-my-job-dot" aria-label="New application update" />
+                        ) : null}
+                        <span className={`jobs-status-badge ${applicationUi.tone}`}>{applicationUi.badge}</span>
+                      </div>
                       <button
                         type="button"
                         className="jobs-my-job-menu"
                         aria-label={`Manage ${application.jobTitle}`}
-                        onClick={() => setManagedJobApplication(application)}
+                        onClick={() => {
+                          markApplicationUpdateRead(application);
+                          setManagedJobApplication(application);
+                        }}
                       >
                         ⋮
                       </button>
@@ -1758,8 +1783,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       ×
                     </button>
                   </header>
-                  <button type="button">▣ View and Manage Details</button>
-                  <button type="button">▾ Archive</button>
+                  <button type="button">
+                    <WorkOutlineRoundedIcon />
+                    <span>View and Manage Details</span>
+                  </button>
+                  <button type="button">
+                    <ArchiveOutlinedIcon />
+                    <span>Archive</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
@@ -1767,7 +1798,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       setManagedJobApplication(null);
                     }}
                   >
-                    ⊖ Withdraw application
+                    <RemoveCircleOutlineRoundedIcon />
+                    <span>Withdraw application</span>
                   </button>
                 </section>
               </div>
@@ -2767,18 +2799,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 ) : null}
               </div>
             </div>
-            {kind === "search" ? (
-              <section className="jobs-cta jobs-search-employer-cta">
-                <div>
-                  <span className="jobs-kicker">FOR EMPLOYERS</span>
-                  <h2>Meet talent that is ready to build.</h2>
-                  <p>Publish a role, review verified profiles and manage candidates in one place.</p>
-                </div>
-                <button type="button" onClick={openEmployerPostFlow}>
-                  Post your first job <ArrowForwardRoundedIcon />
-                </button>
-              </section>
-            ) : null}
           </section>
         )}
         {kind !== "post" ? <nav className="jobs-mobile-nav">
