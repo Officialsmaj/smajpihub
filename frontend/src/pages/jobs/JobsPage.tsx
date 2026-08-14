@@ -717,9 +717,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     }
   };
   useEffect(() => {
-    if (kind !== "home" || homeTab !== "messages") return;
+    if (kind === "post" || !user) return;
     let active = true;
-    setMessagesLoading(true);
+    if (kind === "home" && homeTab === "messages") setMessagesLoading(true);
     const load = () => axiosClient
       .get<{ conversations?: JobsConversation[] }>("/messages", { params: { context: "jobs" } })
       .then(({ data }) => {
@@ -737,7 +737,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       active = false;
       window.clearInterval(timer);
     };
-  }, [homeTab, kind]);
+  }, [homeTab, kind, user]);
 
   useEffect(() => {
     const conversationId = searchParams.get("conversation");
@@ -3283,7 +3283,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
               >
-                <ChatOutlinedIcon />
+                <span className="jobs-nav-icon-badge">
+                  <ChatOutlinedIcon />
+                  {unreadJobMessages > 0 ? <b>{unreadJobMessages > 9 ? "9+" : unreadJobMessages}</b> : null}
+                </span>
                 <span>Messages</span>
               </Link>
               <NavLink to="/services/jobs/profile">
@@ -3297,7 +3300,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
               >
-                <ChatOutlinedIcon />
+                <span className="jobs-nav-icon-badge">
+                  <ChatOutlinedIcon />
+                  {unreadJobMessages > 0 ? <b>{unreadJobMessages > 9 ? "9+" : unreadJobMessages}</b> : null}
+                </span>
                 <span>Messages</span>
               </Link>
               <NavLink to="/services/jobs/candidates">
