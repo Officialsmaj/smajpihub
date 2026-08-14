@@ -2079,11 +2079,18 @@
 .job-application-form button {
   width: fit-content;
   padding: 12px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 0;
   border-radius: 9px;
   color: #fff;
   background: var(--green);
   font-weight: 800;
+}
+.job-application-form button:disabled {
+  opacity: 0.72;
+  cursor: wait;
 }
 .jobs-application-list {
   display: grid;
@@ -3165,25 +3172,136 @@
   margin: 0 auto;
   padding: 42px 22px 96px;
 }
-.jobs-message-tabs {
+.jobs-messages-heading {
+  position: relative;
   display: flex;
-  gap: 8px;
-  margin: 18px 0;
-  overflow-x: auto;
+  align-items: center;
+  justify-content: space-between;
 }
-.jobs-message-tabs button {
-  min-height: 36px;
-  padding: 0 18px;
+.jobs-messages-heading > button {
+  width: 42px;
+  height: 42px;
+  position: relative;
+  display: grid;
+  place-items: center;
   border: 1px solid #ded7f0;
-  border-radius: 999px;
+  border-radius: 12px;
+  color: #4f4262;
   background: #fff;
-  color: #352552;
-  font-weight: 800;
 }
-.jobs-message-tabs button.active {
-  border-color: #6c3cff;
-  background: #6c3cff;
+.jobs-messages-heading > button.active {
   color: #fff;
+  border-color: var(--green);
+  background: var(--green);
+}
+.jobs-messages-heading > button b {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  background: #e11d48;
+  font-size: 8px;
+}
+.jobs-message-filter-menu {
+  width: 210px;
+  padding: 8px;
+  position: absolute;
+  z-index: 6;
+  top: 50px;
+  right: 0;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #e5e0ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(38, 24, 63, 0.16);
+}
+.jobs-message-filter-menu button {
+  min-height: 42px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 9px;
+  color: #352552;
+  background: transparent;
+  font-weight: 750;
+}
+.jobs-message-filter-menu button.active {
+  color: #5b2bd9;
+  background: #eee8ff;
+}
+.jobs-message-list {
+  display: grid;
+  gap: 10px;
+}
+.jobs-message-list > a {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e3e9e6;
+  border-radius: 14px;
+  color: var(--ink);
+  background: #fff;
+  text-decoration: none;
+}
+.jobs-message-avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--green);
+  font-weight: 850;
+}
+.jobs-message-list > a > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.jobs-message-list small {
+  overflow: hidden;
+  color: #6c7b75;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jobs-message-list i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.jobs-message-loading {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #6c7b75;
+}
+.jobs-message-loading span,
+.jobs-submit-spinner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: jobs-loading-pulse 900ms infinite alternate;
+}
+.jobs-message-loading span:nth-child(2) { animation-delay: 150ms; }
+.jobs-message-loading span:nth-child(3) { animation-delay: 300ms; }
+@keyframes jobs-loading-pulse {
+  to { opacity: 0.25; transform: translateY(-3px); }
 }
 .jobs-message-empty {
   min-height: 280px;

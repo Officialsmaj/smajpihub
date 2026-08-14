@@ -6,6 +6,7 @@ import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
@@ -57,6 +58,7 @@ import { JOB_CATEGORIES, JOB_COUNTRIES } from "../../content/jobOptions";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
 import { PI_USDT_RATE, piFromUsdt } from "../../lib/piPricing";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { axiosClient } from "../../lib/axiosClient";
 import JobPreferencesPanel from "./JobPreferencesPanel";
 
 export type JobsPageKind =
@@ -79,6 +81,16 @@ export type JobsPageKind =
   | "company";
 
 type Job = JobsApiJob;
+type JobsConversation = {
+  _id: string;
+  participantName?: string;
+  lastMessage?: string;
+  updatedAt?: string;
+  unreadBy?: string[];
+  contextType?: string;
+  jobId?: string;
+  applicationId?: string;
+};
 
 const formatJobsPi = (value: number) => `π ${value.toFixed(5).replace(/\.?0+$/, "")}`;
 const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
@@ -274,6 +286,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     }
   });
   const [applyOpen, setApplyOpen] = useState(false);
+  const [applicationSubmitting, setApplicationSubmitting] = useState(false);
   const [applyNote, setApplyNote] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [cvSaving, setCvSaving] = useState(false);
@@ -329,6 +342,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [candidateDrawerTab, setCandidateDrawerTab] = useState<(typeof candidateDrawerTabs)[number]>("Profile");
   const [managedJobApplication, setManagedJobApplication] = useState<JobsApiApplication | null>(null);
   const [withdrawJobApplication, setWithdrawJobApplication] = useState<JobsApiApplication | null>(null);
+  const [messageFilter, setMessageFilter] = useState<"all" | "unread" | "invites">("all");
+  const [messageFilterOpen, setMessageFilterOpen] = useState(false);
+  const [jobConversations, setJobConversations] = useState<JobsConversation[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
@@ -401,7 +418,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       ? "employer"
       : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility", "account-settings", "blocked-employers"].includes(kind)
         ? "candidate"
-        : workspaceMode;
+      : workspaceMode;
+  const visibleJobConversations = jobConversations.filter(conversation => {
+    if (messageFilter === "unread") return Boolean(user?.uid && conversation.unreadBy?.includes(user.uid));
+    if (messageFilter === "invites")
+      return conversation.contextType === "job_invite" || Boolean(conversation.jobId && !conversation.applicationId);
+    return true;
+  });
+  const unreadJobMessages = jobConversations.filter(conversation =>
+    Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)),
+  ).length;
   const currentAvatar = user?.avatar || "";
   const showAvatarConfirmation =
     kind === "profile" && Boolean(user) && !avatarPromptDismissed && profile?.avatarConfirmationValue !== currentAvatar;
@@ -551,6 +577,26 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     setLocation(nextLocation);
     setLocationSheetOpen(false);
   };
+  useEffect(() => {
+    if (kind !== "home" || homeTab !== "messages") return;
+    let active = true;
+    setMessagesLoading(true);
+    axiosClient
+      .get<{ conversations?: JobsConversation[] }>("/messages")
+      .then(({ data }) => {
+        if (active) setJobConversations(data.conversations || []);
+      })
+      .catch(() => {
+        if (active) setJobConversations([]);
+      })
+      .finally(() => {
+        if (active) setMessagesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [homeTab, kind]);
+
   useEffect(() => {
     if (!searchSheetOpen && !locationSheetOpen) return;
     const close = (event: KeyboardEvent) => {
@@ -749,15 +795,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   };
   const submitApplication = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedJob) return;
+    if (!selectedJob || applicationSubmitting) return;
+    const startedAt = Date.now();
+    setApplicationSubmitting(true);
     try {
       const application = await applyToJob(selectedJob.id, applyNote);
+      const remaining = 3000 - (Date.now() - startedAt);
+      if (remaining > 0) await new Promise(resolve => window.setTimeout(resolve, remaining));
       setApplications(current => [application, ...current]);
       setApplyOpen(false);
       setApplyNote("");
       setActionMessage("Application submitted successfully.");
     } catch {
+      const remaining = 3000 - (Date.now() - startedAt);
+      if (remaining > 0) await new Promise(resolve => window.setTimeout(resolve, remaining));
       setActionMessage("This application could not be submitted. Check whether you already applied and try again.");
+    } finally {
+      setApplicationSubmitting(false);
     }
   };
   const createCompany = async (event: FormEvent<HTMLFormElement>) => {
@@ -917,22 +971,59 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : null}
         {kind === "home" && homeTab === "messages" ? (
           <section className="jobs-messages-page">
-            <div className="jobs-page-heading">
+            <div className="jobs-page-heading jobs-messages-heading">
               <h1>Messages</h1>
+              <button
+                type="button"
+                className={messageFilter === "all" ? "" : "active"}
+                aria-label="Filter messages"
+                aria-expanded={messageFilterOpen}
+                onClick={() => setMessageFilterOpen(open => !open)}
+              >
+                <FilterListRoundedIcon />
+                {unreadJobMessages ? <b>{unreadJobMessages}</b> : null}
+              </button>
+              {messageFilterOpen ? (
+                <div className="jobs-message-filter-menu" role="menu">
+                  {(["all", "unread", "invites"] as const).map(filter => (
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={messageFilter === filter}
+                      className={messageFilter === filter ? "active" : ""}
+                      onClick={() => {
+                        setMessageFilter(filter);
+                        setMessageFilterOpen(false);
+                      }}
+                      key={filter}
+                    >
+                      <span>{filter === "all" ? "All messages" : filter === "unread" ? "Unread" : "Job invites"}</span>
+                      {messageFilter === filter ? <span aria-hidden="true">✓</span> : null}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <div className="jobs-message-tabs" aria-label="Message filters">
-              <button type="button" className="active">All</button>
-              <button type="button">Unread</button>
-              <button type="button">Invites</button>
-            </div>
-            <div className="workspace-empty jobs-message-empty">
+            {messagesLoading ? (
+              <div className="jobs-message-loading" role="status"><span /><span /><span />Loading messages…</div>
+            ) : visibleJobConversations.length ? (
+              <div className="jobs-message-list">
+                {visibleJobConversations.map(conversation => (
+                  <Link to={`/messages?conversation=${encodeURIComponent(conversation._id)}`} key={conversation._id}>
+                    <span className="jobs-message-avatar">{(conversation.participantName || "M").slice(0, 1).toUpperCase()}</span>
+                    <span><strong>{conversation.participantName || "SMAJ member"}</strong><small>{conversation.lastMessage || "Open conversation"}</small></span>
+                    {user?.uid && conversation.unreadBy?.includes(user.uid) ? <i aria-label="Unread message" /> : null}
+                  </Link>
+                ))}
+              </div>
+            ) : <div className="workspace-empty jobs-message-empty">
               <ChatOutlinedIcon />
-              <h2>No messages yet</h2>
+              <h2>{messageFilter === "all" ? "No messages yet" : messageFilter === "unread" ? "No unread messages" : "No job invites"}</h2>
               <p>When a verified employer or candidate contacts you, the conversation will show here.</p>
               <Link to={activeWorkspaceMode === "employer" ? "/services/jobs/candidates" : "/services/jobs/search"}>
                 {activeWorkspaceMode === "employer" ? "View candidates" : "Find opportunities"}
               </Link>
-            </div>
+            </div>}
           </section>
         ) : kind === "home" && homeTab === "employer-applications" ? (
           <section className="jobs-candidates-page jobs-employer-applications-page">
@@ -1367,7 +1458,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                         placeholder="Introduce yourself and explain why you are a strong match."
                       />
                     </label>
-                    <button type="submit">Submit application</button>
+                    <button type="submit" disabled={applicationSubmitting} aria-busy={applicationSubmitting}>
+                      {applicationSubmitting ? <><span className="jobs-submit-spinner" /> Submitting…</> : "Submit application"}
+                    </button>
                   </form>
                 ) : null}
                 <h2>About the role</h2>
