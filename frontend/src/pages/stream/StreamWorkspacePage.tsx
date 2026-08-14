@@ -545,6 +545,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const [downloaded, setDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [playbackId, setPlaybackId] = useState("");
+  const [playbackUnavailableMessage, setPlaybackUnavailableMessage] = useState("");
   const [downloadAllowed, setDownloadAllowed] = useState(false);
   const [ambientColor, setAmbientColor] = useState("rgb(24 16 27)");
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -561,13 +562,14 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       getStreamTitle(type, id),
       getStreamMyListStatus(type, id).catch(() => false),
       getStreamDownloadStatus(type, id).catch(() => false),
-      getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string; downloadAllowed: boolean } => ({ available: false, downloadAllowed: false })),
+      getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string; downloadAllowed: boolean; message?: string } => ({ available: false, downloadAllowed: false })),
     ])
       .then(([titleData, savedStatus, downloadStatus, availability]) => {
         setDetail(titleData as typeof detail);
         setSaved(savedStatus);
         setDownloaded(downloadStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
+        setPlaybackUnavailableMessage(availability.available ? "" : availability.message || "");
         setDownloadAllowed(availability.available && availability.downloadAllowed === true);
         setState("ready");
       })
@@ -770,7 +772,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
               </button>
             </div>
             {!playbackId ? (
-              <small className="sw-detail-watch-note unavailable">Not available yet on SMAJ Stream.</small>
+              <small className="sw-detail-watch-note unavailable">{playbackUnavailableMessage || "Not available yet on SMAJ Stream."}</small>
             ) : null}
             <div className="sw-detail-description">
               <p>{detail.overview || "No overview is available for this title yet."}</p>

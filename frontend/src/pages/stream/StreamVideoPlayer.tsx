@@ -84,7 +84,22 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       if (lastSavedRef.current > 0 && lastSavedRef.current < element.duration - 15)
         element.currentTime = lastSavedRef.current;
     };
+    const fail = (reason: string) => {
+      setMessage(reason);
+      setState("error");
+      hls?.destroy();
+    };
+    const onElementError = () => {
+      const code = element.error?.code;
+      fail(
+        code === MediaError.MEDIA_ERR_NETWORK ? "The video could not load. Check your connection and retry."
+          : code === MediaError.MEDIA_ERR_DECODE ? "This video file is corrupted and could not be decoded."
+          : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "This video format is not supported by your browser."
+          : "This video could not be played."
+      );
+    };
     element.addEventListener("loadedmetadata", resume, { once: true });
+    element.addEventListener("error", onElementError);
     if (video.sourceType === "mp4") element.src = video.playbackUrl;
     else if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
     else if (Hls.isSupported()) {
@@ -92,11 +107,12 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       hls.loadSource(video.playbackUrl);
       hls.attachMedia(element);
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) setMessage("Playback was interrupted. Check your connection and retry.");
+        if (data.fatal) fail("Playback was interrupted. Check your connection and retry.");
       });
-    } else setMessage("This browser cannot play HLS video.");
+    } else fail("This browser cannot play this video.");
     return () => {
       element.removeEventListener("loadedmetadata", resume);
+      element.removeEventListener("error", onElementError);
       hls?.destroy();
     };
   }, [video]);

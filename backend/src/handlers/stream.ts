@@ -50,6 +50,45 @@ const youtubeVideoId = (input: string) => {
   } catch { return null; }
 };
 
+const NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE = "No playable video source is available for this title.";
+
+type ArchiveOrgFile = { name?: unknown; format?: unknown; size?: unknown; private?: unknown };
+
+const ARCHIVE_IGNORED_NAME_PATTERN = /\.(xml|torrent|srt|vtt|sub|txt|pdf|sqlite|db|nfo|jpg|jpeg|png|gif|bmp|ico|json|tlg|log)$/i;
+const ARCHIVE_IGNORED_FORMAT_PATTERN = /thumbnail|tile|metadata|torrent|text|image|subtitle|caption|animated gif/i;
+const ARCHIVE_H264_MP4_NAME_PATTERN = /\.mp4$/i;
+const ARCHIVE_H264_FORMAT_PATTERN = /h\.?264/i;
+const ARCHIVE_MP4_NAME_PATTERN = /\.(mp4|m4v)$/i;
+const ARCHIVE_MP4_FORMAT_PATTERN = /mpeg-?4/i;
+const ARCHIVE_OTHER_VIDEO_NAME_PATTERN = /\.(webm|ogv|ogg)$/i;
+const ARCHIVE_OTHER_VIDEO_FORMAT_PATTERN = /webm|ogg video|ogv/i;
+
+const isPlayableArchiveCandidate = (file: ArchiveOrgFile) => {
+  const name = typeof file.name === "string" ? file.name : "";
+  if (!name || file.private === true || file.private === "true") return false;
+  if (ARCHIVE_IGNORED_NAME_PATTERN.test(name)) return false;
+  const format = typeof file.format === "string" ? file.format : "";
+  if (ARCHIVE_IGNORED_FORMAT_PATTERN.test(format)) return false;
+  return true;
+};
+
+const largestBySize = (files: ArchiveOrgFile[]) =>
+  files.length ? files.sort((left, right) => Number(right.size || 0) - Number(left.size || 0))[0] : null;
+
+// Selection order: H.264 MP4, then any other MPEG4/MP4, then another browser-playable format (WebM/Ogg).
+const selectPlayableArchiveFile = (files: ArchiveOrgFile[]): ArchiveOrgFile | null => {
+  const candidates = files.filter(isPlayableArchiveCandidate);
+  const h264Mp4 = largestBySize(candidates.filter(file =>
+    ARCHIVE_H264_MP4_NAME_PATTERN.test(String(file.name)) && ARCHIVE_H264_FORMAT_PATTERN.test(String(file.format || ""))));
+  if (h264Mp4) return h264Mp4;
+  const anyMp4 = largestBySize(candidates.filter(file =>
+    ARCHIVE_MP4_NAME_PATTERN.test(String(file.name)) || ARCHIVE_MP4_FORMAT_PATTERN.test(String(file.format || ""))));
+  if (anyMp4) return anyMp4;
+  const otherVideo = largestBySize(candidates.filter(file =>
+    ARCHIVE_OTHER_VIDEO_NAME_PATTERN.test(String(file.name)) || ARCHIVE_OTHER_VIDEO_FORMAT_PATTERN.test(String(file.format || ""))));
+  return otherVideo || null;
+};
+
 type YouTubePlaylistItemsResponse = {
   items?: Array<{
     snippet?: { resourceId?: { videoId?: string } };
@@ -967,11 +1006,9 @@ const mountStreamEndpoints = (router: Router) => {
       const response = await axios.get<{ metadata?: Record<string, unknown>; files?: Array<Record<string, unknown>> }>(`https://archive.org/metadata/${encodeURIComponent(identifier)}`, { timeout: 15_000 });
       const metadata = response.data.metadata || {};
       const files = response.data.files || [];
-      const mp4 = files
-        .filter(file => typeof file.name === "string" && /\.mp4$/i.test(file.name) && file.private !== true && file.private !== "true")
-        .sort((left, right) => Number(right.size || 0) - Number(left.size || 0))[0];
-      if (!mp4?.name) return res.status(422).json({ error: "mp4_missing", message: "This Archive item has no public MP4/H.264 file." });
-      const encodedName = String(mp4.name).split("/").map(encodeURIComponent).join("/");
+      const selected = selectPlayableArchiveFile(files);
+      if (!selected?.name) return res.status(422).json({ error: "no_playable_source", message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
+      const encodedName = String(selected.name).split("/").map(encodeURIComponent).join("/");
       const streamUrl = `https://archive.org/download/${encodeURIComponent(identifier)}/${encodedName}`;
       const now = new Date();
       const record = {
@@ -1100,7 +1137,10 @@ const mountStreamEndpoints = (router: Router) => {
     const user = await requireViewer(req, res); if (!user) return;
     if (!req.app.locals.streamContentCollection) return res.json({ available: false });
     const video = await req.app.locals.streamContentCollection.findOne({ "catalogAttachment.tmdbId": Number(req.params.id), "catalogAttachment.mediaType": req.params.type, visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready" });
-    return res.json(video ? { available: true, playbackId: video.cloudflareUid, title: video.title, downloadAllowed: video.downloadAllowed === true } : { available: false, downloadAllowed: false });
+    if (!video) return res.json({ available: false, downloadAllowed: false });
+    if (video.contentSource === "internet_archive" && !/^https:\/\/archive\.org\/download\//i.test(String(video.playback?.mp4 || "")))
+      return res.json({ available: false, downloadAllowed: false, message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
+    return res.json({ available: true, playbackId: video.cloudflareUid, title: video.title, downloadAllowed: video.downloadAllowed === true });
   });
 
   router.get("/live/:uid/playback", async (req, res) => {
@@ -1130,8 +1170,12 @@ const mountStreamEndpoints = (router: Router) => {
     let video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid });
     if (!video) video = await req.app.locals.streamContentCollection.findOne({ youtubeVideoId: uid });
     if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true) return res.status(404).json({ error: "not_available", message: "This video is not published or licensed for playback." });
-    if (video.contentSource === "internet_archive" && /^https:\/\/archive\.org\/download\//i.test(String(video.playback?.mp4 || "")))
-      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: video.playback.mp4, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
+    if (video.contentSource === "internet_archive") {
+      const archivePlaybackUrl = String(video.playback?.mp4 || "");
+      if (!/^https:\/\/archive\.org\/download\//i.test(archivePlaybackUrl))
+        return res.status(422).json({ error: "no_playable_source", message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
+      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: archivePlaybackUrl, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
+    }
     if (video.contentSource === "youtube" && video.youtubeVideoId) return res.json({ video: { id: String(video.cloudflareUid), sourceType: "youtube", youtubeVideoId: video.youtubeVideoId, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl, duration: video.duration || null } });
     let playback = video.playback as { hls?: string; dash?: string } | undefined;
     if ((!playback?.hls || video.processingStatus !== "ready") && env.cloudflare_stream_account_id && env.cloudflare_stream_api_token) {
