@@ -2079,23 +2079,23 @@
 }
 .jobs-my-jobs-page {
   min-height: 76vh;
-  padding: 34px 0 92px;
+  padding: 48px 0 100px;
   background: #fff;
 }
 .jobs-my-jobs-header {
-  padding: 0 18px 10px;
+  padding: 0 24px 12px;
   border-bottom: 1px solid #e2e2e2;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 .jobs-my-jobs-header h1 {
-  margin: 0 0 22px;
+  margin: 0 0 32px;
   color: #2d2d2d;
-  font-size: clamp(1.55rem, 6vw, 2rem);
+  font-size: clamp(1.9rem, 7vw, 2.45rem);
   letter-spacing: -0.04em;
 }
 .jobs-my-jobs-header nav {
   display: flex;
-  gap: 9px;
+  gap: 12px;
   overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
@@ -2104,18 +2104,18 @@
   display: none;
 }
 .jobs-my-jobs-header a {
-  min-height: 50px;
-  padding: 0 18px;
+  min-height: 64px;
+  padding: 0 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
   flex: 0 0 auto;
-  border: 1px solid #e4e1df;
+  border: 2px solid #e4e1df;
   border-radius: 999px;
   color: #303030;
   background: #fff;
-  font-size: 1rem;
+  font-size: clamp(1.05rem, 4.7vw, 1.28rem);
   font-weight: 700;
   text-decoration: none;
 }
@@ -2125,25 +2125,25 @@
   background: #2d2d2d;
 }
 .jobs-my-jobs-header a b {
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 28px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   color: #303030;
   background: #f1f1f1;
-  font-size: 0.86rem;
+  font-size: 0.95rem;
 }
 .jobs-my-jobs-list {
-  padding: 24px 18px;
+  padding: 30px 24px;
   display: grid;
-  gap: 18px;
+  gap: 24px;
 }
 .jobs-my-jobs-list > h2 {
   margin: 0;
   color: #555;
-  font-size: clamp(1.35rem, 5.5vw, 1.8rem);
+  font-size: clamp(1.65rem, 6vw, 2.2rem);
 }
 .jobs-my-job-card {
   position: relative;
