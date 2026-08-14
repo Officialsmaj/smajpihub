@@ -3,10 +3,11 @@ import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-ro
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
-import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -315,6 +316,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
   const navigate = useNavigate();
+  const homeTab = kind === "home" ? searchParams.get("tab") || "" : "";
   const filteredEmployerJobTitles = useMemo(() => {
     const typed = postJobTitle.trim().toLowerCase();
     return [...new Set([...employerJobTitleSuggestions, ...jobs.map(job => job.title)])]
@@ -834,7 +836,67 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             {error}
           </p>
         ) : null}
-        {kind === "home" ? (
+        {kind === "home" && homeTab === "messages" ? (
+          <section className="jobs-messages-page">
+            <div className="jobs-page-heading">
+              <span className="jobs-kicker">MESSAGES</span>
+              <h1>Your conversations</h1>
+              <p>Employer chats, candidate replies, interview notes, and SMAJ PI HUB updates will appear here.</p>
+            </div>
+            <div className="jobs-message-tabs" aria-label="Message filters">
+              <button type="button" className="active">All</button>
+              <button type="button">Unread</button>
+              <button type="button">Invites</button>
+            </div>
+            <div className="workspace-empty jobs-message-empty">
+              <ChatBubbleOutlineRoundedIcon />
+              <h2>No messages yet</h2>
+              <p>When a verified employer or candidate contacts you, the conversation will show here.</p>
+              <Link to={activeWorkspaceMode === "employer" ? "/services/jobs/candidates" : "/services/jobs/search"}>
+                {activeWorkspaceMode === "employer" ? "View candidates" : "Find opportunities"}
+              </Link>
+            </div>
+          </section>
+        ) : kind === "home" && homeTab === "employer-applications" ? (
+          <section className="jobs-candidates-page jobs-employer-applications-page">
+            <div className="jobs-page-heading">
+              <span className="jobs-kicker">APPLICATIONS</span>
+              <h1>Employer applications</h1>
+              <p>Review candidate submissions for your posted SMAJ PI HUB roles.</p>
+            </div>
+            <div className="jobs-application-list">
+              {employerApplications.map(application => (
+                <article key={application.id}>
+                  <div>
+                    <h2>{application.jobTitle}</h2>
+                    <p>
+                      {application.profileSnapshot?.title || "Candidate"} · {application.company}
+                    </p>
+                  </div>
+                  <select
+                    aria-label={`Status for ${application.jobTitle}`}
+                    value={application.status}
+                    onChange={event => void changeApplicationStatus(application.id, event.target.value)}
+                  >
+                    <option>submitted</option>
+                    <option>reviewing</option>
+                    <option>shortlisted</option>
+                    <option>rejected</option>
+                    <option>hired</option>
+                  </select>
+                </article>
+              ))}
+              {!employerApplications.length ? (
+                <div className="workspace-empty">
+                  <WorkOutlineRoundedIcon />
+                  <h2>No applications yet</h2>
+                  <p>Applications for your posted jobs will appear here.</p>
+                  <Link to="/services/jobs/post">Post a job</Link>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : kind === "home" ? (
           activeWorkspaceMode === "employer" ? (
             <>
               <section className="jobs-employer-home">
@@ -2514,9 +2576,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </NavLink>
           {activeWorkspaceMode === "candidate" ? (
             <>
-              <NavLink to="/services/jobs/search">
-                <SearchRoundedIcon />
-                <span>Jobs</span>
+              <NavLink to="/services/jobs?tab=messages">
+                <ChatBubbleOutlineRoundedIcon />
+                <span>Messages</span>
               </NavLink>
               <NavLink to="/services/jobs/saved">
                 <BookmarkBorderRoundedIcon />
@@ -2527,23 +2589,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <span>Applications</span>
               </NavLink>
               <NavLink to="/services/jobs/profile">
-                <BusinessRoundedIcon />
+                <PersonOutlineRoundedIcon />
                 <span>Profile</span>
               </NavLink>
             </>
           ) : (
             <>
+              <NavLink to="/services/jobs?tab=messages">
+                <ChatBubbleOutlineRoundedIcon />
+                <span>Messages</span>
+              </NavLink>
               <NavLink to="/services/jobs/candidates">
-                <SearchRoundedIcon />
+                <PersonOutlineRoundedIcon />
                 <span>Candidates</span>
               </NavLink>
-              <NavLink to="/services/jobs/employer">
-                <BusinessRoundedIcon />
-                <span>Dashboard</span>
-              </NavLink>
-              <NavLink to="/services/jobs/companies">
-                <BusinessRoundedIcon />
-                <span>Companies</span>
+              <NavLink to="/services/jobs?tab=employer-applications">
+                <WorkOutlineRoundedIcon />
+                <span>Applications</span>
               </NavLink>
               <NavLink to="/services/jobs/post">
                 <WorkOutlineRoundedIcon />

@@ -2742,6 +2742,35 @@
   background: var(--green);
   font-weight: 800;
 }
+.jobs-messages-page,
+.jobs-employer-applications-page {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 42px 22px 96px;
+}
+.jobs-message-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0;
+  overflow-x: auto;
+}
+.jobs-message-tabs button {
+  min-height: 36px;
+  padding: 0 18px;
+  border: 1px solid #ded7f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #352552;
+  font-weight: 800;
+}
+.jobs-message-tabs button.active {
+  border-color: #6c3cff;
+  background: #6c3cff;
+  color: #fff;
+}
+.jobs-message-empty {
+  min-height: 280px;
+}
 .jobs-mobile-nav {
   display: none;
 }
