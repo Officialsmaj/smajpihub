@@ -951,7 +951,7 @@ export default function mountJobsEndpoints(router: Router) {
       const result = await req.app.locals.conversationCollection.insertOne(document);
       conversation = { ...document, _id: result.insertedId };
     }
-    res.status(200).json({ conversation: serializeJobDocument(conversation) });
+    res.status(200).json({ conversation: { ...conversation, _id: conversation._id.toString() } });
   });
   router.get("/employer/dashboard", async (req, res) => {
     const user = await requireEmployer(req, res);
