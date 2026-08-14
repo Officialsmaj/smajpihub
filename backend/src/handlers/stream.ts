@@ -1158,6 +1158,42 @@ const mountStreamEndpoints = (router: Router) => {
     } catch (error) { return res.status(502).json({ error: "live_playback_failed", message: error instanceof Error ? error.message : "Unable to load live playback" }); }
   });
 
+  // Streams Internet Archive video bytes through our own domain instead of the browser
+  // hitting archive.org directly, since embedded/sandboxed webviews (e.g. the Pi Browser
+  // sandbox) can silently block or mis-handle a cross-origin third-party media source.
+  router.get("/archive-media/:uid", async (req, res) => {
+    const uid = String(req.params.uid || "").slice(0, 180);
+    if (!req.app.locals.streamContentCollection) return res.status(503).json({ error: "service_unavailable" });
+    const video = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid, contentSource: "internet_archive" });
+    if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true)
+      return res.status(404).json({ error: "not_available", message: "This video is not published or licensed for playback." });
+    const archiveUrl = String(video.playback?.mp4 || "");
+    if (!/^https:\/\/archive\.org\/download\//i.test(archiveUrl))
+      return res.status(422).json({ error: "no_playable_source", message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
+    try {
+      const upstream = await axios.get<NodeJS.ReadableStream>(archiveUrl, {
+        responseType: "stream",
+        timeout: 20_000,
+        maxRedirects: 5,
+        headers: req.headers.range ? { Range: req.headers.range } : {},
+        validateStatus: status => status === 200 || status === 206,
+      });
+      res.status(upstream.status);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Accept-Ranges", "bytes");
+      ["content-type", "content-length", "content-range", "cache-control", "etag", "last-modified"].forEach(header => {
+        const value = upstream.headers[header];
+        if (value) res.setHeader(header, value);
+      });
+      upstream.data.on("error", () => res.end());
+      upstream.data.pipe(res);
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      if (!res.headersSent) return res.status(status).json({ error: "archive_stream_failed", message: "Unable to stream this video." });
+      res.end();
+    }
+  });
+
   router.get("/playback/:uid", async (req, res) => {
     const user = await requireViewer(req, res); if (!user) return;
     const requestedUid = String(req.params.uid || "").slice(0, 180);
@@ -1174,7 +1210,8 @@ const mountStreamEndpoints = (router: Router) => {
       const archivePlaybackUrl = String(video.playback?.mp4 || "");
       if (!/^https:\/\/archive\.org\/download\//i.test(archivePlaybackUrl))
         return res.status(422).json({ error: "no_playable_source", message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
-      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: archivePlaybackUrl, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
+      const proxyUrl = `${req.protocol}://${req.get("host")}/stream/archive-media/${encodeURIComponent(String(video.cloudflareUid))}`;
+      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: proxyUrl, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
     }
     if (video.contentSource === "youtube" && video.youtubeVideoId) return res.json({ video: { id: String(video.cloudflareUid), sourceType: "youtube", youtubeVideoId: video.youtubeVideoId, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl, duration: video.duration || null } });
     let playback = video.playback as { hls?: string; dash?: string } | undefined;
