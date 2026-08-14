@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -8,6 +8,8 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import AppLayout from "../../layouts/AppLayout";
@@ -279,6 +281,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postBenefits, setPostBenefits] = useState<string[]>([]);
   const [postDescription, setPostDescription] = useState("");
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
+  const [employerHeroVideoPaused, setEmployerHeroVideoPaused] = useState(false);
+  const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -782,15 +786,37 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             <>
               <section className="jobs-employer-home">
                 <div className="jobs-employer-hero">
-                  <video className="jobs-employer-hero-video" autoPlay muted loop playsInline aria-hidden="true">
+                  <video
+                    ref={employerHeroVideoRef}
+                    className="jobs-employer-hero-video"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    aria-hidden="true"
+                  >
                     <source src="/videos/jobs-employer-hero.webm" type="video/webm" />
                     <source src="/videos/jobs-employer-hero.mp4" type="video/mp4" />
                   </video>
                   <span>SMAJ FOR EMPLOYERS</span>
                   <h1>Hiring trusted Pi talent is simpler, faster, and more human</h1>
                   <Link to="/services/jobs/post">Post a job</Link>
-                  <button type="button" aria-label="Play employer story">
-                    <ArrowForwardRoundedIcon />
+                  <button
+                    type="button"
+                    aria-label={employerHeroVideoPaused ? "Play employer hero video" : "Pause employer hero video"}
+                    onClick={() => {
+                      const video = employerHeroVideoRef.current;
+                      if (!video) return;
+                      if (video.paused) {
+                        void video.play();
+                        setEmployerHeroVideoPaused(false);
+                      } else {
+                        video.pause();
+                        setEmployerHeroVideoPaused(true);
+                      }
+                    }}
+                  >
+                    {employerHeroVideoPaused ? <PlayArrowRoundedIcon /> : <PauseRoundedIcon />}
                   </button>
                 </div>
                 <form

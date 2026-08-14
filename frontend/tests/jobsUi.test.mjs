@@ -52,6 +52,9 @@ assert.match(page, /Hiring trusted Pi talent is simpler, faster, and more human/
 assert.match(page, /The people you're looking for are here/);
 assert.match(page, /jobs-employer-hero-video/);
 assert.match(page, /jobs-employer-hero\.webm/);
+assert.match(page, /employerHeroVideoRef/);
+assert.match(page, /Pause employer hero video/);
+assert.match(page, /Play employer hero video/);
 assert.match(page, /navigate\("\/services\/jobs"\)/);
 assert.match(page, /jobs-employer-contact-form/);
 assert.match(page, /Company website \(optional\)/);
