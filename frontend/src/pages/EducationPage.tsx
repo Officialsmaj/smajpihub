@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
-import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -84,29 +83,38 @@ const EducationPage = () => {
         <section className="education-hero">
           <div className="education-hero-copy">
             <span className="education-kicker">SMAJ PI EDUCATION</span>
-            <h1>Learn, apply, and pay with Pi.</h1>
+            <h1>Learn skills that move you forward.</h1>
             <p>
-              SMAJ Education brings online courses, verified tutors, certificates, and partner university access into
-              one Pi-powered learning marketplace.
+              Explore practical courses, trusted tutors, and certificate programs from verified education providers.
             </p>
             <div className="education-search" role="search">
               <SearchOutlinedIcon />
               <input
                 type="search"
-                placeholder="Search universities, courses, tutors, certificates..."
+                placeholder="What do you want to learn?"
                 value={query}
                 onChange={event => setQuery(event.target.value)}
               />
-              <Link to="/services/education/courses">Explore</Link>
+              <Link
+                to={`/services/education/courses${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}
+              >
+                Explore courses
+              </Link>
             </div>
-            <div className="education-hero-actions">
-              <Link to="/services/education/courses" className="education-primary-btn">
-                Start Learning
-                <ArrowForwardOutlinedIcon />
-              </Link>
-              <Link to="/onboarding" className="education-secondary-btn">
-                Become a Provider
-              </Link>
+            <div className="education-hero-trust" aria-label="Learning benefits">
+              <span>Verified providers</span>
+              <span>Flexible learning</span>
+              <span>Pay with Pi</span>
+            </div>
+            <nav className="education-popular-links" aria-label="Popular education categories">
+              <b>Popular:</b>
+              <Link to="/services/education/categories/tech-skills">Technology</Link>
+              <Link to="/services/education/categories/business">Business</Link>
+              <Link to="/services/education/categories/exam-prep">Exam preparation</Link>
+            </nav>
+            <div className="education-provider-cta">
+              <span>University, tutor, or course creator?</span>
+              <Link to="/onboarding">Join as a provider →</Link>
             </div>
           </div>
           <aside className="education-hero-panel" aria-label="Education payment preview">
