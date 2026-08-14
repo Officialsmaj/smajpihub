@@ -300,6 +300,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [candidateView, setCandidateView] = useState<"pipeline" | "list">("pipeline");
   const [selectedCandidate, setSelectedCandidate] = useState<JobsApiApplication | null>(null);
   const [candidateDrawerTab, setCandidateDrawerTab] = useState<(typeof candidateDrawerTabs)[number]>("Profile");
+  const [managedJobApplication, setManagedJobApplication] = useState<JobsApiApplication | null>(null);
+  const [withdrawJobApplication, setWithdrawJobApplication] = useState<JobsApiApplication | null>(null);
   const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
@@ -610,9 +612,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const listings =
     kind === "freelance"
       ? visibleJobs.filter(job => job.freelance)
-      : kind === "saved"
-        ? visibleJobs.filter(job => saved.has(job.id))
-        : visibleJobs;
+      : visibleJobs;
+  const savedJobs = visibleJobs.filter(job => saved.has(job.id));
+  const myJobsTab =
+    kind === "applications"
+      ? "applied"
+      : kind === "saved" && searchParams.get("tab") === "interviews"
+        ? "interviews"
+        : kind === "saved" && searchParams.get("tab") === "archived"
+          ? "archived"
+          : "saved";
   const recommendedJobs = useMemo(() => {
     const titles = profile?.preferredTitles || [];
     const locations = profile?.preferredLocations || [];
@@ -1564,7 +1573,174 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </aside>
             ) : null}
           </section>
-        ) : kind === "post" || kind === "profile" || kind === "employer" || kind === "applications" ? (
+        ) : kind === "saved" || kind === "applications" ? (
+          <section className="jobs-my-jobs-page">
+            <header className="jobs-my-jobs-header">
+              <h1>My jobs</h1>
+              <nav aria-label="My jobs sections">
+                {[
+                  ["saved", "Saved", savedJobs.length, "/services/jobs/saved"],
+                  ["applied", "Applied", applications.length, "/services/jobs/applications"],
+                  ["interviews", "Interviews", 0, "/services/jobs/saved?tab=interviews"],
+                  ["archived", "Archived", 0, "/services/jobs/saved?tab=archived"],
+                ].map(([tab, label, count, to]) => (
+                  <NavLink key={String(tab)} to={String(to)} className={myJobsTab === tab ? "active" : ""}>
+                    <span>{label}</span>
+                    {tab !== "archived" ? <b>{count}</b> : null}
+                  </NavLink>
+                ))}
+              </nav>
+            </header>
+            {myJobsTab === "saved" ? (
+              savedJobs.length ? (
+                <div className="jobs-my-jobs-list">
+                  {savedJobs.map(job => (
+                    <article key={job.id} className="jobs-my-job-card">
+                      <span className="jobs-my-job-dot" />
+                      <button type="button" className="jobs-my-job-menu" aria-label={`Manage ${job.title}`}>
+                        ⋮
+                      </button>
+                      <h2>{job.title}</h2>
+                      <p>{job.company}</p>
+                      <p>{job.location}</p>
+                      <small>Saved to SMAJ PI HUB Jobs</small>
+                      <Link to={`/services/jobs/job/${job.id}`}>View job</Link>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="jobs-my-jobs-empty saved">
+                  <div className="jobs-empty-illustration saved" aria-hidden="true">
+                    <span />
+                    <i />
+                  </div>
+                  <h2>No saved jobs yet</h2>
+                  <p>Track jobs you're interested in by saving them. Your saved jobs will appear here.</p>
+                  <Link to="/services/jobs/search">Find jobs <ArrowForwardRoundedIcon /></Link>
+                  <button type="button">Not seeing a job?</button>
+                </div>
+              )
+            ) : myJobsTab === "applied" ? (
+              <div className="jobs-my-jobs-list">
+                <h2>Past 14 days</h2>
+                {applications.map((application, index) => (
+                  <article key={application.id} className="jobs-my-job-card applied">
+                    <span className="jobs-my-job-dot" />
+                    <span className={index === 0 ? "jobs-status-badge rejected" : "jobs-status-badge viewed"}>
+                      {index === 0 ? "Not selected by employer" : "Application viewed"}
+                    </span>
+                    <button
+                      type="button"
+                      className="jobs-my-job-menu"
+                      aria-label={`Manage ${application.jobTitle}`}
+                      onClick={() => setManagedJobApplication(application)}
+                    >
+                      ⋮
+                    </button>
+                    <h2>{application.jobTitle}</h2>
+                    <p>{application.company}</p>
+                    <p>{application.profileSnapshot?.location || "Abu Dhabi"}</p>
+                    <small>Applied on SMAJ PI HUB Jobs on {new Date(application.createdAt).toLocaleDateString()}</small>
+                    {index === 0 ? (
+                      <button type="button" className="jobs-update-status-button">Update status</button>
+                    ) : (
+                      <div className="jobs-application-update-card">
+                        <button type="button" aria-label="Dismiss update prompt">×</button>
+                        <p>Any updates since you applied?</p>
+                        <button type="button">I'm interviewing</button>
+                        <button type="button">I have another update</button>
+                      </div>
+                    )}
+                  </article>
+                ))}
+                {!applications.length ? (
+                  <div className="jobs-my-jobs-empty">
+                    <h2>No applications yet</h2>
+                    <p>Jobs you apply for will appear here.</p>
+                    <Link to="/services/jobs/search">Find jobs <ArrowForwardRoundedIcon /></Link>
+                  </div>
+                ) : null}
+              </div>
+            ) : myJobsTab === "interviews" ? (
+              <div className="jobs-my-jobs-empty interviews">
+                <div className="jobs-empty-illustration calendar" aria-hidden="true">
+                  <span />
+                  <i />
+                </div>
+                <h2>No upcoming interviews</h2>
+                <p>Your scheduled interviews will appear here.</p>
+                <button type="button">Not seeing an interview?</button>
+              </div>
+            ) : (
+              <div className="jobs-my-jobs-empty archived">
+                <div className="jobs-empty-illustration archived" aria-hidden="true">
+                  <span />
+                  <i />
+                </div>
+                <h2>No archived applications</h2>
+                <p>To keep things tidy, we remove applications that are older than 6 months.</p>
+                <button type="button">Not seeing an archived application?</button>
+              </div>
+            )}
+            {managedJobApplication ? (
+              <div className="jobs-bottom-sheet-backdrop" role="presentation" onClick={() => setManagedJobApplication(null)}>
+                <section
+                  className="jobs-bottom-sheet"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Manage this job"
+                  onClick={event => event.stopPropagation()}
+                >
+                  <header>
+                    <h2>Manage this job</h2>
+                    <button type="button" aria-label="Close manage job" onClick={() => setManagedJobApplication(null)}>
+                      ×
+                    </button>
+                  </header>
+                  <button type="button">▣ View and Manage Details</button>
+                  <button type="button">▾ Archive</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWithdrawJobApplication(managedJobApplication);
+                      setManagedJobApplication(null);
+                    }}
+                  >
+                    ⊖ Withdraw application
+                  </button>
+                </section>
+              </div>
+            ) : null}
+            {withdrawJobApplication ? (
+              <div className="jobs-bottom-sheet-backdrop" role="presentation" onClick={() => setWithdrawJobApplication(null)}>
+                <section
+                  className="jobs-bottom-sheet jobs-withdraw-sheet"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Withdraw your application"
+                  onClick={event => event.stopPropagation()}
+                >
+                  <header>
+                    <h2>Withdraw your application</h2>
+                    <button type="button" aria-label="Close withdraw application" onClick={() => setWithdrawJobApplication(null)}>
+                      ×
+                    </button>
+                  </header>
+                  <div>
+                    <h3>{withdrawJobApplication.jobTitle}</h3>
+                    <p>{withdrawJobApplication.profileSnapshot?.location || "Abu Dhabi"}</p>
+                  </div>
+                  <button type="button" className="danger" onClick={() => setWithdrawJobApplication(null)}>
+                    Withdraw application
+                  </button>
+                  <button type="button" onClick={() => setWithdrawJobApplication(null)}>
+                    Keep this application
+                  </button>
+                </section>
+              </div>
+            ) : null}
+          </section>
+        ) : kind === "post" || kind === "profile" || kind === "employer" ? (
           <section className="jobs-workspace">
             {kind !== "profile" ? <div className="jobs-page-heading">
               <span className="jobs-kicker">{kind === "post" ? "EMPLOYER WORKSPACE" : "YOUR JOBS WORKSPACE"}</span>
@@ -2582,7 +2758,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               </NavLink>
               <NavLink to="/services/jobs/saved">
                 <BookmarkBorderRoundedIcon />
-                <span>Saved</span>
+                <span>My Jobs</span>
               </NavLink>
               <NavLink to="/services/jobs/applications">
                 <WorkOutlineRoundedIcon />
