@@ -786,8 +786,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <source src="/videos/jobs-employer-hero.webm" type="video/webm" />
                     <source src="/videos/jobs-employer-hero.mp4" type="video/mp4" />
                   </video>
-                  <span>INDEED FOR EMPLOYERS</span>
-                  <h1>Hiring that's simpler, faster, and more human</h1>
+                  <span>SMAJ FOR EMPLOYERS</span>
+                  <h1>Hiring trusted Pi talent is simpler, faster, and more human</h1>
                   <Link to="/services/jobs/post">Post a job</Link>
                   <button type="button" aria-label="Play employer story">
                     <ArrowForwardRoundedIcon />
