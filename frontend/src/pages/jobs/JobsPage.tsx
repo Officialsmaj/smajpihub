@@ -164,8 +164,13 @@ const employerLocationTypes = [
   { id: "hybrid", title: "Hybrid", detail: "Some on-site work required", mode: "Hybrid", icon: "group" },
 ] as const;
 const hiringTimeframes = ["1 to 3 days", "3 to 7 days", "1 to 2 weeks", "2 to 4 weeks", "More than 4 weeks"] as const;
-const employerJobTypes = ["Contract", "Part-time", "Full-time", "Temporary", "Internship"] as const;
-const employerBenefits = ["401(k)", "Vision insurance", "Health insurance", "403(b)", "Paid time off", "Dental insurance"] as const;
+const employerJobTypes = ["Full time", "Part time", "Contract", "Project"] as const;
+const employerBenefits = [
+  "401(k)", "Vision insurance", "Health insurance", "403(b)", "Paid time off", "Dental insurance",
+  "Life insurance", "Disability insurance", "Flexible schedule", "Parental leave", "Employee discount",
+  "Referral program", "Professional development assistance", "Retirement plan", "Relocation assistance",
+  "Work from home", "Gym membership", "Company events", "Loyalty bonus", "Commuter assistance",
+] as const;
 const sponsorPlans = [
   { id: "premium-plus", title: "Premium Plus", price: "$140 daily average", detail: "Auto-invites up to 30 matches per day" },
   { id: "premium", title: "Premium", price: "$90 daily average", detail: "Appear higher in search results" },
@@ -173,6 +178,7 @@ const sponsorPlans = [
 ] as const;
 const candidateStages = ["New", "Shortlisted", "Interview", "Offer", "Hired"] as const;
 const candidateDrawerTabs = ["Profile", "Application", "Messages", "Interviews", "Notes", "Activity"] as const;
+const POST_DRAFT_STORAGE_KEY = "smaj_jobs_post_draft";
 const candidateStageForStatus = (status: string): (typeof candidateStages)[number] => {
   const normalized = status.toLowerCase();
   if (normalized.includes("hired")) return "Hired";
@@ -394,11 +400,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postCountry, setPostCountry] = useState("");
   const [postHires, setPostHires] = useState(0);
   const [postHiringTimeframe, setPostHiringTimeframe] = useState<(typeof hiringTimeframes)[number]>("1 to 3 days");
-  const [postJobType, setPostJobType] = useState("Full-time");
+  const [postJobType, setPostJobType] = useState("Full time");
   const [postBenefits, setPostBenefits] = useState<string[]>([]);
+  const [benefitsExpanded, setBenefitsExpanded] = useState(false);
   const [postDescription, setPostDescription] = useState("");
   const [postCustomCategory, setPostCustomCategory] = useState("");
   const [postSkills, setPostSkills] = useState("");
+  const [postCompensationPeriod, setPostCompensationPeriod] = useState<
+    "hour" | "day" | "week" | "month" | "year" | "project"
+  >("hour");
+  const [descriptionHelpOpen, setDescriptionHelpOpen] = useState(false);
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
@@ -1060,12 +1072,116 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("Interview could not be cancelled.");
     }
   };
+  const postDraftRestoredRef = useRef(false);
+  useEffect(() => {
+    if (kind !== "post" || postDraftRestoredRef.current) return;
+    postDraftRestoredRef.current = true;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(POST_DRAFT_STORAGE_KEY) || "null");
+      if (!saved) return;
+      if (saved.postStep) setPostStep(saved.postStep);
+      if (saved.postJobTitle) setPostJobTitle(saved.postJobTitle);
+      if (saved.postLanguage) setPostLanguage(saved.postLanguage);
+      if (saved.postPostingRegion) setPostPostingRegion(saved.postPostingRegion);
+      if (saved.postLocationType) setPostLocationType(saved.postLocationType);
+      if (saved.postCountry) setPostCountry(saved.postCountry);
+      if (typeof saved.postHires === "number") setPostHires(saved.postHires);
+      if (saved.postHiringTimeframe) setPostHiringTimeframe(saved.postHiringTimeframe);
+      if (saved.postJobType) setPostJobType(saved.postJobType);
+      if (Array.isArray(saved.postBenefits)) setPostBenefits(saved.postBenefits);
+      if (saved.postDescription) setPostDescription(saved.postDescription);
+      if (saved.postCategory) setPostCategory(saved.postCategory);
+      if (saved.postCustomCategory) setPostCustomCategory(saved.postCustomCategory);
+      if (saved.postSkills) setPostSkills(saved.postSkills);
+      if (saved.postCompensationPeriod) setPostCompensationPeriod(saved.postCompensationPeriod);
+      if (saved.payMin) setPayMin(saved.payMin);
+      if (saved.payMax) setPayMax(saved.payMax);
+      if (saved.postCompanyId) setPostCompanyId(saved.postCompanyId);
+      if (saved.postSponsorPlan) setPostSponsorPlan(saved.postSponsorPlan);
+    } catch {
+      // Ignore malformed drafts.
+    }
+  }, [kind]);
+  useEffect(() => {
+    if (kind !== "post") return;
+    const draft = {
+      postStep,
+      postJobTitle,
+      postLanguage,
+      postPostingRegion,
+      postLocationType,
+      postCountry,
+      postHires,
+      postHiringTimeframe,
+      postJobType,
+      postBenefits,
+      postDescription,
+      postCategory,
+      postCustomCategory,
+      postSkills,
+      postCompensationPeriod,
+      payMin,
+      payMax,
+      postCompanyId,
+      postSponsorPlan,
+    };
+    try {
+      window.localStorage.setItem(POST_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // Ignore storage failures (e.g. private browsing quota).
+    }
+  }, [
+    kind,
+    postStep,
+    postJobTitle,
+    postLanguage,
+    postPostingRegion,
+    postLocationType,
+    postCountry,
+    postHires,
+    postHiringTimeframe,
+    postJobType,
+    postBenefits,
+    postDescription,
+    postCategory,
+    postCustomCategory,
+    postSkills,
+    postCompensationPeriod,
+    payMin,
+    payMax,
+    postCompanyId,
+    postSponsorPlan,
+  ]);
   useEffect(() => {
     if (kind === "post" && postStep === "contact" && employerCompanies.length && !postCompanyId) {
       setPostCompanyId(employerCompanies[0].id);
       setPostStep("title");
     }
   }, [kind, postStep, employerCompanies, postCompanyId]);
+  const wrapDescriptionSelection = (marker: string) => {
+    const textarea = descriptionTextareaRef.current;
+    if (!textarea) return;
+    const { selectionStart, selectionEnd, value } = textarea;
+    const selected = value.slice(selectionStart, selectionEnd) || "text";
+    const next = `${value.slice(0, selectionStart)}${marker}${selected}${marker}${value.slice(selectionEnd)}`;
+    setPostDescription(next);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(selectionStart + marker.length, selectionStart + marker.length + selected.length);
+    });
+  };
+  const insertDescriptionListItem = () => {
+    const textarea = descriptionTextareaRef.current;
+    if (!textarea) return;
+    const { selectionStart, value } = textarea;
+    const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+    const next = `${value.slice(0, lineStart)}- ${value.slice(lineStart)}`;
+    setPostDescription(next);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(selectionStart + 2, selectionStart + 2);
+    });
+  };
   const submitContactStep = async (form: HTMLFormElement) => {
     if (contactSubmitting) return;
     setContactSubmitting(true);
@@ -1119,10 +1235,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           .split(",")
           .map(skill => skill.trim())
           .filter(Boolean),
-        salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin") || payMin)))}${Number(data.get("compensationMax") || payMax) > Number(data.get("compensationMin") || payMin) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax") || payMax)))}` : ""} / ${String(data.get("compensationPeriod") || "month")}`,
+        salary: `${formatPiAmount(piFromUsdt(Number(data.get("compensationMin") || payMin)))}${Number(data.get("compensationMax") || payMax) > Number(data.get("compensationMin") || payMin) ? `–${formatPiAmount(piFromUsdt(Number(data.get("compensationMax") || payMax)))}` : ""} / ${String(data.get("compensationPeriod") || postCompensationPeriod)}`,
         compensationMinUsdt: Number(data.get("compensationMin") || payMin),
         compensationMaxUsdt: Number(data.get("compensationMax") || payMax) || Number(data.get("compensationMin") || payMin),
-        compensationPeriod: String(data.get("compensationPeriod") || "month"),
+        compensationPeriod: String(data.get("compensationPeriod") || postCompensationPeriod),
         summary: String(data.get("summary") || postDescription),
       });
       setJobs(current => [created, ...current]);
@@ -1132,15 +1248,21 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setPostCountry("");
       setPostHires(0);
       setPostHiringTimeframe("1 to 3 days");
-      setPostJobType("Full-time");
+      setPostJobType("Full time");
       setPostBenefits([]);
       setPostDescription("");
       setPostCategory("");
       setPostCustomCategory("");
       setPostSkills("");
+      setPostCompensationPeriod("hour");
       setPayMin("");
       setPayMax("");
       setPostSponsorPlan("none");
+      try {
+        window.localStorage.removeItem(POST_DRAFT_STORAGE_KEY);
+      } catch {
+        // Ignore storage failures.
+      }
       navigate(`/services/jobs/employer`);
     } catch {
       setActionMessage("The job could not be submitted. Confirm your employer account and company ownership.");
@@ -2868,7 +2990,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </button>
                   ))}
                 </div>
-                <button className="jobs-show-more" type="button">Show 1 more⌄</button>
                 <footer><button type="button" onClick={() => setPostStep("timeframe")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "salary" ? (
@@ -2884,8 +3005,29 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <span>to</span>
                     <label>Maximum<input value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="$ 30.96" inputMode="decimal" /></label>
                   </div>
+                  {Number(payMin) > 0 ? (
+                    <output className="jobs-salary-pi-output">
+                      {formatUsdAmount(Number(payMin))}
+                      {Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} ={" "}
+                      {formatPiAmount(piFromUsdt(Number(payMin)))}
+                      {Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}
+                    </output>
+                  ) : null}
                   <b>Rate</b>
-                  <div className="jobs-pill-row"><button type="button" className="active">per hour</button><button type="button">per day</button><button type="button">per week</button><button type="button">per month</button><button type="button">per year</button></div>
+                  <div className="jobs-pill-row" role="radiogroup" aria-label="Pay rate">
+                    {(["hour", "day", "week", "month", "year"] as const).map(period => (
+                      <button
+                        type="button"
+                        key={period}
+                        className={postCompensationPeriod === period ? "active" : ""}
+                        role="radio"
+                        aria-checked={postCompensationPeriod === period}
+                        onClick={() => setPostCompensationPeriod(period)}
+                      >
+                        per {period}
+                      </button>
+                    ))}
+                  </div>
                 </section>
                 <footer><button type="button" onClick={() => setPostStep("type")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
@@ -2893,13 +3035,17 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("description"); }}>
                 <h2>Benefits</h2>
                 <div className="jobs-post-option-stack">
-                  {employerBenefits.slice(0, 4).map(item => (
+                  {(benefitsExpanded ? employerBenefits : employerBenefits.slice(0, 4)).map(item => (
                     <button type="button" key={item} className={postBenefits.includes(item) ? "active" : ""} onClick={() => setPostBenefits(current => current.includes(item) ? current.filter(value => value !== item) : [...current, item])}>
                       <span>+ {item}</span>
                     </button>
                   ))}
                 </div>
-                <button className="jobs-show-more" type="button">Show 19 more⌄</button>
+                {!benefitsExpanded && employerBenefits.length > 4 ? (
+                  <button className="jobs-show-more" type="button" onClick={() => setBenefitsExpanded(true)}>
+                    Show {employerBenefits.length - 4} more⌄
+                  </button>
+                ) : null}
                 <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "description" ? (
@@ -2907,8 +3053,38 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <h2>Job description *</h2>
                 <p>This is a SMAJ PI HUB-assisted job description. You can edit or replace it.</p>
                 <div className="jobs-description-editor">
-                  <div><b>B</b><i>I</i><span>☷</span><button type="button">?</button></div>
-                  <textarea required value={postDescription} onChange={event => setPostDescription(event.target.value)} placeholder={`Overview\n\nJoin our dynamic team as a ${postJobTitle || "team member"} and help customers in the Pi economy.`} />
+                  <div>
+                    <button type="button" aria-label="Bold" onClick={() => wrapDescriptionSelection("**")}>
+                      <b>B</b>
+                    </button>
+                    <button type="button" aria-label="Italic" onClick={() => wrapDescriptionSelection("_")}>
+                      <i>I</i>
+                    </button>
+                    <button type="button" aria-label="Bullet list" onClick={() => insertDescriptionListItem()}>
+                      <span>☷</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Formatting help"
+                      aria-expanded={descriptionHelpOpen}
+                      onClick={() => setDescriptionHelpOpen(value => !value)}
+                    >
+                      ?
+                    </button>
+                  </div>
+                  {descriptionHelpOpen ? (
+                    <p className="jobs-description-help">
+                      Select text and use <b>B</b> for **bold**, <i>I</i> for _italic_, or the list icon to start a
+                      bullet line with "- ". This plain-text formatting is shown to candidates as written.
+                    </p>
+                  ) : null}
+                  <textarea
+                    ref={descriptionTextareaRef}
+                    required
+                    value={postDescription}
+                    onChange={event => setPostDescription(event.target.value)}
+                    placeholder={`Overview\n\nJoin our dynamic team as a ${postJobTitle || "team member"} and help customers in the Pi economy.`}
+                  />
                 </div>
                 <footer><button type="button" onClick={() => setPostStep("benefits")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
@@ -3098,12 +3274,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     Job type
-                    <select name="type" defaultValue={postJobType}>
-                      <option>Full-time</option>
-                      <option>Part-time</option>
-                      <option>Contract</option>
-                      <option>Temporary</option>
-                      <option>Project</option>
+                    <select name="type" value={postJobType} onChange={event => setPostJobType(event.target.value)}>
+                      {employerJobTypes.map(item => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label>
@@ -3202,7 +3378,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </label>
                     <label>
                       Pay period
-                      <select name="compensationPeriod">
+                      <select
+                        name="compensationPeriod"
+                        value={postCompensationPeriod}
+                        onChange={event => setPostCompensationPeriod(event.target.value as typeof postCompensationPeriod)}
+                      >
                         <option value="hour">Per hour</option>
                         <option value="day">Per day</option>
                         <option value="week">Per week</option>

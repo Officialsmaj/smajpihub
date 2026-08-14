@@ -1763,6 +1763,7 @@
 }
 .jobs-pill-row {
   margin: 8px 0 14px;
+  max-width: 100%;
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
@@ -1773,10 +1774,29 @@
   border-radius: 999px;
   background: #f2f1f0;
   font: inherit;
+  white-space: nowrap;
 }
 .jobs-pill-row button.active {
   border-color: #333;
   background: #fff;
+}
+.jobs-salary-pi-output {
+  margin: -6px 0 14px;
+  padding: 12px;
+  display: block;
+  border-radius: 9px;
+  color: #5b2bd9;
+  background: #eee8ff;
+  font-weight: 800;
+}
+.jobs-description-help {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #52675e;
+  background: #f1f6f3;
+  font-size: 12px;
+  line-height: 1.5;
 }
 .jobs-salary-inputs {
   display: grid;
