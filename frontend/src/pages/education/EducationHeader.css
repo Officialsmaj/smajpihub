@@ -144,4 +144,40 @@
     background: rgba(35, 97, 146, 0.08);
     color: #236192;
   }
+
+  .education-mobile-search {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 6px 7px 6px 12px;
+    border: 1px solid rgba(19, 32, 51, 0.1);
+    border-radius: 13px;
+    background: #f6faff;
+  }
+
+  .education-mobile-search svg {
+    color: #236192;
+    font-size: 20px;
+  }
+
+  .education-mobile-search input {
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .education-mobile-search button {
+    min-height: 36px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 10px;
+    background: #236192;
+    color: #fff;
+    font-weight: 800;
+  }
 }

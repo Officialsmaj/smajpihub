@@ -6,9 +6,10 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import "./EducationHeader.css";
 
 const links = [
-  ["", "Courses"],
-  ["courses", "All Courses"],
-  ["partners", "Partners"],
+  ["/services/education/courses", "Explore Courses"],
+  ["/services/education/partners", "Partners"],
+  ["/onboarding", "Teach on SMAJ"],
+  ["/help", "Help"],
 ] as const;
 
 const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => {
@@ -17,6 +18,7 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    setMenuOpen(false);
     const term = query.trim();
     navigate(`/services/education/courses${term ? `?q=${encodeURIComponent(term)}` : ""}`);
   };
@@ -30,8 +32,8 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
         <b>Education</b>
       </Link>
       <nav className={menuOpen ? "open" : ""} aria-label="Education navigation">
-        {links.map(([path, label]) => (
-          <NavLink key={label} end={!path} to={`/services/education${path ? `/${path}` : ""}`} onClick={() => setMenuOpen(false)}>
+        {links.map(([to, label]) => (
+          <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
             {label}
           </NavLink>
         ))}
@@ -57,9 +59,22 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
       </button>
       {menuOpen ? (
         <div className="education-mobile-menu open">
-          <NavLink end to="/services/education" onClick={() => setMenuOpen(false)}>Courses</NavLink>
-          <NavLink to="/services/education/courses" onClick={() => setMenuOpen(false)}>All Courses</NavLink>
-          <NavLink to="/services/education/partners" onClick={() => setMenuOpen(false)}>Partners</NavLink>
+          <form className="education-mobile-search" role="search" onSubmit={submit}>
+            <SearchRoundedIcon />
+            <input
+              type="search"
+              value={query}
+              onChange={event => onQueryChange(event.target.value)}
+              placeholder="What do you want to learn?"
+              aria-label="Search SMAJ PI Education"
+            />
+            <button type="submit">Search</button>
+          </form>
+          {links.map(([to, label]) => (
+            <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
+              {label}
+            </NavLink>
+          ))}
           <Link to="/app/services">Back to SMAJ Hub</Link>
         </div>
       ) : null}
