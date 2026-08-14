@@ -3,8 +3,8 @@ import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-ro
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
-import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
@@ -856,7 +856,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <button type="button">Invites</button>
             </div>
             <div className="workspace-empty jobs-message-empty">
-              <ChatBubbleOutlineRoundedIcon />
+              <ChatOutlinedIcon />
               <h2>No messages yet</h2>
               <p>When a verified employer or candidate contacts you, the conversation will show here.</p>
               <Link to={activeWorkspaceMode === "employer" ? "/services/jobs/candidates" : "/services/jobs/search"}>
@@ -2739,7 +2739,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <span>My Jobs</span>
               </NavLink>
               <NavLink to="/services/jobs?tab=messages">
-                <ChatBubbleOutlineRoundedIcon />
+                <ChatOutlinedIcon />
                 <span>Messages</span>
               </NavLink>
               <NavLink to="/services/jobs/profile">
@@ -2750,7 +2750,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           ) : (
             <>
               <NavLink to="/services/jobs?tab=messages">
-                <ChatBubbleOutlineRoundedIcon />
+                <ChatOutlinedIcon />
                 <span>Messages</span>
               </NavLink>
               <NavLink to="/services/jobs/candidates">

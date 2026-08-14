@@ -3335,20 +3335,32 @@
   }
   .jobs-mobile-nav a {
     min-width: 52px;
+    padding: 0 2px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 1px;
     color: #708079;
     font-size: 9px;
+    font-weight: 700;
     text-decoration: none;
   }
   .jobs-mobile-nav a svg {
-    font-size: 21px;
+    width: 30px;
+    height: 24px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: #76867f;
+    font-size: 18px;
+    transition: background 160ms ease, color 160ms ease;
   }
   .jobs-mobile-nav a.active {
     color: #6d3df5;
+  }
+  .jobs-mobile-nav a.active svg {
+    color: #6d3df5;
+    background: #eee8ff;
   }
   .jobs-employer-dashboard {
     grid-template-columns: 1fr;

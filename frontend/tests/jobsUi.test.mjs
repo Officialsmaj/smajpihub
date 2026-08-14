@@ -65,6 +65,7 @@ assert.match(page, /candidateStages/);
 assert.match(page, /Pipeline/);
 assert.match(page, /candidateDrawerTabs/);
 assert.match(page, /Messages/);
+assert.match(page, /ChatOutlinedIcon/);
 assert.match(page, /jobs-messages-page/);
 assert.match(page, /No messages yet/);
 assert.doesNotMatch(page, /Your conversations/);
