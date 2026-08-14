@@ -1613,10 +1613,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   ["interviews", "Interviews", 0, "/services/jobs/saved?tab=interviews"],
                   ["archived", "Archived", 0, "/services/jobs/saved?tab=archived"],
                 ].map(([tab, label, count, to]) => (
-                  <NavLink key={String(tab)} to={String(to)} className={myJobsTab === tab ? "active" : ""}>
+                  <Link key={String(tab)} to={String(to)} className={myJobsTab === tab ? "active" : ""}>
                     <span>{label}</span>
                     {tab !== "archived" ? <b>{count}</b> : null}
-                  </NavLink>
+                  </Link>
                 ))}
               </nav>
             </header>
