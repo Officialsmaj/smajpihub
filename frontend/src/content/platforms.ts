@@ -17,7 +17,7 @@ export const platformDefinitions: PlatformDefinition[] = [
     name: "SMAJ PI Jobs",
     routeSegment: "jobs",
     description: "Find jobs and freelance opportunities.",
-    status: "Coming Soon",
+    status: "Live",
   },
   {
     name: "SMAJ PI Health",
