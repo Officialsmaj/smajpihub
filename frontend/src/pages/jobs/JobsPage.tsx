@@ -90,7 +90,10 @@ type JobsConversation = {
   contextType?: string;
   jobId?: string;
   applicationId?: string;
+  jobTitle?: string;
+  sellerId?: string;
 };
+type JobsChatMessage = { _id: string; senderId: string; senderName?: string; message: string; createdAt: string };
 
 const formatJobsPi = (value: number) => `π ${value.toFixed(5).replace(/\.?0+$/, "")}`;
 const salaryFromUsdt = (minimum: number, maximum: number, period: string) =>
@@ -363,6 +366,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [messageFilterOpen, setMessageFilterOpen] = useState(false);
   const [jobConversations, setJobConversations] = useState<JobsConversation[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [activeJobsConversation, setActiveJobsConversation] = useState<JobsConversation | null>(null);
+  const [jobsChatMessages, setJobsChatMessages] = useState<JobsChatMessage[]>([]);
+  const [jobsChatDraft, setJobsChatDraft] = useState("");
+  const [jobsChatSending, setJobsChatSending] = useState(false);
   const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
@@ -445,13 +452,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       : workspaceMode;
   const visibleJobConversations = jobConversations.filter(conversation => {
     if (messageFilter === "unread") return Boolean(user?.uid && conversation.unreadBy?.includes(user.uid));
-    if (messageFilter === "invites")
-      return conversation.contextType === "job_invite" || Boolean(conversation.jobId && !conversation.applicationId);
+    if (messageFilter === "invites") return conversation.contextType === "jobs";
     return true;
   });
   const unreadJobMessages = jobConversations.filter(conversation =>
     Boolean(user?.uid && conversation.unreadBy?.includes(user.uid)),
   ).length;
+  const waitingForEmployerMessage = Boolean(
+    activeJobsConversation && !jobsChatMessages.length && activeJobsConversation.sellerId !== user?.uid,
+  );
   const currentAvatar = user?.avatar || "";
   const showAvatarConfirmation =
     kind === "profile" && Boolean(user) && !avatarPromptDismissed && profile?.avatarConfirmationValue !== currentAvatar;
@@ -601,12 +610,61 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     setLocation(nextLocation);
     setLocationSheetOpen(false);
   };
+  const openJobsConversation = async (conversation: JobsConversation) => {
+    setActiveJobsConversation(conversation);
+    setJobsChatMessages([]);
+    try {
+      const { data } = await axiosClient.get<{ conversation?: JobsConversation; messages?: JobsChatMessage[] }>(
+        `/messages/${encodeURIComponent(conversation._id)}`,
+      );
+      if (data.conversation) setActiveJobsConversation(data.conversation);
+      setJobsChatMessages(data.messages || []);
+      setJobConversations(current =>
+        current.map(item => item._id === conversation._id ? { ...item, unreadBy: [] } : item),
+      );
+    } catch {
+      setActionMessage("This Jobs conversation could not be opened.");
+    }
+  };
+  const startEmployerConversation = async (application: JobsApiApplication) => {
+    try {
+      const { data } = await axiosClient.post<{ conversation: JobsConversation }>(
+        `/jobs/employer/applications/${encodeURIComponent(application.id)}/conversation`,
+      );
+      setSelectedCandidate(null);
+      setWorkspaceMode("employer");
+      navigate(`/services/jobs?tab=messages&conversation=${encodeURIComponent(data.conversation._id)}`);
+    } catch {
+      setActionMessage("The Jobs conversation could not be started.");
+    }
+  };
+  const sendJobsChatMessage = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const message = jobsChatDraft.trim();
+    if (!activeJobsConversation || !message || jobsChatSending) return;
+    setJobsChatSending(true);
+    try {
+      const { data } = await axiosClient.post<{ message: JobsChatMessage }>(
+        `/messages/${encodeURIComponent(activeJobsConversation._id)}`,
+        { message },
+      );
+      setJobsChatDraft("");
+      setJobsChatMessages(current => [...current, data.message]);
+      setJobConversations(current =>
+        current.map(item => item._id === activeJobsConversation._id ? { ...item, lastMessage: data.message.message } : item),
+      );
+    } catch {
+      setActionMessage("Message could not be sent.");
+    } finally {
+      setJobsChatSending(false);
+    }
+  };
   useEffect(() => {
     if (kind !== "home" || homeTab !== "messages") return;
     let active = true;
     setMessagesLoading(true);
-    axiosClient
-      .get<{ conversations?: JobsConversation[] }>("/messages")
+    const load = () => axiosClient
+      .get<{ conversations?: JobsConversation[] }>("/messages", { params: { context: "jobs" } })
       .then(({ data }) => {
         if (active) setJobConversations(data.conversations || []);
       })
@@ -616,10 +674,41 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       .finally(() => {
         if (active) setMessagesLoading(false);
       });
+    void load();
+    const timer = window.setInterval(() => void load(), 5000);
     return () => {
       active = false;
+      window.clearInterval(timer);
     };
   }, [homeTab, kind]);
+
+  useEffect(() => {
+    const conversationId = searchParams.get("conversation");
+    if (homeTab !== "messages" || !conversationId || !jobConversations.length) return;
+    const conversation = jobConversations.find(item => item._id === conversationId);
+    if (conversation && activeJobsConversation?._id !== conversationId) void openJobsConversation(conversation);
+  }, [activeJobsConversation?._id, homeTab, jobConversations, searchParams]);
+
+  useEffect(() => {
+    if (!activeJobsConversation) return;
+    let active = true;
+    const timer = window.setInterval(() => {
+      axiosClient
+        .get<{ conversation?: JobsConversation; messages?: JobsChatMessage[] }>(
+          `/messages/${encodeURIComponent(activeJobsConversation._id)}`,
+        )
+        .then(({ data }) => {
+          if (!active) return;
+          if (data.conversation) setActiveJobsConversation(data.conversation);
+          setJobsChatMessages(data.messages || []);
+        })
+        .catch(() => undefined);
+    }, 3000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [activeJobsConversation?._id]);
 
   useEffect(() => {
     if (!searchSheetOpen && !locationSheetOpen) return;
@@ -995,7 +1084,31 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : null}
         {kind === "home" && homeTab === "messages" ? (
           <section className="jobs-messages-page">
-            <div className="jobs-page-heading jobs-messages-heading">
+            {activeJobsConversation ? (
+              <div className="jobs-chat-panel">
+                <header>
+                  <button type="button" aria-label="Back to Jobs messages" onClick={() => {
+                    setActiveJobsConversation(null);
+                    setJobsChatMessages([]);
+                    navigate("/services/jobs?tab=messages");
+                  }}>←</button>
+                  <div><h1>{activeJobsConversation.participantName || "Jobs conversation"}</h1><small>{activeJobsConversation.jobTitle || "SMAJ PI Jobs"}</small></div>
+                </header>
+                <div className="jobs-chat-thread" aria-live="polite">
+                  {jobsChatMessages.length ? jobsChatMessages.map(message => (
+                    <article className={message.senderId === user?.uid ? "mine" : ""} key={message._id}>
+                      <strong>{message.senderId === user?.uid ? "You" : message.senderName || activeJobsConversation.participantName}</strong>
+                      <p>{message.message}</p>
+                    </article>
+                  )) : <p className="jobs-chat-start">{waitingForEmployerMessage ? "Waiting for the employer’s first message." : "Send the first message to start this Jobs conversation."}</p>}
+                </div>
+                <form className="jobs-chat-compose" onSubmit={sendJobsChatMessage}>
+                  <input disabled={waitingForEmployerMessage} value={jobsChatDraft} onChange={event => setJobsChatDraft(event.target.value)} placeholder={waitingForEmployerMessage ? "Employer will message first" : "Write a message"} aria-label="Jobs message" />
+                  <button type="submit" disabled={waitingForEmployerMessage || jobsChatSending || !jobsChatDraft.trim()}>{jobsChatSending ? "Sending…" : "Send"}</button>
+                </form>
+              </div>
+            ) : <>
+              <div className="jobs-page-heading jobs-messages-heading">
               <h1>Messages</h1>
               <button
                 type="button"
@@ -1028,16 +1141,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
               ) : null}
             </div>
-            {messagesLoading ? (
+              {messagesLoading ? (
               <div className="jobs-message-loading" role="status"><span /><span /><span />Loading messages…</div>
             ) : visibleJobConversations.length ? (
               <div className="jobs-message-list">
                 {visibleJobConversations.map(conversation => (
-                  <Link to={`/messages?conversation=${encodeURIComponent(conversation._id)}`} key={conversation._id}>
+                  <button type="button" onClick={() => {
+                    navigate(`/services/jobs?tab=messages&conversation=${encodeURIComponent(conversation._id)}`);
+                    void openJobsConversation(conversation);
+                  }} key={conversation._id}>
                     <span className="jobs-message-avatar">{(conversation.participantName || "M").slice(0, 1).toUpperCase()}</span>
                     <span><strong>{conversation.participantName || "SMAJ member"}</strong><small>{conversation.lastMessage || "Open conversation"}</small></span>
                     {user?.uid && conversation.unreadBy?.includes(user.uid) ? <i aria-label="Unread message" /> : null}
-                  </Link>
+                  </button>
                 ))}
               </div>
             ) : <div className="workspace-empty jobs-message-empty">
@@ -1047,7 +1163,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <Link to={activeWorkspaceMode === "employer" ? "/services/jobs/candidates" : "/services/jobs/search"}>
                 {activeWorkspaceMode === "employer" ? "View candidates" : "Find opportunities"}
               </Link>
-            </div>}
+              </div>}
+            </>}
           </section>
         ) : kind === "home" && homeTab === "employer-applications" ? (
           <section className="jobs-candidates-page jobs-employer-applications-page">
@@ -1790,7 +1907,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <section>
                   {candidateDrawerTab === "Profile" ? <p>{selectedCandidate.profileSnapshot?.summary || "No professional summary added."}</p> : null}
                   {candidateDrawerTab === "Application" ? <p>{selectedCandidate.coverNote || "No cover note was provided."}</p> : null}
-                  {candidateDrawerTab === "Messages" ? <p>No messages yet.</p> : null}
+                  {candidateDrawerTab === "Messages" ? (
+                    <div className="jobs-candidate-message-start">
+                      <p>Start a private Jobs conversation about this application.</p>
+                      <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
+                    </div>
+                  ) : null}
                   {candidateDrawerTab === "Interviews" ? <p>No interviews scheduled.</p> : null}
                   {candidateDrawerTab === "Notes" ? <textarea placeholder="Private notes for your hiring team" /> : null}
                   {candidateDrawerTab === "Activity" ? <p>Applied on {new Date(selectedCandidate.createdAt).toLocaleDateString()} with status {selectedCandidate.status}.</p> : null}

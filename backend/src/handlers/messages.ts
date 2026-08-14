@@ -32,7 +32,9 @@ const mergePairConversations = async (req: any, conversations: Array<Record<stri
   const sorted = [...conversations].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
   const primary = sorted[0];
   const duplicates = sorted.slice(1);
-  const pairKey = pairKeyFor(primary.buyerId, primary.sellerId);
+  const pairKey = primary.contextType === "jobs" && primary.pairKey
+    ? primary.pairKey
+    : pairKeyFor(primary.buyerId, primary.sellerId);
   const unreadBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.unreadBy) ? item.unreadBy : []))];
   const archivedBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.archivedBy) ? item.archivedBy : []))];
   const deletedBy = [...new Set(sorted.flatMap((item) => Array.isArray(item.deletedBy) ? item.deletedBy : []))];
@@ -98,7 +100,12 @@ export default function mountMessageEndpoints(router: Router) {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.status(200).json({ conversations: [] });
     const uid = currentUser.uid;
-    const conversations = await req.app.locals.conversationCollection.find({ participants: uid, deletedBy: { $ne: uid } }).sort({ updatedAt: -1 }).toArray();
+    const contextType = req.query.context === "jobs" ? "jobs" : "marketplace";
+    const conversations = await req.app.locals.conversationCollection.find({
+      participants: uid,
+      deletedBy: { $ne: uid },
+      ...(contextType === "jobs" ? { contextType: "jobs" } : { contextType: { $ne: "jobs" } }),
+    }).sort({ updatedAt: -1 }).toArray();
     const grouped = new Map<string, Array<Record<string, any>>>();
     conversations.forEach((conversation: Record<string, any>) => {
       const key = conversation.pairKey || pairKeyFor(conversation.buyerId, conversation.sellerId);
@@ -220,6 +227,8 @@ export default function mountMessageEndpoints(router: Router) {
     if (!user) return res.status(401).json({ error: "unauthorized", message: "User needs to sign in first" });
     const conversation = await req.app.locals.conversationCollection.findOne({ _id: new ObjectId(req.params.id), participants: user.uid });
     if (!conversation) return res.status(404).json({ error: "not_found", message: "Conversation not found" });
+    if (conversation.contextType === "jobs" && !conversation.lastMessage && conversation.sellerId !== user.uid)
+      return res.status(403).json({ error: "employer_message_required", message: "The employer must send the first Jobs message." });
     const message = String(req.body?.message || "").trim();
     const requestedType = String(req.body?.messageType || "text");
     const messageType = allowedMessageTypes.has(requestedType) ? requestedType : "text";

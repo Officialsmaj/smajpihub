@@ -867,6 +867,45 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, "application.archived", req.params.id);
     res.json({ candidateArchivedAt });
   });
+  router.post("/employer/applications/:id/conversation", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const application = await req.app.locals.jobApplicationCollection.findOne({
+      _id: documentId(req.params.id),
+    });
+    if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
+      return res.status(404).json({ error: "not_found" });
+    const candidate = req.app.locals.userCollection
+      ? await req.app.locals.userCollection.findOne({ uid: application.candidateId })
+      : null;
+    const employerId = application.employerId;
+    const candidateId = application.candidateId;
+    const pair = [candidateId, employerId].sort().join(":");
+    const pairKey = `jobs:${application._id.toString()}:${pair}`;
+    let conversation = await req.app.locals.conversationCollection.findOne({ pairKey });
+    if (!conversation) {
+      const now = new Date();
+      const document = {
+        pairKey,
+        contextType: "jobs",
+        applicationId: application._id.toString(),
+        jobId: application.jobId,
+        jobTitle: application.jobTitle,
+        buyerId: candidateId,
+        buyerName: candidate?.displayName || candidate?.username || application.profileSnapshot?.title || "Candidate",
+        sellerId: employerId,
+        sellerName: user.displayName || user.username || application.company,
+        participants: [candidateId, employerId],
+        lastMessage: "",
+        unreadBy: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      const result = await req.app.locals.conversationCollection.insertOne(document);
+      conversation = { ...document, _id: result.insertedId };
+    }
+    res.status(200).json({ conversation: serializeJobDocument(conversation) });
+  });
   router.get("/employer/dashboard", async (req, res) => {
     const user = await requireEmployer(req, res);
     if (!user) return;

@@ -3280,7 +3280,8 @@
   display: grid;
   gap: 10px;
 }
-.jobs-message-list > a {
+.jobs-message-list > button {
+  width: 100%;
   padding: 14px;
   display: grid;
   grid-template-columns: 42px 1fr auto;
@@ -3290,6 +3291,7 @@
   border-radius: 14px;
   color: var(--ink);
   background: #fff;
+  text-align: left;
   text-decoration: none;
 }
 .jobs-message-avatar {
@@ -3302,7 +3304,7 @@
   background: var(--green);
   font-weight: 850;
 }
-.jobs-message-list > a > span:nth-child(2) {
+.jobs-message-list > button > span:nth-child(2) {
   min-width: 0;
   display: grid;
   gap: 4px;
@@ -3319,6 +3321,84 @@
   border-radius: 50%;
   background: var(--green);
 }
+.jobs-chat-panel {
+  min-height: calc(100dvh - 190px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  border: 1px solid #e3e9e6;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.jobs-chat-panel > header {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e7ece9;
+}
+.jobs-chat-panel > header button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #eee8ff;
+  color: #5b2bd9;
+  font-size: 20px;
+}
+.jobs-chat-panel h1 { margin: 0; font-size: 1rem; }
+.jobs-chat-panel header small { color: #6c7b75; }
+.jobs-chat-thread {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  background: #f7faf8;
+}
+.jobs-chat-thread article {
+  max-width: 82%;
+  padding: 10px 12px;
+  align-self: flex-start;
+  border-radius: 13px 13px 13px 4px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(25, 42, 34, 0.08);
+}
+.jobs-chat-thread article.mine {
+  align-self: flex-end;
+  color: #fff;
+  border-radius: 13px 13px 4px 13px;
+  background: #6d3df5;
+}
+.jobs-chat-thread article strong { font-size: 10px; opacity: 0.72; }
+.jobs-chat-thread article p { margin: 3px 0 0; }
+.jobs-chat-start { margin: auto; color: #6c7b75; text-align: center; }
+.jobs-chat-compose {
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  border-top: 1px solid #e7ece9;
+}
+.jobs-chat-compose input {
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid #dce4e0;
+  border-radius: 999px;
+  font: inherit;
+}
+.jobs-chat-compose button,
+.jobs-candidate-message-start button {
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: #6d3df5;
+  font-weight: 800;
+}
+.jobs-chat-compose button:disabled { opacity: 0.55; }
+.jobs-candidate-message-start { display: grid; gap: 12px; }
+.jobs-candidate-message-start button { min-height: 44px; width: fit-content; }
 .jobs-message-loading {
   min-height: 220px;
   display: flex;
