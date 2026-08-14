@@ -35,6 +35,7 @@ export type JobsApiApplication = {
   coverNote?: string;
   status: string;
   createdAt: string;
+  candidateArchivedAt?: string;
   profileSnapshot?: JobsProfile;
 };
 
@@ -184,6 +185,9 @@ export const updateEmployerApplication = async (id: string, status: string) =>
     .data.status;
 export const withdrawJobApplication = async (id: string) =>
   (await axiosClient.patch<{ status: string }>(`/jobs/applications/${encodeURIComponent(id)}/withdraw`)).data.status;
+export const archiveJobApplication = async (id: string) =>
+  (await axiosClient.patch<{ candidateArchivedAt: string }>(`/jobs/applications/${encodeURIComponent(id)}/archive`)).data
+    .candidateArchivedAt;
 export const claimJobCompany = async (id: string, evidence: { website: string; evidence: string }) =>
   (await axiosClient.post(`/jobs/companies/${encodeURIComponent(id)}/claim`, evidence)).data;
 export const requestCompanyVerification = async (

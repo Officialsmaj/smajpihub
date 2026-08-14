@@ -88,6 +88,8 @@ assert.match(page, /ArchiveOutlinedIcon/);
 assert.match(page, /RemoveCircleOutlineRoundedIcon/);
 assert.match(page, /getCandidateApplicationUi\(application\.status\)/);
 assert.match(page, /withdrawJobApplicationRequest/);
+assert.match(page, /archiveCandidateApplication/);
+assert.match(page, /candidateArchivedAt/);
 assert.doesNotMatch(page, /index === 0/);
 assert.match(page, /Job alerts/);
 assert.match(page, /NotificationsNoneRoundedIcon/);

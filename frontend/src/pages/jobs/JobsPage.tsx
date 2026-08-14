@@ -19,6 +19,7 @@ import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import AppLayout from "../../layouts/AppLayout";
 import {
   applyToJob,
+  archiveJobApplication,
   createJobCompany,
   createJob,
   createJobsBillingIntent,
@@ -648,6 +649,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       ? visibleJobs.filter(job => job.freelance)
       : visibleJobs;
   const savedJobs = visibleJobs.filter(job => saved.has(job.id));
+  const activeApplications = applications.filter(application => !application.candidateArchivedAt);
+  const archivedApplications = applications.filter(application => Boolean(application.candidateArchivedAt));
   const markApplicationUpdateRead = (application: JobsApiApplication) => {
     const updateKey = applicationUpdateKey(application);
     setReadApplicationUpdates(current => {
@@ -656,6 +659,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       window.localStorage.setItem("smaj_jobs_read_application_updates", JSON.stringify([...next]));
       return next;
     });
+  };
+  const archiveCandidateApplication = async (application: JobsApiApplication) => {
+    try {
+      const candidateArchivedAt = await archiveJobApplication(application.id);
+      setApplications(current =>
+        current.map(item => (item.id === application.id ? { ...item, candidateArchivedAt } : item)),
+      );
+      setManagedJobApplication(null);
+      navigate("/services/jobs/saved?tab=archived");
+    } catch {
+      setManagedJobApplication(null);
+      setActionMessage("Application could not be archived.");
+    }
   };
   const myJobsTab =
     kind === "applications"
@@ -1658,9 +1674,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <nav aria-label="My jobs sections">
                 {[
                   ["saved", "Saved", savedJobs.length, "/services/jobs/saved"],
-                  ["applied", "Applied", applications.length, "/services/jobs/applications"],
+                  ["applied", "Applied", activeApplications.length, "/services/jobs/applications"],
                   ["interviews", "Interviews", 0, "/services/jobs/saved?tab=interviews"],
-                  ["archived", "Archived", 0, "/services/jobs/saved?tab=archived"],
+                  ["archived", "Archived", archivedApplications.length, "/services/jobs/saved?tab=archived"],
                 ].map(([tab, label, count, to]) => (
                   <Link key={String(tab)} to={String(to)} className={myJobsTab === tab ? "active" : ""}>
                     <span>{label}</span>
@@ -1700,7 +1716,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             ) : myJobsTab === "applied" ? (
               <div className="jobs-my-jobs-list">
                 <h2>Past 14 days</h2>
-                {applications.map(application => {
+                {activeApplications.map(application => {
                   const applicationUi = getCandidateApplicationUi(application.status);
                   return (
                     <article key={application.id} className="jobs-my-job-card applied">
@@ -1739,7 +1755,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </article>
                   );
                 })}
-                {!applications.length ? (
+                {!activeApplications.length ? (
                   <div className="jobs-my-jobs-empty">
                     <h2>No applications yet</h2>
                     <p>Jobs you apply for will appear here.</p>
@@ -1757,15 +1773,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <p>Your scheduled interviews will appear here.</p>
                 <button type="button">Not seeing an interview?</button>
               </div>
+            ) : archivedApplications.length ? (
+              <div className="jobs-my-jobs-list">
+                {archivedApplications.map(application => (
+                  <article key={application.id} className="jobs-my-job-card applied">
+                    <span className="jobs-status-badge archived">Archived</span>
+                    <h2>{application.jobTitle}</h2>
+                    <p>{application.company}</p>
+                    <small>Archived from your active applications</small>
+                    <Link to={`/services/jobs/job/${application.jobId}`}>View job</Link>
+                  </article>
+                ))}
+              </div>
             ) : (
               <div className="jobs-my-jobs-empty archived">
-                <div className="jobs-empty-illustration archived" aria-hidden="true">
-                  <span />
-                  <i />
-                </div>
+                <div className="jobs-empty-illustration archived" aria-hidden="true"><span /><i /></div>
                 <h2>No archived applications</h2>
-                <p>To keep things tidy, we remove applications that are older than 6 months.</p>
-                <button type="button">Not seeing an archived application?</button>
+                <p>Applications you archive will appear here.</p>
               </div>
             )}
             {managedJobApplication ? (
@@ -1783,11 +1807,18 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       ×
                     </button>
                   </header>
-                  <button type="button">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const jobId = managedJobApplication.jobId;
+                      setManagedJobApplication(null);
+                      navigate(`/services/jobs/job/${jobId}`);
+                    }}
+                  >
                     <WorkOutlineRoundedIcon />
                     <span>View and Manage Details</span>
                   </button>
-                  <button type="button">
+                  <button type="button" onClick={() => void archiveCandidateApplication(managedJobApplication)}>
                     <ArchiveOutlinedIcon />
                     <span>Archive</span>
                   </button>

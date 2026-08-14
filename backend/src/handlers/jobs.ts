@@ -851,6 +851,22 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, "application.withdrawn", req.params.id);
     res.json({ status: "withdrawn" });
   });
+  router.patch("/applications/:id/archive", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const application = await req.app.locals.jobApplicationCollection.findOne({
+      _id: documentId(req.params.id),
+      candidateId: userId(user),
+    });
+    if (!application) return res.status(404).json({ error: "not_found" });
+    const candidateArchivedAt = new Date().toISOString();
+    await req.app.locals.jobApplicationCollection.updateOne(
+      { _id: application._id },
+      { $set: { candidateArchivedAt } },
+    );
+    await audit(req, user, "application.archived", req.params.id);
+    res.json({ candidateArchivedAt });
+  });
   router.get("/employer/dashboard", async (req, res) => {
     const user = await requireEmployer(req, res);
     if (!user) return;
