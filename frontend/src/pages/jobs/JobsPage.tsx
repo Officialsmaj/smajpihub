@@ -373,16 +373,32 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [employerSearch, setEmployerSearch] = useState("");
   const [blockedEmployers, setBlockedEmployers] = useState<string[]>([]);
   const [postStep, setPostStep] = useState<
-    "contact" | "title" | "location" | "hires" | "timeframe" | "type" | "salary" | "benefits" | "description" | "review" | "sponsor" | "details"
+    | "contact"
+    | "title"
+    | "location"
+    | "hires"
+    | "timeframe"
+    | "type"
+    | "salary"
+    | "benefits"
+    | "description"
+    | "category"
+    | "review"
+    | "sponsor"
+    | "details"
   >("contact");
   const [postJobTitle, setPostJobTitle] = useState("");
   const [postLocationType, setPostLocationType] = useState<(typeof employerLocationTypes)[number]["id"]>("in-person");
+  const [postCountry, setPostCountry] = useState("");
   const [postHires, setPostHires] = useState(0);
   const [postHiringTimeframe, setPostHiringTimeframe] = useState<(typeof hiringTimeframes)[number]>("1 to 3 days");
   const [postJobType, setPostJobType] = useState("Full-time");
   const [postBenefits, setPostBenefits] = useState<string[]>([]);
   const [postDescription, setPostDescription] = useState("");
+  const [postCustomCategory, setPostCustomCategory] = useState("");
+  const [postSkills, setPostSkills] = useState("");
   const [postSubmitting, setPostSubmitting] = useState(false);
+  const [contactSubmitting, setContactSubmitting] = useState(false);
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
   const [employerHeroVideoPaused, setEmployerHeroVideoPaused] = useState(false);
   const [workspaceSwitchingTo, setWorkspaceSwitchingTo] = useState<"candidate" | "employer" | "">("");
@@ -1042,6 +1058,34 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setActionMessage("Interview could not be cancelled.");
     }
   };
+  useEffect(() => {
+    if (kind === "post" && postStep === "contact" && employerCompanies.length && !postCompanyId) {
+      setPostCompanyId(employerCompanies[0].id);
+      setPostStep("title");
+    }
+  }, [kind, postStep, employerCompanies, postCompanyId]);
+  const submitContactStep = async (form: HTMLFormElement) => {
+    if (contactSubmitting) return;
+    setContactSubmitting(true);
+    try {
+      if (employerCompanies.length) {
+        setPostCompanyId(employerCompanies[0].id);
+      } else {
+        const data = new FormData(form);
+        const name = String(data.get("companyName") || "").trim();
+        await enrollEmployer();
+        const company = await createJobCompany({ name, field: "Other" });
+        setEmployerCompanies(current => [...current, company]);
+        setCompanies(current => [...current, company]);
+        setPostCompanyId(company.id);
+      }
+      setPostStep("title");
+    } catch {
+      setActionMessage("We could not save your company details. Please try again.");
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (postSubmitting) return;
@@ -1081,6 +1125,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       });
       setJobs(current => [created, ...current]);
       setActionMessage(`Job posted at ${formatJobDateTime(created.postedAt || created.createdAt)} and is pending review.`);
+      setPostStep("title");
+      setPostJobTitle("");
+      setPostCountry("");
+      setPostHires(0);
+      setPostHiringTimeframe("1 to 3 days");
+      setPostJobType("Full-time");
+      setPostBenefits([]);
+      setPostDescription("");
+      setPostCategory("");
+      setPostCustomCategory("");
+      setPostSkills("");
+      setPayMin("");
+      setPayMax("");
+      setPostSponsorPlan("none");
       navigate(`/services/jobs/employer`);
     } catch {
       setActionMessage("The job could not be submitted. Confirm your employer account and company ownership.");
@@ -2606,12 +2664,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-contact-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  setPostStep("title");
+                  void submitContactStep(event.currentTarget);
                 }}
               >
                 <label>
                   Company name *
-                  <input name="companyName" required />
+                  <input name="companyName" required minLength={2} maxLength={120} />
                 </label>
                 <label>
                   Company website (optional)
@@ -2669,8 +2727,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </span>
                 </label>
                 <footer>
-                  <button type="submit">
-                    Continue <ArrowForwardRoundedIcon />
+                  <button type="submit" disabled={contactSubmitting} aria-busy={contactSubmitting}>
+                    {contactSubmitting ? "Saving…" : <>Continue <ArrowForwardRoundedIcon /></>}
                   </button>
                 </footer>
               </form>
@@ -2720,7 +2778,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-location-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  setPostStep("hires");
+                  if (postCountry.trim()) setPostStep("hires");
                 }}
               >
                 <h2>Location type *</h2>
@@ -2742,11 +2800,30 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </button>
                   ))}
                 </div>
+                <label>
+                  Country or work location *
+                  <input
+                    name="country"
+                    required
+                    list="job-country-options"
+                    value={postCountry}
+                    onChange={event => setPostCountry(event.target.value)}
+                    placeholder="Search country"
+                    autoComplete="off"
+                  />
+                  <datalist id="job-country-options">
+                    <option value="🌐 Worldwide" />
+                    <option value="🏠 Remote" />
+                    {JOB_COUNTRIES.map(country => (
+                      <option key={country.code} value={country.label} />
+                    ))}
+                  </datalist>
+                </label>
                 <footer>
                   <button type="button" onClick={() => setPostStep("title")}>
                     ← Back
                   </button>
-                  <button type="submit">
+                  <button type="submit" disabled={!postCountry.trim()}>
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
@@ -2818,7 +2895,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "description" ? (
-              <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("review"); }}>
+              <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("category"); }}>
                 <h2>Job description *</h2>
                 <p>This is a SMAJ PI HUB-assisted job description. You can edit or replace it.</p>
                 <div className="jobs-description-editor">
@@ -2826,6 +2903,67 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <textarea required value={postDescription} onChange={event => setPostDescription(event.target.value)} placeholder={`Overview\n\nJoin our dynamic team as a ${postJobTitle || "team member"} and help customers in the Pi economy.`} />
                 </div>
                 <footer><button type="button" onClick={() => setPostStep("benefits")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "category" ? (
+              <form
+                className="jobs-employer-step-form jobs-category-step"
+                onSubmit={event => {
+                  event.preventDefault();
+                  if (postCategory.trim() && (postCategory !== "Other" || postCustomCategory.trim()) && postSkills.trim())
+                    setPostStep("review");
+                }}
+              >
+                <h2>Category and skills *</h2>
+                <label>
+                  Category
+                  <input
+                    name="category"
+                    required
+                    list="job-category-options"
+                    value={postCategory}
+                    onChange={event => setPostCategory(event.target.value)}
+                    placeholder="Search 100+ categories"
+                    autoComplete="off"
+                  />
+                  <datalist id="job-category-options">
+                    {JOB_CATEGORIES.map(item => (
+                      <option value={item} key={item} />
+                    ))}
+                  </datalist>
+                </label>
+                {postCategory === "Other" ? (
+                  <label>
+                    Custom category
+                    <input
+                      name="customCategory"
+                      required
+                      minLength={2}
+                      maxLength={80}
+                      value={postCustomCategory}
+                      onChange={event => setPostCustomCategory(event.target.value)}
+                      placeholder="Type the job category"
+                    />
+                  </label>
+                ) : null}
+                <label>
+                  Skills
+                  <input
+                    name="skills"
+                    required
+                    value={postSkills}
+                    onChange={event => setPostSkills(event.target.value)}
+                    placeholder="React, Research, Communication"
+                  />
+                </label>
+                <footer>
+                  <button type="button" onClick={() => setPostStep("description")}>← Back</button>
+                  <button
+                    type="submit"
+                    disabled={!postCategory.trim() || (postCategory === "Other" && !postCustomCategory.trim()) || !postSkills.trim()}
+                  >
+                    Continue <ArrowForwardRoundedIcon />
+                  </button>
+                </footer>
               </form>
             ) : kind === "post" && postStep === "review" ? (
               <form className="jobs-employer-step-form jobs-review-step" onSubmit={event => { event.preventDefault(); setPostStep("sponsor"); }}>
@@ -2838,6 +2976,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     ["Job title", postJobTitle, "title"],
                     ["Location type", selectedPostLocationType.title, "location"],
                     ["Work mode", selectedPostLocationType.mode, "location"],
+                    ["Country", postCountry || "Not set", "location"],
                     ["Number of hires", String(postHires), "hires"],
                     ["Hiring timeframe", postHiringTimeframe, "timeframe"],
                     ["Job type", postJobType, "type"],
@@ -2845,12 +2984,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     ["Pi equivalent", `${formatPiAmount(piFromUsdt(Number(payMin) || 0))}${Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}`, "salary"],
                     ["Benefits", postBenefits.join(", ") || "None selected", "benefits"],
                     ["Description", postDescription ? `${postDescription.slice(0, 80)}${postDescription.length > 80 ? "…" : ""}` : "Add description", "description"],
+                    ["Category", (postCategory === "Other" ? postCustomCategory : postCategory) || "Not set", "category"],
+                    ["Skills", postSkills || "Not set", "category"],
                     ["Sponsor plan", postSponsorPlan === "none" ? "No sponsor plan" : postSponsorPlan, "sponsor"],
                   ].map(([label, value, step]) => (
                     <div key={label}><small>{label}</small><span>{value}</span><button type="button" onClick={() => setPostStep(step as typeof postStep)}>Edit</button></div>
                   ))}
                 </section>
-                <footer><button type="button" onClick={() => setPostStep("description")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("category")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "sponsor" ? (
               <form className="jobs-employer-step-form jobs-sponsor-step" onSubmit={event => { event.preventDefault(); setPostStep("details"); }}>
@@ -2934,6 +3075,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       name="country"
                       required
                       list="job-country-options"
+                      value={postCountry}
+                      onChange={event => setPostCountry(event.target.value)}
                       placeholder="Search country"
                       autoComplete="off"
                     />
@@ -2984,7 +3127,13 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </label>
                   <label>
                     Skills
-                    <input name="skills" required placeholder="React, Research, Communication" />
+                    <input
+                      name="skills"
+                      required
+                      value={postSkills}
+                      onChange={event => setPostSkills(event.target.value)}
+                      placeholder="React, Research, Communication"
+                    />
                   </label>
                 </div>
                 {postCategory === "Other" ? (
@@ -2995,6 +3144,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       required
                       minLength={2}
                       maxLength={80}
+                      value={postCustomCategory}
+                      onChange={event => setPostCustomCategory(event.target.value)}
                       placeholder="Type the job category"
                     />
                   </label>
