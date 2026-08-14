@@ -981,6 +981,15 @@
 .job-card-main > p svg {
   font-size: 16px;
 }
+.job-card-main > .job-card-dates {
+  margin: -6px 0 12px;
+  gap: 6px;
+  color: #8a988f;
+  font-size: 11px;
+}
+.job-card-dates span {
+  color: #c0c9c4;
+}
 .job-card-main > .job-card-salary {
   margin: 0 0 12px;
   color: #5b2bd9;

@@ -114,6 +114,23 @@ const displayJobSalary = (job: Job) => {
   }
   return job.salary?.trim() || "Compensation not specified";
 };
+const formatJobDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const today = new Date();
+  const dateLabel =
+    date.toDateString() === today.toDateString()
+      ? "today"
+      : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return `${dateLabel} · ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+};
+const formatJobDate = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+};
 const normalizeJobLocation = (value: string) =>
   JOB_COUNTRIES.find(country => country.label === value)?.name || value.trim();
 const employerJobTitleSuggestions = [
@@ -275,6 +292,12 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
       <p>
         <LocationOnOutlinedIcon /> {job.location} · {job.mode} · {job.type}
       </p>
+      {(job.postedAt || job.createdAt || job.expiresAt) ? (
+        <p className="job-card-dates">
+          {job.postedAt || job.createdAt ? <>Posted {formatJobDateTime(job.postedAt || job.createdAt)}</> : null}
+          {job.expiresAt ? <><span>•</span> Expires {formatJobDate(job.expiresAt)}</> : null}
+        </p>
+      ) : null}
       <strong className="job-card-salary">{displayJobSalary(job)}</strong>
       <div>
         {job.skills.map(skill => (
@@ -351,6 +374,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postJobType, setPostJobType] = useState("Full-time");
   const [postBenefits, setPostBenefits] = useState<string[]>([]);
   const [postDescription, setPostDescription] = useState("");
+  const [postSubmitting, setPostSubmitting] = useState(false);
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
   const [employerHeroVideoPaused, setEmployerHeroVideoPaused] = useState(false);
   const [workspaceSwitchingTo, setWorkspaceSwitchingTo] = useState<"candidate" | "employer" | "">("");
@@ -900,7 +924,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const selectedCompany = companies.find(company => company.id === id);
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (postSubmitting) return;
     const data = new FormData(event.currentTarget);
+    setPostSubmitting(true);
     try {
       let companyId = String(data.get("companyId") || "");
       if (companyId === "__add__") {
@@ -934,10 +960,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         summary: String(data.get("summary") || ""),
       });
       setJobs(current => [created, ...current]);
-      setActionMessage("Job submitted for moderation.");
+      setActionMessage(`Job posted at ${formatJobDateTime(created.postedAt || created.createdAt)} and is pending review.`);
       navigate(`/services/jobs/employer`);
     } catch {
       setActionMessage("The job could not be submitted. Confirm your employer account and company ownership.");
+    } finally {
+      setPostSubmitting(false);
     }
   };
   const submitApplication = async (event: FormEvent<HTMLFormElement>) => {
@@ -2719,7 +2747,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     genuine and can be honored.
                   </label>
                 </fieldset>
-                <button type="submit">Publish job</button>
+                <button type="submit" disabled={postSubmitting} aria-busy={postSubmitting}>
+                  {postSubmitting ? <><span className="jobs-submit-spinner" /> Publishing…</> : "Publish job"}
+                </button>
               </form>
             ) : kind === "profile" ? (
               <div className="jobs-profile-workspace">

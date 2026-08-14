@@ -18,6 +18,12 @@ export type JobsApiJob = {
   freelance?: boolean;
   summary: string;
   skills: string[];
+  status?: string;
+  moderationStatus?: string;
+  postedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  expiresAt?: string;
 };
 
 export type JobsApiCompany = {

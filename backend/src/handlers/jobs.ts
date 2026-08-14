@@ -570,9 +570,10 @@ export default function mountJobsEndpoints(router: Router) {
       slug,
       company: company.name,
       employerId: userId(user),
-      status: "draft",
+      status: "active",
       moderationStatus: "pending",
       featured: false,
+      postedAt: now,
       createdAt: now,
       updatedAt: now,
     };
