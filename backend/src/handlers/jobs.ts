@@ -922,11 +922,12 @@ export default function mountJobsEndpoints(router: Router) {
     });
     if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
       return res.status(404).json({ error: "not_found" });
-    const candidate = req.app.locals.userCollection
-      ? await req.app.locals.userCollection.findOne({ uid: application.candidateId })
+    const candidate = req.app.locals.userCollection && ObjectId.isValid(application.candidateId)
+      ? await req.app.locals.userCollection.findOne({ _id: new ObjectId(application.candidateId) })
       : null;
-    const employerId = application.employerId;
-    const candidateId = application.candidateId;
+    if (!candidate) return res.status(404).json({ error: "candidate_not_found" });
+    const employerId = user.uid;
+    const candidateId = candidate.uid;
     const pair = [candidateId, employerId].sort().join(":");
     const pairKey = `jobs:${application._id.toString()}:${pair}`;
     let conversation = await req.app.locals.conversationCollection.findOne({ pairKey });
