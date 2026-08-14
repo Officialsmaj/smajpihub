@@ -855,31 +855,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </form>
                 <div className="jobs-employer-map-preview" aria-hidden="true" />
               </section>
-              <section className="jobs-section jobs-employer-home-list">
-                <header>
-                  <div>
-                    <span className="jobs-kicker">HIRING WORKSPACE</span>
-                    <h2>Manage hiring in one place</h2>
-                  </div>
-                  <Link to="/services/jobs/employer">
-                    Manage jobs <ArrowForwardRoundedIcon />
-                  </Link>
-                </header>
-                <div className="jobs-employer-dashboard">
-                  <article>
-                    <strong>{employerCompanies.length}</strong>
-                    <span>Companies</span>
-                  </article>
-                  <article>
-                    <strong>{employerApplications.length}</strong>
-                    <span>Candidates</span>
-                  </article>
-                  <article>
-                    <strong>{jobs.filter(job => employerCompanies.some(company => company.id === job.companyId)).length}</strong>
-                    <span>Posted jobs</span>
-                  </article>
-                </div>
-              </section>
             </>
           ) : (
           <>

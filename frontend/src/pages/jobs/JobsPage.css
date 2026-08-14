@@ -422,9 +422,6 @@
   bottom: 58px;
   transform: rotate(28deg);
 }
-.jobs-employer-home-list {
-  padding-top: 42px;
-}
 .jobs-search-sheet-layer {
   position: fixed;
   z-index: 2147483000;

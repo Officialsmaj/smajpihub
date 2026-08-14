@@ -53,6 +53,7 @@ assert.match(page, /Switching to \{workspaceSwitchingTo === "candidate" \? "Find
 assert.match(page, /3000/);
 assert.match(page, /Hiring trusted Pi talent is simpler, faster, and more human/);
 assert.match(page, /The people you're looking for are here/);
+assert.doesNotMatch(page, /Manage hiring in one place/);
 assert.match(page, /jobs-employer-hero-video/);
 assert.match(page, /jobs-employer-hero\.webm/);
 assert.match(page, /employerHeroVideoRef/);
