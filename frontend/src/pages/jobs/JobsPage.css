@@ -229,6 +229,25 @@
 .jobs-recommended h2 {
   margin: 0 0 14px;
 }
+.jobs-recommendation-skeleton {
+  display: grid;
+  gap: 12px;
+}
+.jobs-recommendation-skeleton span {
+  height: 86px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #edf3ff, #f7faff, #edf3ff);
+  background-size: 220% 100%;
+  animation: jobs-skeleton-pulse 1.2s ease-in-out infinite;
+}
+@keyframes jobs-skeleton-pulse {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
 .jobs-employer-home {
   min-height: 720px;
   position: relative;

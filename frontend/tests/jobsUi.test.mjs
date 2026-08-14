@@ -97,6 +97,8 @@ assert.match(page, /jobs-quick-search/);
 assert.match(page, /Country, city or remote/);
 assert.match(page, /Recommended jobs/);
 assert.match(page, /recommendedJobs/);
+assert.match(page, /jobs-recommendation-skeleton/);
+assert.match(page, /!user \? <section className="jobs-hero">/);
 assert.match(page, /jobs-search-sheet/);
 assert.match(page, /Search suggestions/);
 assert.match(page, /smaj_jobs_recent_searches/);

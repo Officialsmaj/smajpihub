@@ -1001,9 +1001,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </section>
                 </div>
               ) : null}
-              {user && !loading && activeWorkspaceMode === "candidate" ? (
+              {user && activeWorkspaceMode === "candidate" ? (
                 <JobPreferencesPanel
-                  key={profile?.updatedAt || profile?.jobsMode || "new"}
+                  key={loading ? "loading-candidate-preferences" : profile?.updatedAt || profile?.jobsMode || "new"}
                   userName={user.displayName || user.piUsername || user.username || "Pioneer"}
                   profile={profile}
                   jobs={jobs}
@@ -1026,10 +1026,16 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   }}
                 />
               ) : null}
-              {user && profile?.jobsMode && activeWorkspaceMode === "candidate" ? (
+              {user && activeWorkspaceMode === "candidate" ? (
                 <section className="jobs-recommended">
                   <h2>Recommended jobs</h2>
-                  {recommendedJobs.length ? (
+                  {loading ? (
+                    <div className="jobs-recommendation-skeleton" aria-label="Loading recommended jobs">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  ) : recommendedJobs.length ? (
                     <div className="jobs-list">
                       {recommendedJobs.map(job => (
                         <JobCard key={job.id} job={job} saved={saved.has(job.id)} onSave={() => saveJob(job.id)} />
@@ -1043,7 +1049,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </section>
               ) : null}
             </section>
-            <section className="jobs-hero">
+            {!user ? <section className="jobs-hero">
               <div>
                 <span className="jobs-kicker">VERIFIED TALENT. REAL OPPORTUNITIES.</span>
                 <h1>
@@ -1069,7 +1075,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <small>Pi-powered</small>
                 </div>
               </aside>
-            </section>
+            </section> : null}
             <section className="jobs-section">
               <header>
                 <div>

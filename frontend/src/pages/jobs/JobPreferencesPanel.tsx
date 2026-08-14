@@ -27,8 +27,9 @@ const JobPreferencesPanel = ({
   jobs: JobsApiJob[];
   onSaved: (preferences: JobsPreferences) => void;
 }) => {
+  const hydratedProfile = profile ? { ...defaults, ...profile } : { ...defaults, jobsMode: "candidate" };
   const [editor, setEditor] = useState<Editor>("");
-  const [preferences, setPreferences] = useState<JobsPreferences>({ ...defaults, ...profile });
+  const [preferences, setPreferences] = useState<JobsPreferences>(hydratedProfile);
   const recommendations = useMemo(
     () =>
       jobs.filter(job => {
@@ -61,7 +62,7 @@ const JobPreferencesPanel = ({
   const titles = preferences.preferredTitles.length ? preferences.preferredTitles : [""];
   const locations = preferences.preferredLocations.length ? preferences.preferredLocations : [""];
 
-  if (!profile?.jobsMode)
+  if (profile && !profile.jobsMode)
     return (
       <section className="jobs-role-onboarding">
         <h2>How do you want to use SMAJ PI Jobs?</h2>
