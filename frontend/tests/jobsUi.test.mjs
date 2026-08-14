@@ -8,6 +8,7 @@ const preferences = readFileSync(new URL("../src/pages/jobs/JobPreferencesPanel.
 const styles = readFileSync(new URL("../src/pages/jobs/JobsPage.css", import.meta.url), "utf8");
 
 assert.match(page, /Loading live opportunities/);
+assert.match(page, /loading && kind !== "home"/);
 assert.match(page, /limited offline catalog/);
 assert.match(page, /URLSearchParams/);
 assert.match(api, /location\?: string/);

@@ -767,7 +767,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             </section>
           </div>
         ) : null}
-        {loading ? (
+        {loading && kind !== "home" ? (
           <p className="jobs-status" role="status">
             Loading live opportunities…
           </p>
