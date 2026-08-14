@@ -163,6 +163,7 @@ const jobsRoutes: Array<[string, JobsPageKind]> = [
   ["settings/blocked-employers", "blocked-employers"],
   ["post", "post"],
   ["employer", "employer"],
+  ["candidates", "candidates"],
 ];
 
 const housingRoutes: Array<[string, HousingPageKind]> = [
