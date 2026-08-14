@@ -689,13 +689,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     if (conversation && activeJobsConversation?._id !== conversationId) void openJobsConversation(conversation);
   }, [activeJobsConversation?._id, homeTab, jobConversations, searchParams]);
 
+  const activeJobsConversationId = activeJobsConversation?._id || "";
   useEffect(() => {
-    if (!activeJobsConversation) return;
+    if (!activeJobsConversationId) return;
     let active = true;
     const timer = window.setInterval(() => {
       axiosClient
         .get<{ conversation?: JobsConversation; messages?: JobsChatMessage[] }>(
-          `/messages/${encodeURIComponent(activeJobsConversation._id)}`,
+          `/messages/${encodeURIComponent(activeJobsConversationId)}`,
         )
         .then(({ data }) => {
           if (!active) return;
@@ -708,7 +709,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       active = false;
       window.clearInterval(timer);
     };
-  }, [activeJobsConversation?._id]);
+  }, [activeJobsConversationId]);
 
   useEffect(() => {
     if (!searchSheetOpen && !locationSheetOpen) return;
