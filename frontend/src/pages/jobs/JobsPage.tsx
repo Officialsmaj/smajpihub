@@ -357,7 +357,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postAfterWorkspaceSwitch, setPostAfterWorkspaceSwitch] = useState(false);
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateStageFilter, setCandidateStageFilter] = useState<"All" | (typeof candidateStages)[number]>("All");
-  const [candidateView, setCandidateView] = useState<"pipeline" | "list">("pipeline");
+  const [candidateView, setCandidateView] = useState<"pipeline" | "list">("list");
   const [selectedCandidate, setSelectedCandidate] = useState<JobsApiApplication | null>(null);
   const [candidateDrawerTab, setCandidateDrawerTab] = useState<(typeof candidateDrawerTabs)[number]>("Profile");
   const [managedJobApplication, setManagedJobApplication] = useState<JobsApiApplication | null>(null);
@@ -1912,9 +1912,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 {filteredCandidates.map(application => (
                   <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
                     {renderCandidateAvatar(application)}
-                    <span><b>{application.profileSnapshot?.title || "Candidate"}</b><small>{application.profileSnapshot?.location || "Location not added"}</small></span>
-                    <span>{application.jobTitle}</span>
-                    <b>{candidateStageForStatus(application.status)}</b>
+                    <span className="jobs-candidate-list-identity"><b>{application.profileSnapshot?.title || "Candidate"}</b><small>{application.profileSnapshot?.location || "Location not added"}</small></span>
+                    <span className="jobs-candidate-list-job">{application.jobTitle}</span>
+                    <b className="jobs-candidate-list-stage">{candidateStageForStatus(application.status)}</b>
                   </button>
                 ))}
               </div>

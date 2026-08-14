@@ -2665,7 +2665,7 @@
 }
 .jobs-candidate-view-toggle button.active {
   color: #fff;
-  background: var(--green);
+  background: #6d3df5;
 }
 .jobs-candidate-pipeline {
   display: grid;
@@ -2736,6 +2736,76 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+@media (max-width: 720px) {
+  .jobs-candidates-page {
+    padding: 18px 16px 96px;
+  }
+  .jobs-candidates-title h1 {
+    margin-bottom: 12px;
+    font-size: 1.55rem;
+  }
+  .jobs-candidate-tabs {
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+  .jobs-candidate-tabs button {
+    min-height: 34px;
+    padding: 0 13px;
+    font-size: 0.78rem;
+  }
+  .jobs-candidate-toolbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .jobs-candidate-toolbar select {
+    min-height: 42px;
+  }
+  .jobs-candidate-view-toggle {
+    display: none;
+  }
+  .jobs-candidate-list {
+    gap: 12px;
+  }
+  .jobs-candidate-list > button {
+    min-height: 96px;
+    padding: 14px;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "avatar identity stage"
+      "avatar job stage";
+    column-gap: 12px;
+    row-gap: 5px;
+    border-radius: 14px;
+  }
+  .jobs-candidate-list > button .jobs-candidate-avatar {
+    grid-area: avatar;
+  }
+  .jobs-candidate-list-identity {
+    grid-area: identity;
+    display: grid;
+    gap: 3px;
+  }
+  .jobs-candidate-list-identity b {
+    line-height: 1.12;
+  }
+  .jobs-candidate-list-job {
+    grid-area: job;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.25;
+  }
+  .jobs-candidate-list-stage {
+    grid-area: stage;
+    align-self: start;
+    padding: 5px 8px;
+    border-radius: 999px;
+    color: #6d3df5;
+    background: #efe8ff;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
 }
 .jobs-candidate-drawer {
   width: min(420px, 100%);
