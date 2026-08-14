@@ -7,6 +7,7 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
@@ -656,6 +657,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       })
       .slice(0, 3);
   }, [jobs, profile]);
+  const jobAlertsCount = Math.min(9, recommendedJobs.length || metrics.opportunities);
+  const jobAlertsLabel = jobAlertsCount >= 9 ? "9+" : String(jobAlertsCount);
   const selectedJob = jobs.find(job => job.id === id);
   const selectedCompany = companies.find(company => company.id === id);
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
@@ -2760,8 +2763,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           {activeWorkspaceMode === "candidate" ? (
             <>
               <NavLink to="/services/jobs/search">
-                <SearchRoundedIcon />
-                <span>Search</span>
+                <span className="jobs-nav-icon-badge">
+                  <NotificationsNoneRoundedIcon />
+                  {jobAlertsCount > 0 ? <b>{jobAlertsLabel}</b> : null}
+                </span>
+                <span>Job alerts</span>
               </NavLink>
               <NavLink to="/services/jobs/saved">
                 <BookmarkBorderRoundedIcon />

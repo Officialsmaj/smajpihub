@@ -3363,6 +3363,29 @@
     font-size: 18px;
     transition: background 160ms ease, color 160ms ease;
   }
+  .jobs-mobile-nav .jobs-nav-icon-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .jobs-mobile-nav .jobs-nav-icon-badge b {
+    position: absolute;
+    top: -4px;
+    right: -3px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    color: #fff;
+    background: #e11d48;
+    font-size: 8px;
+    line-height: 1;
+  }
   .jobs-mobile-nav a.active {
     color: #6d3df5;
   }
