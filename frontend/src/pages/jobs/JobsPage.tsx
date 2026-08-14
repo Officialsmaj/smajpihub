@@ -38,6 +38,7 @@ import {
   toggleSavedJob,
   uploadJobsCv,
   updateEmployerApplication,
+  withdrawJobApplication as withdrawJobApplicationRequest,
   type JobsApiApplication,
   type JobsApiCompany,
   type JobsApiJob,
@@ -119,6 +120,19 @@ const candidateStageForStatus = (status: string): (typeof candidateStages)[numbe
   if (normalized.includes("interview")) return "Interview";
   if (normalized.includes("shortlist") || normalized.includes("review")) return "Shortlisted";
   return "New";
+};
+const getCandidateApplicationUi = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized.includes("reject") || normalized.includes("not selected")) {
+    return { badge: "Not selected by employer", tone: "rejected", action: "status" };
+  }
+  if (normalized.includes("view") || normalized.includes("review")) {
+    return { badge: "Application viewed", tone: "viewed", action: "updates" };
+  }
+  if (normalized.includes("withdraw") || normalized.includes("archive")) {
+    return { badge: "Archived", tone: "archived", action: "none" };
+  }
+  return { badge: "Applied", tone: "applied", action: "none" };
 };
 
 const fallbackJobs: Job[] = [
@@ -721,6 +735,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setEmployerApplications(current => current.map(item => (item.id === applicationId ? { ...item, status } : item)));
     } catch {
       setActionMessage("Application status could not be updated.");
+    }
+  };
+  const withdrawCandidateApplication = async (application: JobsApiApplication) => {
+    try {
+      const status = await withdrawJobApplicationRequest(application.id);
+      setApplications(current => current.map(item => (item.id === application.id ? { ...item, status } : item)));
+      setWithdrawJobApplication(null);
+    } catch {
+      setActionMessage("Application could not be withdrawn.");
     }
   };
   const submitCompanyVerification = async (event: FormEvent<HTMLFormElement>, companyId: string) => {
@@ -1619,36 +1642,38 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
             ) : myJobsTab === "applied" ? (
               <div className="jobs-my-jobs-list">
                 <h2>Past 14 days</h2>
-                {applications.map((application, index) => (
-                  <article key={application.id} className="jobs-my-job-card applied">
-                    <span className="jobs-my-job-dot" />
-                    <span className={index === 0 ? "jobs-status-badge rejected" : "jobs-status-badge viewed"}>
-                      {index === 0 ? "Not selected by employer" : "Application viewed"}
-                    </span>
-                    <button
-                      type="button"
-                      className="jobs-my-job-menu"
-                      aria-label={`Manage ${application.jobTitle}`}
-                      onClick={() => setManagedJobApplication(application)}
-                    >
-                      ⋮
-                    </button>
-                    <h2>{application.jobTitle}</h2>
-                    <p>{application.company}</p>
-                    <p>{application.profileSnapshot?.location || "Abu Dhabi"}</p>
-                    <small>Applied on SMAJ PI HUB Jobs on {new Date(application.createdAt).toLocaleDateString()}</small>
-                    {index === 0 ? (
-                      <button type="button" className="jobs-update-status-button">Update status</button>
-                    ) : (
-                      <div className="jobs-application-update-card">
-                        <button type="button" aria-label="Dismiss update prompt">×</button>
-                        <p>Any updates since you applied?</p>
-                        <button type="button">I'm interviewing</button>
-                        <button type="button">I have another update</button>
-                      </div>
-                    )}
-                  </article>
-                ))}
+                {applications.map(application => {
+                  const applicationUi = getCandidateApplicationUi(application.status);
+                  return (
+                    <article key={application.id} className="jobs-my-job-card applied">
+                      <span className="jobs-my-job-dot" />
+                      <span className={`jobs-status-badge ${applicationUi.tone}`}>{applicationUi.badge}</span>
+                      <button
+                        type="button"
+                        className="jobs-my-job-menu"
+                        aria-label={`Manage ${application.jobTitle}`}
+                        onClick={() => setManagedJobApplication(application)}
+                      >
+                        ⋮
+                      </button>
+                      <h2>{application.jobTitle}</h2>
+                      <p>{application.company}</p>
+                      <p>{application.profileSnapshot?.location || "Abu Dhabi"}</p>
+                      <small>Applied on SMAJ PI HUB Jobs on {new Date(application.createdAt).toLocaleDateString()}</small>
+                      {applicationUi.action === "status" ? (
+                        <button type="button" className="jobs-update-status-button">Update status</button>
+                      ) : null}
+                      {applicationUi.action === "updates" ? (
+                        <div className="jobs-application-update-card">
+                          <button type="button" aria-label="Dismiss update prompt">×</button>
+                          <p>Any updates since you applied?</p>
+                          <button type="button">I'm interviewing</button>
+                          <button type="button">I have another update</button>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
                 {!applications.length ? (
                   <div className="jobs-my-jobs-empty">
                     <h2>No applications yet</h2>
@@ -1726,7 +1751,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <h3>{withdrawJobApplication.jobTitle}</h3>
                     <p>{withdrawJobApplication.profileSnapshot?.location || "Abu Dhabi"}</p>
                   </div>
-                  <button type="button" className="danger" onClick={() => setWithdrawJobApplication(null)}>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => void withdrawCandidateApplication(withdrawJobApplication)}
+                  >
                     Withdraw application
                   </button>
                   <button type="button" onClick={() => setWithdrawJobApplication(null)}>

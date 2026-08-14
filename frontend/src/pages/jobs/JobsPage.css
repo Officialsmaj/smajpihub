@@ -2221,6 +2221,14 @@
   color: #a61e2d;
   background: #feecef;
 }
+.jobs-status-badge.applied {
+  color: #075bd8;
+  background: #eaf2ff;
+}
+.jobs-status-badge.archived {
+  color: #5f5f5f;
+  background: #f1f1f1;
+}
 .jobs-application-update-card {
   position: relative;
   margin-top: 12px;
