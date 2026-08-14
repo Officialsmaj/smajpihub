@@ -2648,12 +2648,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </section>
         ) : kind === "post" || kind === "profile" || kind === "employer" ? (
           <section className="jobs-workspace">
-            {kind !== "profile" ? <div className="jobs-page-heading">
-              <span className="jobs-kicker">{kind === "post" ? "EMPLOYER WORKSPACE" : "YOUR JOBS WORKSPACE"}</span>
+            {kind !== "profile" && kind !== "post" ? <div className="jobs-page-heading">
+              <span className="jobs-kicker">YOUR JOBS WORKSPACE</span>
               <h1>
-                {kind === "post"
-                  ? "Post a new opportunity"
-                  : kind === "employer"
+                {kind === "employer"
                       ? "Employer dashboard"
                       : "Applications"}
               </h1>
@@ -2768,6 +2766,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </div>
                 </label>
                 <footer>
+                  <button type="button" onClick={() => setPostStep("contact")}>← Back</button>
                   <button type="submit" disabled={!postJobTitle.trim()}>
                     Continue <ArrowForwardRoundedIcon />
                   </button>
@@ -3008,7 +3007,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <label>Plan duration<select defaultValue="continuous"><option value="continuous">Runs continuously</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
                 <p><b>Max budget:</b> $675.00 per week</p>
                 <button type="button" className="jobs-no-thanks" onClick={() => { setPostSponsorPlan("none"); setPostStep("details"); }}>No thanks</button>
-                <footer><button type="submit">Save and continue</button></footer>
+                <footer><button type="button" onClick={() => setPostStep("review")}>← Back</button><button type="submit">Save and continue</button></footer>
               </form>
             ) : kind === "post" ? (
               <form className="job-form" onSubmit={event => void submitJob(event)}>
@@ -3217,9 +3216,14 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     genuine and can be honored.
                   </label>
                 </fieldset>
-                <button type="submit" disabled={postSubmitting} aria-busy={postSubmitting}>
-                  {postSubmitting ? <><span className="jobs-submit-spinner" /> Publishing…</> : "Publish job"}
-                </button>
+                <footer>
+                  <button type="button" onClick={() => setPostStep("sponsor")} disabled={postSubmitting}>
+                    ← Back
+                  </button>
+                  <button type="submit" disabled={postSubmitting} aria-busy={postSubmitting}>
+                    {postSubmitting ? <><span className="jobs-submit-spinner" /> Publishing…</> : "Publish job"}
+                  </button>
+                </footer>
               </form>
             ) : kind === "profile" ? (
               <div className="jobs-profile-workspace">
