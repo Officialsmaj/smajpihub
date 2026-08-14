@@ -1608,7 +1608,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         ) : kind === "saved" || kind === "applications" ? (
           <section className="jobs-my-jobs-page">
             <header className="jobs-my-jobs-header">
-              <h1>My jobs</h1>
               <nav aria-label="My jobs sections">
                 {[
                   ["saved", "Saved", savedJobs.length, "/services/jobs/saved"],
