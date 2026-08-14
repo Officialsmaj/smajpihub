@@ -68,6 +68,7 @@ export type JobsProfile = {
     visibility: "applications" | "verified_employers" | "private";
     updatedAt: string;
   };
+  blockedEmployerIds?: string[];
   employment?: Array<{
     id: string;
     position: string;
@@ -192,6 +193,12 @@ export const saveJobsCv = async (cv: { url: string; name: string; size: number; 
 export const deleteJobsCv = async () => axiosClient.delete("/jobs/profile/cv");
 export const saveJobsProfileSection = async (section: string, values: Record<string, unknown>) =>
   (await axiosClient.patch("/jobs/profile/section", { section, ...values })).data;
+export const toggleBlockedEmployer = async (companyId: string) =>
+  (
+    await axiosClient.put<{ blocked: boolean; blockedEmployerIds: string[] }>(
+      `/jobs/profile/blocked-employers/${encodeURIComponent(companyId)}`
+    )
+  ).data;
 export const enrollEmployer = async () => (await axiosClient.post<{ role: string }>("/jobs/employer/enroll")).data;
 export const createJobCompany = async (company: { name: string; field: string }) =>
   (await axiosClient.post<{ company: JobsApiCompany }>("/jobs/companies", company)).data.company;

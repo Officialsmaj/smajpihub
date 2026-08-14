@@ -287,6 +287,12 @@ const enrichApplicationsWithCandidateProfiles = async (req: Request, application
     };
   });
 };
+const isCandidateBlockingEmployer = async (req: Request, employerUserId: string, candidateUserId: string) => {
+  const company = await req.app.locals.jobCompanyCollection.findOne({ ownerId: employerUserId });
+  if (!company) return false;
+  const profile = await req.app.locals.jobProfileCollection.findOne({ userId: candidateUserId });
+  return Boolean(profile?.blockedEmployerIds?.includes(company.slug));
+};
 const requireUser = async (req: Request, res: Response) => {
   const user = await resolveCurrentUser(req);
   if (!user)
@@ -685,6 +691,22 @@ export default function mountJobsEndpoints(router: Router) {
     await req.app.locals.jobProfileCollection.updateOne({ userId: userId(user) }, { $set: { ...values, updatedAt: new Date().toISOString() }, $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() } }, { upsert: true });
     await audit(req, user, `profile.${section}_updated`, userId(user)); res.json({ section, values });
   });
+  router.put("/profile/blocked-employers/:companyId", async (req, res) => {
+    const user = await requireUser(req, res); if (!user) return;
+    const companyId = String(req.params.companyId || "").trim().slice(0, 120);
+    if (!companyId) return res.status(400).json({ error: "invalid_company" });
+    const profile = await req.app.locals.jobProfileCollection.findOne({ userId: userId(user) });
+    const current: string[] = Array.isArray(profile?.blockedEmployerIds) ? profile.blockedEmployerIds : [];
+    const blocked = !current.includes(companyId);
+    const blockedEmployerIds = blocked ? [...current, companyId] : current.filter((id) => id !== companyId);
+    await req.app.locals.jobProfileCollection.updateOne(
+      { userId: userId(user) },
+      { $set: { blockedEmployerIds, updatedAt: new Date().toISOString() }, $setOnInsert: { userId: userId(user), createdAt: new Date().toISOString() } },
+      { upsert: true },
+    );
+    await audit(req, user, blocked ? "profile.employer_blocked" : "profile.employer_unblocked", companyId);
+    res.json({ blocked, blockedEmployerIds });
+  });
   router.patch("/preferences", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
@@ -1039,6 +1061,8 @@ export default function mountJobsEndpoints(router: Router) {
     });
     if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
       return res.status(404).json({ error: "not_found" });
+    if (!isAdmin(user) && (await isCandidateBlockingEmployer(req, userId(user), application.candidateId)))
+      return res.status(403).json({ error: "candidate_blocked", message: "This candidate has restricted employer access." });
     const candidate = req.app.locals.userCollection && ObjectId.isValid(application.candidateId)
       ? await req.app.locals.userCollection.findOne({ _id: new ObjectId(application.candidateId) })
       : null;
@@ -1079,10 +1103,20 @@ export default function mountJobsEndpoints(router: Router) {
       .find(isAdmin(user) ? {} : { employerId: owner })
       .sort({ createdAt: -1 })
       .toArray();
-    const applications = await req.app.locals.jobApplicationCollection
+    let applications = await req.app.locals.jobApplicationCollection
       .find(isAdmin(user) ? {} : { employerId: owner })
       .sort({ createdAt: -1 })
       .toArray();
+    if (!isAdmin(user)) {
+      const ownCompany = await req.app.locals.jobCompanyCollection.findOne({ ownerId: owner });
+      if (ownCompany) {
+        const blockedByProfiles = await req.app.locals.jobProfileCollection
+          .find({ blockedEmployerIds: ownCompany.slug })
+          .toArray();
+        const blockedCandidateIds = new Set(blockedByProfiles.map((profile: any) => profile.userId));
+        applications = applications.filter((application: any) => !blockedCandidateIds.has(application.candidateId));
+      }
+    }
     const enrichedApplications = await enrichApplicationsWithCandidateProfiles(req, applications);
     const companies = await req.app.locals.jobCompanyCollection
       .find(isAdmin(user) ? {} : { ownerId: owner })
@@ -1107,6 +1141,8 @@ export default function mountJobsEndpoints(router: Router) {
       (!isAdmin(user) && application.employerId !== userId(user))
     )
       return res.status(404).json({ error: "not_found" });
+    if (!isAdmin(user) && (await isCandidateBlockingEmployer(req, userId(user), application.candidateId)))
+      return res.status(403).json({ error: "candidate_blocked", message: "This candidate has restricted employer access." });
     const now = new Date().toISOString();
     await req.app.locals.jobApplicationCollection.updateOne(
       { _id: application._id },

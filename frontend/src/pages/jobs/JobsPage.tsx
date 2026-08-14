@@ -42,6 +42,7 @@ import {
   requestCandidateVerification,
   requestCompanyVerification,
   saveJobsCv,
+  toggleBlockedEmployer,
   toggleSavedJob,
   uploadJobsCv,
   updateEmployerApplication,
@@ -366,13 +367,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [profileVisibility, setProfileVisibility] = useState<"active" | "open" | "deactivated">("active");
   const [visibilityDetailsOpen, setVisibilityDetailsOpen] = useState(true);
   const [employerSearch, setEmployerSearch] = useState("");
-  const [blockedEmployers, setBlockedEmployers] = useState<string[]>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem("smaj_jobs_blocked_employers") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [blockedEmployers, setBlockedEmployers] = useState<string[]>([]);
   const [postStep, setPostStep] = useState<
     "contact" | "title" | "location" | "hires" | "timeframe" | "type" | "salary" | "benefits" | "description" | "review" | "sponsor" | "details"
   >("contact");
@@ -816,6 +811,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         setSaved(new Set(savedJobs.map(job => job.id)));
         setApplications(nextApplications);
         setProfile(nextProfile);
+        setBlockedEmployers(nextProfile?.blockedEmployerIds || []);
         if (kind === "home" && nextProfile?.jobsMode === "employer") setWorkspaceMode("employer");
         if (dashboard) {
           setEmployerApplications(dashboard.applications);
@@ -2072,19 +2068,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <div className="jobs-employer-suggestions">
                 {employerSearch.trim() ? companies.filter(company => company.name.toLowerCase().includes(employerSearch.trim().toLowerCase()) && !blockedEmployers.includes(company.id)).slice(0, 6).map(company => (
                   <button type="button" key={company.id} onClick={() => {
-                    const next = [...blockedEmployers, company.id];
-                    setBlockedEmployers(next);
-                    window.localStorage.setItem("smaj_jobs_blocked_employers", JSON.stringify(next));
                     setEmployerSearch("");
+                    void toggleBlockedEmployer(company.id)
+                      .then(result => setBlockedEmployers(result.blockedEmployerIds))
+                      .catch(() => setActionMessage("This employer could not be blocked. Try again."));
                   }}><span>{company.name}</span><small>{company.verificationStatus === "verified" || company.verificationStatus === "pi_kyb" ? "Verified company" : company.field}</small><b>Block</b></button>
                 )) : null}
               </div>
               {blockedEmployers.length ? <section className="jobs-blocked-list"><h2>Blocked employers</h2>{blockedEmployers.map(id => {
                 const company = companies.find(item => item.id === id);
                 return <div key={id}><span>{company?.name || id}</span><button type="button" onClick={() => {
-                  const next = blockedEmployers.filter(item => item !== id);
-                  setBlockedEmployers(next);
-                  window.localStorage.setItem("smaj_jobs_blocked_employers", JSON.stringify(next));
+                  void toggleBlockedEmployer(id)
+                    .then(result => setBlockedEmployers(result.blockedEmployerIds))
+                    .catch(() => setActionMessage("This employer could not be unblocked. Try again."));
                 }}>Unblock</button></div>;
               })}</section> : null}
             </div>
