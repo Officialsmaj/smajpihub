@@ -20493,7 +20493,7 @@ svg {
   }
 
   body {
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   .mobile-tablet-app {
