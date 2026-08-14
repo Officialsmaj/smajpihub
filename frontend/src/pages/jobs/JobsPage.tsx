@@ -21,6 +21,7 @@ import AppLayout from "../../layouts/AppLayout";
 import {
   applyToJob,
   archiveJobApplication,
+  cancelApplicationInterview,
   createJobCompany,
   createJob,
   createJobsBillingIntent,
@@ -41,7 +42,9 @@ import {
   saveJobsProfileSection,
   requestCandidateVerification,
   requestCompanyVerification,
+  saveApplicationNotes,
   saveJobsCv,
+  scheduleApplicationInterview,
   toggleBlockedEmployer,
   toggleSavedJob,
   uploadJobsCv,
@@ -49,6 +52,7 @@ import {
   withdrawJobApplication as withdrawJobApplicationRequest,
   type JobsApiApplication,
   type JobsApiCompany,
+  type JobsApiInterview,
   type JobsApiJob,
   type JobsMetrics,
   type JobsProfile,
@@ -390,6 +394,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [employerApplicationStage, setEmployerApplicationStage] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [selectedCandidate, setSelectedCandidate] = useState<JobsApiApplication | null>(null);
   const [candidateDrawerTab, setCandidateDrawerTab] = useState<(typeof candidateDrawerTabs)[number]>("Profile");
+  const [candidateNotesDraft, setCandidateNotesDraft] = useState("");
+  const [candidateNotesSaving, setCandidateNotesSaving] = useState(false);
+  const [interviewDateDraft, setInterviewDateDraft] = useState("");
+  const [interviewNoteDraft, setInterviewNoteDraft] = useState("");
+  const [interviewSubmitting, setInterviewSubmitting] = useState(false);
   const [managedJobApplication, setManagedJobApplication] = useState<JobsApiApplication | null>(null);
   const [withdrawJobApplication, setWithdrawJobApplication] = useState<JobsApiApplication | null>(null);
   const [messageFilter, setMessageFilter] = useState<"all" | "unread" | "invites">("all");
@@ -983,6 +992,56 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, id]);
+  useEffect(() => {
+    setCandidateNotesDraft(selectedCandidate?.notes || "");
+    setInterviewDateDraft("");
+    setInterviewNoteDraft("");
+  }, [selectedCandidate?.id]);
+  const saveCandidateNotes = async () => {
+    if (!selectedCandidate || candidateNotesSaving) return;
+    setCandidateNotesSaving(true);
+    try {
+      const notes = await saveApplicationNotes(selectedCandidate.id, candidateNotesDraft);
+      setSelectedCandidate(current => (current ? { ...current, notes } : current));
+      setEmployerApplications(current => current.map(item => (item.id === selectedCandidate.id ? { ...item, notes } : item)));
+    } catch {
+      setActionMessage("Notes could not be saved.");
+    } finally {
+      setCandidateNotesSaving(false);
+    }
+  };
+  const scheduleCandidateInterview = async () => {
+    if (!selectedCandidate || interviewSubmitting || !interviewDateDraft) return;
+    setInterviewSubmitting(true);
+    try {
+      const scheduledAt = new Date(interviewDateDraft).toISOString();
+      const interview = await scheduleApplicationInterview(selectedCandidate.id, scheduledAt, interviewNoteDraft);
+      const withInterview = (item: JobsApiApplication) => ({ ...item, interviews: [...(item.interviews || []), interview] });
+      setSelectedCandidate(current => (current ? withInterview(current) : current));
+      setEmployerApplications(current => current.map(item => (item.id === selectedCandidate.id ? withInterview(item) : item)));
+      setInterviewDateDraft("");
+      setInterviewNoteDraft("");
+      setActionMessage("Interview scheduled.");
+    } catch {
+      setActionMessage("Interview could not be scheduled.");
+    } finally {
+      setInterviewSubmitting(false);
+    }
+  };
+  const cancelCandidateInterview = async (interviewId: string) => {
+    if (!selectedCandidate) return;
+    try {
+      await cancelApplicationInterview(selectedCandidate.id, interviewId);
+      const withoutInterview = (item: JobsApiApplication) => ({
+        ...item,
+        interviews: (item.interviews || []).filter(interview => interview.id !== interviewId),
+      });
+      setSelectedCandidate(current => (current ? withoutInterview(current) : current));
+      setEmployerApplications(current => current.map(item => (item.id === selectedCandidate.id ? withoutInterview(item) : item)));
+    } catch {
+      setActionMessage("Interview could not be cancelled.");
+    }
+  };
   const submitJob = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (postSubmitting) return;
@@ -1420,6 +1479,61 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       </select>
                     </article>
                     <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note attached."}</p></article>
+                  </div>
+                ) : candidateDrawerTab === "Interviews" ? (
+                  <div className="jobs-candidate-interviews">
+                    {(selectedCandidate.interviews || []).length ? (
+                      <ul>
+                        {selectedCandidate.interviews!.map((interview: JobsApiInterview) => (
+                          <li key={interview.id}>
+                            <div>
+                              <b>{new Date(interview.scheduledAt).toLocaleString()}</b>
+                              {interview.note ? <p>{interview.note}</p> : null}
+                            </div>
+                            <button type="button" onClick={() => void cancelCandidateInterview(interview.id)}>Cancel</button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No interviews scheduled.</p>
+                    )}
+                    <div className="jobs-schedule-interview">
+                      <label>
+                        Date and time
+                        <input
+                          type="datetime-local"
+                          value={interviewDateDraft}
+                          onChange={event => setInterviewDateDraft(event.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Note (optional)
+                        <input
+                          value={interviewNoteDraft}
+                          onChange={event => setInterviewNoteDraft(event.target.value)}
+                          placeholder="Video call, location, or agenda"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        disabled={!interviewDateDraft || interviewSubmitting}
+                        onClick={() => void scheduleCandidateInterview()}
+                      >
+                        {interviewSubmitting ? "Scheduling…" : "Schedule interview"}
+                      </button>
+                    </div>
+                  </div>
+                ) : candidateDrawerTab === "Notes" ? (
+                  <div className="jobs-candidate-notes">
+                    <textarea
+                      value={candidateNotesDraft}
+                      onChange={event => setCandidateNotesDraft(event.target.value)}
+                      placeholder="Private notes for your hiring team"
+                      rows={6}
+                    />
+                    <button type="button" disabled={candidateNotesSaving} onClick={() => void saveCandidateNotes()}>
+                      {candidateNotesSaving ? "Saving…" : "Save notes"}
+                    </button>
                   </div>
                 ) : (
                   <div className="jobs-candidate-profile-grid">
@@ -2212,8 +2326,63 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
                     </div>
                   ) : null}
-                  {candidateDrawerTab === "Interviews" ? <p>No interviews scheduled.</p> : null}
-                  {candidateDrawerTab === "Notes" ? <textarea placeholder="Private notes for your hiring team" /> : null}
+                  {candidateDrawerTab === "Interviews" ? (
+                    <div className="jobs-candidate-interviews">
+                      {(selectedCandidate.interviews || []).length ? (
+                        <ul>
+                          {selectedCandidate.interviews!.map((interview: JobsApiInterview) => (
+                            <li key={interview.id}>
+                              <div>
+                                <b>{new Date(interview.scheduledAt).toLocaleString()}</b>
+                                {interview.note ? <p>{interview.note}</p> : null}
+                              </div>
+                              <button type="button" onClick={() => void cancelCandidateInterview(interview.id)}>Cancel</button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No interviews scheduled.</p>
+                      )}
+                      <div className="jobs-schedule-interview">
+                        <label>
+                          Date and time
+                          <input
+                            type="datetime-local"
+                            value={interviewDateDraft}
+                            onChange={event => setInterviewDateDraft(event.target.value)}
+                          />
+                        </label>
+                        <label>
+                          Note (optional)
+                          <input
+                            value={interviewNoteDraft}
+                            onChange={event => setInterviewNoteDraft(event.target.value)}
+                            placeholder="Video call, location, or agenda"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          disabled={!interviewDateDraft || interviewSubmitting}
+                          onClick={() => void scheduleCandidateInterview()}
+                        >
+                          {interviewSubmitting ? "Scheduling…" : "Schedule interview"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {candidateDrawerTab === "Notes" ? (
+                    <div className="jobs-candidate-notes">
+                      <textarea
+                        value={candidateNotesDraft}
+                        onChange={event => setCandidateNotesDraft(event.target.value)}
+                        placeholder="Private notes for your hiring team"
+                        rows={6}
+                      />
+                      <button type="button" disabled={candidateNotesSaving} onClick={() => void saveCandidateNotes()}>
+                        {candidateNotesSaving ? "Saving…" : "Save notes"}
+                      </button>
+                    </div>
+                  ) : null}
                   {candidateDrawerTab === "Activity" ? <p>Applied on {new Date(selectedCandidate.createdAt).toLocaleDateString()} with status {selectedCandidate.status}.</p> : null}
                 </section>
               </aside>

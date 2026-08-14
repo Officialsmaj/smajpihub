@@ -927,7 +927,9 @@ export default function mountJobsEndpoints(router: Router) {
       .find({ candidateId: userId(user) })
       .sort({ createdAt: -1 })
       .toArray();
-    res.json({ applications: applications.map(serializeJobDocument) });
+    res.json({
+      applications: applications.map((application: any) => serializeJobDocument({ ...application, notes: undefined })),
+    });
   });
   router.get("/activity", async (req, res) => {
     const user = await requireUser(req, res); if (!user) return;
@@ -1167,6 +1169,76 @@ export default function mountJobsEndpoints(router: Router) {
       });
     }
     res.json({ status });
+  });
+  router.patch("/employer/applications/:id/notes", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const application = await req.app.locals.jobApplicationCollection.findOne({
+      _id: documentId(req.params.id),
+    });
+    if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
+      return res.status(404).json({ error: "not_found" });
+    const notes = String(req.body?.notes || "").slice(0, 4000);
+    await req.app.locals.jobApplicationCollection.updateOne(
+      { _id: application._id },
+      { $set: { notes, notesUpdatedAt: new Date().toISOString() } },
+    );
+    await audit(req, user, "application.notes_updated", req.params.id);
+    res.json({ notes });
+  });
+  router.post("/employer/applications/:id/interviews", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const application = await req.app.locals.jobApplicationCollection.findOne({
+      _id: documentId(req.params.id),
+    });
+    if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
+      return res.status(404).json({ error: "not_found" });
+    if (!isAdmin(user) && (await isCandidateBlockingEmployer(req, userId(user), application.candidateId)))
+      return res.status(403).json({ error: "candidate_blocked", message: "This candidate has restricted employer access." });
+    const scheduledAt = new Date(String(req.body?.scheduledAt || ""));
+    if (Number.isNaN(scheduledAt.getTime()) || scheduledAt.getTime() < Date.now() - 60_000)
+      return res.status(400).json({ error: "invalid_schedule", message: "A valid, upcoming interview date and time is required." });
+    const interview = {
+      id: `interview-${Date.now().toString(36)}`,
+      scheduledAt: scheduledAt.toISOString(),
+      note: String(req.body?.note || "").trim().slice(0, 1000),
+      createdAt: new Date().toISOString(),
+      createdBy: userId(user),
+    };
+    await req.app.locals.jobApplicationCollection.updateOne(
+      { _id: application._id },
+      { $push: { interviews: interview } },
+    );
+    await audit(req, user, "application.interview_scheduled", req.params.id, { scheduledAt: interview.scheduledAt });
+    const candidate = ObjectId.isValid(application.candidateId) && req.app.locals.userCollection
+      ? await req.app.locals.userCollection.findOne({ _id: new ObjectId(application.candidateId) })
+      : null;
+    if (candidate) {
+      await createNotification(req.app, {
+        userId: candidate.uid,
+        type: "jobs_interview_scheduled",
+        title: "Interview scheduled",
+        message: `${application.company} scheduled an interview for ${application.jobTitle}.`,
+        relatedId: application._id.toString(),
+      });
+    }
+    res.status(201).json({ interview });
+  });
+  router.delete("/employer/applications/:id/interviews/:interviewId", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const application = await req.app.locals.jobApplicationCollection.findOne({
+      _id: documentId(req.params.id),
+    });
+    if (!application || (!isAdmin(user) && application.employerId !== userId(user)))
+      return res.status(404).json({ error: "not_found" });
+    await req.app.locals.jobApplicationCollection.updateOne(
+      { _id: application._id },
+      { $pull: { interviews: { id: req.params.interviewId } } },
+    );
+    await audit(req, user, "application.interview_cancelled", req.params.id, { interviewId: req.params.interviewId });
+    res.status(204).send();
   });
   router.get("/admin/review", async (req, res) => {
     const user = await requireEmployer(req, res);

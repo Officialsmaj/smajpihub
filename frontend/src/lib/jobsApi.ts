@@ -37,6 +37,7 @@ export type JobsApiCompany = {
   website?: string;
 };
 
+export type JobsApiInterview = { id: string; scheduledAt: string; note?: string; createdAt: string; createdBy: string };
 export type JobsApiApplication = {
   id: string;
   jobId: string;
@@ -47,6 +48,8 @@ export type JobsApiApplication = {
   createdAt: string;
   candidateArchivedAt?: string;
   profileSnapshot?: JobsProfile;
+  notes?: string;
+  interviews?: JobsApiInterview[];
 };
 
 export type JobsProfile = {
@@ -211,6 +214,18 @@ export const getEmployerDashboard = async () =>
 export const updateEmployerApplication = async (id: string, status: string) =>
   (await axiosClient.patch<{ status: string }>(`/jobs/employer/applications/${encodeURIComponent(id)}`, { status }))
     .data.status;
+export const saveApplicationNotes = async (id: string, notes: string) =>
+  (await axiosClient.patch<{ notes: string }>(`/jobs/employer/applications/${encodeURIComponent(id)}/notes`, { notes }))
+    .data.notes;
+export const scheduleApplicationInterview = async (id: string, scheduledAt: string, note = "") =>
+  (
+    await axiosClient.post<{ interview: JobsApiInterview }>(
+      `/jobs/employer/applications/${encodeURIComponent(id)}/interviews`,
+      { scheduledAt, note }
+    )
+  ).data.interview;
+export const cancelApplicationInterview = async (id: string, interviewId: string) =>
+  axiosClient.delete(`/jobs/employer/applications/${encodeURIComponent(id)}/interviews/${encodeURIComponent(interviewId)}`);
 export const withdrawJobApplication = async (id: string) =>
   (await axiosClient.patch<{ status: string }>(`/jobs/applications/${encodeURIComponent(id)}/withdraw`)).data.status;
 export const archiveJobApplication = async (id: string) =>
