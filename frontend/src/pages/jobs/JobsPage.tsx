@@ -388,7 +388,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     | "salary"
     | "benefits"
     | "description"
-    | "category"
     | "review"
     | "sponsor"
     | "details"
@@ -1153,8 +1152,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     postSponsorPlan,
   ]);
   useEffect(() => {
-    if (kind === "post" && postStep === "contact" && employerCompanies.length && !postCompanyId) {
+    if (kind !== "post") return;
+    if (!postCompanyId && employerCompanies.length) {
       setPostCompanyId(employerCompanies[0].id);
+      if (postStep === "contact") setPostStep("title");
+    } else if (postCompanyId && postStep === "contact") {
       setPostStep("title");
     }
   }, [kind, postStep, employerCompanies, postCompanyId]);
@@ -3049,7 +3051,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "description" ? (
-              <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("category"); }}>
+              <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("review"); }}>
                 <h2>Job description *</h2>
                 <p>This is a SMAJ PI HUB-assisted job description. You can edit or replace it.</p>
                 <div className="jobs-description-editor">
@@ -3088,67 +3090,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </div>
                 <footer><button type="button" onClick={() => setPostStep("benefits")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
-            ) : kind === "post" && postStep === "category" ? (
-              <form
-                className="jobs-employer-step-form jobs-category-step"
-                onSubmit={event => {
-                  event.preventDefault();
-                  if (postCategory.trim() && (postCategory !== "Other" || postCustomCategory.trim()) && postSkills.trim())
-                    setPostStep("review");
-                }}
-              >
-                <h2>Category and skills *</h2>
-                <label>
-                  Category
-                  <input
-                    name="category"
-                    required
-                    list="job-category-options"
-                    value={postCategory}
-                    onChange={event => setPostCategory(event.target.value)}
-                    placeholder="Search 100+ categories"
-                    autoComplete="off"
-                  />
-                  <datalist id="job-category-options">
-                    {JOB_CATEGORIES.map(item => (
-                      <option value={item} key={item} />
-                    ))}
-                  </datalist>
-                </label>
-                {postCategory === "Other" ? (
-                  <label>
-                    Custom category
-                    <input
-                      name="customCategory"
-                      required
-                      minLength={2}
-                      maxLength={80}
-                      value={postCustomCategory}
-                      onChange={event => setPostCustomCategory(event.target.value)}
-                      placeholder="Type the job category"
-                    />
-                  </label>
-                ) : null}
-                <label>
-                  Skills
-                  <input
-                    name="skills"
-                    required
-                    value={postSkills}
-                    onChange={event => setPostSkills(event.target.value)}
-                    placeholder="React, Research, Communication"
-                  />
-                </label>
-                <footer>
-                  <button type="button" onClick={() => setPostStep("description")}>← Back</button>
-                  <button
-                    type="submit"
-                    disabled={!postCategory.trim() || (postCategory === "Other" && !postCustomCategory.trim()) || !postSkills.trim()}
-                  >
-                    Continue <ArrowForwardRoundedIcon />
-                  </button>
-                </footer>
-              </form>
             ) : kind === "post" && postStep === "review" ? (
               <form className="jobs-employer-step-form jobs-review-step" onSubmit={event => { event.preventDefault(); setPostStep("sponsor"); }}>
                 <h2>Review</h2>
@@ -3168,14 +3109,18 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     ["Pi equivalent", `${formatPiAmount(piFromUsdt(Number(payMin) || 0))}${Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}`, "salary"],
                     ["Benefits", postBenefits.join(", ") || "None selected", "benefits"],
                     ["Description", postDescription ? `${postDescription.slice(0, 80)}${postDescription.length > 80 ? "…" : ""}` : "Add description", "description"],
-                    ["Category", (postCategory === "Other" ? postCustomCategory : postCategory) || "Not set", "category"],
-                    ["Skills", postSkills || "Not set", "category"],
+                    [
+                      "Category",
+                      (postCategory === "Other" ? postCustomCategory : postCategory) || "Set on the next screen",
+                      "details",
+                    ],
+                    ["Skills", postSkills || "Set on the next screen", "details"],
                     ["Sponsor plan", postSponsorPlan === "none" ? "No sponsor plan" : postSponsorPlan, "sponsor"],
                   ].map(([label, value, step]) => (
                     <div key={label}><small>{label}</small><span>{value}</span><button type="button" onClick={() => setPostStep(step as typeof postStep)}>Edit</button></div>
                   ))}
                 </section>
-                <footer><button type="button" onClick={() => setPostStep("category")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("description")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "sponsor" ? (
               <form className="jobs-employer-step-form jobs-sponsor-step" onSubmit={event => { event.preventDefault(); setPostStep("details"); }}>
