@@ -13,6 +13,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import SentimentSatisfiedAltOutlinedIcon from "@mui/icons-material/SentimentSatisfiedAltOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FullscreenOutlinedIcon from "@mui/icons-material/FullscreenOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { axiosClient } from "../../lib/axiosClient";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -106,6 +107,7 @@ const MessagesPage = () => {
   const [pendingPhoto, setPendingPhoto] = useState<PendingPhoto | null>(null);
   const [pendingPhotoCaption, setPendingPhotoCaption] = useState("");
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [imagePreviewFullscreen, setImagePreviewFullscreen] = useState(false);
   const [voiceError, setVoiceError] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -562,7 +564,7 @@ const MessagesPage = () => {
   useEffect(() => {
     if (!imagePreview) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setImagePreview(null);
+      if (event.key === "Escape") { setImagePreview(null); setImagePreviewFullscreen(false); }
     };
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
@@ -953,7 +955,7 @@ const MessagesPage = () => {
           )}
         </div>
       </section>
-      {imagePreview ? <div className="chat-image-viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => setImagePreview(null)}><div className="chat-image-viewer-actions" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setImagePreview(null)} aria-label="Close photo"><CloseOutlinedIcon /></button><button type="button" className="chat-image-viewer-delete" onClick={() => { setDeleteTarget(imagePreview.message); setImagePreview(null); }}>Delete</button></div><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div> : null}
+      {imagePreview ? <div className={`chat-image-viewer${imagePreviewFullscreen ? " chat-image-viewer-fullscreen" : ""}`} role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => { setImagePreview(null); setImagePreviewFullscreen(false); }}><div className="chat-image-viewer-actions" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => { setImagePreview(null); setImagePreviewFullscreen(false); }} aria-label="Close photo"><CloseOutlinedIcon /></button><button type="button" className="chat-image-viewer-delete" onClick={() => { setDeleteTarget(imagePreview.message); setImagePreview(null); setImagePreviewFullscreen(false); }}>Delete</button><button type="button" onClick={() => setImagePreviewFullscreen((open) => !open)} aria-label={imagePreviewFullscreen ? "Exit fullscreen" : "Fullscreen"}><FullscreenOutlinedIcon /></button></div><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div> : null}
     </main>
   );
 };

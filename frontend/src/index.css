@@ -17957,6 +17957,20 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   border-radius: 10px;
 }
 
+.chat-image-viewer.chat-image-viewer-fullscreen {
+  padding: 0;
+}
+
+.chat-image-viewer.chat-image-viewer-fullscreen img {
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+.chat-image-viewer.chat-image-viewer-fullscreen p {
+  display: none;
+}
+
 .chat-image-viewer p {
   max-width: min(720px, calc(100vw - 28px));
   margin: 14px 0 0;

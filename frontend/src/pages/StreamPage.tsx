@@ -75,7 +75,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const navigationType = useNavigationType();
-  const [showEntryLoader] = useState(() => location.state?.streamEntry === true);
+  const [showEntryLoader] = useState(() => location.state?.streamEntry === true || navigationType === "PUSH");
   const params = useParams();
   const activeSlug = categorySlug || params.slug || "trending";
   const categoryLabel = categoryLabels[activeSlug] || activeSlug.split("-").map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ");
