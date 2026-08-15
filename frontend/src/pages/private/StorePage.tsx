@@ -49,10 +49,11 @@ const StorePage = () => {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showStoreEntrance, setShowStoreEntrance] = useState(() => Boolean((location.state as { showStoreEntrance?: boolean } | null)?.showStoreEntrance));
   const [products, setProducts] = useState<Product[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [storeReady, setStoreReady] = useState(false);
+  const loadStartTime = useRef(Date.now());
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");
   const collection = params.get("collection") || "";
@@ -78,11 +79,13 @@ const StorePage = () => {
   const profileName = user?.displayName || user?.username || "Pi User";
 
   useEffect(() => {
-    if (!showStoreEntrance) return;
-    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
-    const timer = window.setTimeout(() => setShowStoreEntrance(false), 950);
-    return () => window.clearTimeout(timer);
-  }, [location.pathname, location.search, navigate, showStoreEntrance]);
+    if (!loading) {
+      const elapsed = Date.now() - loadStartTime.current;
+      const remaining = Math.max(0, 800 - elapsed);
+      const timer = window.setTimeout(() => setStoreReady(true), remaining);
+      return () => window.clearTimeout(timer);
+    }
+  }, [loading]);
 
   const loadCatalog = useCallback(async (showSkeleton = false) => {
     if (showSkeleton) setLoading(true);
@@ -342,7 +345,7 @@ const StorePage = () => {
 
   return (
     <main className="private-page storefront-page">
-      {showStoreEntrance ? <section className="store-entrance" aria-label="Opening SMAJ Store" aria-live="polite"><div className="store-entrance-glow" /><div className="store-entrance-brand"><span><img src={logoImage} alt="" /></span><small>SMAJ PI HUB</small><h1>Opening SMAJ Store</h1><p>Finding products and trusted sellers for you.</p></div><div className="store-entrance-shelves" aria-hidden="true"><i /><i /><i /></div><div className="store-entrance-progress" aria-hidden="true"><i /></div></section> : null}
+      {!storeReady ? <div className="store-loading-overlay" aria-label="Opening SMAJ Store" aria-live="polite"><div className="store-loading-spinner" /><span>Opening store...</span></div> : null}
       <PullToRefresh onRefresh={() => loadCatalog(false)} />
       {cartToast}
       <section className="storefront-shell">

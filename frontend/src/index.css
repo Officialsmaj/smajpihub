@@ -8838,6 +8838,33 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 @keyframes storeEntranceProgress { from { width: 5%; } to { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .store-entrance-glow,.store-entrance-shelves i,.store-entrance-progress i { animation: none; } .store-entrance-progress i { width: 100%; } }
 
+.store-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  color: #fff;
+  background: #0f0720;
+}
+.store-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255,255,255,.15);
+  border-top-color: #b76cff;
+  border-radius: 50%;
+  animation: store-spin .8s linear infinite;
+}
+.store-loading-overlay span {
+  font-size: 13px;
+  color: rgba(255,255,255,.76);
+}
+@keyframes store-spin {
+  to { transform: rotate(360deg); }
+}
+
 .storefront-page {
   width: 100%;
   max-width: none;
