@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useNavigationType } from "react-router-dom";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
@@ -48,10 +48,11 @@ const StorePage = () => {
   const { user } = useAuthContext();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const [products, setProducts] = useState<Product[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [storeReady, setStoreReady] = useState(false);
+  const [storeReady, setStoreReady] = useState(() => navigationType !== "PUSH");
   const loadStartTime = useRef(Date.now());
   const [catalogError, setCatalogError] = useState("");
   const [search, setSearch] = useState(params.get("search") || "");

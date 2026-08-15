@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -74,6 +74,7 @@ const uniqueCatalogTitles = (items: StreamCatalogTitle[], excluded = new Set<str
 const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const [showEntryLoader] = useState(() => location.state?.streamEntry === true);
   const params = useParams();
   const activeSlug = categorySlug || params.slug || "trending";
@@ -95,6 +96,8 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
   const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => new Set());
   const [downloadError, setDownloadError] = useState("");
   const [liveNow, setLiveNow] = useState<PublishedLiveInput[]>([]);
+  const [streamReady, setStreamReady] = useState(() => navigationType !== "PUSH");
+  const loadStartTime = useRef(Date.now());
 
   useEffect(() => { setFeatureIndex(0); }, [activeSlug]);
 
@@ -118,6 +121,15 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
       .finally(() => active && setCatalogLoading(false));
     return () => { active = false; };
   }, [activeSlug]);
+
+  useEffect(() => {
+    if (!catalogLoading) {
+      const elapsed = Date.now() - loadStartTime.current;
+      const remaining = Math.max(0, 800 - elapsed);
+      const timer = window.setTimeout(() => setStreamReady(true), remaining);
+      return () => window.clearTimeout(timer);
+    }
+  }, [catalogLoading]);
 
   useEffect(() => {
     void searchStreamCatalog("Anime").then((data) => setAnime(data.results)).catch(() => setAnime([]));
@@ -214,6 +226,7 @@ const StreamPage = ({ categorySlug }: StreamPageProps) => {
 
   const experience = (
     <>
+      {!streamReady ? <div className="store-loading-overlay" aria-label="Opening SMAJ Stream" aria-live="polite"><div className="store-loading-spinner" /><span>Opening stream...</span></div> : null}
       {showEntryLoader && catalogLoading && activeSlug === "trending" ? (
         <div className="stream-opening-loader" role="status" aria-live="polite" aria-label="Opening SMAJ Stream">
           <div className="stream-opening-loader-content">

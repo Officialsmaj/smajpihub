@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useNavigate, useNavigationType, useParams, useSearchParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
@@ -327,6 +327,7 @@ const JobCard = ({ job, saved, onSave }: { job: Job; saved: boolean; onSave: () 
 
 const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const { user } = useAuthContext();
+  const navigationType = useNavigationType();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("All");
@@ -354,6 +355,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [profile, setProfile] = useState<JobsProfile | null>(null);
   const [metrics, setMetrics] = useState<JobsMetrics>({ opportunities: 0, verifiedEmployers: 0, remotePercent: 0 });
   const [loading, setLoading] = useState(true);
+  const [jobsReady, setJobsReady] = useState(() => navigationType !== "PUSH");
+  const loadStartTime = useRef(Date.now());
   const [offline, setOffline] = useState(false);
   const [error, setError] = useState("");
   const [employerApplications, setEmployerApplications] = useState<JobsApiApplication[]>([]);
@@ -867,6 +870,15 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       });
     return () => controller.abort();
   }, [searchParams, category, kind, page]);
+
+  useEffect(() => {
+    if (!loading) {
+      const elapsed = Date.now() - loadStartTime.current;
+      const remaining = Math.max(0, 800 - elapsed);
+      const timer = window.setTimeout(() => setJobsReady(true), remaining);
+      return () => window.clearTimeout(timer);
+    }
+  }, [loading]);
   useEffect(() => {
     void getJobsBillingPlans()
       .then(setBillingPlans)
@@ -1396,6 +1408,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
+      {!jobsReady ? <div className="store-loading-overlay" aria-label="Opening Jobs" aria-live="polite"><div className="store-loading-spinner" /><span>Opening jobs...</span></div> : null}
       <main className="jobs-page">
         <JobsHeader
           query={query}
