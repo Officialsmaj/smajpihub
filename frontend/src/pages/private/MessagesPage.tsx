@@ -143,6 +143,7 @@ const MessagesPage = () => {
   const ignoreMousePressRef = useRef(false);
   const ignoreConversationMousePressRef = useRef(false);
   const selectedId = params.get("conversation");
+  const [chatFullscreen, setChatFullscreen] = useState(false);
   const filteredConversations = useMemo(() => {
     const query = conversationSearch.trim().toLowerCase();
     return conversations.filter((item) => inboxFilter === "archived" ? item.archived : !item.archived).filter((item) => !query || [
@@ -776,6 +777,7 @@ const MessagesPage = () => {
                 onClick={() => {
                   if (selectedConversationIds.size > 0 || conversationLongPressTriggeredRef.current) return;
                   setParams({ conversation: item._id });
+                  setChatFullscreen(true);
                 }}
                 onMouseDown={() => handleConversationMouseDown(item)}
                 onMouseLeave={clearConversationLongPressTimer}
@@ -805,156 +807,310 @@ const MessagesPage = () => {
           )}
           {selectedConversations.length ? <div className="conversation-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected chats"><strong>{selectedConversations.length} selected</strong><button type="button" disabled={deletingConversations} onClick={() => void archiveSelectedConversations(inboxFilter !== "archived")}>{inboxFilter === "archived" ? "Unarchive" : "Archive"}</button><button type="button" className="conversation-delete-button" disabled={deletingConversations} onClick={() => void deleteSelectedConversations()}>{deletingConversations ? "Deleting…" : "Delete"}</button><button type="button" disabled={deletingConversations} onClick={() => { setSelectedConversationIds(new Set()); setConversationActionError(""); }}>Cancel</button>{conversationActionError ? <span className="conversation-selection-error" role="alert">{conversationActionError}</span> : null}</div> : null}
         </aside>
-        <div className="chat-panel">
-          {active ? (
-            <>
-              <header>
-                <button className="chat-mobile-back" onClick={() => setParams({})} aria-label="Back to messages">
-                  <ArrowBackOutlinedIcon />
-                </button>
-                <div className="chat-person">
-                  <span className="conversation-avatar">
-                    {active.profileImage ? <img src={active.profileImage} alt="" /> : getConversationInitial(active, user?.uid)}
-                    <i className={active.online ? "online" : "offline"} />
-                  </span>
-                  <div>
-                    <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} status={active.verificationStatus} /></strong>
-                    <small>{active.typing ? "Typing..." : formatLastSeen(active)}</small>
-                  </div>
-                </div>
-                <div className="chat-header-actions">
-                  <button type="button" onClick={() => setReportOpen(true)} aria-label="Report conversation" title="Report conversation">
-                    <FlagOutlinedIcon />
+        {chatFullscreen && active ? createPortal(
+          <div className="chat-panel chat-panel-fullscreen" role="dialog" aria-modal="true" aria-label="Chat">
+            {active ? (
+              <>
+                <header>
+                  <button className="chat-mobile-back" onClick={() => { setParams({}); setChatFullscreen(false); }} aria-label="Back to messages">
+                    <ArrowBackOutlinedIcon />
                   </button>
-                  <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-label="More options">
-                    <MoreVertOutlinedIcon />
-                  </button>
-                  {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => void archiveConversation(active._id, !active.archived)}>{active.archived ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
-                </div>
-                <div className="chat-product-preview">
-                  {active.productImage ? <img src={active.productImage} alt="" /> : null}
-                  <span>
-                    <strong>{active.productTitle}</strong>
-                    <small>Marketplace conversation</small>
-                  </span>
-                </div>
-              </header>
-              <div className="chat-messages" ref={chatMessagesRef} onScroll={handleChatScroll}>
-                <div className="chat-product-mobile">
-                  {active.productImage ? <img src={active.productImage} alt="" /> : null}
-                  <div>
-                    <strong>{active.productTitle}</strong>
-                    <span>Marketplace product</span>
+                  <div className="chat-person">
+                    <span className="conversation-avatar">
+                      {active.profileImage ? <img src={active.profileImage} alt="" /> : getConversationInitial(active, user?.uid)}
+                      <i className={active.online ? "online" : "offline"} />
+                    </span>
+                    <div>
+                      <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} status={active.verificationStatus} /></strong>
+                      <small>{active.typing ? "Typing..." : formatLastSeen(active)}</small>
+                    </div>
                   </div>
-                </div>
-                {messages.map((item, index) => (
-                  <article
-                    className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
-                    key={item._id}
-                    onMouseDown={() => handleMessageMouseDown(item)}
-                    onMouseLeave={clearLongPressTimer}
-                    onMouseUp={(event) => handleMessageMouseUp(item, event)}
-                    onTouchStart={() => handleMessageTouchStart(item)}
-                    onTouchCancel={clearLongPressTimer}
-                    onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
-                  >
-                    {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
-                      {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
-                      <span><small>About this product</small><strong>{item.productTitle}</strong></span>
-                    </Link> : null}
-                    {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
-                      <div className="voice-message">
-                        <MicNoneOutlinedIcon />
-                        <audio controls src={item.audioDataUrl}>
-                          <track kind="captions" />
-                        </audio>
-                        <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
-                      </div>
-                    ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
-                      <figure className="chat-attachment chat-photo-message">
-                        <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
-                          <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
-                        </button>
-                        <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
-                      </figure>
-                    ) : item.messageType === "document" && item.attachmentDataUrl ? (
-                      <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
-                        <DescriptionOutlinedIcon />
-                        <span>
-                          <strong>{item.attachmentName || "Document"}</strong>
-                          <small>{item.attachmentMimeType || "File"}</small>
-                        </span>
-                      </a>
-                    ) : (
-                      <p>{item.message || "Message"}</p>
-                    )}
-                    <small className="chat-message-meta">
-                      <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
-                      {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
-                    </small>
-                    {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
-                  </article>
-                ))}
-                {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
-              </div>
-              {showScrollBottom ? (
-                <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">
-                  <KeyboardArrowDownOutlinedIcon />
-                </button>
-              ) : null}
-              {recording || voicePreview ? (
-                <div className="voice-recorder-bar">
-                  <button type="button" onClick={cancelVoiceRecording} aria-label="Cancel voice note">Cancel</button>
-                  <span className={recording ? "recording-live" : ""}>
-                    <MicNoneOutlinedIcon />
-                    {recording ? `Recording ${formatVoiceTime(recordingSeconds)}` : `Voice note ${formatVoiceTime(voicePreview?.durationSeconds || 0)}`}
-                  </span>
-                  {voicePreview ? (
-                    <audio controls src={voicePreview.url}>
-                      <track kind="captions" />
-                    </audio>
-                  ) : null}
-                  {recording ? (
-                    <button type="button" className="chat-send-button" onClick={stopVoiceRecording} aria-label="Stop recording">Stop</button>
-                  ) : (
-                    <button type="button" className="chat-send-button" onClick={sendVoiceNote} disabled={sendingVoice} aria-label="Send voice note">
-                      <SendOutlinedIcon />
+                  <div className="chat-header-actions">
+                    <button type="button" onClick={() => setReportOpen(true)} aria-label="Report conversation" title="Report conversation">
+                      <FlagOutlinedIcon />
                     </button>
-                  )}
+                    <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-label="More options">
+                      <MoreVertOutlinedIcon />
+                    </button>
+                    {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => void archiveConversation(active._id, !active.archived)}>{active.archived ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
+                  </div>
+                  <div className="chat-product-preview">
+                    {active.productImage ? <img src={active.productImage} alt="" /> : null}
+                    <span>
+                      <strong>{active.productTitle}</strong>
+                      <small>Marketplace conversation</small>
+                    </span>
+                  </div>
+                </header>
+                <div className="chat-messages" ref={chatMessagesRef} onScroll={handleChatScroll}>
+                  <div className="chat-product-mobile">
+                    {active.productImage ? <img src={active.productImage} alt="" /> : null}
+                    <div>
+                      <strong>{active.productTitle}</strong>
+                      <span>Marketplace product</span>
+                    </div>
+                  </div>
+                  {messages.map((item, index) => (
+                    <article
+                      className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
+                      key={item._id}
+                      onMouseDown={() => handleMessageMouseDown(item)}
+                      onMouseLeave={clearLongPressTimer}
+                      onMouseUp={(event) => handleMessageMouseUp(item, event)}
+                      onTouchStart={() => handleMessageTouchStart(item)}
+                      onTouchCancel={clearLongPressTimer}
+                      onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
+                    >
+                      {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                        {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
+                        <span><small>About this product</small><strong>{item.productTitle}</strong></span>
+                      </Link> : null}
+                      {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
+                        <div className="voice-message">
+                          <MicNoneOutlinedIcon />
+                          <audio controls src={item.audioDataUrl}>
+                            <track kind="captions" />
+                          </audio>
+                          <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
+                        </div>
+                      ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
+                        <figure className="chat-attachment chat-photo-message">
+                          <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
+                            <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
+                          </button>
+                          <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
+                        </figure>
+                      ) : item.messageType === "document" && item.attachmentDataUrl ? (
+                        <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
+                          <DescriptionOutlinedIcon />
+                          <span>
+                            <strong>{item.attachmentName || "Document"}</strong>
+                            <small>{item.attachmentMimeType || "File"}</small>
+                          </span>
+                        </a>
+                      ) : (
+                        <p>{item.message || "Message"}</p>
+                      )}
+                      <small className="chat-message-meta">
+                        <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                        {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
+                      </small>
+                      {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
+                    </article>
+                  ))}
+                  {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
                 </div>
-              ) : (
-                <form onSubmit={send}>
-                  <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void preparePhotoAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} />
-                  <input ref={documentInputRef} className="chat-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { void sendAttachment(event.target.files?.[0], "document"); event.currentTarget.value = ""; }} />
-                  <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
-                    <SentimentSatisfiedAltOutlinedIcon />
+                {showScrollBottom ? (
+                  <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">
+                    <KeyboardArrowDownOutlinedIcon />
                   </button>
-                  <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
-                  <button type="button" onClick={() => setAttachOpen(true)} aria-label="Attach file">
-                    <AttachFileOutlinedIcon />
+                ) : null}
+                {recording || voicePreview ? (
+                  <div className="voice-recorder-bar">
+                    <button type="button" onClick={cancelVoiceRecording} aria-label="Cancel voice note">Cancel</button>
+                    <span className={recording ? "recording-live" : ""}>
+                      <MicNoneOutlinedIcon />
+                      {recording ? `Recording ${formatVoiceTime(recordingSeconds)}` : `Voice note ${formatVoiceTime(voicePreview?.durationSeconds || 0)}`}
+                    </span>
+                    {voicePreview ? (
+                      <audio controls src={voicePreview.url}>
+                        <track kind="captions" />
+                      </audio>
+                    ) : null}
+                    {recording ? (
+                      <button type="button" className="chat-send-button" onClick={stopVoiceRecording} aria-label="Stop recording">Stop</button>
+                    ) : (
+                      <button type="button" className="chat-send-button" onClick={sendVoiceNote} disabled={sendingVoice} aria-label="Send voice note">
+                        <SendOutlinedIcon />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={send}>
+                    <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void preparePhotoAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+                    <input ref={documentInputRef} className="chat-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { void sendAttachment(event.target.files?.[0], "document"); event.currentTarget.value = ""; }} />
+                    <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
+                      <SentimentSatisfiedAltOutlinedIcon />
+                    </button>
+                    <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
+                    <button type="button" onClick={() => setAttachOpen(true)} aria-label="Attach file">
+                      <AttachFileOutlinedIcon />
+                    </button>
+                    <button
+                      type={text.trim() ? "submit" : "button"}
+                      className="chat-send-button"
+                      onClick={text.trim() ? undefined : startVoiceRecording}
+                      aria-label={text.trim() ? "Send" : "Record voice note"}
+                    >
+                      {text.trim() ? <SendOutlinedIcon /> : <MicNoneOutlinedIcon />}
+                    </button>
+                  </form>
+                )}
+                {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
+                {pendingPhoto ? <div className="chat-photo-composer" role="dialog" aria-modal="true" aria-label="Photo preview"><header><strong>Send photo</strong><button type="button" onClick={clearPendingPhoto} aria-label="Close photo preview"><CloseOutlinedIcon /></button></header><img src={pendingPhoto.url} alt="Selected photo preview" /><div><input value={pendingPhotoCaption} maxLength={1000} onChange={(event) => setPendingPhotoCaption(event.target.value)} placeholder="Write a message..." /><button type="button" className="chat-send-button" disabled={sendingAttachment} onClick={() => void sendPendingPhoto()} aria-label="Send photo"><SendOutlinedIcon /></button></div></div> : null}
+                {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
+                {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
+                {selectedMessages.length ? <div className="chat-action-sheet chat-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected messages"><strong>{selectedMessages.length} selected</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("me")}>Delete for me</button>{canDeleteSelectedForEveryone ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setSelectedMessageIds(new Set())}>Cancel</button></div> : null}
+                {deleteTarget && !selectedMessages.length ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
+                {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
+              </>
+            ) : (
+              <div className="private-state">Select a conversation.</div>
+            )}
+          </div>,
+          document.body
+        ) : (
+          <div className="chat-panel">
+            {active ? (
+              <>
+                <header>
+                  <button className="chat-mobile-back" onClick={() => setParams({})} aria-label="Back to messages">
+                    <ArrowBackOutlinedIcon />
                   </button>
-                  <button
-                    type={text.trim() ? "submit" : "button"}
-                    className="chat-send-button"
-                    onClick={text.trim() ? undefined : startVoiceRecording}
-                    aria-label={text.trim() ? "Send" : "Record voice note"}
-                  >
-                    {text.trim() ? <SendOutlinedIcon /> : <MicNoneOutlinedIcon />}
+                  <div className="chat-person">
+                    <span className="conversation-avatar">
+                      {active.profileImage ? <img src={active.profileImage} alt="" /> : getConversationInitial(active, user?.uid)}
+                      <i className={active.online ? "online" : "offline"} />
+                    </span>
+                    <div>
+                      <strong className="conversation-name">{getConversationName(active, user?.uid)}<TrustBadge level={active.verificationLevel} status={active.verificationStatus} /></strong>
+                      <small>{active.typing ? "Typing..." : formatLastSeen(active)}</small>
+                    </div>
+                  </div>
+                  <div className="chat-header-actions">
+                    <button type="button" onClick={() => setReportOpen(true)} aria-label="Report conversation" title="Report conversation">
+                      <FlagOutlinedIcon />
+                    </button>
+                    <button type="button" onClick={() => setMoreOpen((open) => !open)} aria-expanded={moreOpen} aria-label="More options">
+                      <MoreVertOutlinedIcon />
+                    </button>
+                    {moreOpen ? <div className="chat-more-menu"><Link to={`/seller/${active.participantId || (active.sellerId === user?.uid ? active.buyerId : active.sellerId)}`}>View profile</Link><Link to={`/product/${active.productId}`}>View product</Link><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("Conversation muted."); }}>Mute notifications</button><button type="button" onClick={() => void archiveConversation(active._id, !active.archived)}>{active.archived ? "Unarchive" : "Archive conversation"}</button><button type="button" onClick={() => { setMoreOpen(false); setVoiceError("User blocked locally. You can report the conversation for review."); }}>Block user</button></div> : null}
+                  </div>
+                  <div className="chat-product-preview">
+                    {active.productImage ? <img src={active.productImage} alt="" /> : null}
+                    <span>
+                      <strong>{active.productTitle}</strong>
+                      <small>Marketplace conversation</small>
+                    </span>
+                  </div>
+                </header>
+                <div className="chat-messages" ref={chatMessagesRef} onScroll={handleChatScroll}>
+                  <div className="chat-product-mobile">
+                    {active.productImage ? <img src={active.productImage} alt="" /> : null}
+                    <div>
+                      <strong>{active.productTitle}</strong>
+                      <span>Marketplace product</span>
+                    </div>
+                  </div>
+                  {messages.map((item, index) => (
+                    <article
+                      className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
+                      key={item._id}
+                      onMouseDown={() => handleMessageMouseDown(item)}
+                      onMouseLeave={clearLongPressTimer}
+                      onMouseUp={(event) => handleMessageMouseUp(item, event)}
+                      onTouchStart={() => handleMessageTouchStart(item)}
+                      onTouchCancel={clearLongPressTimer}
+                      onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
+                    >
+                      {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                        {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
+                        <span><small>About this product</small><strong>{item.productTitle}</strong></span>
+                      </Link> : null}
+                      {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
+                        <div className="voice-message">
+                          <MicNoneOutlinedIcon />
+                          <audio controls src={item.audioDataUrl}>
+                            <track kind="captions" />
+                          </audio>
+                          <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
+                        </div>
+                      ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
+                        <figure className="chat-attachment chat-photo-message">
+                          <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
+                            <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
+                          </button>
+                          <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
+                        </figure>
+                      ) : item.messageType === "document" && item.attachmentDataUrl ? (
+                        <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
+                          <DescriptionOutlinedIcon />
+                          <span>
+                            <strong>{item.attachmentName || "Document"}</strong>
+                            <small>{item.attachmentMimeType || "File"}</small>
+                          </span>
+                        </a>
+                      ) : (
+                        <p>{item.message || "Message"}</p>
+                      )}
+                      <small className="chat-message-meta">
+                        <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                        {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
+                      </small>
+                      {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
+                    </article>
+                  ))}
+                  {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
+                </div>
+                {showScrollBottom ? (
+                  <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">
+                    <KeyboardArrowDownOutlinedIcon />
                   </button>
-                </form>
-              )}
-              {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
-              {pendingPhoto ? <div className="chat-photo-composer" role="dialog" aria-modal="true" aria-label="Photo preview"><header><strong>Send photo</strong><button type="button" onClick={clearPendingPhoto} aria-label="Close photo preview"><CloseOutlinedIcon /></button></header><img src={pendingPhoto.url} alt="Selected photo preview" /><div><input value={pendingPhotoCaption} maxLength={1000} onChange={(event) => setPendingPhotoCaption(event.target.value)} placeholder="Write a message..." /><button type="button" className="chat-send-button" disabled={sendingAttachment} onClick={() => void sendPendingPhoto()} aria-label="Send photo"><SendOutlinedIcon /></button></div></div> : null}
-              {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
-              {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
-              {selectedMessages.length ? <div className="chat-action-sheet chat-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected messages"><strong>{selectedMessages.length} selected</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("me")}>Delete for me</button>{canDeleteSelectedForEveryone ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setSelectedMessageIds(new Set())}>Cancel</button></div> : null}
-              {deleteTarget && !selectedMessages.length ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
-              {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
-            </>
-          ) : (
-            <div className="private-state">Select a conversation.</div>
-          )}
-        </div>
+                ) : null}
+                {recording || voicePreview ? (
+                  <div className="voice-recorder-bar">
+                    <button type="button" onClick={cancelVoiceRecording} aria-label="Cancel voice note">Cancel</button>
+                    <span className={recording ? "recording-live" : ""}>
+                      <MicNoneOutlinedIcon />
+                      {recording ? `Recording ${formatVoiceTime(recordingSeconds)}` : `Voice note ${formatVoiceTime(voicePreview?.durationSeconds || 0)}`}
+                    </span>
+                    {voicePreview ? (
+                      <audio controls src={voicePreview.url}>
+                        <track kind="captions" />
+                      </audio>
+                    ) : null}
+                    {recording ? (
+                      <button type="button" className="chat-send-button" onClick={stopVoiceRecording} aria-label="Stop recording">Stop</button>
+                    ) : (
+                      <button type="button" className="chat-send-button" onClick={sendVoiceNote} disabled={sendingVoice} aria-label="Send voice note">
+                        <SendOutlinedIcon />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={send}>
+                    <input ref={photoInputRef} className="chat-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { void preparePhotoAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+                    <input ref={documentInputRef} className="chat-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { void sendAttachment(event.target.files?.[0], "document"); event.currentTarget.value = ""; }} />
+                    <button type="button" onClick={() => setEmojiOpen((open) => !open)} aria-label="Emoji">
+                      <SentimentSatisfiedAltOutlinedIcon />
+                    </button>
+                    <input value={text} onChange={(event) => handleTextChange(event.target.value)} maxLength={1000} placeholder="Message..." />
+                    <button type="button" onClick={() => setAttachOpen(true)} aria-label="Attach file">
+                      <AttachFileOutlinedIcon />
+                    </button>
+                    <button
+                      type={text.trim() ? "submit" : "button"}
+                      className="chat-send-button"
+                      onClick={text.trim() ? undefined : startVoiceRecording}
+                      aria-label={text.trim() ? "Send" : "Record voice note"}
+                    >
+                      {text.trim() ? <SendOutlinedIcon /> : <MicNoneOutlinedIcon />}
+                    </button>
+                  </form>
+                )}
+                {emojiOpen ? <div className="chat-emoji-picker" role="dialog" aria-label="Choose an emoji">{["👍", "😊", "❤️", "👋", "🔥", "😍", "😂", "🙏"].map((emoji) => <button key={emoji} type="button" onClick={() => { setText((current) => `${current}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}</div> : null}
+                {pendingPhoto ? <div className="chat-photo-composer" role="dialog" aria-modal="true" aria-label="Photo preview"><header><strong>Send photo</strong><button type="button" onClick={clearPendingPhoto} aria-label="Close photo preview"><CloseOutlinedIcon /></button></header><img src={pendingPhoto.url} alt="Selected photo preview" /><div><input value={pendingPhotoCaption} maxLength={1000} onChange={(event) => setPendingPhotoCaption(event.target.value)} placeholder="Write a message..." /><button type="button" className="chat-send-button" disabled={sendingAttachment} onClick={() => void sendPendingPhoto()} aria-label="Send photo"><SendOutlinedIcon /></button></div></div> : null}
+                {attachOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Attachments"><button type="button" disabled={sendingAttachment} onClick={() => photoInputRef.current?.click()}><ImageOutlinedIcon />Photo sharing</button><button type="button" disabled={sendingAttachment} onClick={() => documentInputRef.current?.click()}><DescriptionOutlinedIcon />Document sharing</button><button type="button" onClick={() => setAttachOpen(false)}>Cancel</button></div> : null}
+                {reportOpen ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Report conversation"><strong>Report conversation</strong><select value={reportReason} onChange={(event) => setReportReason(event.target.value)}><option>Spam or scam</option><option>Harassment</option><option>Unsafe payment request</option><option>Misleading product information</option><option>Other</option></select><button type="button" className="chat-report-submit" onClick={() => void submitConversationReport()}>Submit report</button><button type="button" onClick={() => setReportOpen(false)}>Cancel</button></div> : null}
+                {selectedMessages.length ? <div className="chat-action-sheet chat-selection-sheet" role="dialog" aria-modal="true" aria-label="Selected messages"><strong>{selectedMessages.length} selected</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("me")}>Delete for me</button>{canDeleteSelectedForEveryone ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteSelectedMessages("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setSelectedMessageIds(new Set())}>Cancel</button></div> : null}
+                {deleteTarget && !selectedMessages.length ? <div className="chat-action-sheet" role="dialog" aria-modal="true" aria-label="Delete message"><strong>Delete message</strong><button type="button" disabled={deletingMessage} onClick={() => void deleteMessage("me")}>Delete for me</button>{deleteTarget.senderId === user?.uid && Date.now() - new Date(deleteTarget.createdAt).getTime() <= 15 * 60 * 1000 ? <button type="button" className="chat-delete-everyone" disabled={deletingMessage} onClick={() => void deleteMessage("everyone")}>Delete for everyone</button> : null}<button type="button" disabled={deletingMessage} onClick={() => setDeleteTarget(null)}>Cancel</button></div> : null}
+                {voiceError ? <p className="voice-recorder-error">{voiceError}</p> : null}
+              </>
+            ) : (
+              <div className="private-state">Select a conversation.</div>
+            )}
+          </div>
+        )}
       </section>
       {imagePreview ? createPortal(<div className={`chat-image-viewer${imagePreviewFullscreen ? " chat-image-viewer-fullscreen" : ""}`} role="dialog" aria-modal="true" aria-label="Photo viewer" onClick={() => { setImagePreview(null); setImagePreviewFullscreen(false); }}><div className="chat-image-viewer-actions" onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => { setImagePreview(null); setImagePreviewFullscreen(false); }} aria-label="Close photo"><CloseOutlinedIcon /></button><button type="button" className="chat-image-viewer-delete" onClick={() => { setDeleteTarget(imagePreview.message); setImagePreview(null); setImagePreviewFullscreen(false); }}>Delete</button><button type="button" onClick={() => setImagePreviewFullscreen((open) => !open)} aria-label={imagePreviewFullscreen ? "Exit fullscreen" : "Fullscreen"}><FullscreenOutlinedIcon /></button></div><img src={imagePreview.src} alt={imagePreview.caption || "Shared photo"} onClick={(event) => event.stopPropagation()} />{imagePreview.caption && imagePreview.caption !== "Photo" ? <p>{imagePreview.caption}</p> : null}</div>, document.body) : null}
     </main>

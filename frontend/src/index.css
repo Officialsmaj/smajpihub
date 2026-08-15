@@ -17909,6 +17909,15 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   border-radius: 11px;
 }
 
+.chat-panel-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483099;
+  display: flex;
+  flex-direction: column;
+  background: var(--smaj-bg);
+}
+
 .chat-image-viewer {
   position: fixed;
   inset: 0;
