@@ -99,6 +99,7 @@ const MessagesPage = () => {
   const [conversations, setConversations] = useState<RichConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [text, setText] = useState("");
   const [conversationSearch, setConversationSearch] = useState("");
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -208,8 +209,10 @@ const MessagesPage = () => {
   const loadMessages = useCallback(async () => {
     if (!activeId) {
       setMessages([]);
+      setLoadingMessages(false);
       return;
     }
+    setLoadingMessages(true);
     try {
       const { data } = await axiosClient.get<{ conversation?: RichConversation; messages: ChatMessage[] }>(`/messages/${activeId}`);
       setMessages(data.messages || []);
@@ -218,6 +221,8 @@ const MessagesPage = () => {
       }
     } catch {
       setMessages([]);
+    } finally {
+      setLoadingMessages(false);
     }
   }, [activeId]);
 
@@ -850,55 +855,61 @@ const MessagesPage = () => {
                       <span>Marketplace product</span>
                     </div>
                   </div>
-                  {messages.map((item, index) => (
-                    <article
-                      className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
-                      key={item._id}
-                      onMouseDown={() => handleMessageMouseDown(item)}
-                      onMouseLeave={clearLongPressTimer}
-                      onMouseUp={(event) => handleMessageMouseUp(item, event)}
-                      onTouchStart={() => handleMessageTouchStart(item)}
-                      onTouchCancel={clearLongPressTimer}
-                      onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
-                    >
-                      {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
-                        {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
-                        <span><small>About this product</small><strong>{item.productTitle}</strong></span>
-                      </Link> : null}
-                      {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
-                        <div className="voice-message">
-                          <MicNoneOutlinedIcon />
-                          <audio controls src={item.audioDataUrl}>
-                            <track kind="captions" />
-                          </audio>
-                          <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
-                        </div>
-                      ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
-                        <figure className="chat-attachment chat-photo-message">
-                          <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
-                            <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
-                          </button>
-                          <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
-                        </figure>
-                      ) : item.messageType === "document" && item.attachmentDataUrl ? (
-                        <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
-                          <DescriptionOutlinedIcon />
-                          <span>
-                            <strong>{item.attachmentName || "Document"}</strong>
-                            <small>{item.attachmentMimeType || "File"}</small>
-                          </span>
-                        </a>
-                      ) : (
-                        <p>{item.message || "Message"}</p>
-                      )}
-                      <small className="chat-message-meta">
-                        <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
-                        {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
-                      </small>
-                      {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
-                    </article>
-                  ))}
-                  {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
+                  {loadingMessages ? (
+                    <PrivateSkeleton variant="chat" count={6} />
+                  ) : (
+                    <>
+                      {messages.map((item, index) => (
+                        <article
+                          className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
+                          key={item._id}
+                          onMouseDown={() => handleMessageMouseDown(item)}
+                          onMouseLeave={clearLongPressTimer}
+                          onMouseUp={(event) => handleMessageMouseUp(item, event)}
+                          onTouchStart={() => handleMessageTouchStart(item)}
+                          onTouchCancel={clearLongPressTimer}
+                          onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
+                        >
+                          {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                            {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
+                            <span><small>About this product</small><strong>{item.productTitle}</strong></span>
+                          </Link> : null}
+                          {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
+                            <div className="voice-message">
+                              <MicNoneOutlinedIcon />
+                              <audio controls src={item.audioDataUrl}>
+                                <track kind="captions" />
+                              </audio>
+                              <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
+                            </div>
+                          ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
+                            <figure className="chat-attachment chat-photo-message">
+                              <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
+                                <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
+                              </button>
+                              <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
+                            </figure>
+                          ) : item.messageType === "document" && item.attachmentDataUrl ? (
+                            <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
+                              <DescriptionOutlinedIcon />
+                              <span>
+                                <strong>{item.attachmentName || "Document"}</strong>
+                                <small>{item.attachmentMimeType || "File"}</small>
+                              </span>
+                            </a>
+                          ) : (
+                            <p>{item.message || "Message"}</p>
+                          )}
+                          <small className="chat-message-meta">
+                            <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                            {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
+                          </small>
+                          {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
+                        </article>
+                      ))}
+                      {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
+                    </>
+                  )}
                 </div>
                 {showScrollBottom ? (
                   <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">
@@ -1002,55 +1013,61 @@ const MessagesPage = () => {
                       <span>Marketplace product</span>
                     </div>
                   </div>
-                  {messages.map((item, index) => (
-                    <article
-                      className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
-                      key={item._id}
-                      onMouseDown={() => handleMessageMouseDown(item)}
-                      onMouseLeave={clearLongPressTimer}
-                      onMouseUp={(event) => handleMessageMouseUp(item, event)}
-                      onTouchStart={() => handleMessageTouchStart(item)}
-                      onTouchCancel={clearLongPressTimer}
-                      onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
-                    >
-                      {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
-                        {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
-                        <span><small>About this product</small><strong>{item.productTitle}</strong></span>
-                      </Link> : null}
-                      {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
-                        <div className="voice-message">
-                          <MicNoneOutlinedIcon />
-                          <audio controls src={item.audioDataUrl}>
-                            <track kind="captions" />
-                          </audio>
-                          <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
-                        </div>
-                      ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
-                        <figure className="chat-attachment chat-photo-message">
-                          <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
-                            <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
-                          </button>
-                          <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
-                        </figure>
-                      ) : item.messageType === "document" && item.attachmentDataUrl ? (
-                        <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
-                          <DescriptionOutlinedIcon />
-                          <span>
-                            <strong>{item.attachmentName || "Document"}</strong>
-                            <small>{item.attachmentMimeType || "File"}</small>
-                          </span>
-                        </a>
-                      ) : (
-                        <p>{item.message || "Message"}</p>
-                      )}
-                      <small className="chat-message-meta">
-                        <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
-                        {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
-                      </small>
-                      {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
-                    </article>
-                  ))}
-                  {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
+                  {loadingMessages ? (
+                    <PrivateSkeleton variant="chat" count={6} />
+                  ) : (
+                    <>
+                      {messages.map((item, index) => (
+                        <article
+                          className={`${item.senderId === user?.uid ? "mine" : ""}${selectedMessageIds.has(item._id) ? " selected" : ""}`}
+                          key={item._id}
+                          onMouseDown={() => handleMessageMouseDown(item)}
+                          onMouseLeave={clearLongPressTimer}
+                          onMouseUp={(event) => handleMessageMouseUp(item, event)}
+                          onTouchStart={() => handleMessageTouchStart(item)}
+                          onTouchCancel={clearLongPressTimer}
+                          onTouchEnd={(event) => handleMessageTouchEnd(item, event)}
+                        >
+                          {!item.deletedForEveryone && item.productId && item.productTitle && item.productId !== messages[index - 1]?.productId ? <Link className="chat-message-product" to={`/product/${item.productId}`}>
+                            {item.productImage ? <img src={item.productImage} alt="" /> : <ImageOutlinedIcon />}
+                            <span><small>About this product</small><strong>{item.productTitle}</strong></span>
+                          </Link> : null}
+                          {item.deletedForEveryone ? <p className="chat-deleted-message">This message was deleted.</p> : item.messageType === "voice" && item.audioDataUrl ? (
+                            <div className="voice-message">
+                              <MicNoneOutlinedIcon />
+                              <audio controls src={item.audioDataUrl}>
+                                <track kind="captions" />
+                              </audio>
+                              <span>{formatVoiceTime(item.audioDurationSeconds || 0)}</span>
+                            </div>
+                          ) : item.messageType === "image" && (item.attachmentUrl || item.attachmentDataUrl) ? (
+                            <figure className="chat-attachment chat-photo-message">
+                              <button type="button" onClick={() => setImagePreview({ src: item.attachmentUrl || item.attachmentDataUrl || "", caption: item.message, message: item })} aria-label="Open photo">
+                                <img src={item.attachmentUrl || item.attachmentDataUrl} alt={item.attachmentName || item.message || "Shared photo"} />
+                              </button>
+                              <figcaption>{item.message && item.message !== "Photo" ? item.message : item.attachmentName || "Photo"}</figcaption>
+                            </figure>
+                          ) : item.messageType === "document" && item.attachmentDataUrl ? (
+                            <a className="chat-attachment chat-document-message" href={item.attachmentDataUrl} download={item.attachmentName || "document"} target="_blank" rel="noreferrer">
+                              <DescriptionOutlinedIcon />
+                              <span>
+                                <strong>{item.attachmentName || "Document"}</strong>
+                                <small>{item.attachmentMimeType || "File"}</small>
+                              </span>
+                            </a>
+                          ) : (
+                            <p>{item.message || "Message"}</p>
+                          )}
+                          <small className="chat-message-meta">
+                            <time>{new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                            {item.senderId === user?.uid ? <span className={`message-checks ${item.readAt ? "read" : "sent"}`} aria-label={item.readAt ? "Read" : "Sent"}>{item.readAt ? "✓✓" : "✓"}</span> : null}
+                          </small>
+                          {!item.deletedForEveryone ? <button type="button" className="chat-message-delete" onClick={() => setDeleteTarget(item)} aria-label="Delete message" title="Delete message"><DeleteOutlineRoundedIcon /></button> : null}
+                        </article>
+                      ))}
+                      {active.typing ? <div className="typing-indicator"><span />Typing...</div> : null}
+                    </>
+                  )}
                 </div>
                 {showScrollBottom ? (
                   <button type="button" className="chat-scroll-bottom" onClick={() => scrollToBottom()} aria-label="Scroll to newest message">

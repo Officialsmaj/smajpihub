@@ -1,5 +1,5 @@
 type PrivateSkeletonProps = {
-  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "settings" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard" | "wallet";
+  variant?: "page" | "grid" | "list" | "product" | "seller" | "stats" | "profile" | "settings" | "home" | "messages" | "notifications" | "orders" | "search" | "sellerDashboard" | "wallet" | "chat";
   count?: number;
 };
 
@@ -154,6 +154,21 @@ const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) 
               <SkeletonLine />
               <SkeletonLine className="short" />
             </div>
+          </article>
+        ))}
+      </section>
+    );
+  }
+
+  if (variant === "chat") {
+    return (
+      <section className="private-skeleton-chat" aria-label="Loading">
+        {Array.from({ length: count }).map((_, index) => (
+          <article
+            className={`private-skeleton-chat-row ${index % 2 === 0 ? "mine" : ""}`}
+            key={index}
+          >
+            <SkeletonLine className="chat-bubble" />
           </article>
         ))}
       </section>

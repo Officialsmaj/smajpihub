@@ -3448,6 +3448,16 @@ a.dashboard-card:hover { transform: translateY(-2px); border-color: #7544dc; }
 .private-skeleton-image::after,
 .private-skeleton-panel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--smaj-card, #ffffff) 82%, white), transparent); animation: privateSkeletonShimmer 1.25s ease-in-out infinite; }
 @keyframes privateSkeletonShimmer { 100% { transform: translateX(100%); } }
+
+.private-skeleton-chat { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+.private-skeleton-chat-row { display: flex; flex-direction: column; max-width: 75%; }
+.private-skeleton-chat-row.mine { align-self: flex-end; }
+.private-skeleton-chat-row:not(.mine) { align-self: flex-start; }
+.private-skeleton-chat-row .chat-bubble { height: 42px; border-radius: 14px; background: color-mix(in srgb, var(--smaj-text-secondary, #94a3b8) 16%, var(--smaj-card, #ffffff)); position: relative; overflow: hidden; }
+.private-skeleton-chat-row.mine .chat-bubble { background: color-mix(in srgb, var(--smaj-primary, #6b21a8) 55%, #000); }
+.private-skeleton-chat-row .chat-bubble::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--smaj-card, #ffffff) 82%, white), transparent); animation: privateSkeletonShimmer 1.25s ease-in-out infinite; }
+.private-skeleton-chat-row.mine .chat-bubble::after { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--smaj-primary, #6b21a8) 35%, white), transparent); }
+
 .private-route-loading { width: 100%; animation: privateRouteLoadingIn .14s ease-out; }
 .private-route-loading .private-skeleton-page,
 .private-route-loading .private-skeleton-grid,
