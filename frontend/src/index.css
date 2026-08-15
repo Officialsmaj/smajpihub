@@ -4080,6 +4080,54 @@ body {
   font-size: 10px;
 }
 
+.live-card-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-right: 6px;
+  animation: live-badge-boil 1.1s linear infinite;
+}
+
+.live-rating-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-right: 6px;
+  animation: live-badge-boil 1.1s linear infinite;
+}
+
+@keyframes live-badge-boil {
+  0% { transform: rotate(0deg) scale(1); opacity: 1; }
+  25% { transform: rotate(90deg) scale(1.4); opacity: 0.6; }
+  50% { transform: rotate(180deg) scale(1); opacity: 1; }
+  75% { transform: rotate(270deg) scale(1.4); opacity: 0.6; }
+  100% { transform: rotate(360deg) scale(1); opacity: 1; }
+}
+
+.live-badge-boil::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-right: 6px;
+  animation: live-badge-boil 1.1s linear infinite;
+}
+
+.live-badge-static::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-right: 6px;
+  animation: none;
+}
+
 .experience-live-badge,
 .feature-live-badge {
   position: absolute;

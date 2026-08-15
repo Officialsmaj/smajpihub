@@ -12,10 +12,10 @@ export type ServiceDefinition = {
 export const serviceCatalog: ServiceDefinition[] = [
   { slug: "store", name: "SMAJ Store", experience: "Get anything", description: "Buy and sell products with Pi.", items: ["Products", "Stores", "Sellers", "Deals", "Delivery"], atlasIndex: 0, live: true },
   { slug: "stream", name: "SMAJ Stream", experience: "Watch anytime", description: "Movies, series, creators, and live content.", items: ["Movies", "Series", "Videos", "Creators", "Live"], atlasIndex: 12, live: true },
-  { slug: "sports", name: "SMAJ Sports", experience: "Play together", description: "Sports, scores, clubs, games, and fans.", items: ["Sports", "Scores", "Clubs", "Games", "Community"], atlasIndex: 13, live: true },
-  { slug: "food", name: "SMAJ Food", experience: "Eat anytime", description: "Restaurants, delivery, groceries, and offers.", items: ["Restaurants", "Food delivery", "Groceries", "Offers"], atlasIndex: 1, live: true },
   { slug: "jobs", name: "SMAJ Jobs", experience: "Work anywhere", description: "Jobs, freelance work, hiring, and talent.", items: ["Jobs", "Freelance", "Hiring", "Talent", "Companies"], atlasIndex: 2, live: true },
   { slug: "education", name: "SMAJ Education", experience: "Learn anything", description: "Learning, training, skills, and certifications.", items: ["Courses", "Skills", "Training", "Certifications", "Learning resources"], atlasIndex: 3, live: true },
+  { slug: "sports", name: "SMAJ Sports", experience: "Play together", description: "Sports, scores, clubs, games, and fans.", items: ["Sports", "Scores", "Clubs", "Games", "Community"], atlasIndex: 13, live: true },
+  { slug: "food", name: "SMAJ Food", experience: "Eat anytime", description: "Restaurants, delivery, groceries, and offers.", items: ["Restaurants", "Food delivery", "Groceries", "Offers"], atlasIndex: 1, live: true },
   { slug: "health", name: "SMAJ Health", experience: "Stay healthy", description: "Healthcare, appointments, and pharmacy access.", items: ["Doctors", "Appointments", "Pharmacy", "Health services"], atlasIndex: 4, live: true },
   { slug: "transport", name: "SMAJ Transport", experience: "Move anywhere", description: "Transport, mobility, delivery, and rentals.", items: ["Rides", "Transport", "Delivery", "Rentals"], atlasIndex: 5, live: true },
   { slug: "agro", name: "SMAJ Agro", experience: "Grow more", description: "Agriculture marketplace and supply connections.", items: ["Farmers", "Crops", "Buyers", "Suppliers", "Equipment"], atlasIndex: 6, live: true },

@@ -101,6 +101,8 @@ const HomePage = () => {
   const goToNextServicesPage = () =>
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
   const getServiceStatus = (service: ServiceDefinition) => service.live || service.slug === "store";
+  const boilSlugs = new Set(["store", "stream", "jobs", "education"]);
+  const liveBadgeClass = (service: ServiceDefinition) => getServiceStatus(service) ? (boilSlugs.has(service.slug) ? "live-rating-badge live-badge-boil" : "live-rating-badge live-badge-static") : service.inProgress ? "status-chip in-progress" : undefined;
 
   if (isAuthenticated) {
     return <main className="private-page private-route-loading"><PrivateSkeleton variant="home" count={6} /></main>;
@@ -205,7 +207,7 @@ const HomePage = () => {
                               <h3>{service.name}</h3>
                               <p>{service.items.slice(0, 2).join(" • ")}</p>
                             </div>
-                            <small className={getServiceStatus(service) ? "live-rating-badge" : service.inProgress ? "status-chip in-progress" : undefined}>
+                             <small className={liveBadgeClass(service)}>
                               {getServiceStatus(service) ? t("home.live") : service.inProgress ? t("home.inProgress") : t("home.soon")}
                             </small>
                           </Link>

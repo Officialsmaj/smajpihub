@@ -240,14 +240,16 @@ const DiscoveryTabButtons = ({ activeTab, onTabChange, className }: { activeTab:
   </nav>
 );
 
-const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: "desktop" | "mobile" }) => (
-  mode === "desktop" ? (
+const boilSlugs = new Set(["store", "stream", "jobs", "education"]);
+const liveBadgeClass = (service: ServiceDefinition) => service.live ? (boilSlugs.has(service.slug) ? "live-card-badge live-badge-boil" : "live-card-badge live-badge-static") : service.inProgress ? "service-in-progress-badge" : undefined;
+
+const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: "desktop" | "mobile" }) => (mode === "desktop" ? (
     <div className="desktop-suggested-grid">
       {services.map((service) => (
         <Link to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={`desktop-service-app ${service.inProgress ? "service-in-progress-card" : ""}`} key={service.slug} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
           <div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span></div>
-          <small className={service.live ? "live-rating-badge" : service.inProgress ? "status-chip in-progress" : undefined}>{service.live ? "LIVE" : service.inProgress ? "IN PROGRESS" : `${serviceRatings[service.slug]} star`}</small>
+          <small className={liveBadgeClass(service)}>{service.live ? "LIVE" : service.inProgress ? "IN PROGRESS" : `${serviceRatings[service.slug]} star`}</small>
         </Link>
       ))}
     </div>
@@ -256,7 +258,7 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
       {services.map((service) => (
         <Link key={service.slug} to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
-          {service.live ? <em className="live-card-badge">LIVE</em> : service.inProgress ? <em className="service-in-progress-badge">IN PROGRESS</em> : null}
+          {service.live ? <em className={liveBadgeClass(service)}>LIVE</em> : service.inProgress ? <em className="service-in-progress-badge">IN PROGRESS</em> : null}
           <strong>{service.name.replace("SMAJ ", "")}</strong>
           <span>{serviceHints[service.slug] || service.items.slice(0, 2).join(" - ")}</span>
         </Link>
