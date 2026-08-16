@@ -10,16 +10,20 @@ type CategoryGridProps = {
 
 const CategoryGrid = ({ categories, selected }: CategoryGridProps) => (
   <div className="education-category-grid">
-    {categories.map(category => (
-      <Link
-        key={category}
-        to={`/services/education/categories/${toEducationCategorySlug(category)}`}
-        className={`education-category-tile${selected === category ? " selected" : ""}`}
-      >
-        <SchoolOutlinedIcon />
-        <span>{category}</span>
-      </Link>
-    ))}
+    {categories.map(category => {
+      const slug = toEducationCategorySlug(category);
+      const isUniversities = category.toLowerCase() === "universities";
+      return (
+        <Link
+          key={category}
+          to={isUniversities ? "/services/education/universities" : `/services/education/categories/${slug}`}
+          className={`education-category-tile${selected === category ? " selected" : ""}`}
+        >
+          <SchoolOutlinedIcon />
+          <span>{category}</span>
+        </Link>
+      );
+    })}
   </div>
 );
 
