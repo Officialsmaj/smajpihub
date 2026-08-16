@@ -3,6 +3,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { getMyLearning, getAdminCourses, getAdminCourseStats, updateAdminCourse } from "../../lib/coursesApi";
 import type { Course, Enrollment } from "../../types/courses";
 import "../../pages/EducationPage.css";
+import "../../components/education/courses.css";
 
 const InstructorDashboardPage = () => {
   const [courses, setCourses] = useState<Course[]>([]);

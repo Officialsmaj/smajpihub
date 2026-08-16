@@ -5,6 +5,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { verifyCertificate } from "../../lib/coursesApi";
 import type { Certificate } from "../../types/courses";
 import "../../pages/EducationPage.css";
+import "../../components/education/courses.css";
 
 const CertificateVerifyPage = () => {
   const { certificateId } = useParams();

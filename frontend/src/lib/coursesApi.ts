@@ -105,7 +105,21 @@ const FALLBACK_COURSES: Course[] = [
 export const getCourses = async (params?: CourseSearchParams): Promise<{ courses: Course[]; total: number; page: number; pageSize: number; totalPages: number }> => {
   try {
     const response = await axiosClient.get<{ courses: Course[]; total: number; page: number; pageSize: number; totalPages: number }>("/courses", { params });
-    return response.data;
+    const data = response.data;
+    if (data.courses.length === 0 && data.total === 0) {
+      const filtered = params?.q || params?.category || params?.level || params?.type
+        ? FALLBACK_COURSES.filter((c) => {
+            const q = (params.q || "").toLowerCase();
+            if (q && !c.title.toLowerCase().includes(q) && !c.description.toLowerCase().includes(q) && !c.tags.some((t) => t.includes(q))) return false;
+            if (params.category && c.category !== params.category) return false;
+            if (params.level && c.level !== params.level) return false;
+            if (params.type && c.course_type !== params.type) return false;
+            return true;
+          })
+        : FALLBACK_COURSES;
+      return { courses: filtered, total: filtered.length, page: 1, pageSize: 20, totalPages: 1 };
+    }
+    return data;
   } catch {
     const filtered = params?.q || params?.category || params?.level || params?.type
       ? FALLBACK_COURSES.filter((c) => {

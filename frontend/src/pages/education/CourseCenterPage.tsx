@@ -7,6 +7,7 @@ import OnlineCourseCard from "../../components/education/OnlineCourseCard";
 import { getCourses } from "../../lib/coursesApi";
 import type { Course, CourseType, CourseLevel } from "../../types/courses";
 import EducationHeader from "./EducationHeader";
+import "../../components/education/courses.css";
 
 const FALLBACK_CATEGORIES = [
   "Technology",

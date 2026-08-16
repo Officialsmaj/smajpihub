@@ -9,6 +9,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { getEnrollment, completeLesson, getCourse } from "../../lib/coursesApi";
 import type { Enrollment, Course, Lesson } from "../../types/courses";
 import "../../pages/EducationPage.css";
+import "../../components/education/courses.css";
 
 const lessonIcon = (type: string) => {
   switch (type) {

@@ -8,6 +8,7 @@ import { getCourse, enrollInCourse, completeCoursePayment } from "../../lib/cour
 import type { Course, Enrollment, CoursePayment } from "../../types/courses";
 import { formatPiAmount } from "../../lib/formatters";
 import "../../pages/EducationPage.css";
+import "../../components/education/courses.css";
 
 const CourseDetailPage = () => {
   const { courseId } = useParams();

@@ -109,6 +109,115 @@ export default function mountCourseEndpoints(router: Router) {
     next();
   });
 
+  const ensureSeedCourses = async (req: Request) => {
+    const collection = req.app.locals.courseCollection;
+    if (!collection) return;
+    const count = await collection.countDocuments({});
+    if (count > 0) return;
+    const now = new Date();
+    const demoCourses = [
+      {
+        slug: "demo-web-foundations",
+        title: "Web Development Foundations",
+        subtitle: "Learn HTML, CSS, and JavaScript from scratch",
+        short_description: "Build modern websites with core web technologies.",
+        description: "This comprehensive course takes you from zero to building real websites using HTML, CSS, and JavaScript.",
+        category: "Technology",
+        course_type: "paid",
+        price_pi: piFromUsdt(15709),
+        price_usdt: 15709,
+        instructor_id: "demo-instructor",
+        provider_id: "demo-instructor",
+        provider_type: "individual",
+        language: "en",
+        level: "beginner",
+        estimated_duration: "6 weeks",
+        total_duration_minutes: 1260,
+        thumbnail_url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85",
+        tags: ["html", "css", "javascript", "web"],
+        certificate_enabled: true,
+        completion_rules: defaultCompletionRules,
+        modules: [
+          {
+            title: "Module 1 - HTML",
+            description: "Learn HTML basics",
+            order: 1,
+            lessons: [
+              { title: "Introduction", description: "Course intro", order: 1, type: "video", required: true, preview: true, duration: "5 min", video_url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+              { title: "HTML Structure", description: "Tags and elements", order: 2, type: "text", required: true, preview: false, content: "<p>HTML structure uses tags like &lt;div&gt;, &lt;p&gt;, &lt;h1&gt;...</p>" },
+              { title: "Forms", description: "HTML forms", order: 3, type: "video", required: true, preview: false, duration: "10 min", video_url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+            ],
+          },
+          {
+            title: "Module 2 - CSS",
+            description: "Learn CSS basics",
+            order: 2,
+            lessons: [
+              { title: "CSS Basics", description: "Selectors and properties", order: 1, type: "video", required: true, preview: false, duration: "12 min", video_url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+              { title: "Flexbox", description: "Flexible box layout", order: 2, type: "text", required: true, preview: false, content: "<p>Flexbox makes layout easy.</p>" },
+            ],
+          },
+        ],
+        status: "published",
+        published_at: now.toISOString(),
+        enrollment_count: 1240,
+        rating_average: 4.8,
+        rating_count: 320,
+        provenance: defaultProvenance,
+        copyright_agreed: true,
+        copyright_agreed_at: now.toISOString(),
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        is_demo: true,
+      },
+      {
+        slug: "demo-pi-business-growth",
+        title: "Small Business Growth with Pi",
+        subtitle: "Use digital tools to grow your business",
+        short_description: "Practical business skills for the Pi economy.",
+        description: "Learn how to leverage digital tools and the Pi ecosystem to grow a small business.",
+        category: "Business",
+        course_type: "free",
+        price_pi: 0,
+        price_usdt: 0,
+        instructor_id: "demo-instructor-2",
+        provider_id: "demo-instructor-2",
+        provider_type: "individual",
+        language: "en",
+        level: "intermediate",
+        estimated_duration: "4 weeks",
+        total_duration_minutes: 480,
+        thumbnail_url: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=85",
+        tags: ["business", "pi", "growth"],
+        certificate_enabled: true,
+        completion_rules: defaultCompletionRules,
+        modules: [
+          {
+            title: "Module 1 - Digital Tools",
+            description: "Overview of tools",
+            order: 1,
+            lessons: [
+              { title: "Getting Started", description: "Course intro", order: 1, type: "video", required: true, preview: true, duration: "8 min", video_url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+            ],
+          },
+        ],
+        status: "published",
+        published_at: now.toISOString(),
+        enrollment_count: 856,
+        rating_average: 4.6,
+        rating_count: 210,
+        provenance: defaultProvenance,
+        copyright_agreed: true,
+        copyright_agreed_at: now.toISOString(),
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        is_demo: true,
+      },
+    ];
+
+    await collection.insertMany(demoCourses);
+  };
+
   router.get("/courses", async (req, res) => {
     try {
       const query = safeString(req.query.q as string || "");
@@ -124,6 +233,8 @@ export default function mountCourseEndpoints(router: Router) {
       if (!collection) {
         return res.status(200).json({ courses: [], total: 0, page, pageSize, totalPages: 0 });
       }
+
+      await ensureSeedCourses(req);
 
       const mongoQuery: Record<string, any> = { status: "published", is_demo: { $ne: true } };
       if (query) {
