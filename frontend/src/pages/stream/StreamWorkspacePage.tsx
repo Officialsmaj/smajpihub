@@ -47,12 +47,14 @@ import {
   getStreamMyList,
   getStreamMyListStatus,
   getStreamTitle,
+  getStreamTrailer,
   removeStreamDownload,
   removeStreamTitle,
   saveStreamDownload,
   saveStreamTitle,
   searchStreamCatalog,
   type StreamCatalogTitle,
+  type StreamTrailer,
 } from "../../lib/streamCatalog";
 import { getStreamProfile, saveStreamProfile, type StreamProfile } from "../../lib/streamProfile";
 import {
@@ -536,7 +538,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const navigate = useNavigate();
   const type = series ? "tv" : "movie";
   const [detail, setDetail] = useState<
-    | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; trailer: { youtubeVideoId: string; name: string; official: boolean; type: string } | null; raw: TmdbDetailRaw })
+    | (StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; trailer: StreamTrailer | null; raw: TmdbDetailRaw })
     | null
   >(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -563,14 +565,18 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       getStreamMyListStatus(type, id).catch(() => false),
       getStreamDownloadStatus(type, id).catch(() => false),
       getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string; downloadAllowed: boolean; message?: string } => ({ available: false, downloadAllowed: false })),
+      getStreamTrailer(type, id).catch(() => ({ available: false })),
     ])
-      .then(([titleData, savedStatus, downloadStatus, availability]) => {
+      .then(([titleData, savedStatus, downloadStatus, availability, trailerData]) => {
         setDetail(titleData as typeof detail);
         setSaved(savedStatus);
         setDownloaded(downloadStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
         setPlaybackUnavailableMessage(availability.available ? "" : availability.message || "");
         setDownloadAllowed(availability.available && availability.downloadAllowed === true);
+        if (trailerData.available && trailerData.trailer) {
+          setDetail(current => current ? { ...current, trailer: trailerData.trailer! } : current);
+        }
         setState("ready");
       })
       .catch(() => setState("error"));
@@ -790,9 +796,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           <button type="button" onClick={closeTrailer} aria-label="Close trailer"><CloseRoundedIcon /></button>
           {!trailerLoaded ? <span className="sw-trailer-spinner" role="status" aria-label="Loading trailer" /> : null}
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${detail.trailer.youtubeVideoId}?autoplay=1&rel=0&playsinline=1`}
-            title={detail.trailer.name}
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            src={`https://www.dailymotion.com/embed/video/${detail.trailer.dailymotionVideoId}?autoplay=1&fullscreen=1`}
+            title={detail.trailer.trailerTitle}
+            allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             onLoad={() => setTrailerLoaded(true)}
           />
