@@ -62,6 +62,7 @@ import {
   AdminReportsPage,
   AdminSettingsPage,
   AdminUsersPage,
+  AdminUniversitiesPage,
 } from "./pages/admin/AdminPages";
 import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
@@ -71,6 +72,9 @@ import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
 import CourseDetailPage from "./pages/education/CourseDetailPage";
 import EducationCatalogPage from "./pages/education/EducationCatalogPage";
+import UniversitiesPage from "./pages/education/UniversitiesPage";
+import UniversityProfilePage from "./pages/education/UniversityProfilePage";
+import UniversityClaimPage from "./pages/education/UniversityClaimPage";
 import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
 import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
 import CartPage from "./pages/food-delivery/CartPage";
@@ -665,6 +669,18 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/services/education/universities",
+    element: <UniversitiesPage />,
+  },
+  {
+    path: "/services/education/universities/:slug",
+    element: <UniversityProfilePage />,
+  },
+  {
+    path: "/services/education/universities/:slug/claim",
+    element: <UniversityClaimPage />,
+  },
+  {
     path: "/services/education/courses",
     element: <EducationCatalogPage />,
   },
@@ -1105,6 +1121,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminSettingsPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/universities",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminUniversitiesPage />
         </AdminLayout>
       </ProtectedRoute>
     ),

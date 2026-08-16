@@ -492,3 +492,110 @@ export const AdminReportsPage = () => {
 };
 
 export const AdminSettingsPage = () => <main className="private-page"><Head title="Admin Settings" description="Administrative preferences use your main SMAJ settings." /><div className="private-state"><p>Theme, language, notifications, and logout are managed in account settings.</p><Link className="private-primary-button" to="/settings">Open Settings</Link></div></main>;
+
+export const AdminUniversitiesPage = () => {
+  const [universities, setUniversities] = useState<any[]>([]);
+  const [claims, setClaims] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    try {
+      const [uniResponse, claimsResponse, statsResponse] = await Promise.all([
+        axiosClient.get("/admin/universities"),
+        axiosClient.get("/admin/universities/claims"),
+        axiosClient.get("/admin/universities/stats"),
+      ]);
+      setUniversities(uniResponse.data.universities);
+      setClaims(claimsResponse.data.claims);
+      setStats(statsResponse.data.stats);
+    } catch {
+      setMessage("Failed to load university data.");
+    }
+  }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+
+  const updateClaim = async (id: string, reviewStatus: string, reviewNotes?: string) => {
+    await axiosClient.patch(`/admin/universities/claims/${id}`, { review_status: reviewStatus, review_notes: reviewNotes });
+    setMessage("Claim updated.");
+    await load();
+  };
+
+  const updateUniversity = async (id: string, body: any) => {
+    await axiosClient.patch(`/admin/universities/${id}`, body);
+    setMessage("University updated.");
+    await load();
+  };
+
+  return (
+    <main className="private-page">
+      <Head title="Universities" description="Manage university listings, partnerships, programs, claims, and Pi-enabled services." action={<button className="private-secondary-button" type="button" onClick={() => void load()}>Refresh</button>} />
+      <Notice text={message} />
+      {stats && (
+        <section className="stats-grid admin-stats admin-summary-stats">
+          <div><span>Total Universities</span><strong>{stats.totalUniversities}</strong></div>
+          <div><span>Programs</span><strong>{stats.totalPrograms}</strong></div>
+          <div><span>Pending Claims</span><strong>{stats.pendingClaims}</strong></div>
+          <div><span>Applications</span><strong>{stats.totalApplications}</strong></div>
+          <div><span>Completed Payments</span><strong>{stats.completedPayments}</strong></div>
+        </section>
+      )}
+      <section className="management-list">
+        <h2>Universities</h2>
+        {universities.length === 0 ? <div className="private-state"><h3>No universities</h3><p>Add universities via the API or admin tools.</p></div> : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>University</th><th>Country</th><th>Type</th><th>Recognition</th><th>Partnership</th><th>Actions</th></tr></thead>
+              <tbody>{universities.map((uni) => (
+                <tr key={uni.id}>
+                  <td><strong>{uni.official_name}</strong><small>{uni.short_name}</small></td>
+                  <td>{uni.country}</td>
+                  <td>{uni.institution_type}</td>
+                  <td>{uni.recognition_status?.replace(/_/g, " ")}</td>
+                  <td>{uni.partnership_status?.replace(/_/g, " ")}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button onClick={() => updateUniversity(uni.id, { partnership_status: uni.partnership_status === "smaj_verified_partner" ? "directory" : "smaj_verified_partner" })}>
+                        {uni.partnership_status === "smaj_verified_partner" ? "Remove Partner" : "Make Partner"}
+                      </button>
+                      <button onClick={() => updateUniversity(uni.id, { pi_payments_enabled: !uni.pi_payments_enabled })}>
+                        {uni.pi_payments_enabled ? "Disable Pi" : "Enable Pi"}
+                      </button>
+                      <button onClick={() => updateUniversity(uni.id, { applications_enabled: !uni.applications_enabled })}>
+                        {uni.applications_enabled ? "Disable Apps" : "Enable Apps"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+      </section>
+      <section className="management-list">
+        <h2>University Claims</h2>
+        {claims.length === 0 ? <div className="private-state"><h3>No claims</h3><p>University representative claims will appear here.</p></div> : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>University</th><th>Representative</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>{claims.map((claim) => (
+                <tr key={claim.id}>
+                  <td><strong>{claim.university_name}</strong></td>
+                  <td>{claim.representative_full_name}<small>{claim.job_title}</small></td>
+                  <td>{claim.institutional_email}</td>
+                  <td>{claim.review_status?.replace(/_/g, " ")}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button onClick={() => void updateClaim(claim.id, "approved", "Identity verified.")}>Approve</button>
+                      <button onClick={() => void updateClaim(claim.id, "rejected", "Could not verify authority.")}>Reject</button>
+                      <button onClick={() => void updateClaim(claim.id, "additional_information_required", "Please provide more documents.")}>Request Info</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+};

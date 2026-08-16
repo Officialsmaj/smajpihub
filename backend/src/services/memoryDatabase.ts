@@ -204,4 +204,9 @@ export const createMemoryCollections = () => ({
   transportTripCollection: new MemoryCollection(),
   transportReceiptCollection: new MemoryCollection(),
   transportNotificationCollection: new MemoryCollection(),
+  universityCollection: new MemoryCollection(),
+  universityProgramCollection: new MemoryCollection(),
+  universityClaimCollection: new MemoryCollection(),
+  universityApplicationCollection: new MemoryCollection(),
+  universityPaymentCollection: new MemoryCollection(),
 });

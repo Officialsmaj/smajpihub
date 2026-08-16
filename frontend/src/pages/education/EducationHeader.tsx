@@ -12,7 +12,7 @@ const links = [
   ["/help", "Help"],
 ] as const;
 
-const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChange: (value: string) => void }) => {
+const EducationHeader = ({ query, onQueryChange, searchPath = "/services/education/courses" }: { query: string; onQueryChange: (value: string) => void; searchPath?: string }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ const EducationHeader = ({ query, onQueryChange }: { query: string; onQueryChang
     event.preventDefault();
     setMenuOpen(false);
     const term = query.trim();
-    navigate(`/services/education/courses${term ? `?q=${encodeURIComponent(term)}` : ""}`);
+    navigate(`${searchPath}${term ? `?q=${encodeURIComponent(term)}` : ""}`);
   };
 
   return (

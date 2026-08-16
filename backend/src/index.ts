@@ -30,6 +30,7 @@ import mountTransportEndpoints from "./handlers/transport";
 import mountTranslationEndpoints from "./handlers/translations";
 import mountHeroBannerEndpoints from "./handlers/heroBanners";
 import mountAmbassadorEndpoints from "./handlers/ambassadors";
+import mountEducationEndpoints from "./handlers/education";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -285,26 +286,35 @@ const ambassadorRouter = express.Router();
 mountAmbassadorEndpoints(ambassadorRouter);
 app.use("/ambassadors", ambassadorRouter);
 
-app.get("/health", async (_, res) => {
-  const ready = Boolean(
-    app.locals.userCollection &&
-    app.locals.productCollection &&
-    app.locals.marketplaceOrderCollection &&
-    app.locals.notificationCollection &&
-    app.locals.heroBannerCollection &&
-    app.locals.transportBookingCollection &&
-    app.locals.transportDriverCollection,
-  );
+const educationRouter = express.Router();
+mountEducationEndpoints(educationRouter);
+app.use("/education", educationRouter);
 
-  res.status(ready ? 200 : 503).json({
-    status: ready ? "ok" : "starting",
-    service: "smaj-pi-hub-backend",
-    database: env.use_memory_db ? "memory" : "mongodb",
-    uptimeSeconds: Math.round(process.uptime()),
-    startedAt: serviceStartedAt.toISOString(),
-    features: { heroBanners: Boolean(app.locals.heroBannerCollection) },
+  app.get("/health", async (_, res) => {
+    const ready = Boolean(
+      app.locals.userCollection &&
+      app.locals.productCollection &&
+      app.locals.marketplaceOrderCollection &&
+      app.locals.notificationCollection &&
+      app.locals.heroBannerCollection &&
+      app.locals.transportBookingCollection &&
+      app.locals.transportDriverCollection &&
+      app.locals.universityCollection &&
+      app.locals.universityProgramCollection &&
+      app.locals.universityClaimCollection &&
+      app.locals.universityApplicationCollection &&
+      app.locals.universityPaymentCollection
+    );
+
+    res.status(ready ? 200 : 503).json({
+      status: ready ? "ok" : "starting",
+      service: "smaj-pi-hub-backend",
+      database: env.use_memory_db ? "memory" : "mongodb",
+      uptimeSeconds: Math.round(process.uptime()),
+      startedAt: serviceStartedAt.toISOString(),
+      features: { heroBanners: Boolean(app.locals.heroBannerCollection), education: Boolean(app.locals.universityCollection) },
+    });
   });
-});
 
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
@@ -366,6 +376,13 @@ const start = async () => {
       app.locals.transportNotificationCollection = db.collection(
         "transport_notifications",
       );
+      app.locals.universityCollection = db.collection("universities");
+      app.locals.universityProgramCollection = db.collection("university_programs");
+      app.locals.universityClaimCollection = db.collection("university_claims");
+      app.locals.universityApplicationCollection = db.collection(
+        "university_applications",
+      );
+      app.locals.universityPaymentCollection = db.collection("university_payments");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -558,6 +575,39 @@ const start = async () => {
         app.locals.transportNotificationCollection.createIndex({
           userId: 1,
           createdAt: -1,
+        }),
+        app.locals.universityCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.universityCollection.createIndex({
+          partnership_status: 1,
+          country: 1,
+          updated_at: -1,
+        }),
+        app.locals.universityProgramCollection.createIndex({
+          university_id: 1,
+          created_at: -1,
+        }),
+        app.locals.universityClaimCollection.createIndex({
+          university_id: 1,
+          review_status: 1,
+          submitted_at: -1,
+        }),
+        app.locals.universityApplicationCollection.createIndex({
+          applicant_id: 1,
+          created_at: -1,
+        }),
+        app.locals.universityApplicationCollection.createIndex({
+          university_id: 1,
+          status: 1,
+          created_at: -1,
+        }),
+        app.locals.universityPaymentCollection.createIndex({
+          user_id: 1,
+          created_at: -1,
+        }),
+        app.locals.universityPaymentCollection.createIndex({
+          university_id: 1,
+          status: 1,
+          created_at: -1,
         }),
       ]);
     }

@@ -1,29 +1,40 @@
-export type EducationCourse = {
-  id: string;
-  title: string;
+import { ObjectId } from "mongodb";
+
+export type UniversityRecognitionStatus = "directory" | "recognition_verified" | "partnership_pending" | "smaj_verified_partner" | "partnership_suspended";
+
+export type UniversityInstitutionType = "public" | "private" | "research" | "polytechnic" | "college" | "institute" | "academy" | "other";
+
+export type UniversityDegreeLevel = "certificate" | "diploma" | "associate" | "bachelor" | "master" | "doctoral" | "postdoctoral" | "other";
+
+export type UniversityStudyMode = "on_campus" | "online" | "hybrid" | "distance" | "other";
+
+export type UniversityClaimStatus = "pending" | "additional_information_required" | "approved" | "rejected";
+
+export type UniversityApplicationStatus = "draft" | "submitted" | "payment_pending" | "under_review" | "additional_documents_required" | "accepted" | "rejected" | "waitlisted" | "withdrawn";
+
+export type UniversityPaymentStatus = "pending" | "processing" | "paid" | "cancelled" | "failed" | "refunded";
+
+export type UniversityPaymentPurpose = "application_fee" | "registration_fee" | "admission_deposit" | "course_fee" | "tuition_deposit" | "tuition" | "other";
+
+export interface UniversityDataProvenance {
+  source_type: "official_website" | "whed_iau" | "national_ministry" | "government_database" | "openalex" | "other";
+  source_name: string;
+  source_url: string;
+  external_id?: string;
+  retrieved_at: string;
+  last_verified_at: string;
+  verification_status: "unverified" | "verified" | "stale";
+  confidence: number;
+  is_official_source: boolean;
+}
+
+export interface UniversityExternalId {
   provider: string;
-  category: string;
-  level: string;
-  duration: string;
-  priceUsdt: number;
-  rating: string;
-  image: string;
-  description?: string;
-};
-
-export type EducationPartner = {
   id: string;
-  name: string;
-  type: string;
-  location: string;
-  programs: string;
-  status: string;
-};
+}
 
-export type EducationCategory = string;
-
-export type University = {
-  id: string;
+export interface UniversityData {
+  _id: ObjectId;
   slug: string;
   official_name: string;
   short_name?: string;
@@ -31,7 +42,7 @@ export type University = {
   logo_url?: string;
   cover_image_url?: string;
   description?: string;
-  institution_type: string;
+  institution_type: UniversityInstitutionType;
   founded_year?: number;
   country: string;
   country_code: string;
@@ -46,11 +57,11 @@ export type University = {
   contact_email?: string;
   contact_phone?: string;
   languages?: string[];
-  recognition_status: string;
+  recognition_status: UniversityRecognitionStatus;
   recognition_authority?: string;
-  external_ids: Array<{ provider: string; id: string }>;
+  external_ids: UniversityExternalId[];
   whed_id?: string;
-  partnership_status: string;
+  partnership_status: UniversityRecognitionStatus;
   partner_since?: string;
   pi_payments_enabled: boolean;
   applications_enabled: boolean;
@@ -60,20 +71,20 @@ export type University = {
   created_at: string;
   updated_at: string;
   is_demo: boolean;
-};
+}
 
-export type UniversityProgram = {
-  id: string;
+export interface UniversityProgramData {
+  _id: ObjectId;
   university_id: string;
   university_slug: string;
   name: string;
-  degree_level: string;
+  degree_level: UniversityDegreeLevel;
   field: string;
   faculty?: string;
   department?: string;
   description?: string;
   duration?: string;
-  study_mode: string;
+  study_mode: UniversityStudyMode;
   campus?: string;
   teaching_language?: string;
   tuition?: number;
@@ -85,25 +96,15 @@ export type UniversityProgram = {
   application_opening_date?: string;
   application_deadline?: string;
   official_program_url?: string;
-  provenance: {
-    source_type: string;
-    source_name: string;
-    source_url: string;
-    external_id?: string;
-    retrieved_at: string;
-    last_verified_at: string;
-    verification_status: string;
-    confidence: number;
-    is_official_source: boolean;
-  };
+  provenance: UniversityDataProvenance;
   last_verified_at?: string;
   created_at: string;
   updated_at: string;
   is_demo: boolean;
-};
+}
 
-export type UniversityClaim = {
-  id: string;
+export interface UniversityClaimData {
+  _id: ObjectId;
   university_id: string;
   university_slug: string;
   university_name: string;
@@ -117,16 +118,16 @@ export type UniversityClaim = {
   supporting_documents?: string[];
   message?: string;
   submitted_at: string;
-  review_status: string;
+  review_status: UniversityClaimStatus;
   reviewed_by?: string;
   reviewed_at?: string;
   review_notes?: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type UniversityApplication = {
-  id: string;
+export interface UniversityApplicationData {
+  _id: ObjectId;
   application_id: string;
   applicant_id: string;
   university_id: string;
@@ -134,12 +135,12 @@ export type UniversityApplication = {
   program_id?: string;
   program_name?: string;
   intake?: string;
-  personal_information: Record<string, unknown>;
-  education_history: Record<string, unknown>[];
-  required_documents: Record<string, unknown>[];
+  personal_information: Record<string, any>;
+  education_history: Record<string, any>[];
+  required_documents: Record<string, any>[];
   statement_essay?: string;
-  status: string;
-  payment_status: string;
+  status: UniversityApplicationStatus;
+  payment_status: UniversityPaymentStatus;
   payment_id?: string;
   university_review_status?: string;
   submitted_at?: string;
@@ -147,10 +148,10 @@ export type UniversityApplication = {
   decision_notes?: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type UniversityPayment = {
-  id: string;
+export interface UniversityPaymentData {
+  _id: ObjectId;
   payment_id: string;
   user_id: string;
   university_id: string;
@@ -158,25 +159,25 @@ export type UniversityPayment = {
   application_id?: string;
   program_id?: string;
   program_name?: string;
-  payment_purpose: string;
+  payment_purpose: UniversityPaymentPurpose;
   amount_display: number;
   currency_display: string;
   amount_pi: number;
   pi_payment_identifier?: string;
   transaction_identifier?: string;
-  status: string;
+  status: UniversityPaymentStatus;
   approved_at?: string;
   completed_at?: string;
   failed_at?: string;
   cancelled_at?: string;
   failure_reason?: string;
-  audit_metadata: Record<string, unknown>;
+  audit_metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type UniversityAuthorization = {
+export type UniversityServiceAuthorization = {
   applications_enabled: boolean;
   pi_payments_enabled: boolean;
-  payment_categories: string[];
+  payment_categories: UniversityPaymentPurpose[];
 };

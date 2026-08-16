@@ -1,5 +1,5 @@
 import { axiosClient } from "./axiosClient";
-import type { EducationCourse, EducationPartner, EducationCategory } from "../types/education";
+import type { EducationCourse, EducationPartner, EducationCategory, University, UniversityProgram, UniversityClaim, UniversityApplication, UniversityPayment, UniversityAuthorization } from "../types/education";
 
 const FALLBACK_CATEGORIES: EducationCategory[] = [
   "Universities",
@@ -77,6 +77,60 @@ const FALLBACK_PARTNERS: EducationPartner[] = [
   },
 ];
 
+const FALLBACK_UNIVERSITIES: University[] = [
+  {
+    id: "global-institute-of-technology",
+    slug: "global-institute-of-technology",
+    official_name: "Global Institute of Technology",
+    short_name: "GIT",
+    description: "A demo institution for platform development and UI verification.",
+    institution_type: "research",
+    country: "United States",
+    country_code: "US",
+    city: "San Francisco",
+    state_region: "California",
+    official_website: "https://example.edu",
+    contact_email: "info@example.edu",
+    languages: ["English"],
+    recognition_status: "directory",
+    recognition_authority: "Demo Authority",
+    external_ids: [{ provider: "demo", id: "git-001" }],
+    partnership_status: "directory",
+    pi_payments_enabled: false,
+    applications_enabled: false,
+    profile_claimed: false,
+    data_last_verified_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_demo: true,
+  },
+  {
+    id: "pioneer-academy-of-sciences",
+    slug: "pioneer-academy-of-sciences",
+    official_name: "Pioneer Academy of Sciences",
+    short_name: "PAS",
+    description: "Another demo institution for UI development.",
+    institution_type: "public",
+    country: "United Kingdom",
+    country_code: "GB",
+    city: "London",
+    official_website: "https://example.ac.uk",
+    contact_email: "info@example.ac.uk",
+    languages: ["English"],
+    recognition_status: "recognition_verified",
+    recognition_authority: "Demo UK Authority",
+    external_ids: [{ provider: "demo", id: "pas-002" }],
+    partnership_status: "directory",
+    pi_payments_enabled: false,
+    applications_enabled: false,
+    profile_claimed: false,
+    data_last_verified_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_demo: true,
+  },
+];
+
 export const getEducationCategories = async (): Promise<EducationCategory[]> => {
   try {
     const response = await axiosClient.get<{ categories: EducationCategory[] }>("/education/categories");
@@ -114,4 +168,94 @@ export const getEducationPartners = async (): Promise<EducationPartner[]> => {
   } catch {
     return FALLBACK_PARTNERS;
   }
+};
+
+export const getUniversities = async (params?: { q?: string; country?: string; city?: string; institution_type?: string; partnership?: string; page?: number; limit?: number }): Promise<{ universities: University[]; total: number; page: number; pageSize: number; totalPages: number }> => {
+  try {
+    const response = await axiosClient.get<{ universities: University[]; total: number; page: number; pageSize: number; totalPages: number }>("/education/universities", { params });
+    return response.data;
+  } catch {
+    return { universities: FALLBACK_UNIVERSITIES, total: FALLBACK_UNIVERSITIES.length, page: 1, pageSize: 20, totalPages: 1 };
+  }
+};
+
+export const getUniversity = async (idOrSlug: string): Promise<{ university: University | null; programs: UniversityProgram[]; authorization: UniversityAuthorization }> => {
+  try {
+    const response = await axiosClient.get<{ university: University | null; programs: UniversityProgram[]; authorization: UniversityAuthorization }>(`/education/universities/${encodeURIComponent(idOrSlug)}`);
+    return response.data;
+  } catch {
+    const uni = FALLBACK_UNIVERSITIES.find((u) => u.id === idOrSlug || u.slug === idOrSlug) || null;
+    return { university: uni, programs: [], authorization: { applications_enabled: false, pi_payments_enabled: false, payment_categories: [] } };
+  }
+};
+
+export const getUniversityPrograms = async (universityId: string): Promise<UniversityProgram[]> => {
+  try {
+    const response = await axiosClient.get<{ programs: UniversityProgram[] }>(`/education/universities/${encodeURIComponent(universityId)}/programs`);
+    return response.data.programs;
+  } catch {
+    return [];
+  }
+};
+
+export const createUniversityClaim = async (data: {
+  university_id: string;
+  university_slug: string;
+  university_name: string;
+  representative_full_name: string;
+  job_title: string;
+  institutional_email: string;
+  department?: string;
+  phone?: string;
+  university_website?: string;
+  proof_of_authority: string;
+  supporting_documents?: string[];
+  message?: string;
+}): Promise<UniversityClaim> => {
+  const response = await axiosClient.post<{ claim: UniversityClaim }>("/education/universities/claims", data);
+  return response.data.claim;
+};
+
+export const getUniversityApplications = async (): Promise<UniversityApplication[]> => {
+  try {
+    const response = await axiosClient.get<{ applications: UniversityApplication[] }>("/education/applications");
+    return response.data.applications;
+  } catch {
+    return [];
+  }
+};
+
+export const createUniversityApplication = async (universityId: string, data: {
+  program_id?: string;
+  program_name?: string;
+  intake?: string;
+  personal_information?: Record<string, unknown>;
+  education_history?: Record<string, unknown>[];
+  required_documents?: Record<string, unknown>[];
+  statement_essay?: string;
+}): Promise<UniversityApplication> => {
+  const response = await axiosClient.post<{ application: UniversityApplication }>(`/education/universities/${encodeURIComponent(universityId)}/applications`, data);
+  return response.data.application;
+};
+
+export const approveUniversityPayment = async (universityId: string, data: {
+  payment_purpose?: string;
+  amount_display: number;
+  currency_display?: string;
+  application_id?: string;
+  program_id?: string;
+  program_name?: string;
+}): Promise<UniversityPayment> => {
+  const response = await axiosClient.post<{ payment: UniversityPayment }>(`/education/universities/${encodeURIComponent(universityId)}/payments/approve`, data);
+  return response.data.payment;
+};
+
+export const completeUniversityPayment = async (paymentId: string, txid: string): Promise<{ message: string; payment_id: string; txid: string }> => {
+  const response = await axiosClient.post<{ message: string; payment_id: string; txid: string }>(`/education/universities/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+  return response.data;
+};
+
+export const cancelUniversityPayment = async (paymentId: string): Promise<{ message: string }> => {
+  const response = await axiosClient.post<{ message: string }>(`/education/universities/payments/${encodeURIComponent(paymentId)}/cancel`);
+  return response.data;
 };
