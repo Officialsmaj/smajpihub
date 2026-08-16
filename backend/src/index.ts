@@ -31,6 +31,7 @@ import mountTranslationEndpoints from "./handlers/translations";
 import mountHeroBannerEndpoints from "./handlers/heroBanners";
 import mountAmbassadorEndpoints from "./handlers/ambassadors";
 import mountEducationEndpoints from "./handlers/education";
+import mountCourseEndpoints from "./handlers/courses";
 import { createMemoryCollections } from "./services/memoryDatabase";
 
 const dbName = env.mongo_db_name;
@@ -290,7 +291,11 @@ const educationRouter = express.Router();
 mountEducationEndpoints(educationRouter);
 app.use("/education", educationRouter);
 
-  app.get("/health", async (_, res) => {
+const coursesRouter = express.Router();
+mountCourseEndpoints(coursesRouter);
+app.use("/courses", coursesRouter);
+
+app.get("/health", async (_, res) => {
     const ready = Boolean(
       app.locals.userCollection &&
       app.locals.productCollection &&
@@ -383,6 +388,13 @@ const start = async () => {
         "university_applications",
       );
       app.locals.universityPaymentCollection = db.collection("university_payments");
+      app.locals.courseCollection = db.collection("courses");
+      app.locals.coursePaymentCollection = db.collection("course_payments");
+      app.locals.enrollmentCollection = db.collection("enrollments");
+      app.locals.lessonProgressCollection = db.collection("lesson_progress");
+      app.locals.quizCollection = db.collection("quizzes");
+      app.locals.quizSubmissionCollection = db.collection("quiz_submissions");
+      app.locals.certificateCollection = db.collection("certificates");
       await Promise.all([
         app.locals.userCollection.createIndex({ uid: 1 }, { unique: true }),
         app.locals.userCollection.createIndex({ piUsername: 1 }),
@@ -607,6 +619,32 @@ const start = async () => {
         app.locals.universityPaymentCollection.createIndex({
           university_id: 1,
           status: 1,
+          created_at: -1,
+        }),
+        app.locals.courseCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.courseCollection.createIndex({
+          status: 1,
+          published_at: -1,
+          enrollment_count: -1,
+        }),
+        app.locals.courseCollection.createIndex({
+          category: 1,
+          level: 1,
+          course_type: 1,
+          status: 1,
+        }),
+        app.locals.courseCollection.createIndex({ instructor_id: 1, created_at: -1 }),
+        app.locals.enrollmentCollection.createIndex({
+          user_id: 1,
+          created_at: -1,
+        }),
+        app.locals.enrollmentCollection.createIndex({
+          course_id: 1,
+          status: 1,
+        }),
+        app.locals.certificateCollection.createIndex({ certificate_id: 1 }, { unique: true }),
+        app.locals.certificateCollection.createIndex({
+          user_id: 1,
           created_at: -1,
         }),
       ]);

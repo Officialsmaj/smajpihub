@@ -599,3 +599,73 @@ export const AdminUniversitiesPage = () => {
     </main>
   );
 };
+
+export const AdminCoursesPage = () => {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [message, setMessage] = useState("");
+  const load = useCallback(async () => {
+    try {
+      const [coursesResponse, statsResponse] = await Promise.all([
+        axiosClient.get("/admin/courses"),
+        axiosClient.get("/admin/courses/stats"),
+      ]);
+      setCourses(coursesResponse.data.courses);
+      setStats(statsResponse.data.stats);
+    } catch {
+      setMessage("Failed to load courses.");
+    }
+  }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+
+  const updateCourse = async (id: string, body: any) => {
+    await axiosClient.patch(`/admin/courses/${id}`, body);
+    setMessage("Course updated.");
+    await load();
+  };
+
+  return (
+    <main className="private-page">
+      <Head title="Courses" description="Manage online courses, review submissions, and inspect enrollments." action={<button className="private-secondary-button" type="button" onClick={() => void load()}>Refresh</button>} />
+      <Notice text={message} />
+      {stats && (
+        <section className="stats-grid admin-stats admin-summary-stats">
+          <div><span>Total Courses</span><strong>{stats.totalCourses}</strong></div>
+          <div><span>Published</span><strong>{stats.publishedCourses}</strong></div>
+          <div><span>Drafts</span><strong>{stats.draftCourses}</strong></div>
+          <div><span>Pending Review</span><strong>{stats.pendingReview}</strong></div>
+          <div><span>Enrollments</span><strong>{stats.totalEnrollments}</strong></div>
+          <div><span>Certificates</span><strong>{stats.totalCertificates}</strong></div>
+        </section>
+      )}
+      <section className="management-list">
+        <h2>Courses</h2>
+        {courses.length === 0 ? <div className="private-state"><h3>No courses</h3><p>Courses will appear here once created.</p></div> : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Course</th><th>Category</th><th>Type</th><th>Level</th><th>Status</th><th>Enrollments</th><th>Actions</th></tr></thead>
+              <tbody>{courses.map((course) => (
+                <tr key={course.id}>
+                  <td><strong>{course.title}</strong><small>{course.short_description}</small></td>
+                  <td>{course.category}</td>
+                  <td>{course.course_type}</td>
+                  <td>{course.level}</td>
+                  <td>{course.status}</td>
+                  <td>{course.enrollment_count}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button onClick={() => updateCourse(course.id, { status: course.status === "published" ? "archived" : "published" })}>
+                        {course.status === "published" ? "Archive" : "Publish"}
+                      </button>
+                      <button onClick={() => updateCourse(course.id, { status: "rejected", review_notes: "Does not meet standards." })}>Reject</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+};

@@ -63,6 +63,7 @@ import {
   AdminSettingsPage,
   AdminUsersPage,
   AdminUniversitiesPage,
+  AdminCoursesPage,
 } from "./pages/admin/AdminPages";
 import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
@@ -72,6 +73,11 @@ import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
 import CourseDetailPage from "./pages/education/CourseDetailPage";
 import EducationCatalogPage from "./pages/education/EducationCatalogPage";
+import CourseCenterPage from "./pages/education/CourseCenterPage";
+import OnlineCourseDetailPage from "./pages/education/OnlineCourseDetailPage";
+import CoursePlayerPage from "./pages/education/CoursePlayerPage";
+import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
+import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
 import UniversityProfilePage from "./pages/education/UniversityProfilePage";
 import UniversityClaimPage from "./pages/education/UniversityClaimPage";
@@ -669,6 +675,16 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/app/services/education/courses",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <InstructorDashboardPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/services/education/universities",
     element: <UniversitiesPage />,
   },
@@ -682,7 +698,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/services/education/courses",
-    element: <EducationCatalogPage />,
+    element: <CourseCenterPage />,
+  },
+  {
+    path: "/services/education/courses/:slug",
+    element: <OnlineCourseDetailPage />,
+  },
+  {
+    path: "/services/education/courses/learn/:enrollmentId",
+    element: <CoursePlayerPage />,
+  },
+  {
+    path: "/verify/certificate/:certificateId",
+    element: <CertificateVerifyPage />,
   },
   {
     path: "/services/education/categories/:categorySlug",
@@ -1131,6 +1159,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminUniversitiesPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/courses",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminCoursesPage />
         </AdminLayout>
       </ProtectedRoute>
     ),

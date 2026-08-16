@@ -209,4 +209,11 @@ export const createMemoryCollections = () => ({
   universityClaimCollection: new MemoryCollection(),
   universityApplicationCollection: new MemoryCollection(),
   universityPaymentCollection: new MemoryCollection(),
+  courseCollection: new MemoryCollection(),
+  coursePaymentCollection: new MemoryCollection(),
+  enrollmentCollection: new MemoryCollection(),
+  lessonProgressCollection: new MemoryCollection(),
+  quizCollection: new MemoryCollection(),
+  quizSubmissionCollection: new MemoryCollection(),
+  certificateCollection: new MemoryCollection(),
 });
