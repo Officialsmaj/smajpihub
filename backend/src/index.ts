@@ -347,7 +347,6 @@ const start = async () => {
       app.locals.streamPostCollection = db.collection("stream_posts");
       app.locals.streamReviewCollection = db.collection("stream_reviews");
       app.locals.streamSettingsCollection = db.collection("stream_settings");
-      app.locals.streamTrailerCollection = db.collection("stream_trailers");
       app.locals.jobCollection = db.collection("jobs");
       app.locals.jobCompanyCollection = db.collection("job_companies");
       app.locals.jobSavedCollection = db.collection("job_saved");
@@ -458,10 +457,6 @@ const start = async () => {
           popularityScore: -1,
           createdAt: -1,
         }),
-        app.locals.streamTrailerCollection.createIndex(
-          { tmdbId: 1 },
-          { unique: true },
-        ),
         app.locals.jobCollection.createIndex({ slug: 1 }, { unique: true }),
         app.locals.jobCollection.createIndex({
           status: 1,

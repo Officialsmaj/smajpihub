@@ -21,9 +21,10 @@ export type StreamCatalogTitle = {
 };
 
 export type StreamTrailer = {
-  dailymotionVideoId: string;
-  trailerTitle: string;
-  trailerProvider: "dailymotion";
+  youtubeVideoId: string;
+  name: string;
+  official: boolean;
+  type: string;
 };
 
 export type StreamDownloadTitle = StreamCatalogTitle & {
@@ -56,11 +57,6 @@ export const getStreamCategory = async (slug: string, page = 1, sort = "populari
 
 export const getStreamTitle = async (type: "movie" | "tv", id: string) => {
   const response = await axiosClient.get<StreamCatalogTitle & { genres: Array<{ id: number; name: string }>; runtime: number | null; trailer: StreamTrailer | null; raw: unknown }>(`/stream/${type}/${id}`);
-  return response.data;
-};
-
-export const getStreamTrailer = async (type: "movie" | "tv", id: string) => {
-  const response = await axiosClient.get<{ available: boolean; trailer?: StreamTrailer }>(`/stream/trailer/${type}/${id}`);
   return response.data;
 };
 

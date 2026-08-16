@@ -45,7 +45,6 @@ interface Environment {
   youtube_api_key: string;
   youtube_live_channel_ids: string[];
   youtube_live_refresh_minutes: number;
-  dailymotion_api_key: string;
   sports_provider: string;
   sports_api_key: string;
   sports_league_ids: string[];
@@ -111,7 +110,6 @@ const env: Environment = {
     5,
     Number(process.env.YOUTUBE_LIVE_REFRESH_MINUTES) || 360,
   ),
-  dailymotion_api_key: String(process.env.DAILYMOTION_API_KEY || "").trim(),
   sports_provider: String(process.env.SPORTS_PROVIDER || "")
     .trim()
     .toLowerCase(),

@@ -47,7 +47,6 @@ import {
   getStreamMyList,
   getStreamMyListStatus,
   getStreamTitle,
-  getStreamTrailer,
   removeStreamDownload,
   removeStreamTitle,
   saveStreamDownload,
@@ -565,18 +564,14 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       getStreamMyListStatus(type, id).catch(() => false),
       getStreamDownloadStatus(type, id).catch(() => false),
       getTitleAvailability(type, id).catch((): { available: boolean; playbackId?: string; downloadAllowed: boolean; message?: string } => ({ available: false, downloadAllowed: false })),
-      getStreamTrailer(type, id).catch(() => ({ available: false })),
     ])
-      .then(([titleData, savedStatus, downloadStatus, availability, trailerData]) => {
+      .then(([titleData, savedStatus, downloadStatus, availability]) => {
         setDetail(titleData as typeof detail);
         setSaved(savedStatus);
         setDownloaded(downloadStatus);
         setPlaybackId(availability.available ? availability.playbackId || "" : "");
         setPlaybackUnavailableMessage(availability.available ? "" : availability.message || "");
         setDownloadAllowed(availability.available && availability.downloadAllowed === true);
-        if (trailerData.available && trailerData.trailer) {
-          setDetail(current => current ? { ...current, trailer: trailerData.trailer! } : current);
-        }
         setState("ready");
       })
       .catch(() => setState("error"));
@@ -637,15 +632,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     if (!detail?.trailer) return;
     setTrailerLoaded(false);
     setTrailerOpen(true);
-    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
-    const fullscreenRequest = root.requestFullscreen?.bind(root) || root.webkitRequestFullscreen?.bind(root);
-    try {
-      const result = fullscreenRequest?.();
-      void Promise.resolve(result).then(() => {
-        const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: "landscape") => Promise<void> };
-        return orientation.lock?.("landscape");
-      }).catch(() => { /* Fullscreen and orientation locking depend on the browser. */ });
-    } catch { /* Manual rotation remains available when fullscreen is blocked. */ }
   };
   const closeTrailer = () => {
     setTrailerOpen(false);
@@ -796,9 +782,9 @@ const Detail = ({ series = false }: { series?: boolean }) => {
           <button type="button" onClick={closeTrailer} aria-label="Close trailer"><CloseRoundedIcon /></button>
           {!trailerLoaded ? <span className="sw-trailer-spinner" role="status" aria-label="Loading trailer" /> : null}
           <iframe
-            src={`https://www.dailymotion.com/embed/video/${detail.trailer.dailymotionVideoId}?autoplay=1&fullscreen=1`}
-            title={detail.trailer.trailerTitle}
-            allow="autoplay; fullscreen; picture-in-picture"
+            src={`https://www.youtube-nocookie.com/embed/${detail.trailer.youtubeVideoId}?autoplay=1&playsinline=1&rel=0`}
+            title={detail.trailer.name}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             onLoad={() => setTrailerLoaded(true)}
           />

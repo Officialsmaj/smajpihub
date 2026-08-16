@@ -281,6 +281,16 @@ type TmdbMedia = {
   genre_ids?: number[];
 };
 
+type TmdbVideo = {
+  key?: string;
+  name?: string;
+  site?: string;
+  type?: string;
+  official?: boolean;
+  iso_639_1?: string;
+  published_at?: string;
+};
+
 const normalizeMedia = (item: TmdbMedia, fallbackType: "movie" | "tv" = "movie") => ({
   id: String(item.id),
   tmdbId: item.id,
@@ -1330,133 +1340,19 @@ const mountStreamEndpoints = (router: Router) => {
       const id = Number(req.params.id);
       if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid TMDB title ID" });
       const language = String(req.query.language || "en-US");
-      const data = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }>; runtime?: number; episode_run_time?: number[] }>(`/${type}/${id}`, { language, append_to_response: "credits,recommendations,external_ids" });
-      const trailer = null;
+      const requestedLanguage = language.split("-")[0].toLowerCase();
+      const data = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }>; runtime?: number; episode_run_time?: number[]; videos?: { results?: TmdbVideo[] } }>(`/${type}/${id}`, { language, append_to_response: "credits,recommendations,external_ids,videos" });
+      const trailerVideo = (data.videos?.results || [])
+        .filter(video => video.site === "YouTube" && /^[A-Za-z0-9_-]{11}$/.test(String(video.key || "")) && (video.type === "Trailer" || video.type === "Teaser" || video.type === "Clip"))
+        .sort((left, right) => {
+          const score = (video: TmdbVideo) => (video.type === "Trailer" ? 100 : video.type === "Teaser" ? 50 : 10) + (video.official ? 25 : 0) + (video.iso_639_1?.toLowerCase() === requestedLanguage ? 10 : 0);
+          return score(right) - score(left) || String(right.published_at || "").localeCompare(String(left.published_at || ""));
+        })[0];
+      const trailer = trailerVideo ? { youtubeVideoId: trailerVideo.key!, name: trailerVideo.name || "Official trailer", official: Boolean(trailerVideo.official), type: trailerVideo.type || "Trailer" } : null;
       return res.json({ ...normalizeMedia(data, type), genres: data.genres || [], runtime: data.runtime || data.episode_run_time?.[0] || null, trailer, source: "TMDB", raw: data });
     } catch (error) {
       const status = Number((error as { status?: number; response?: { status?: number } }).status || (error as { response?: { status?: number } }).response?.status || 502);
       return res.status(status).json({ error: error instanceof Error ? error.message : "Unable to load title" });
-    }
-  });
-
-  type DailymotionVideo = {
-    id: string;
-    title: string;
-    description?: string;
-    duration?: number;
-    thumbnail_360_url?: string;
-    created_time?: string;
-  };
-
-  type DailymotionSearchResponse = {
-    list?: DailymotionVideo[];
-    total?: number;
-    page?: number;
-    limit?: number;
-  };
-
-  type TrailerCacheDocument = {
-    _id?: unknown;
-    tmdbId: number;
-    mediaType: "movie" | "tv";
-    dailymotionVideoId: string;
-    trailerTitle: string;
-    trailerProvider: "dailymotion";
-    cachedAt: string;
-  };
-
-  const DAILYMOTION_API_URL = "https://api.dailymotion.com/videos";
-
-  const dailymotionSearch = async (query: string, clientId: string): Promise<DailymotionSearchResponse> => {
-    const response = await axios.get<DailymotionSearchResponse>(DAILYMOTION_API_URL, {
-      params: {
-        search: query.slice(0, 240),
-        fields: "id,title,description,duration,thumbnail_360_url,created_time",
-        limit: 20,
-        sort: "relevance",
-        client_id: clientId,
-      },
-      timeout: 15_000,
-    });
-    return response.data;
-  };
-
-  const dailymotionVideoId = (input: string) => {
-    const value = input.trim();
-    if (/^[A-Za-z0-9_-]{6,}$/.test(value)) return value;
-    try {
-      const url = new URL(value);
-      const host = url.hostname.replace(/^www\./, "").toLowerCase();
-      if (host !== "dailymotion.com" && host !== "www.dailymotion.com") return null;
-      const parts = url.pathname.split("/").filter(Boolean);
-      const candidate = parts[1] || parts[0] || "";
-      return /^[A-Za-z0-9_-]{6,}$/.test(candidate) ? candidate : null;
-    } catch { return null; }
-  };
-
-  const trailerTitleMatchScore = (candidateTitle: string, targetTitle: string, targetYear?: number | null) => {
-    const normalizedCandidate = candidateTitle.toLowerCase();
-    const normalizedTarget = targetTitle.toLowerCase();
-    const targetWords = normalizedTarget.split(/\s+/).filter(word => word.length > 2);
-    const matchedWords = targetWords.filter(word => normalizedCandidate.includes(word));
-    const wordScore = targetWords.length > 0 ? matchedWords.length / targetWords.length : 0;
-    const yearStr = targetYear ? String(targetYear) : null;
-    const yearBonus = yearStr && normalizedCandidate.includes(yearStr) ? 0.1 : 0;
-    const typeBonus = /official\s+trailer/.test(normalizedCandidate) ? 0.25 : /trailer/.test(normalizedCandidate) ? 0.15 : /teaser/.test(normalizedCandidate) ? 0.05 : -0.5;
-    return wordScore + yearBonus + typeBonus;
-  };
-
-  const selectBestDailymotionTrailer = (videos: DailymotionVideo[], title: string, year: number | null) => {
-    const candidates = videos.filter(video => {
-      const t = video.title.toLowerCase();
-      return /official\s+trailer|trailer|teaser/.test(t);
-    });
-    if (!candidates.length) return null;
-    candidates.sort((a, b) => trailerTitleMatchScore(b.title, title, year) - trailerTitleMatchScore(a.title, title, year));
-    const best = candidates[0];
-    const score = trailerTitleMatchScore(best.title, title, year);
-    return score >= 0.3 ? best : null;
-  };
-
-  router.get("/trailer/:type(movie|tv)/:id", async (req, res) => {
-    try {
-      const type = req.params.type as "movie" | "tv";
-      const tmdbId = Number(req.params.id);
-      if (!Number.isInteger(tmdbId) || tmdbId <= 0) return res.status(400).json({ error: "Invalid TMDB title ID" });
-
-      if (!req.app.locals.streamTrailerCollection) return res.status(503).json({ error: "service_unavailable", message: "Trailer cache storage is not ready." });
-      if (!env.dailymotion_api_key) return res.json({ available: false });
-
-      const cached = await req.app.locals.streamTrailerCollection.findOne({ tmdbId }) as TrailerCacheDocument | null;
-      if (cached?.dailymotionVideoId) {
-        return res.json({ available: true, trailer: { tmdbId, dailymotionVideoId: cached.dailymotionVideoId, trailerTitle: cached.trailerTitle, trailerProvider: "dailymotion" } });
-      }
-
-      const data = await tmdbGet<TmdbMedia & { release_date?: string; first_air_date?: string }>(`/${type}/${tmdbId}`, { language: "en-US" });
-      const title = data.title || data.name || "";
-      const releaseDate = data.release_date || data.first_air_date || "";
-      const year = releaseDate ? Number(releaseDate.slice(0, 4)) : null;
-
-      if (!title) return res.json({ available: false });
-
-      const searchResults = await dailymotionSearch(`${title} ${year || ""} official trailer`, env.dailymotion_api_key);
-      const best = selectBestDailymotionTrailer((searchResults.list || []).filter((video): video is DailymotionVideo & { id: string } => video.id.length > 0), title, year);
-
-      if (!best) return res.json({ available: false });
-
-      const cacheEntry: TrailerCacheDocument = {
-        tmdbId,
-        mediaType: type,
-        dailymotionVideoId: best.id,
-        trailerTitle: best.title,
-        trailerProvider: "dailymotion",
-        cachedAt: new Date().toISOString(),
-      };
-      await req.app.locals.streamTrailerCollection.updateOne({ tmdbId }, { $set: cacheEntry }, { upsert: true });
-
-      return res.json({ available: true, trailer: { tmdbId, dailymotionVideoId: best.id, trailerTitle: best.title, trailerProvider: "dailymotion" } });
-    } catch (error) {
-      return res.json({ available: false });
     }
   });
 };
