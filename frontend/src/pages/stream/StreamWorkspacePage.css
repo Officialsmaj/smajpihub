@@ -1309,13 +1309,14 @@
 .sw-detail-trailer-action { color: #171219; background: #fff; cursor: pointer; }
 .sw-detail-trailer-action:disabled { color: #b5adb8; background: #ffffff24; cursor: default; }
 @media (orientation: landscape) and (max-height: 700px) {
-  .sw-trailer { padding: 0; background: #000; }
+  .sw-trailer { padding: 0; background: #000; pointer-events: auto; }
   .sw-trailer iframe {
     width: 100vw;
     height: 100dvh;
     max-width: none;
     aspect-ratio: auto;
     border-radius: 0;
+    pointer-events: auto;
   }
   .sw-trailer > button {
     z-index: 2;
@@ -2198,7 +2199,9 @@
   opacity: 0;
   transition: opacity .2s ease;
 }
-.sw-trailer.loaded iframe { opacity: 1; }
+.sw-trailer.loading { pointer-events: none; }
+.sw-trailer.loaded iframe,
+.sw-trailer iframe { opacity: 1; pointer-events: auto; }
 .sw-trailer-spinner { position:absolute;width:46px;height:46px;border:4px solid #ffffff38;border-top-color:#fff;border-radius:50%;animation:sw-trailer-spin .8s linear infinite; }
 @keyframes sw-trailer-spin { to { transform:rotate(360deg); } }
 .sw-fullscreen-player-shell .sw-real-player video,
