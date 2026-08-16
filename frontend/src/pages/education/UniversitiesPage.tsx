@@ -7,6 +7,7 @@ import UniversityCard from "../../components/education/UniversityCard";
 import { getUniversities } from "../../lib/educationApi";
 import type { University } from "../../types/education";
 import EducationHeader from "./EducationHeader";
+import "../../components/education/education.css";
 
 const UniversitiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

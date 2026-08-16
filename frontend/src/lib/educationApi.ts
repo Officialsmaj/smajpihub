@@ -173,7 +173,11 @@ export const getEducationPartners = async (): Promise<EducationPartner[]> => {
 export const getUniversities = async (params?: { q?: string; country?: string; city?: string; institution_type?: string; partnership?: string; page?: number; limit?: number }): Promise<{ universities: University[]; total: number; page: number; pageSize: number; totalPages: number }> => {
   try {
     const response = await axiosClient.get<{ universities: University[]; total: number; page: number; pageSize: number; totalPages: number }>("/education/universities", { params });
-    return response.data;
+    const data = response.data;
+    if (data.universities.length === 0 && data.total === 0) {
+      return { universities: FALLBACK_UNIVERSITIES, total: FALLBACK_UNIVERSITIES.length, page: 1, pageSize: 20, totalPages: 1 };
+    }
+    return data;
   } catch {
     return { universities: FALLBACK_UNIVERSITIES, total: FALLBACK_UNIVERSITIES.length, page: 1, pageSize: 20, totalPages: 1 };
   }

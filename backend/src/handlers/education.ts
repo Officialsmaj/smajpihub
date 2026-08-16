@@ -95,6 +95,92 @@ const generateId = () => new ObjectId().toString();
 const generateApplicationId = () => `APP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 const generatePaymentId = () => `EDU-PAY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
+const ensureSeedUniversities = async (req: Request) => {
+  const collection = req.app.locals.universityCollection;
+  if (!collection) return;
+  const count = await collection.countDocuments({});
+  if (count > 0) return;
+  const now = new Date();
+  const demoUniversities = [
+    {
+      slug: "global-institute-of-technology",
+      official_name: "Global Institute of Technology",
+      short_name: "GIT",
+      description: "A demo institution for platform development and UI verification.",
+      institution_type: "research",
+      country: "United States",
+      country_code: "US",
+      city: "San Francisco",
+      state_region: "California",
+      official_website: "https://example.edu",
+      contact_email: "info@example.edu",
+      languages: ["English"],
+      recognition_status: "directory",
+      recognition_authority: "Demo Authority",
+      external_ids: [{ provider: "demo", id: "git-001" }],
+      partnership_status: "directory",
+      pi_payments_enabled: false,
+      applications_enabled: false,
+      profile_claimed: false,
+      data_last_verified_at: now.toISOString(),
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      is_demo: true,
+    },
+    {
+      slug: "pioneer-academy-of-sciences",
+      official_name: "Pioneer Academy of Sciences",
+      short_name: "PAS",
+      description: "Another demo institution for UI development.",
+      institution_type: "public",
+      country: "United Kingdom",
+      country_code: "GB",
+      city: "London",
+      official_website: "https://example.ac.uk",
+      contact_email: "info@example.ac.uk",
+      languages: ["English"],
+      recognition_status: "recognition_verified",
+      recognition_authority: "Demo UK Authority",
+      external_ids: [{ provider: "demo", id: "pas-002" }],
+      partnership_status: "directory",
+      pi_payments_enabled: false,
+      applications_enabled: false,
+      profile_claimed: false,
+      data_last_verified_at: now.toISOString(),
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      is_demo: true,
+    },
+    {
+      slug: "african-leadership-university",
+      official_name: "African Leadership University",
+      short_name: "ALU",
+      description: "Demo African university for development testing.",
+      institution_type: "private",
+      country: "Rwanda",
+      country_code: "RW",
+      city: "Kigali",
+      official_website: "https://example.aluedu.org",
+      contact_email: "info@example.aluedu.org",
+      languages: ["English", "French"],
+      recognition_status: "recognition_verified",
+      recognition_authority: "Demo Rwanda Authority",
+      external_ids: [{ provider: "demo", id: "alu-003" }],
+      partnership_status: "partnership_pending",
+      partner_since: now.toISOString(),
+      pi_payments_enabled: false,
+      applications_enabled: false,
+      profile_claimed: true,
+      claimed_by_user_id: "demo-user",
+      data_last_verified_at: now.toISOString(),
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      is_demo: true,
+    },
+  ];
+  await collection.insertMany(demoUniversities);
+};
+
 export default function mountEducationEndpoints(router: Router) {
   router.use((_, res, next) => {
     res.setHeader("Cache-Control", "no-store");
@@ -116,6 +202,8 @@ export default function mountEducationEndpoints(router: Router) {
         const providerResults = await getProvider().searchInstitutions(query, country || undefined, 100);
         return res.status(200).json({ universities: providerResults.map(serialize), source: "demo_provider", total: providerResults.length });
       }
+
+      await ensureSeedUniversities(req);
 
       const mongoQuery: Record<string, any> = {};
       if (query) {
