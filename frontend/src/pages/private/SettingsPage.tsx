@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import InstagramIcon from "@mui/icons-material/Instagram";
-import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import XIcon from "@mui/icons-material/X";
-import YouTubeIcon from "@mui/icons-material/YouTube";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
 import TrustBadge from "../../components/TrustBadge";
 import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
@@ -37,13 +32,6 @@ type VerificationStats = {
 type VerificationLevel = "pi_verified" | "seller_verified" | "trusted_seller";
 
 const STORAGE_KEY = "smaj_account_settings";
-const socialLinks = [
-  ["X", "https://x.com/smajpihub", XIcon],
-  ["Telegram", "https://t.me/smajpihub", TelegramIcon],
-  ["Instagram", "https://instagram.com/smajpihub", InstagramIcon],
-  ["YouTube", "https://youtube.com/@smajpihub", YouTubeIcon],
-  ["TikTok", "https://www.tiktok.com/@smajpihub", MusicNoteOutlinedIcon],
-] as const;
 
 const readSavedSettings = (): Partial<SavedSettings> => {
   try {
@@ -324,18 +312,6 @@ const SettingsPage = () => {
           <label className="setting-line toggle-line"><span><strong>Show profile publicly</strong><small>Allow marketplace users to see your public seller or buyer profile.</small></span><input type="checkbox" checked={form.publicProfile} onChange={(event) => setField("publicProfile", event.target.checked)} /></label>
           <label className="setting-line toggle-line"><span><strong>Allow sellers/buyers to contact me</strong><small>Enable safe marketplace contact for service and order activity.</small></span><input type="checkbox" checked={form.allowContact} onChange={(event) => setField("allowContact", event.target.checked)} /></label>
           <button type="button" className="private-secondary-button danger" onClick={() => setDeleteRequested(true)}>Delete account</button>
-        </section>
-
-        <section>
-          <h2>Official Social Links</h2>
-          <p>Use only official SMAJ PI HUB social channels for announcements, support updates, and ecosystem news.</p>
-          <div className="settings-social-row">
-            {socialLinks.map(([label, href, Icon]) => (
-              <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
-                <Icon fontSize="small" />
-              </a>
-            ))}
-          </div>
         </section>
 
         {message ? <div className="private-alert success">{message}</div> : null}

@@ -8,6 +8,11 @@ import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlin
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import InstagramIcon from "@mui/icons-material/Instagram";
+import MusicNoteOutlinedIcon from "@mui/icons-material/MusicNoteOutlined";
+import TelegramIcon from "@mui/icons-material/Telegram";
+import XIcon from "@mui/icons-material/X";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import { useAuthContext } from "../../contexts/AuthContext";
 import TrustBadge from "../../components/TrustBadge";
 
@@ -28,6 +33,14 @@ const accountRows = [
   ["Help center", "Support and marketplace guidance", "/help"],
   ["Legal", "Terms, privacy, and platform rules", "/terms"],
   ["White Paper", "Vision, ecosystem, utility, and roadmap", "/white-paper"],
+] as const;
+
+const socialLinks = [
+  ["X", "https://x.com/smajpihub", XIcon],
+  ["Telegram", "https://t.me/smajpihub", TelegramIcon],
+  ["Instagram", "https://instagram.com/smajpihub", InstagramIcon],
+  ["YouTube", "https://youtube.com/@smajpihub", YouTubeIcon],
+  ["TikTok", "https://www.tiktok.com/@smajpihub", MusicNoteOutlinedIcon],
 ] as const;
 
 const AccountDashboardPage = () => {
@@ -78,6 +91,17 @@ const AccountDashboardPage = () => {
         <div>
           <span>App version</span>
           <small>0.1.0</small>
+        </div>
+        <div>
+          <h2>Official Social Links</h2>
+          <p>Use only official SMAJ PI HUB social channels for announcements, support updates, and ecosystem news.</p>
+          <div className="settings-social-row">
+            {socialLinks.map(([label, href, Icon]) => (
+              <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
+                <Icon fontSize="small" />
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 

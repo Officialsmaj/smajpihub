@@ -330,6 +330,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const navigationType = useNavigationType();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
+  const [employerTitle, setEmployerTitle] = useState("");
+  const [employerLocation, setEmployerLocation] = useState("");
   const [category, setCategory] = useState("All");
   const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
@@ -1167,11 +1169,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     if (kind !== "post") return;
     if (!postCompanyId && employerCompanies.length) {
       setPostCompanyId(employerCompanies[0].id);
-      if (postStep === "contact") setPostStep("title");
-    } else if (postCompanyId && postStep === "contact") {
-      setPostStep("title");
     }
-  }, [kind, postStep, employerCompanies, postCompanyId]);
+  }, [kind, employerCompanies, postCompanyId]);
   const wrapDescriptionSelection = (marker: string) => {
     const textarea = descriptionTextareaRef.current;
     if (!textarea) return;
@@ -1782,17 +1781,32 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   className="jobs-employer-search-card"
                   onSubmit={event => {
                     event.preventDefault();
-                    navigate("/services/jobs/post");
+                    const params = new URLSearchParams();
+                    const cleanTitle = employerTitle.trim();
+                    const cleanLocation = employerLocation.trim();
+                    if (cleanTitle) params.set("q", cleanTitle);
+                    if (cleanLocation) params.set("location", normalizeJobLocation(cleanLocation));
+                    navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
                   }}
                 >
                   <h2>The people you're looking for are here</h2>
                   <label>
                     What job title are you hiring for?
-                    <input name="title" placeholder="Job title or role" />
+                    <input
+                      name="title"
+                      placeholder="Job title or role"
+                      value={employerTitle}
+                      onChange={event => setEmployerTitle(event.target.value)}
+                    />
                   </label>
                   <label>
                     Where are you hiring?
-                    <input name="location" placeholder="City, State, or ZIP" />
+                    <input
+                      name="location"
+                      placeholder="City, State, or ZIP"
+                      value={employerLocation}
+                      onChange={event => setEmployerLocation(event.target.value)}
+                    />
                   </label>
                   <button type="submit">Search</button>
                 </form>
