@@ -1354,4 +1354,111 @@ export default function mountJobsEndpoints(router: Router) {
     await audit(req, user, "candidate.verification_reviewed", req.params.userId, { verificationStatus });
     res.json({ verificationStatus });
   });
+  router.get("/employer/candidates/search", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const owner = userId(user);
+    const query = String(req.query.q || "").trim();
+    const location = String(req.query.location || "").trim();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || 20));
+    const skip = (page - 1) * pageSize;
+
+    const company = await req.app.locals.jobCompanyCollection.findOne({ ownerId: owner });
+    const blockedSlugs = company ? [company.slug] : [];
+    const blockedByProfiles = await req.app.locals.jobProfileCollection
+      .find({ blockedEmployerIds: { $in: blockedSlugs } })
+      .toArray();
+    const blockedCandidateIds = new Set(blockedByProfiles.map((profile: any) => profile.userId));
+
+    const match: any = {};
+    if (blockedCandidateIds.size) {
+      match.userId = { $nin: Array.from(blockedCandidateIds) };
+    }
+
+    if (query) {
+      match.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { skills: { $regex: query, $options: "i" } },
+        { summary: { $regex: query, $options: "i" } },
+      ];
+    }
+    if (location) {
+      match.location = { $regex: location, $options: "i" };
+    }
+
+    const total = await req.app.locals.jobProfileCollection.countDocuments(match);
+    const profiles = await req.app.locals.jobProfileCollection
+      .find(match)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray();
+
+    const userIds = Array.from(new Set(profiles.map((p: any) => p.userId).filter(Boolean)));
+    const users = userIds.length && req.app.locals.userCollection
+      ? await req.app.locals.userCollection.find({ uid: { $in: userIds } }).toArray()
+      : [];
+    const userByUid = new Map(users.map((u: any) => [u.uid, u]));
+
+    const results = profiles.map((profile: any) => {
+      const candidate = userByUid.get(profile.userId);
+      return {
+        userId: profile.userId,
+        title: profile.title,
+        skills: Array.isArray(profile.skills) ? profile.skills : profile.skills ? [profile.skills] : [],
+        location: profile.location,
+        availability: profile.availability,
+        summary: profile.summary,
+        portfolio: profile.portfolio,
+        avatar: candidate?.avatar || profile.avatar || profile.avatarConfirmationValue || "",
+        displayName: candidate?.displayName || candidate?.username || profile.title || "Candidate",
+        verificationStatus: profile.verificationStatus,
+        cv: profile.cv,
+        employment: profile.employment || [],
+        updatedAt: profile.updatedAt,
+      };
+    });
+
+    res.json({
+      candidates: results,
+      pagination: { page, pageSize, total, pages: Math.max(1, Math.ceil(total / pageSize)) },
+    });
+  });
+  router.get("/employer/candidates/:userId", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const owner = userId(user);
+    const candidateUserId = req.params.userId;
+
+    const company = await req.app.locals.jobCompanyCollection.findOne({ ownerId: owner });
+    const blockedSlugs = company ? [company.slug] : [];
+    const profile = await req.app.locals.jobProfileCollection.findOne({
+      userId: candidateUserId,
+      blockedEmployerIds: { $nin: blockedSlugs },
+    });
+    if (!profile) return res.status(404).json({ error: "not_found" });
+
+    const candidate = req.app.locals.userCollection
+      ? await req.app.locals.userCollection.findOne({ uid: candidateUserId })
+      : null;
+
+    res.json({
+      candidate: {
+        userId: profile.userId,
+        title: profile.title,
+        skills: Array.isArray(profile.skills) ? profile.skills : profile.skills ? [profile.skills] : [],
+        location: profile.location,
+        availability: profile.availability,
+        portfolio: profile.portfolio,
+        summary: profile.summary,
+        avatar: candidate?.avatar || profile.avatar || profile.avatarConfirmationValue || "",
+        displayName: candidate?.displayName || candidate?.username || profile.title || "Candidate",
+        verificationStatus: profile.verificationStatus,
+        cv: profile.cv,
+        employment: profile.employment || [],
+        updatedAt: profile.updatedAt,
+      },
+    });
+  });
 }

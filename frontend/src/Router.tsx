@@ -69,6 +69,7 @@ import StreamPage from "./pages/StreamPage";
 import StreamWorkspacePage, { type StreamPageKind } from "./pages/stream/StreamWorkspacePage";
 import SportsPage, { type SportsPageKind } from "./pages/sports/SportsPage";
 import JobsPage, { type JobsPageKind } from "./pages/jobs/JobsPage";
+import CandidateProfilePage from "./pages/jobs/CandidateProfilePage";
 import TransportPage from "./pages/transport/TransportPage";
 import EducationPage from "./pages/EducationPage";
 import CourseDetailPage from "./pages/education/CourseDetailPage";
@@ -96,6 +97,7 @@ import CharityPage, { type CharityPageKind } from "./pages/charity/CharityPage";
 import SwapPage, { type SwapPageKind } from "./pages/swap/SwapPage";
 import HealthAppointmentsPage from "./pages/health/HealthAppointmentsPage";
 
+// eslint-disable-next-line react-refresh/only-export-components
 const LegacyProductRedirect = () => {
   const { id } = useParams();
   return <Navigate to={id ? `/product/${id}` : "/store"} replace />;
@@ -432,6 +434,10 @@ export const router = createBrowserRouter([
   {
     path: "/services/jobs/company/:id",
     element: <JobsPage kind="company" />,
+  },
+  {
+    path: "/services/jobs/candidates/:candidateId",
+    element: <CandidateProfilePage />,
   },
   {
     path: "/services/sports/match/:id",

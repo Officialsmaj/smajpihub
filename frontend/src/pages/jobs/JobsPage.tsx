@@ -58,8 +58,11 @@ import {
   type JobsProfile,
   type JobsBillingPlan,
   type JobsActivity,
+  searchCandidates,
+  type JobsCandidateSearchResult,
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
+import CandidateCard from "../../components/CandidateCard";
 import "./JobsPage.css";
 import { JOB_CATEGORIES, JOB_COUNTRIES, JOB_LANGUAGES, JOB_PHONE_CODES } from "../../content/jobOptions";
 import { formatPiAmount, formatUsdAmount } from "../../lib/formatters";
@@ -427,6 +430,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateStageFilter, setCandidateStageFilter] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [candidateView, setCandidateView] = useState<"pipeline" | "list">("list");
+  const [candidateSearchResults, setCandidateSearchResults] = useState<JobsCandidateSearchResult[]>([]);
+  const [candidateSearchLoading, setCandidateSearchLoading] = useState(false);
+  const [candidateSearchError, setCandidateSearchError] = useState("");
   const [employerApplicationQuery, setEmployerApplicationQuery] = useState("");
   const [employerApplicationStage, setEmployerApplicationStage] = useState<"All" | (typeof candidateStages)[number]>("All");
   const [selectedCandidate, setSelectedCandidate] = useState<JobsApiApplication | null>(null);
@@ -594,6 +600,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility", "account-settings", "blocked-employers"].includes(kind)
         ? "candidate"
       : workspaceMode;
+  const isCandidateSearchMode =
+    kind === "candidates" && (searchParams.get("q") || searchParams.get("location"));
   const visibleJobConversations = jobConversations.filter(conversation => {
     if (messageFilter === "unread") return Boolean(user?.uid && conversation.unreadBy?.includes(user.uid));
     if (messageFilter === "invites") return conversation.contextType === "jobs";
@@ -931,6 +939,23 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         .then(setActivity)
         .catch(() => setActivity(null));
   }, [kind, activityDays]);
+  useEffect(() => {
+    if (!isCandidateSearchMode) return;
+    let active = true;
+    setCandidateSearchLoading(true);
+    setCandidateSearchError("");
+    searchCandidates({ q: searchParams.get("q") || "", location: searchParams.get("location") || "", pageSize: 50 })
+      .then(data => {
+        if (active) setCandidateSearchResults(data.candidates);
+      })
+      .catch(() => {
+        if (active) setCandidateSearchError("Could not load candidates.");
+      })
+      .finally(() => {
+        if (active) setCandidateSearchLoading(false);
+      });
+    return () => { active = false; };
+  }, [isCandidateSearchMode, searchParams]);
   const effectiveQuery = query || searchParams.get("q") || "";
   const effectiveLocation = searchParams.get("location") || "";
   const visibleJobs = useMemo(
@@ -1832,7 +1857,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     const cleanLocation = employerLocation.trim();
                     if (cleanTitle) params.set("q", cleanTitle);
                     if (cleanLocation) params.set("location", normalizeJobLocation(cleanLocation));
-                    navigate(`/services/jobs/search${params.size ? `?${params.toString()}` : ""}`);
+                    navigate(`/services/jobs/candidates${params.size ? `?${params.toString()}` : ""}`);
                   }}
                 >
                   <h2>The people you're looking for are here</h2>
@@ -2458,192 +2483,231 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
           </section>
         ) : kind === "candidates" ? (
           <section className="jobs-candidates-page">
-            <div className="jobs-candidates-title">
-              <h1>Candidates</h1>
-            </div>
-            <nav className="jobs-candidate-tabs" aria-label="Candidate stages">
-              {(["All", ...candidateStages] as Array<"All" | (typeof candidateStages)[number]>).map(stage => {
-                const count =
-                  stage === "All"
-                    ? employerApplications.length
-                    : employerApplications.filter(item => candidateStageForStatus(item.status) === stage).length;
-                return (
-                  <button
-                    type="button"
-                    key={stage}
-                    className={candidateStageFilter === stage ? "active" : ""}
-                    onClick={() => setCandidateStageFilter(stage)}
-                  >
-                    <span>{stage}</span>
-                    <b>{count}</b>
-                  </button>
-                );
-              })}
-            </nav>
-            <div className="jobs-candidate-toolbar">
-              <label>
-                <SearchRoundedIcon />
-                <input value={candidateQuery} onChange={event => setCandidateQuery(event.target.value)} placeholder="Search candidates, jobs, skills, location" />
-              </label>
-              <select value={candidateStageFilter} onChange={event => setCandidateStageFilter(event.target.value as typeof candidateStageFilter)}>
-                <option value="All">All stages</option>
-                {candidateStages.map(stage => <option key={stage}>{stage}</option>)}
-              </select>
-              <div className="jobs-candidate-view-toggle">
-                <button type="button" className={candidateView === "pipeline" ? "active" : ""} onClick={() => setCandidateView("pipeline")}>Pipeline</button>
-                <button type="button" className={candidateView === "list" ? "active" : ""} onClick={() => setCandidateView("list")}>List</button>
-              </div>
-            </div>
-            {candidateView === "pipeline" ? (
-              <div className="jobs-candidate-pipeline">
-                {candidateStages.map(stage => (
-                  <section key={stage}>
-                    <h2>{stage} <span>{filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).length}</span></h2>
-                    {filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).map(application => (
+            {isCandidateSearchMode ? (
+              <>
+                <div className="jobs-candidates-title">
+                  <h1>Candidate search results</h1>
+                </div>
+                <div className="jobs-candidate-toolbar">
+                  <label>
+                    <SearchRoundedIcon />
+                    <input value={candidateSearchQuery} readOnly placeholder="Search query" />
+                  </label>
+                  <Link to="/services/jobs/post" className="private-primary-button">Create new job</Link>
+                </div>
+                {candidateSearchLoading ? (
+                  <div className="jobs-candidate-loading">Loading candidates...</div>
+                ) : candidateSearchError ? (
+                  <div className="workspace-empty">
+                    <SearchRoundedIcon />
+                    <h2>Could not load candidates</h2>
+                    <p>{candidateSearchError}</p>
+                  </div>
+                ) : candidateSearchResults.length === 0 ? (
+                  <div className="workspace-empty">
+                    <SearchRoundedIcon />
+                    <h2>No candidates found</h2>
+                    <p>Try adjusting your search criteria.</p>
+                  </div>
+                ) : (
+                  <div className="jobs-candidate-search-results">
+                    {candidateSearchResults.map(candidate => (
+                      <CandidateCard key={candidate.userId} candidate={candidate} />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="jobs-candidates-title">
+                  <h1>Candidates</h1>
+                </div>
+                <nav className="jobs-candidate-tabs" aria-label="Candidate stages">
+                  {(["All", ...candidateStages] as Array<"All" | (typeof candidateStages)[number]>).map(stage => {
+                    const count =
+                      stage === "All"
+                        ? employerApplications.length
+                        : employerApplications.filter(item => candidateStageForStatus(item.status) === stage).length;
+                    return (
+                      <button
+                        type="button"
+                        key={stage}
+                        className={candidateStageFilter === stage ? "active" : ""}
+                        onClick={() => setCandidateStageFilter(stage)}
+                      >
+                        <span>{stage}</span>
+                        <b>{count}</b>
+                      </button>
+                    );
+                  })}
+                </nav>
+                <div className="jobs-candidate-toolbar">
+                  <label>
+                    <SearchRoundedIcon />
+                    <input value={candidateQuery} onChange={event => setCandidateQuery(event.target.value)} placeholder="Search candidates, jobs, skills, location" />
+                  </label>
+                  <select value={candidateStageFilter} onChange={event => setCandidateStageFilter(event.target.value as typeof candidateStageFilter)}>
+                    <option value="All">All stages</option>
+                    {candidateStages.map(stage => <option key={stage}>{stage}</option>)}
+                  </select>
+                  <div className="jobs-candidate-view-toggle">
+                    <button type="button" className={candidateView === "pipeline" ? "active" : ""} onClick={() => setCandidateView("pipeline")}>Pipeline</button>
+                    <button type="button" className={candidateView === "list" ? "active" : ""} onClick={() => setCandidateView("list")}>List</button>
+                  </div>
+                  <Link to="/services/jobs/post" className="private-primary-button">Create new job</Link>
+                </div>
+                {candidateView === "pipeline" ? (
+                  <div className="jobs-candidate-pipeline">
+                    {candidateStages.map(stage => (
+                      <section key={stage}>
+                        <h2>{stage} <span>{filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).length}</span></h2>
+                        {filteredCandidates.filter(item => candidateStageForStatus(item.status) === stage).map(application => (
+                          <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
+                            {renderCandidateAvatar(application)}
+                            <span>
+                              <b>{application.profileSnapshot?.title || "Candidate"}</b>
+                              <small>{application.jobTitle}</small>
+                              <small>{application.profileSnapshot?.location || application.company}</small>
+                            </span>
+                          </button>
+                        ))}
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="jobs-candidate-list">
+                    {filteredCandidates.map(application => (
                       <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
                         {renderCandidateAvatar(application)}
-                        <span>
-                          <b>{application.profileSnapshot?.title || "Candidate"}</b>
-                          <small>{application.jobTitle}</small>
-                          <small>{application.profileSnapshot?.location || application.company}</small>
-                        </span>
+                        <span className="jobs-candidate-list-identity"><b>{application.profileSnapshot?.title || "Candidate"}</b><small>{application.profileSnapshot?.location || "Location not added"}</small></span>
+                        <span className="jobs-candidate-list-job">{application.jobTitle}</span>
+                        <b className="jobs-candidate-list-stage">{candidateStageForStatus(application.status)}</b>
                       </button>
                     ))}
-                  </section>
-                ))}
-              </div>
-            ) : (
-              <div className="jobs-candidate-list">
-                {filteredCandidates.map(application => (
-                  <button type="button" key={application.id} onClick={() => { setSelectedCandidate(application); setCandidateDrawerTab("Profile"); }}>
-                    {renderCandidateAvatar(application)}
-                    <span className="jobs-candidate-list-identity"><b>{application.profileSnapshot?.title || "Candidate"}</b><small>{application.profileSnapshot?.location || "Location not added"}</small></span>
-                    <span className="jobs-candidate-list-job">{application.jobTitle}</span>
-                    <b className="jobs-candidate-list-stage">{candidateStageForStatus(application.status)}</b>
-                  </button>
-                ))}
-              </div>
-            )}
-            {!filteredCandidates.length ? <div className="workspace-empty"><SearchRoundedIcon /><h2>No candidates found</h2><p>Try another search or stage filter.</p></div> : null}
-            {selectedCandidate ? (
-              <aside className="jobs-candidate-drawer" role="dialog" aria-modal="true" aria-label="Candidate profile">
-                <button type="button" aria-label="Close candidate profile" onClick={() => setSelectedCandidate(null)}>x</button>
-                <header>
-                  {renderCandidateAvatar(selectedCandidate)}
-                  <div>
-                    <h2>{selectedCandidate.profileSnapshot?.title || "Candidate profile"}</h2>
-                  <p>{selectedCandidate.jobTitle} · {candidateStageForStatus(selectedCandidate.status)}</p>
                   </div>
-                </header>
-                <nav>
-                  {candidateDrawerTabs.map(tab => <button type="button" key={tab} className={candidateDrawerTab === tab ? "active" : ""} onClick={() => setCandidateDrawerTab(tab)}>{tab}</button>)}
-                </nav>
-                <section>
-                  {candidateDrawerTab === "Profile" ? (
-                    <div className="jobs-candidate-profile-grid">
-                      <article><span>Professional title</span><b>{selectedCandidate.profileSnapshot?.title || "Not added"}</b></article>
-                      <article><span>Location</span><b>{selectedCandidate.profileSnapshot?.location || "Not added"}</b></article>
-                      <article><span>Availability</span><b>{selectedCandidate.profileSnapshot?.availability || "Not added"}</b></article>
-                      <article>
-                        <span>Skills</span>
-                        <b>
-                          {Array.isArray(selectedCandidate.profileSnapshot?.skills)
-                            ? selectedCandidate.profileSnapshot?.skills.join(", ")
-                            : selectedCandidate.profileSnapshot?.skills || "Not added"}
-                        </b>
-                      </article>
-                      <article className="wide"><span>Summary</span><p>{selectedCandidate.profileSnapshot?.summary || "No professional summary added."}</p></article>
-                    </div>
-                  ) : null}
-                  {candidateDrawerTab === "Application" ? (
-                    <div className="jobs-candidate-profile-grid">
-                      <article><span>Applied for</span><b>{selectedCandidate.jobTitle}</b></article>
-                      <article>
-                        <span>Status</span>
-                        <select
-                          aria-label={`Status for ${selectedCandidate.jobTitle}`}
-                          value={selectedCandidate.status}
-                          onChange={event => void changeApplicationStatus(selectedCandidate.id, event.target.value)}
-                        >
-                          <option value="submitted">submitted</option>
-                          <option value="reviewing">reviewing</option>
-                          <option value="shortlisted">shortlisted</option>
-                          <option value="rejected">rejected</option>
-                          <option value="hired">hired</option>
-                        </select>
-                      </article>
-                      <article><span>Company</span><b>{selectedCandidate.company}</b></article>
-                      <article><span>Applied on</span><b>{new Date(selectedCandidate.createdAt).toLocaleDateString()}</b></article>
-                      <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note was provided."}</p></article>
-                    </div>
-                  ) : null}
-                  {candidateDrawerTab === "Messages" ? (
-                    <div className="jobs-candidate-message-start">
-                      <p>Start a private Jobs conversation about this application.</p>
-                      <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
-                    </div>
-                  ) : null}
-                  {candidateDrawerTab === "Interviews" ? (
-                    <div className="jobs-candidate-interviews">
-                      {(selectedCandidate.interviews || []).length ? (
-                        <ul>
-                          {selectedCandidate.interviews!.map((interview: JobsApiInterview) => (
-                            <li key={interview.id}>
-                              <div>
-                                <b>{new Date(interview.scheduledAt).toLocaleString()}</b>
-                                {interview.note ? <p>{interview.note}</p> : null}
-                              </div>
-                              <button type="button" onClick={() => void cancelCandidateInterview(interview.id)}>Cancel</button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No interviews scheduled.</p>
-                      )}
-                      <div className="jobs-schedule-interview">
-                        <label>
-                          Date and time
-                          <input
-                            type="datetime-local"
-                            value={interviewDateDraft}
-                            onChange={event => setInterviewDateDraft(event.target.value)}
-                          />
-                        </label>
-                        <label>
-                          Note (optional)
-                          <input
-                            value={interviewNoteDraft}
-                            onChange={event => setInterviewNoteDraft(event.target.value)}
-                            placeholder="Video call, location, or agenda"
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          disabled={!interviewDateDraft || interviewSubmitting}
-                          onClick={() => void scheduleCandidateInterview()}
-                        >
-                          {interviewSubmitting ? "Scheduling…" : "Schedule interview"}
-                        </button>
+                )}
+                {!filteredCandidates.length ? <div className="workspace-empty"><SearchRoundedIcon /><h2>No candidates found</h2><p>Try another search or stage filter.</p></div> : null}
+                {selectedCandidate ? (
+                  <aside className="jobs-candidate-drawer" role="dialog" aria-modal="true" aria-label="Candidate profile">
+                    <button type="button" aria-label="Close candidate profile" onClick={() => setSelectedCandidate(null)}>x</button>
+                    <header>
+                      {renderCandidateAvatar(selectedCandidate)}
+                      <div>
+                        <h2>{selectedCandidate.profileSnapshot?.title || "Candidate profile"}</h2>
+                      <p>{selectedCandidate.jobTitle} · {candidateStageForStatus(selectedCandidate.status)}</p>
                       </div>
-                    </div>
-                  ) : null}
-                  {candidateDrawerTab === "Notes" ? (
-                    <div className="jobs-candidate-notes">
-                      <textarea
-                        value={candidateNotesDraft}
-                        onChange={event => setCandidateNotesDraft(event.target.value)}
-                        placeholder="Private notes for your hiring team"
-                        rows={6}
-                      />
-                      <button type="button" disabled={candidateNotesSaving} onClick={() => void saveCandidateNotes()}>
-                        {candidateNotesSaving ? "Saving…" : "Save notes"}
-                      </button>
-                    </div>
-                  ) : null}
-                  {candidateDrawerTab === "Activity" ? <p>Applied on {new Date(selectedCandidate.createdAt).toLocaleDateString()} with status {selectedCandidate.status}.</p> : null}
-                </section>
-              </aside>
-            ) : null}
+                    </header>
+                    <nav>
+                      {candidateDrawerTabs.map(tab => <button type="button" key={tab} className={candidateDrawerTab === tab ? "active" : ""} onClick={() => setCandidateDrawerTab(tab)}>{tab}</button>)}
+                    </nav>
+                    <section>
+                      {candidateDrawerTab === "Profile" ? (
+                        <div className="jobs-candidate-profile-grid">
+                          <article><span>Professional title</span><b>{selectedCandidate.profileSnapshot?.title || "Not added"}</b></article>
+                          <article><span>Location</span><b>{selectedCandidate.profileSnapshot?.location || "Not added"}</b></article>
+                          <article><span>Availability</span><b>{selectedCandidate.profileSnapshot?.availability || "Not added"}</b></article>
+                          <article>
+                            <span>Skills</span>
+                            <b>
+                              {Array.isArray(selectedCandidate.profileSnapshot?.skills)
+                                ? selectedCandidate.profileSnapshot?.skills.join(", ")
+                                : selectedCandidate.profileSnapshot?.skills || "Not added"}
+                            </b>
+                          </article>
+                          <article className="wide"><span>Summary</span><p>{selectedCandidate.profileSnapshot?.summary || "No professional summary added."}</p></article>
+                        </div>
+                      ) : null}
+                      {candidateDrawerTab === "Application" ? (
+                        <div className="jobs-candidate-profile-grid">
+                          <article><span>Applied for</span><b>{selectedCandidate.jobTitle}</b></article>
+                          <article>
+                            <span>Status</span>
+                            <select
+                              aria-label={`Status for ${selectedCandidate.jobTitle}`}
+                              value={selectedCandidate.status}
+                              onChange={event => void changeApplicationStatus(selectedCandidate.id, event.target.value)}
+                            >
+                              <option value="submitted">submitted</option>
+                              <option value="reviewing">reviewing</option>
+                              <option value="shortlisted">shortlisted</option>
+                              <option value="rejected">rejected</option>
+                              <option value="hired">hired</option>
+                            </select>
+                          </article>
+                          <article><span>Company</span><b>{selectedCandidate.company}</b></article>
+                          <article><span>Applied on</span><b>{new Date(selectedCandidate.createdAt).toLocaleDateString()}</b></article>
+                          <article className="wide"><span>Cover note</span><p>{selectedCandidate.coverNote || "No cover note was provided."}</p></article>
+                        </div>
+                      ) : null}
+                      {candidateDrawerTab === "Messages" ? (
+                        <div className="jobs-candidate-message-start">
+                          <p>Start a private Jobs conversation about this application.</p>
+                          <button type="button" onClick={() => void startEmployerConversation(selectedCandidate)}>Message candidate</button>
+                        </div>
+                      ) : null}
+                      {candidateDrawerTab === "Interviews" ? (
+                        <div className="jobs-candidate-interviews">
+                          {(selectedCandidate.interviews || []).length ? (
+                            <ul>
+                              {selectedCandidate.interviews!.map((interview: JobsApiInterview) => (
+                                <li key={interview.id}>
+                                  <div>
+                                    <b>{new Date(interview.scheduledAt).toLocaleString()}</b>
+                                    {interview.note ? <p>{interview.note}</p> : null}
+                                  </div>
+                                  <button type="button" onClick={() => void cancelCandidateInterview(interview.id)}>Cancel</button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>No interviews scheduled.</p>
+                          )}
+                          <div className="jobs-schedule-interview">
+                            <label>
+                              Date and time
+                              <input
+                                type="datetime-local"
+                                value={interviewDateDraft}
+                                onChange={event => setInterviewDateDraft(event.target.value)}
+                              />
+                            </label>
+                            <label>
+                              Note (optional)
+                              <input
+                                value={interviewNoteDraft}
+                                onChange={event => setInterviewNoteDraft(event.target.value)}
+                                placeholder="Video call, location, or agenda"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              disabled={!interviewDateDraft || interviewSubmitting}
+                              onClick={() => void scheduleCandidateInterview()}
+                            >
+                              {interviewSubmitting ? "Scheduling…" : "Schedule interview"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                      {candidateDrawerTab === "Notes" ? (
+                        <div className="jobs-candidate-notes">
+                          <textarea
+                            value={candidateNotesDraft}
+                            onChange={event => setCandidateNotesDraft(event.target.value)}
+                            placeholder="Private notes for your hiring team"
+                            rows={6}
+                          />
+                          <button type="button" disabled={candidateNotesSaving} onClick={() => void saveCandidateNotes()}>
+                            {candidateNotesSaving ? "Saving…" : "Save notes"}
+                          </button>
+                        </div>
+                      ) : null}
+                      {candidateDrawerTab === "Activity" ? <p>Applied on {new Date(selectedCandidate.createdAt).toLocaleDateString()} with status {selectedCandidate.status}.</p> : null}
+                    </section>
+                  </aside>
+                ) : null}
+              </>
+            )}
           </section>
         ) : kind === "saved" || kind === "applications" ? (
           <section className="jobs-my-jobs-page">

@@ -295,3 +295,53 @@ export const verifyJobsCompany = async (id: string, status: "verified" | "pi_kyb
   (await axiosClient.patch<{ verificationStatus: string }>(`/jobs/admin/companies/${encodeURIComponent(id)}/verify`, { status })).data;
 export const verifyJobsCandidate = async (userId: string, status: "verified" | "rejected") =>
   (await axiosClient.patch<{ verificationStatus: string }>(`/jobs/admin/profiles/${encodeURIComponent(userId)}/verify`, { status })).data;
+
+export type JobsCandidateSearchResult = {
+  userId: string;
+  title: string;
+  skills: string[];
+  location: string;
+  availability: string;
+  summary: string;
+  portfolio: string;
+  avatar: string;
+  displayName: string;
+  verificationStatus?: string;
+  cv?: { url: string; name: string; size: number; visibility: string; updatedAt?: string };
+  employment: Array<{
+    id: string;
+    position: string;
+    employer: string;
+    current: boolean;
+    location: string;
+    country: string;
+    startMonth: string;
+    startYear: string;
+    endMonth?: string;
+    endYear?: string;
+    description: string;
+  }>;
+  updatedAt: string;
+};
+
+export type JobsCandidateSearchResponse = {
+  candidates: JobsCandidateSearchResult[];
+  pagination: JobsPagination;
+};
+
+export const searchCandidates = async (params: {
+  q?: string;
+  location?: string;
+  page?: number;
+  pageSize?: number;
+}) => {
+  const response = await axiosClient.get<JobsCandidateSearchResponse>("/jobs/employer/candidates/search", { params });
+  return response.data;
+};
+
+export const getCandidateProfile = async (userId: string) => {
+  const response = await axiosClient.get<{ candidate: JobsCandidateSearchResult }>(
+    `/jobs/employer/candidates/${encodeURIComponent(userId)}`
+  );
+  return response.data.candidate;
+};

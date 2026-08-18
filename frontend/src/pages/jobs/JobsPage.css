@@ -4041,4 +4041,190 @@
   .job-detail h1 {
     font-size: 34px;
   }
+  .jobs-candidate-card {
+    grid-template-columns: 1fr;
+  }
+}
+.jobs-candidate-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #e1e9e5;
+  border-radius: 12px;
+  background: #fff;
+}
+.jobs-candidate-card a {
+  text-decoration: none;
+  color: inherit;
+}
+.jobs-candidate-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.jobs-candidate-card-header img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.jobs-candidate-card-avatar {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #6d3df5;
+  font-size: 16px;
+  font-weight: 800;
+}
+.jobs-candidate-card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #173d5a;
+}
+.jobs-candidate-card-header p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #4c7390;
+}
+.jobs-candidate-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.jobs-candidate-card-body small {
+  color: #4c7390;
+  font-size: 12px;
+}
+.jobs-candidate-card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.jobs-candidate-card-skills span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  font-size: 12px;
+  color: #303030;
+}
+.jobs-candidate-card footer {
+  margin-top: 6px;
+}
+.jobs-candidate-card footer span {
+  color: #6d3df5;
+  font-weight: 750;
+  font-size: 13px;
+}
+.jobs-candidate-profile-page {
+  max-width: 900px;
+  margin: auto;
+  padding: 22px 16px 96px;
+  display: grid;
+  gap: 18px;
+}
+.jobs-candidate-profile-page.error {
+  color: #b91c1c;
+}
+.jobs-candidate-profile-page > header {
+  display: grid;
+  gap: 14px;
+}
+.jobs-candidate-profile-page > header button {
+  width: fit-content;
+}
+.jobs-candidate-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.jobs-candidate-profile-header img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.jobs-candidate-profile-avatar {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #6d3df5;
+  font-size: 22px;
+  font-weight: 800;
+}
+.jobs-candidate-profile-header h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #173d5a;
+}
+.jobs-candidate-profile-header p {
+  margin: 4px 0 0;
+  color: #303030;
+}
+.jobs-candidate-profile-header small {
+  color: #4c7390;
+}
+.jobs-candidate-profile-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.jobs-candidate-profile-section h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #173d5a;
+}
+.jobs-candidate-profile-section p {
+  margin: 0;
+  color: #303030;
+  line-height: 1.55;
+}
+.jobs-candidate-profile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.jobs-candidate-profile-skills span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  font-size: 13px;
+  color: #303030;
+}
+.jobs-candidate-profile-experience {
+  display: grid;
+  gap: 12px;
+}
+.jobs-candidate-profile-experience article {
+  padding: 14px;
+  border: 1px solid #e1e9e5;
+  border-radius: 12px;
+  background: #f8fbf9;
+}
+.jobs-candidate-profile-experience article h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: #173d5a;
+}
+.jobs-candidate-profile-experience article p {
+  margin: 0 0 4px;
+  color: #303030;
+}
+.jobs-candidate-profile-experience article small {
+  color: #4c7390;
+}
+.jobs-candidate-search-results {
+  display: grid;
+  gap: 14px;
+}
+.jobs-candidate-loading {
+  padding: 40px;
+  text-align: center;
+  color: #4c7390;
 }
