@@ -2491,7 +2491,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <div className="jobs-candidate-toolbar">
                   <label>
                     <SearchRoundedIcon />
-                    <input value={candidateSearchQuery} readOnly placeholder="Search query" />
+                    <input value={candidateQuery} readOnly placeholder="Search query" />
                   </label>
                   <Link to="/services/jobs/post" className="private-primary-button">Create new job</Link>
                 </div>

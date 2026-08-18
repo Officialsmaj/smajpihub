@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
-import { getCandidateProfile } from "../lib/jobsApi";
-import type { JobsCandidateSearchResult } from "../lib/jobsApi";
+import { getCandidateProfile } from "../../lib/jobsApi";
+import type { JobsCandidateSearchResult } from "../../lib/jobsApi";
 
 const CandidateProfileContent = ({ candidateId, onBack }: { candidateId: string; onBack: () => void }) => {
   const [candidate, setCandidate] = useState<JobsCandidateSearchResult | null>(null);
@@ -12,7 +12,7 @@ const CandidateProfileContent = ({ candidateId, onBack }: { candidateId: string;
   useEffect(() => {
     let active = true;
     getCandidateProfile(candidateId)
-      .then(data => { if (active) setCandidate(data); })
+      .then((data) => { if (active) setCandidate(data); })
       .catch(() => { if (active) setError("Could not load candidate profile."); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -54,7 +54,7 @@ const CandidateProfileContent = ({ candidateId, onBack }: { candidateId: string;
       <section className="jobs-candidate-profile-section">
         <h2>Skills</h2>
         <div className="jobs-candidate-profile-skills">
-          {candidate.skills.map(skill => (
+          {candidate.skills.map((skill: string) => (
             <span key={skill}>{skill}</span>
           ))}
         </div>
@@ -64,7 +64,7 @@ const CandidateProfileContent = ({ candidateId, onBack }: { candidateId: string;
         <h2>Experience</h2>
         {candidate.employment.length ? (
           <div className="jobs-candidate-profile-experience">
-            {candidate.employment.map(job => (
+            {candidate.employment.map((job: JobsCandidateSearchResult["employment"][number]) => (
               <article key={job.id}>
                 <h3>{job.position}</h3>
                 <p>{job.employer} {job.current ? "· Current" : ""}</p>
