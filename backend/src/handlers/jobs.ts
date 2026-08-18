@@ -1402,7 +1402,7 @@ export default function mountJobsEndpoints(router: Router) {
     const userByUid = new Map(users.map((u: any) => [u.uid, u]));
 
     const results = profiles.map((profile: any) => {
-      const candidate = userByUid.get(profile.userId);
+      const candidate = userByUid.get(profile.userId) as any;
       return {
         userId: profile.userId,
         title: profile.title,
@@ -1440,7 +1440,7 @@ export default function mountJobsEndpoints(router: Router) {
     if (!profile) return res.status(404).json({ error: "not_found" });
 
     const candidate = req.app.locals.userCollection
-      ? await req.app.locals.userCollection.findOne({ uid: candidateUserId })
+      ? (await req.app.locals.userCollection.findOne({ uid: candidateUserId })) as any
       : null;
 
     res.json({
