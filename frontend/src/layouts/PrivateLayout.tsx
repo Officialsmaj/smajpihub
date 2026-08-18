@@ -163,6 +163,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
       : "";
   });
   const isStoreShell = location.pathname === "/store";
+  const isHeaderHiddenPage = location.pathname === "/app/services" || location.pathname === "/search" || location.pathname === "/messages";
   const dashboardTab = new URLSearchParams(location.search).get("tab");
   const isDashboardDiscovery = location.pathname === "/dashboard" && ["trending", "lifestyle", "categories"].includes(dashboardTab || "");
   const backFallback = backFallbackForPath(location.pathname);
@@ -355,7 +356,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
 
   return (
-    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamImmersive ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""}`}>
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamImmersive ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""} ${isHeaderHiddenPage ? "hide-mobile-header" : ""}`}>
       <header className="private-header">
         <div className="mobile-private-header-content">
           <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>

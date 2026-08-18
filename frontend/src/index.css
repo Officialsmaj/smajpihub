@@ -5694,14 +5694,18 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     display: none !important;
   }
 
-  .mobile-private-header-content {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+   .mobile-private-header-content {
+     height: 100%;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+   }
 
-  .mobile-private-brand {
+   .hide-mobile-header .private-header {
+      display: none;
+   }
+
+   .mobile-private-brand {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
@@ -6941,12 +6945,17 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   }
 
   .mobile-messages-heading {
-    display: block;
-    padding: 2px 2px 15px;
+    display: flex;
+    padding: 12px;
   }
 
-  .mobile-messages-heading h1 {
+  .mobile-messages-heading .conversation-search {
     margin: 0;
+    padding: 0 12px;
+  }
+
+  .messages-page .conversation-list > .conversation-search {
+    display: none;
   }
 
   .messages-layout.rich {
@@ -7422,6 +7431,10 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   .chat-header-actions,
   .chat-product-mobile {
     display: none;
+  }
+
+  .messages-page .conversation-list > .conversation-search {
+    display: flex;
   }
 
   .mobile-search-page > :not(.search-desktop-fallback) {

@@ -758,12 +758,14 @@ const MessagesPage = () => {
   return (
     <main className={`private-page messages-page ${selectedId ? "conversation-selected" : ""}`}>
       <header className="mobile-messages-heading">
-        <h1>Messages</h1>
+        <label className="conversation-search">
+          <SearchOutlinedIcon />
+          <input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" />
+        </label>
       </header>
       <section className="private-page-head messages-desktop-intro">
         <div>
           <p className="private-kicker">COMMUNICATION CENTER</p>
-          <h1>Messages</h1>
           <p>Buyer and seller conversations across SMAJ PI HUB.</p>
         </div>
       </section>
@@ -773,7 +775,8 @@ const MessagesPage = () => {
             <SearchOutlinedIcon />
             <input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" />
           </label>
-          <div className="conversation-filters"><button type="button" className={inboxFilter === "inbox" ? "active" : ""} onClick={() => setInboxFilter("inbox")}>Inbox</button><button type="button" className={inboxFilter === "archived" ? "active" : ""} onClick={() => setInboxFilter("archived")}>Archived</button></div>
+          <div className="conversation-filters">
+<button type="button" className={inboxFilter === "inbox" ? "active" : ""} onClick={() => setInboxFilter("inbox")}>Inbox</button><button type="button" className={inboxFilter === "archived" ? "active" : ""} onClick={() => setInboxFilter("archived")}>Archived</button></div>
           {loadingConversations ? <PrivateSkeleton variant="messages" count={6} /> : filteredConversations.length ? (
             filteredConversations.map((item) => (
               <button
