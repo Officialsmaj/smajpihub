@@ -24,10 +24,10 @@ const CandidateProfileContent = ({ candidateId, onBack }: { candidateId: string;
 
   return (
     <div className="jobs-candidate-profile-page">
+      <button type="button" className="jobs-candidate-profile-back" onClick={onBack} aria-label="Back to search results">
+        <ArrowBackOutlinedIcon />
+      </button>
       <header>
-        <button type="button" onClick={onBack} aria-label="Back to search results">
-          <ArrowBackOutlinedIcon /> Back
-        </button>
         <div className="jobs-candidate-profile-header">
           {candidate.avatar ? (
             <img src={candidate.avatar} alt={candidate.displayName} />
