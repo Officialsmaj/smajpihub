@@ -534,10 +534,6 @@ const DashboardPage = () => {
 
   const recommendedServices = useMemo(() => recommendedServicesForCountry(user?.country), [user?.country]);
 
-  if (productsLoading) {
-    return <main className="private-home"><PrivateSkeleton variant="dashboard" /></main>;
-  }
-
   return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /></main>;
 };
 
