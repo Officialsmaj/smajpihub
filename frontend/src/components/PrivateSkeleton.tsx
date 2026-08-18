@@ -3,8 +3,8 @@ type PrivateSkeletonProps = {
   count?: number;
 };
 
-const SkeletonLine = ({ className = "" }: { className?: string }) => (
-  <span className={`private-skeleton-line ${className}`} aria-hidden="true" />
+const SkeletonLine = ({ className = "", style }: { className?: string; style?: React.CSSProperties }) => (
+  <span className={`private-skeleton-line ${className}`} style={style} aria-hidden="true" />
 );
 
 const PrivateSkeleton = ({ variant = "page", count = 4 }: PrivateSkeletonProps) => {
