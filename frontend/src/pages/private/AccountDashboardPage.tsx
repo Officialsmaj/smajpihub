@@ -92,16 +92,12 @@ const AccountDashboardPage = () => {
           <span>App version</span>
           <small>0.1.0</small>
         </div>
-        <div>
-          <h2>Official Social Links</h2>
-          <p>Use only official SMAJ PI HUB social channels for announcements, support updates, and ecosystem news.</p>
-          <div className="settings-social-row">
-            {socialLinks.map(([label, href, Icon]) => (
-              <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
-                <Icon fontSize="small" />
-              </a>
-            ))}
-          </div>
+        <div className="settings-social-row">
+          {socialLinks.map(([label, href, Icon]) => (
+            <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
+              <Icon fontSize="small" />
+            </a>
+          ))}
         </div>
       </section>
 

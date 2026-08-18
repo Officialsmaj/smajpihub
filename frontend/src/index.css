@@ -7251,9 +7251,17 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
     text-decoration: none;
   }
 
-  .account-dashboard-list small {
-    color: var(--smaj-text-secondary);
-  }
+   .account-dashboard-list small {
+     color: var(--smaj-text-secondary);
+   }
+
+   .account-dashboard-list > .settings-social-row {
+     min-height: auto;
+     padding: 12px 5px;
+     align-items: flex-start;
+     justify-content: flex-start;
+     border-bottom: 0;
+   }
 
   .manage-account-page > header {
     min-height: 55px;
@@ -16261,6 +16269,14 @@ html[data-private-theme="dark"] .storefront-search input::placeholder {
 
   .account-dashboard-list a:last-of-type,
   .account-dashboard-list > div:last-child {
+    border-bottom: 0;
+  }
+
+  .account-dashboard-list > .settings-social-row {
+    min-height: auto;
+    padding: 16px 22px;
+    align-items: flex-start;
+    justify-content: flex-start;
     border-bottom: 0;
   }
 
