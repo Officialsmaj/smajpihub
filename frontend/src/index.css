@@ -5705,6 +5705,10 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
       display: none;
    }
 
+   .hide-mobile-header .private-body {
+      padding-top: 0;
+   }
+
    .mobile-private-brand {
     display: inline-flex;
     align-items: center;
