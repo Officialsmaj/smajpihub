@@ -1737,6 +1737,24 @@
   border-color: #0b5bdc;
   background: #0b5bdc;
 }
+.jobs-step-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: #0b5bdc;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.jobs-step-back:hover {
+  text-decoration: underline;
+}
+.jobs-employer-step-form > .jobs-step-back {
+  margin-bottom: 8px;
+}
 .jobs-hires-control {
   margin-top: 18px;
   display: flex;
@@ -1779,6 +1797,26 @@
 .jobs-pill-row button.active {
   border-color: #333;
   background: #fff;
+}
+.jobs-pay-type-select,
+.jobs-rate-select {
+  width: 100%;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  margin: 8px 0 14px;
+  border: 1px solid #777;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  color: #2c2c2c;
+}
+.jobs-salary-step h3 + p {
+  margin: 0;
+  color: #6b6b6b;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
 }
 .jobs-salary-pi-output {
   margin: -6px 0 14px;

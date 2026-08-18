@@ -369,6 +369,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [postCategory, setPostCategory] = useState("");
   const [payMin, setPayMin] = useState("");
   const [payMax, setPayMax] = useState("");
+  const [postPayType, setPostPayType] = useState<"range" | "starting" | "maximum" | "exact">("range");
   const [postCompanyId, setPostCompanyId] = useState("");
   const [billingPlans, setBillingPlans] = useState<JobsBillingPlan[]>([]);
   const [billingPlanJobId, setBillingPlanJobId] = useState<Record<string, string>>({});
@@ -392,6 +393,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     | "type"
     | "salary"
     | "benefits"
+    | "skills"
     | "description"
     | "review"
     | "sponsor"
@@ -415,6 +417,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   >("hour");
   const [descriptionHelpOpen, setDescriptionHelpOpen] = useState(false);
   const descriptionTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const descriptionSelectionAnchor = useRef<number | null>(null);
   const [postSubmitting, setPostSubmitting] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [postSponsorPlan, setPostSponsorPlan] = useState("none");
@@ -444,6 +447,42 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [jobsChatDraft, setJobsChatDraft] = useState("");
   const [jobsChatSending, setJobsChatSending] = useState(false);
   const employerHeroVideoRef = useRef<HTMLVideoElement>(null);
+  const previousStep = (step: typeof postStep) => {
+    const order = ["contact", "title", "location", "hires", "timeframe", "type", "salary", "benefits", "skills", "description", "review", "sponsor", "details"] as const;
+    const index = order.indexOf(step);
+    if (index <= 0) return null;
+    return order[index - 1];
+  };
+  const isStepValid = useMemo(() => {
+    switch (postStep) {
+      case "contact":
+        return postCompanyId.length > 0;
+      case "title":
+        return postJobTitle.trim().length > 0;
+      case "location":
+        return postCountry.trim().length > 0;
+      case "hires":
+        return postHires > 0;
+      case "timeframe":
+        return postHiringTimeframe.trim().length > 0;
+      case "type":
+        return postJobType.trim().length > 0;
+      case "salary":
+        return Number(payMin) > 0;
+      case "benefits":
+        return postBenefits.length > 0;
+      case "skills":
+        return postSkills.trim().length > 0;
+      case "description":
+        return postDescription.trim().length >= 30;
+      case "review":
+      case "sponsor":
+      case "details":
+        return true;
+      default:
+        return true;
+    }
+  }, [postStep, postCompanyId, postJobTitle, postCountry, postHires, postHiringTimeframe, postJobType, payMin, postBenefits, postSkills, postDescription]);
   const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationSheetOpen, setLocationSheetOpen] = useState(false);
   const [recentJobSearches, setRecentJobSearches] = useState<string[]>(() => {
@@ -1109,6 +1148,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       if (saved.postCompensationPeriod) setPostCompensationPeriod(saved.postCompensationPeriod);
       if (saved.payMin) setPayMin(saved.payMin);
       if (saved.payMax) setPayMax(saved.payMax);
+      if (saved.postPayType) setPostPayType(saved.postPayType);
       if (saved.postCompanyId) setPostCompanyId(saved.postCompanyId);
       if (saved.postSponsorPlan) setPostSponsorPlan(saved.postSponsorPlan);
     } catch {
@@ -1135,6 +1175,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       postCompensationPeriod,
       payMin,
       payMax,
+      postPayType,
       postCompanyId,
       postSponsorPlan,
     };
@@ -1162,6 +1203,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     postCompensationPeriod,
     payMin,
     payMax,
+    postPayType,
     postCompanyId,
     postSponsorPlan,
   ]);
@@ -1177,11 +1219,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const { selectionStart, selectionEnd, value } = textarea;
     const selected = value.slice(selectionStart, selectionEnd) || "text";
     const next = `${value.slice(0, selectionStart)}${marker}${selected}${marker}${value.slice(selectionEnd)}`;
+    descriptionSelectionAnchor.current = selectionStart + marker.length;
     setPostDescription(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(selectionStart + marker.length, selectionStart + marker.length + selected.length);
-    });
   };
   const insertDescriptionListItem = () => {
     const textarea = descriptionTextareaRef.current;
@@ -1189,12 +1228,19 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     const { selectionStart, value } = textarea;
     const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
     const next = `${value.slice(0, lineStart)}- ${value.slice(lineStart)}`;
+    descriptionSelectionAnchor.current = selectionStart + 2;
     setPostDescription(next);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(selectionStart + 2, selectionStart + 2);
-    });
   };
+  useEffect(() => {
+    if (descriptionSelectionAnchor.current != null && descriptionTextareaRef.current) {
+      const textarea = descriptionTextareaRef.current;
+      const anchor = descriptionSelectionAnchor.current;
+      textarea.focus();
+      const end = Math.min(anchor, textarea.value.length);
+      textarea.setSelectionRange(end, end);
+      descriptionSelectionAnchor.current = null;
+    }
+  }, [postDescription]);
   const submitContactStep = async (form: HTMLFormElement) => {
     if (contactSubmitting) return;
     setContactSubmitting(true);
@@ -2818,6 +2864,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   void submitContactStep(event.currentTarget);
                 }}
               >
+                <header>
+                  <h2>Company Info</h2>
+                  <p>Tell us about your company and the primary contact for this posting.</p>
+                </header>
                 <label>
                   Company name *
                   <input name="companyName" required minLength={2} maxLength={120} />
@@ -2878,7 +2928,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   </span>
                 </label>
                 <footer>
-                  <button type="submit" disabled={contactSubmitting} aria-busy={contactSubmitting}>
+                  <button type="submit" disabled={!isStepValid || contactSubmitting} aria-busy={contactSubmitting}>
                     {contactSubmitting ? "Saving…" : <>Continue <ArrowForwardRoundedIcon /></>}
                   </button>
                 </footer>
@@ -2891,6 +2941,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   if (postJobTitle.trim()) setPostStep("location");
                 }}
               >
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <header>
                   <h2>Job title *</h2>
                   <p>
@@ -2946,7 +2997,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 </label>
                 <footer>
                   <button type="button" onClick={() => setPostStep("contact")}>← Back</button>
-                  <button type="submit" disabled={!postJobTitle.trim()}>
+                  <button type="submit" disabled={!isStepValid}>
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
@@ -2956,9 +3007,10 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 className="jobs-employer-location-form"
                 onSubmit={event => {
                   event.preventDefault();
-                  setPostStep("hires");
+                  if (postCountry.trim()) setPostStep("hires");
                 }}
               >
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Location type *</h2>
                 <div className="jobs-location-type-options" role="radiogroup" aria-label="Location type">
                   {employerLocationTypes.map(option => (
@@ -2982,23 +3034,25 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <button type="button" onClick={() => setPostStep("title")}>
                     ← Back
                   </button>
-                  <button type="submit">
+                  <button type="submit" disabled={!isStepValid}>
                     Continue <ArrowForwardRoundedIcon />
                   </button>
                 </footer>
               </form>
             ) : kind === "post" && postStep === "hires" ? (
               <form className="jobs-employer-step-form jobs-hires-step" onSubmit={event => { event.preventDefault(); setPostStep("timeframe"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Number of hires *</h2>
                 <div className="jobs-hires-control">
                   <button type="button" aria-label="Decrease hires" onClick={() => setPostHires(value => Math.max(0, value - 1))}>-</button>
                   <input value={postHires} onChange={event => setPostHires(Math.max(0, Number(event.target.value) || 0))} inputMode="numeric" aria-label="Number of hires" />
                   <button type="button" aria-label="Increase hires" onClick={() => setPostHires(value => value + 1)}>+</button>
                 </div>
-                <footer><button type="button" onClick={() => setPostStep("location")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("location")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "timeframe" ? (
               <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("type"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Hiring timeframe *</h2>
                 <div className="jobs-post-option-stack">
                   {hiringTimeframes.map(item => (
@@ -3007,10 +3061,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </button>
                   ))}
                 </div>
-                <footer><button type="button" onClick={() => setPostStep("hires")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("hires")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "type" ? (
               <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("salary"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Job type *</h2>
                 <div className="jobs-post-option-stack">
                   {employerJobTypes.map(item => (
@@ -3019,21 +3074,42 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     </button>
                   ))}
                 </div>
-                <footer><button type="button" onClick={() => setPostStep("timeframe")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("timeframe")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "salary" ? (
               <form className="jobs-employer-step-form jobs-salary-step" onSubmit={event => { event.preventDefault(); setPostStep("benefits"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Salary *</h2>
                 <section>
                   <h3>Pay</h3>
                   <p>Review the pay we estimated for your job and adjust as needed. Check your local minimum wage.</p>
-                  <b>Show pay by</b>
-                  <div className="jobs-pill-row"><button type="button" className="active">Range</button><button type="button">Starting amount</button><button type="button">Maximum amount</button><button type="button">Exact amount</button></div>
-                  <div className="jobs-salary-inputs">
-                    <label>Minimum<input value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="$ 25.71" inputMode="decimal" /></label>
-                    <span>to</span>
-                    <label>Maximum<input value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="$ 30.96" inputMode="decimal" /></label>
-                  </div>
+                  <label>
+                    Show pay by
+                    <select
+                      className="jobs-pay-type-select"
+                      value={postPayType}
+                      onChange={event => setPostPayType(event.target.value as typeof postPayType)}
+                      aria-label="Show pay by"
+                    >
+                      <option value="range">Range</option>
+                      <option value="starting">Starting amount</option>
+                      <option value="maximum">Maximum amount</option>
+                      <option value="exact">Exact amount</option>
+                    </select>
+                  </label>
+                  {postPayType === "range" ? (
+                    <div className="jobs-salary-inputs">
+                      <label>Minimum<input value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="$ 25.71" inputMode="decimal" /></label>
+                      <span>to</span>
+                      <label>Maximum<input value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="$ 30.96" inputMode="decimal" /></label>
+                    </div>
+                  ) : postPayType === "starting" ? (
+                    <label>Starting amount<input value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="$ 25.71" inputMode="decimal" /></label>
+                  ) : postPayType === "maximum" ? (
+                    <label>Maximum amount<input value={payMax} onChange={event => setPayMax(event.target.value)} placeholder="$ 30.96" inputMode="decimal" /></label>
+                  ) : (
+                    <label>Exact amount<input value={payMin} onChange={event => setPayMin(event.target.value)} placeholder="$ 25.71" inputMode="decimal" /></label>
+                  )}
                   {Number(payMin) > 0 ? (
                     <output className="jobs-salary-pi-output">
                       {formatUsdAmount(Number(payMin))}
@@ -3042,26 +3118,26 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                       {Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}
                     </output>
                   ) : null}
-                  <b>Rate</b>
-                  <div className="jobs-pill-row" role="radiogroup" aria-label="Pay rate">
-                    {(["hour", "day", "week", "month", "year"] as const).map(period => (
-                      <button
-                        type="button"
-                        key={period}
-                        className={postCompensationPeriod === period ? "active" : ""}
-                        role="radio"
-                        aria-checked={postCompensationPeriod === period}
-                        onClick={() => setPostCompensationPeriod(period)}
-                      >
-                        per {period}
-                      </button>
-                    ))}
-                  </div>
+                  <label>
+                    Rate
+                    <select
+                      className="jobs-rate-select"
+                      value={postCompensationPeriod}
+                      onChange={event => setPostCompensationPeriod(event.target.value as typeof postCompensationPeriod)}
+                      aria-label="Pay rate"
+                    >
+                      <option value="hour">per hour</option>
+                      <option value="day">per day</option>
+                      <option value="week">per week</option>
+                      <option value="month">per month</option>
+                    </select>
+                  </label>
                 </section>
-                <footer><button type="button" onClick={() => setPostStep("type")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("type")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "benefits" ? (
-              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("description"); }}>
+              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("skills"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Benefits</h2>
                 <div className="jobs-post-option-stack">
                   {(benefitsExpanded ? employerBenefits : employerBenefits.slice(0, 4)).map(item => (
@@ -3075,10 +3151,30 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     Show {employerBenefits.length - 4} more⌄
                   </button>
                 ) : null}
-                <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("salary")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
+              </form>
+            ) : kind === "post" && postStep === "skills" ? (
+              <form className="jobs-employer-step-form" onSubmit={event => { event.preventDefault(); setPostStep("description"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
+                <h2>Skills *</h2>
+                <p>Add skills that match this role. Separate multiple skills with commas.</p>
+                <label>
+                  Required skills
+                  <input
+                    value={postSkills}
+                    onChange={event => setPostSkills(event.target.value)}
+                    placeholder="React, Research, Communication"
+                    autoFocus
+                  />
+                </label>
+                <footer>
+                  <button type="button" onClick={() => setPostStep("benefits")}>← Back</button>
+                  <button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button>
+                </footer>
               </form>
             ) : kind === "post" && postStep === "description" ? (
               <form className="jobs-employer-step-form jobs-description-step" onSubmit={event => { event.preventDefault(); setPostStep("review"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Job description *</h2>
                 <p>This is a SMAJ PI HUB-assisted job description. You can edit or replace it.</p>
                 <div className="jobs-description-editor">
@@ -3115,10 +3211,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     placeholder={`Overview\n\nJoin our dynamic team as a ${postJobTitle || "team member"} and help customers in the Pi economy.`}
                   />
                 </div>
-                <footer><button type="button" onClick={() => setPostStep("benefits")}>← Back</button><button type="submit">Continue <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("skills")}>← Back</button><button type="submit" disabled={!isStepValid}>Continue <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "review" ? (
               <form className="jobs-employer-step-form jobs-review-step" onSubmit={event => { event.preventDefault(); setPostStep("sponsor"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Review</h2>
                 <p>By selecting Confirm, you agree that this job post reflects your requirements and will be submitted through SMAJ PI HUB Jobs.</p>
                 <section>
@@ -3132,7 +3229,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     ["Number of hires", String(postHires), "hires"],
                     ["Hiring timeframe", postHiringTimeframe, "timeframe"],
                     ["Job type", postJobType, "type"],
-                    ["Salary", `${formatUsdAmount(Number(payMin) || 0)}${Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} / month`, "salary"],
+                    ["Salary", `${formatUsdAmount(Number(payMin) || 0)}${Number(payMax) > Number(payMin) ? `–${formatUsdAmount(Number(payMax))}` : ""} / ${postCompensationPeriod}`, "salary"],
                     ["Pi equivalent", `${formatPiAmount(piFromUsdt(Number(payMin) || 0))}${Number(payMax) > Number(payMin) ? `–${formatPiAmount(piFromUsdt(Number(payMax)))}` : ""}`, "salary"],
                     ["Benefits", postBenefits.join(", ") || "None selected", "benefits"],
                     ["Description", postDescription ? `${postDescription.slice(0, 80)}${postDescription.length > 80 ? "…" : ""}` : "Add description", "description"],
@@ -3147,10 +3244,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                     <div key={label}><small>{label}</small><span>{value}</span><button type="button" onClick={() => setPostStep(step as typeof postStep)}>Edit</button></div>
                   ))}
                 </section>
-                <footer><button type="button" onClick={() => setPostStep("description")}>← Back</button><button type="submit">Confirm <ArrowForwardRoundedIcon /></button></footer>
+                <footer><button type="button" onClick={() => setPostStep("description")}>← Back</button><button type="submit" disabled={!isStepValid}>Confirm <ArrowForwardRoundedIcon /></button></footer>
               </form>
             ) : kind === "post" && postStep === "sponsor" ? (
               <form className="jobs-employer-step-form jobs-sponsor-step" onSubmit={event => { event.preventDefault(); setPostStep("details"); }}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <h2>Sponsor job</h2>
                 <h3>Choose a plan</h3>
                 <div className="jobs-sponsor-plans">
@@ -3164,10 +3262,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <label>Plan duration<select defaultValue="continuous"><option value="continuous">Runs continuously</option><option value="7">7 days</option><option value="30">30 days</option></select></label>
                 <p><b>Max budget:</b> $675.00 per week</p>
                 <button type="button" className="jobs-no-thanks" onClick={() => { setPostSponsorPlan("none"); setPostStep("details"); }}>No thanks</button>
-                <footer><button type="button" onClick={() => setPostStep("review")}>← Back</button><button type="submit">Save and continue</button></footer>
+                <footer><button type="button" onClick={() => setPostStep("review")}>← Back</button><button type="submit" disabled={!isStepValid}>Save and continue</button></footer>
               </form>
             ) : kind === "post" ? (
               <form className="job-form" onSubmit={event => void submitJob(event)}>
+                {previousStep(postStep) ? <button type="button" className="jobs-step-back" onClick={() => setPostStep(previousStep(postStep)!)}>← Back</button> : null}
                 <label>
                   Job title
                   <input
@@ -3280,16 +3379,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                         <option value={item} key={item} />
                       ))}
                     </datalist>
-                  </label>
-                  <label>
-                    Skills
-                    <input
-                      name="skills"
-                      required
-                      value={postSkills}
-                      onChange={event => setPostSkills(event.target.value)}
-                      placeholder="React, Research, Communication"
-                    />
                   </label>
                 </div>
                 {postCategory === "Other" ? (
