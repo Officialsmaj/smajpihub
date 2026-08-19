@@ -2715,8 +2715,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                                 </li>
                               ))}
                             </ul>
-              ) : null}
-                       {candidateDrawerTab === "Notes" ? (
+                          ) : (
                             <p>No interviews scheduled.</p>
                           )}
                           <div className="jobs-schedule-interview">
