@@ -3124,6 +3124,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   void submitContactStep(event.currentTarget);
                 }}
               >
+                <button type="button" className="jobs-step-back" onClick={() => navigate("/services/jobs/employer")}>
+                  <ArrowBackRoundedIcon /> Back
+                </button>
                 <header>
                   <h2>Company Info</h2>
                   <p>Tell us about your company and the primary contact for this posting.</p>

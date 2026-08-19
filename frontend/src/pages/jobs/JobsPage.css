@@ -1752,7 +1752,8 @@
 .jobs-step-back:hover {
   text-decoration: underline;
 }
-.jobs-employer-step-form > .jobs-step-back {
+.jobs-employer-step-form > .jobs-step-back,
+.jobs-employer-contact-form > .jobs-step-back {
   margin-bottom: 8px;
 }
 .jobs-hires-control {
