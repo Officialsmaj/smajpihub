@@ -535,7 +535,7 @@ export const router = createBrowserRouter([
     path: "/profile",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <ProfilePage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -549,7 +549,7 @@ export const router = createBrowserRouter([
     path: "/orders",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <OrdersPage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -569,7 +569,7 @@ export const router = createBrowserRouter([
     path: "/messages",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <MessagesPage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -591,7 +591,7 @@ export const router = createBrowserRouter([
     path: "/saved",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <SavedProductsPage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -1011,7 +1011,7 @@ export const router = createBrowserRouter([
     path: "/settings/preferences",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <SettingsPage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -1051,7 +1051,7 @@ export const router = createBrowserRouter([
     path: "/seller",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <SellerPage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -1061,7 +1061,7 @@ export const router = createBrowserRouter([
     path: "/seller/:id",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <SellerProfilePage />
         </PrivateLayout>
       </ProtectedRoute>
@@ -1081,7 +1081,7 @@ export const router = createBrowserRouter([
     path: "/app/wallet",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <WalletPage />
         </PrivateLayout>
       </ProtectedRoute>

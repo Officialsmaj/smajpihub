@@ -5445,6 +5445,13 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   overflow: auto;
 }
 
+.full-screen-page .private-page,
+.full-screen-tab-page {
+  max-width: none;
+  width: 100%;
+  min-height: 100vh;
+}
+
 .full-screen-tab-page {
   min-height: 100vh;
 }
