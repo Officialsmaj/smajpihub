@@ -60,6 +60,12 @@ import {
   type JobsActivity,
   searchCandidates,
   type JobsCandidateSearchResult,
+  getJobsEarnings,
+  type JobsEarningItem,
+  type JobsEarningsSummary,
+  getJobsEmployerPayments,
+  type JobsEmployerPayment,
+  type JobsEmployerPaymentsSummary,
 } from "../../lib/jobsApi";
 import JobsHeader from "./JobsHeader";
 import CandidateCard from "../../components/CandidateCard";
@@ -88,6 +94,8 @@ export type JobsPageKind =
   | "post"
   | "employer"
   | "candidates"
+  | "my-earnings"
+  | "payments-billing"
   | "job"
   | "company";
 
@@ -383,6 +391,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [activity, setActivity] = useState<JobsActivity | null>(null);
   const [activityTab, setActivityTab] = useState<"appearances" | "actions">("appearances");
   const [activityDays, setActivityDays] = useState(7);
+  const [earnings, setEarnings] = useState<JobsEarningItem[]>([]);
+  const [earningsSummary, setEarningsSummary] = useState<JobsEarningsSummary | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
+  const [employerPayments, setEmployerPayments] = useState<JobsEmployerPayment[]>([]);
+  const [employerPaymentsSummary, setEmployerPaymentsSummary] = useState<JobsEmployerPaymentsSummary | null>(null);
+  const [employerPaymentsLoading, setEmployerPaymentsLoading] = useState(false);
   const [profileVisibility, setProfileVisibility] = useState<"active" | "open" | "deactivated">("active");
   const [visibilityDetailsOpen, setVisibilityDetailsOpen] = useState(true);
   const [employerSearch, setEmployerSearch] = useState("");
@@ -595,9 +609,9 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     );
   };
   const activeWorkspaceMode =
-    kind === "employer" || kind === "post" || kind === "candidates"
+    kind === "employer" || kind === "post" || kind === "candidates" || kind === "payments-billing"
       ? "employer"
-      : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility", "account-settings", "blocked-employers"].includes(kind)
+      : ["search", "freelance", "saved", "applications", "profile", "activity", "settings", "visibility", "account-settings", "blocked-employers", "my-earnings"].includes(kind)
         ? "candidate"
       : workspaceMode;
   const isCandidateSearchMode =
@@ -939,6 +953,48 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
         .then(setActivity)
         .catch(() => setActivity(null));
   }, [kind, activityDays]);
+  useEffect(() => {
+    if (kind === "my-earnings" && user) {
+      let active = true;
+      setEarningsLoading(true);
+      getJobsEarnings()
+        .then(data => {
+          if (!active) return;
+          setEarnings(data.items);
+          setEarningsSummary(data.summary);
+        })
+        .catch(() => {
+          if (!active) return;
+          setEarnings([]);
+          setEarningsSummary(null);
+        })
+        .finally(() => {
+          if (active) setEarningsLoading(false);
+        });
+      return () => { active = false; };
+    }
+  }, [kind, user]);
+  useEffect(() => {
+    if (kind === "payments-billing" && user) {
+      let active = true;
+      setEmployerPaymentsLoading(true);
+      getJobsEmployerPayments()
+        .then(data => {
+          if (!active) return;
+          setEmployerPayments(data.payments);
+          setEmployerPaymentsSummary(data.summary);
+        })
+        .catch(() => {
+          if (!active) return;
+          setEmployerPayments([]);
+          setEmployerPaymentsSummary(null);
+        })
+        .finally(() => {
+          if (active) setEmployerPaymentsLoading(false);
+        });
+      return () => { active = false; };
+    }
+  }, [kind, user]);
   useEffect(() => {
     if (!isCandidateSearchMode) return;
     let active = true;
@@ -2659,7 +2715,146 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                                 </li>
                               ))}
                             </ul>
-                          ) : (
+             ) : kind === "my-earnings" ? (
+               <section className="jobs-earnings-page">
+                 <header className="jobs-page-heading">
+                   <span className="jobs-kicker">JOB SEEKER EARNINGS</span>
+                   <h1>My Earnings</h1>
+                   <p>Compensation from jobs you have been hired for through SMAJ Jobs.</p>
+                 </header>
+                 {earningsLoading ? (
+                   <p className="jobs-status" role="status">Loading earnings…</p>
+                 ) : earningsSummary ? (
+                   <>
+                     <div className="jobs-earnings-summary">
+                       <article>
+                         <strong>{formatJobsPi(earningsSummary.totalEarnedPi)}</strong>
+                         <span>Agreed compensation</span>
+                       </article>
+                       <article>
+                         <strong>{formatJobsPi(earningsSummary.pendingEarningsPi)}</strong>
+                         <span>Pending earnings</span>
+                       </article>
+                       <article>
+                         <strong>{formatJobsPi(earningsSummary.completedPaymentsPi)}</strong>
+                         <span>Completed payments</span>
+                       </article>
+                       <article>
+                         <strong>{earningsSummary.hiredCount}</strong>
+                         <span>Hired positions</span>
+                       </article>
+                     </div>
+                     <div className="jobs-page-heading" style={{ marginTop: 32 }}>
+                       <h2>Payment history</h2>
+                       <small>GCV reference: {PI_USDT_RATE.toLocaleString()} USDT per Pi</small>
+                     </div>
+                     {earnings.length ? (
+                       <div className="jobs-earnings-list">
+                         {earnings.map(item => (
+                           <article key={item.applicationId} className={`jobs-earning-card ${item.status === "hired" ? "hired" : "pending"}`}>
+                             <div className="jobs-earning-main">
+                               <h3>{item.jobTitle}</h3>
+                               <p>{item.company} · {item.period}</p>
+                               <small>Applied {formatJobDate(item.createdAt)}</small>
+                             </div>
+                             <div className="jobs-earning-amount">
+                               <strong>{formatJobsPi(item.agreedCompensationPi)}</strong>
+                               <span>{item.status === "hired" ? "Hired" : item.status}</span>
+                               <small>{formatJobsPi(item.compensationMinPi)}{item.compensationMaxPi > item.compensationMinPi ? ` – ${formatJobsPi(item.compensationMaxPi)}` : ""} / {item.period}</small>
+                             </div>
+                           </article>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="workspace-empty jobs-earnings-empty">
+                         <WorkOutlineRoundedIcon />
+                         <h2>No earnings yet</h2>
+                         <p>Apply to jobs and get hired to see your compensation history here.</p>
+                         <Link to="/services/jobs/search">Find jobs</Link>
+                       </div>
+                     )}
+                   </>
+                 ) : (
+                   <div className="workspace-empty jobs-earnings-empty">
+                     <WorkOutlineRoundedIcon />
+                     <h2>No earnings data</h2>
+                     <p>Earnings from hired positions will appear here.</p>
+                   </div>
+                 )}
+               </section>
+             ) : kind === "payments-billing" ? (
+               <section className="jobs-payments-page">
+                 <header className="jobs-page-heading">
+                   <span className="jobs-kicker">EMPLOYER PAYMENTS</span>
+                   <h1>Payments & Billing</h1>
+                   <p>Manage Pi payments for SMAJ Jobs employer plans and services.</p>
+                 </header>
+                 {employerPaymentsLoading ? (
+                   <p className="jobs-status" role="status">Loading payments…</p>
+                 ) : employerPaymentsSummary ? (
+                   <>
+                     <div className="jobs-payments-summary">
+                       <article>
+                         <strong>{formatJobsPi(employerPaymentsSummary.total)}</strong>
+                         <span>Total paid</span>
+                       </article>
+                       <article>
+                         <strong>{formatJobsPi(employerPaymentsSummary.pending)}</strong>
+                         <span>Pending payments</span>
+                       </article>
+                       <article>
+                         <strong>{formatJobsPi(employerPaymentsSummary.paid)}</strong>
+                         <span>Completed payments</span>
+                       </article>
+                       <article>
+                         <strong>{formatJobsPi(employerPaymentsSummary.cancelled)}</strong>
+                         <span>Cancelled</span>
+                       </article>
+                     </div>
+                     <div className="jobs-page-heading" style={{ marginTop: 32 }}>
+                       <h2>Payment history</h2>
+                       <small>GCV reference: {PI_USDT_RATE.toLocaleString()} USDT per Pi</small>
+                     </div>
+                     {employerPayments.length ? (
+                       <div className="jobs-payments-list">
+                         {employerPayments.map(payment => (
+                           <article key={payment.billingId} className={`jobs-payment-card ${payment.status}`}>
+                             <div className="jobs-payment-main">
+                               <h3>{payment.planName}</h3>
+                               <p>{payment.jobId ? `Job: ${payment.jobId}` : "Employer plan"}</p>
+                               <small>Created {formatJobDateTime(payment.createdAt)}</small>
+                               {payment.paidAt ? <small>Paid {formatJobDateTime(payment.paidAt)}</small> : null}
+                             </div>
+                             <div className="jobs-payment-meta">
+                               <div className="jobs-payment-amount">
+                                 <strong>{formatJobsPi(payment.amountPi)}</strong>
+                                 <span>{formatUsdAmount(payment.amountUsdt)}</span>
+                               </div>
+                               <div className={`jobs-payment-status jobs-status-badge ${payment.status}`}>
+                                 {payment.status}
+                               </div>
+                             </div>
+                           </article>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="workspace-empty jobs-payments-empty">
+                         <WorkOutlineRoundedIcon />
+                         <h2>No payments yet</h2>
+                         <p>Payments for employer plans and job promotions will appear here.</p>
+                         <Link to="/services/jobs/post">Post a job</Link>
+                       </div>
+                     )}
+                   </>
+                 ) : (
+                   <div className="workspace-empty jobs-payments-empty">
+                     <WorkOutlineRoundedIcon />
+                     <h2>No payment data</h2>
+                     <p>Authorized Pi payments through SMAJ Jobs will be recorded here.</p>
+                   </div>
+                 )}
+               </section>
+             ) : (
                             <p>No interviews scheduled.</p>
                           )}
                           <div className="jobs-schedule-interview">
@@ -4082,6 +4277,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <BookmarkBorderRoundedIcon />
                 <span>My Jobs</span>
               </NavLink>
+              <NavLink to="/services/jobs/my-earnings">
+                <span className="jobs-nav-icon-badge">
+                  <span style={{ fontSize: "18px", lineHeight: 1 }}>π</span>
+                </span>
+                <span>Earnings</span>
+              </NavLink>
               <Link
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
@@ -4112,6 +4313,12 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <NavLink to="/services/jobs/candidates">
                 <PersonOutlineRoundedIcon />
                 <span>Candidates</span>
+              </NavLink>
+              <NavLink to="/services/jobs/payments-billing">
+                <span className="jobs-nav-icon-badge">
+                  <span style={{ fontSize: "18px", lineHeight: 1 }}>π</span>
+                </span>
+                <span>Billing</span>
               </NavLink>
               <Link
                 to="/services/jobs?tab=employer-applications"

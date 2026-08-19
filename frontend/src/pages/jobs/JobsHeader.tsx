@@ -9,11 +9,13 @@ const candidateLinks = [
   ["activity", "Activity on profile"],
   ["activity?tab=actions", "Employer invites"],
   ["companies", "Companies"],
+  ["my-earnings", "My Earnings"],
   ["settings", "Settings"],
 ] as const;
 
 const employerLinks = [
   ["employer#jobs", "Manage jobs"],
+  ["payments-billing", "Payments & Billing"],
 ] as const;
 
 type WorkspaceMode = "candidate" | "employer";

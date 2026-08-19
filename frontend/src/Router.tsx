@@ -177,6 +177,8 @@ const jobsRoutes: Array<[string, JobsPageKind]> = [
   ["post", "post"],
   ["employer", "employer"],
   ["candidates", "candidates"],
+  ["my-earnings", "my-earnings"],
+  ["payments-billing", "payments-billing"],
 ];
 
 const housingRoutes: Array<[string, HousingPageKind]> = [

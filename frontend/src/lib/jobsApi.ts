@@ -345,3 +345,63 @@ export const getCandidateProfile = async (userId: string) => {
   );
   return response.data.candidate;
 };
+
+export type JobsEarningItem = {
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  status: string;
+  agreedCompensationPi: number;
+  compensationMinPi: number;
+  compensationMaxPi: number;
+  period: string;
+  piRateUsed: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type JobsEarningsSummary = {
+  totalEarnedPi: number;
+  pendingEarningsPi: number;
+  completedPaymentsPi: number;
+  hiredCount: number;
+  applicationsCount: number;
+};
+export type JobsEarningsResponse = {
+  items: JobsEarningItem[];
+  summary: JobsEarningsSummary;
+  serverTime: string;
+};
+
+export const getJobsEarnings = async () =>
+  (await axiosClient.get<JobsEarningsResponse>("/jobs/earnings")).data;
+
+export type JobsEmployerPayment = {
+  billingId: string;
+  planId: string;
+  planName: string;
+  amountPi: number;
+  amountUsdt: number;
+  piRateUsed: number;
+  status: string;
+  paymentId: string;
+  txid: string;
+  jobId?: string;
+  createdAt: string;
+  paidAt: string | null;
+  updatedAt: string;
+};
+export type JobsEmployerPaymentsSummary = {
+  total: number;
+  paid: number;
+  pending: number;
+  cancelled: number;
+};
+export type JobsEmployerPaymentsResponse = {
+  payments: JobsEmployerPayment[];
+  summary: JobsEmployerPaymentsSummary;
+  serverTime: string;
+};
+
+export const getJobsEmployerPayments = async () =>
+  (await axiosClient.get<JobsEmployerPaymentsResponse>("/jobs/employer/payments")).data;

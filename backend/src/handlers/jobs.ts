@@ -1461,4 +1461,87 @@ export default function mountJobsEndpoints(router: Router) {
       },
     });
   });
+
+  router.get("/earnings", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const owner = userId(user);
+    const applications = await req.app.locals.jobApplicationCollection
+      .find({ candidateId: owner })
+      .sort({ createdAt: -1 })
+      .toArray();
+    const jobSlugs = Array.from(new Set(applications.map((a: any) => a.jobId).filter(Boolean)));
+    const jobs = jobSlugs.length
+      ? await req.app.locals.jobCollection.find({ slug: { $in: jobSlugs } }).toArray()
+      : [];
+    const jobBySlug = new Map<string, any>(jobs.map((job: any) => [job.slug, job]));
+    const items = applications.map((application: any) => {
+      const job = jobBySlug.get(application.jobId);
+      const minUsdt = Number(job?.compensationMinUsdt || 0);
+      const maxUsdt = Number(job?.compensationMaxUsdt || minUsdt || 0);
+      const period = String(job?.compensationPeriod || "project");
+      const minPi = minUsdt > 0 ? minUsdt / PI_USDT_RATE : 0;
+      const maxPi = maxUsdt > 0 ? maxUsdt / PI_USDT_RATE : 0;
+      const agreedPi = maxPi >= minPi && maxPi > 0 ? maxPi : minPi;
+      const status = application.status === "hired" ? "hired" : application.status;
+      return {
+        applicationId: application._id.toString(),
+        jobId: application.jobId,
+        jobTitle: application.jobTitle,
+        company: application.company,
+        status,
+        agreedCompensationPi: agreedPi,
+        compensationMinPi: minPi,
+        compensationMaxPi: maxPi,
+        period,
+        piRateUsed: PI_USDT_RATE,
+        createdAt: application.createdAt,
+        updatedAt: application.updatedAt,
+      };
+    });
+    const hired = items.filter((item: any) => item.status === "hired");
+    const totalEarnedPi = hired.reduce((sum: number, item: any) => sum + item.agreedCompensationPi, 0);
+    const pendingEarningsPi = hired.filter((item: any) => item.status === "hired").reduce((sum: number, item: any) => sum + item.agreedCompensationPi, 0);
+    const summary = {
+      totalEarnedPi,
+      pendingEarningsPi,
+      completedPaymentsPi: 0,
+      hiredCount: hired.length,
+      applicationsCount: items.length,
+    };
+    res.json({ items, summary, serverTime: new Date().toISOString() });
+  });
+
+  router.get("/employer/payments", async (req, res) => {
+    const user = await requireEmployer(req, res);
+    if (!user) return;
+    const owner = userId(user);
+    const intents = await req.app.locals.jobBillingCollection
+      .find({ employerId: owner })
+      .sort({ createdAt: -1 })
+      .toArray();
+    const payments = intents.map((intent: any) => ({
+      billingId: intent.billingId,
+      planId: intent.id,
+      planName: intent.name,
+      amountPi: Number(intent.pricePi) || 0,
+      amountUsdt: Number(intent.priceUsdt) || 0,
+      piRateUsed: Number(intent.piRateUsed) || PI_USDT_RATE,
+      status: intent.status,
+      paymentId: intent.paymentId || "",
+      txid: intent.paymentTxid || "",
+      jobId: intent.jobId || undefined,
+      createdAt: intent.createdAt,
+      paidAt: intent.paidAt || null,
+      updatedAt: intent.updatedAt || intent.createdAt,
+    }));
+    const summary = payments.reduce((totals: { total: number; paid: number; pending: number; cancelled: number }, payment: any) => {
+      totals.total += payment.amountPi;
+      if (payment.status === "paid") totals.paid += payment.amountPi;
+      else if (payment.status === "processing" || payment.status === "pending_payment") totals.pending += payment.amountPi;
+      else if (payment.status === "cancelled") totals.cancelled += payment.amountPi;
+      return totals;
+    }, { total: 0, paid: 0, pending: 0, cancelled: 0 });
+    res.json({ payments, summary, serverTime: new Date().toISOString() });
+  });
 }
