@@ -669,6 +669,22 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/app/services/jobs/my-earnings",
+    element: (
+      <ProtectedRoute>
+        <JobsPage kind="my-earnings" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/jobs/payments-billing",
+    element: (
+      <ProtectedRoute>
+        <JobsPage kind="payments-billing" />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/app/services/jobs/*",
     element: <Navigate to="/services/jobs" replace />,
   },
