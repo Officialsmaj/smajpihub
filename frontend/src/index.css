@@ -5463,6 +5463,7 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   min-height: 100vh;
   margin: 0 !important;
   padding: 0 !important;
+  gap: 0 !important;
 }
 
 .full-screen-page .private-tab-page {
@@ -5476,6 +5477,18 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
 .full-screen-page .private-page > *:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+.full-screen-page .private-page-head,
+.full-screen-page .real-profile-hero,
+.full-screen-page .seller-profile-hero,
+.full-screen-page .wallet-page > section:first-child,
+.full-screen-page .orders-page > section:first-child,
+.full-screen-page .saved-products-page > section:first-child,
+.full-screen-page .seller-page > section:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-radius: 0 !important;
 }
 .private-sidebar-top { justify-content: space-between; }
 .private-sidebar-brand { flex: 0 0 auto; }
