@@ -569,7 +569,7 @@ export const router = createBrowserRouter([
     path: "/messages",
     element: (
       <ProtectedRoute>
-        <PrivateLayout fullScreen>
+        <PrivateLayout>
           <MessagesPage />
         </PrivateLayout>
       </ProtectedRoute>
