@@ -4280,12 +4280,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                 <BookmarkBorderRoundedIcon />
                 <span>My Jobs</span>
               </NavLink>
-              <NavLink to="/services/jobs/my-earnings">
-                <span className="jobs-nav-icon-badge">
-                  <span style={{ fontSize: "18px", lineHeight: 1 }}>π</span>
-                </span>
-                <span>Earnings</span>
-              </NavLink>
               <Link
                 to="/services/jobs?tab=messages"
                 className={kind === "home" && searchParams.get("tab") === "messages" ? "active" : ""}
@@ -4316,12 +4310,6 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
               <NavLink to="/services/jobs/candidates">
                 <PersonOutlineRoundedIcon />
                 <span>Candidates</span>
-              </NavLink>
-              <NavLink to="/services/jobs/payments-billing">
-                <span className="jobs-nav-icon-badge">
-                  <span style={{ fontSize: "18px", lineHeight: 1 }}>π</span>
-                </span>
-                <span>Billing</span>
               </NavLink>
               <Link
                 to="/services/jobs?tab=employer-applications"
