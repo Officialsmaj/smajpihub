@@ -5431,17 +5431,28 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   display: none !important;
 }
 
+.full-screen-page .private-shell {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
 .full-screen-page .private-body {
   display: block;
   height: 100vh;
   min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: hidden;
 }
 
 .full-screen-page .private-content {
   height: 100%;
   min-height: 100vh;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: auto;
 }
 
@@ -5450,10 +5461,21 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   max-width: none;
   width: 100%;
   min-height: 100vh;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.full-screen-tab-page {
+.full-screen-page .private-tab-page {
   min-height: 100vh;
+}
+
+.full-screen-page main,
+.full-screen-page section,
+.full-screen-page article,
+.full-screen-page header:first-child,
+.full-screen-page .private-page > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 .private-sidebar-top { justify-content: space-between; }
 .private-sidebar-brand { flex: 0 0 auto; }
