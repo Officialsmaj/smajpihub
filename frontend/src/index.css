@@ -5420,6 +5420,34 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   .private-sidebar nav { min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
   .private-content { height: auto; overflow: visible; }
 }
+
+.full-screen-page .private-header,
+.full-screen-page .private-sidebar,
+.full-screen-page .mobile-bottom-nav,
+.full-screen-page .live-activity-float,
+.full-screen-page .profile-verify-reminder,
+.full-screen-page .CommunityFollowPrompt,
+.full-screen-page .WelcomeTour {
+  display: none !important;
+}
+
+.full-screen-page .private-body {
+  display: block;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.full-screen-page .private-content {
+  height: 100%;
+  min-height: 100vh;
+  padding: 0;
+  overflow: auto;
+}
+
+.full-screen-tab-page {
+  min-height: 100vh;
+}
 .private-sidebar-top { justify-content: space-between; }
 .private-sidebar-brand { flex: 0 0 auto; }
 .private-sidebar-collapsed .private-sidebar-brand { display: inline-flex; }

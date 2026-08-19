@@ -37,7 +37,7 @@ import useRouteScrollTop from "../hooks/useRouteScrollTop";
 import CommunityFollowPrompt from "../components/CommunityFollowPrompt";
 import { getStreamDownloads, STREAM_DOWNLOADS_CHANGED_EVENT } from "../lib/streamCatalog";
 
-type PrivateLayoutProps = { children: ReactNode };
+type PrivateLayoutProps = { children: ReactNode; fullScreen?: boolean };
 type LiveConversation = {
   _id: string;
   participantName?: string;
@@ -135,7 +135,7 @@ const wasBrowserReload = () => {
   return navigation?.type === "reload";
 };
 
-const PrivateLayout = ({ children }: PrivateLayoutProps) => {
+const PrivateLayout = ({ children, fullScreen }: PrivateLayoutProps) => {
   useRouteScrollTop();
   const { signOut, isLoading, user, updateSettings } = useAuthContext();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -356,74 +356,77 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
   };
 
   return (
-    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamImmersive ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""} ${isHeaderHiddenPage ? "hide-mobile-header" : ""}`}>
-      <header className="private-header">
-        <div className="mobile-private-header-content">
-          <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
-          <span className="environment-badge mobile-environment-badge" aria-label="Testnet beta environment">Beta</span>
-          <div className="mobile-private-header-actions">
-            <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
-            <button className="mobile-private-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
+    <div className={`private-shell ${isStoreShell ? "store-private-shell" : ""} ${isStreamShell ? "stream-private-shell" : ""} ${isStreamImmersive ? "stream-title-immersive-shell" : ""} ${location.pathname === "/dashboard" ? "mobile-home-shell" : ""} ${isDashboardDiscovery ? "mobile-discovery-shell" : ""} ${location.pathname === "/categories" ? "mobile-category-shell" : ""} ${isHeaderHiddenPage ? "hide-mobile-header" : ""} ${fullScreen ? "full-screen-page" : ""}`}>
+      {fullScreen ? null : (
+        <header className="private-header">
+          <div className="mobile-private-header-content">
+            <Link to="/dashboard" className="mobile-private-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
+            <span className="environment-badge mobile-environment-badge" aria-label="Testnet beta environment">Beta</span>
+            <div className="mobile-private-header-actions">
+              <Link className="mobile-private-icon notification-icon" to="/notifications" aria-label="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
+              <button className="mobile-private-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
+                {themeIcon}
+              </button>
+            </div>
+          </div>
+          <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
+            {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+          <Link to="/dashboard" className="private-header-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="" /></Link>
+          <span className="environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
+          <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
+          <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
+          <div className="private-header-actions">
+            <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
+            <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
               {themeIcon}
             </button>
+            <div className="private-header-profile">
+              {profileMenuOpen ? <div className="private-profile-menu private-header-profile-menu" style={profileMenuPosition}><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Account</Link><Link to="/app/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings/preferences" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+              <button ref={profileAvatarRef} type="button" className="private-header-avatar" title="Account" aria-label="Open account menu" aria-expanded={profileMenuOpen} onClick={() => { positionProfileMenu(); setProfileMenuOpen((open) => !open); }}>{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</button>
+            </div>
           </div>
-        </div>
-        <button className="private-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close sidebar" : "Open sidebar"}>
-          {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
-        </button>
-        <Link to="/dashboard" className="private-header-brand" aria-label="SMAJ PI HUB Home"><img src={logoImage} alt="" /></Link>
-        <span className="environment-badge" aria-label="Testnet beta environment">Testnet / Beta</span>
-        <form className="private-global-search" onSubmit={submitHeaderSearch}><SearchOutlinedIcon /><input value={headerSearch} onFocus={() => setSearchOpen(true)} onChange={(event) => { setHeaderSearch(event.target.value); setSearchOpen(true); }} placeholder="Search SMAJ PI HUB..." />{searchOpen && headerSearch.trim() ? <div className="private-search-results">{headerResults.length ? Object.entries(headerResults.reduce<Record<string, typeof headerResults>>((groups, item) => { (groups[item.group] ||= []).push(item); return groups; }, {})).map(([group, items]) => <section key={group}><strong>{group}</strong>{items.map((item) => <button type="button" key={`${group}-${item.label}`} onClick={() => { navigate(item.to); setHeaderSearch(""); setSearchOpen(false); }}>{item.label}</button>)}</section>) : <button type="submit">Search Marketplace for “{headerSearch}”</button>}</div> : null}</form>
-        <div className="private-header-title"><span>Workspace</span><strong>{pageTitle}</strong></div>
-        <div className="private-header-actions">
-          <Link className="private-header-icon notification-icon" to="/notifications" aria-label="Notifications" title="Notifications"><NotificationsNoneOutlinedIcon />{unreadCount ? <span>{notificationBadgeLabel}</span> : null}</Link>
-          <button className="private-header-icon" type="button" onClick={() => void toggleTheme()} aria-label="Toggle theme" title="Toggle light or dark mode">
-            {themeIcon}
-          </button>
-          <div className="private-header-profile">
-            {profileMenuOpen ? <div className="private-profile-menu private-header-profile-menu" style={profileMenuPosition}><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Account</Link><Link to="/app/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings/preferences" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
-            <button ref={profileAvatarRef} type="button" className="private-header-avatar" title="Account" aria-label="Open account menu" aria-expanded={profileMenuOpen} onClick={() => { positionProfileMenu(); setProfileMenuOpen((open) => !open); }}>{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</button>
-          </div>
-        </div>
-      </header>
-
+        </header>
+      )}
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
-        <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
-          <div className="private-sidebar-top">
-            <Link to="/dashboard" className="private-sidebar-brand" title="SMAJ PI HUB"><img src={logoImage} alt="SMAJ PI HUB" /></Link>
-            <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
-              {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
-            </button>
-          </div>
-          <nav aria-label="Private navigation">
-            {links.map((link) => (
-              <NavLink key={link.to} to={link.to} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? link.label : undefined} aria-label={link.label}>
-                {link.icon}
-                <span className="private-nav-label">{link.label}</span>
-                {link.to === "/notifications" && unreadCount ? <b className="sidebar-count">{notificationBadgeLabel}</b> : null}
-              </NavLink>
-            ))}
-          </nav>
-          <section className="private-service-menu">
-            <button type="button" onClick={() => setServiceMenuOpen(open => !open)} aria-expanded={serviceMenuOpen} title={sidebarCollapsed ? "All service apps" : undefined}>
-              <GridViewOutlinedIcon />
-              <span className="private-nav-label">All service apps</span>
-              <KeyboardArrowUpIcon className={serviceMenuOpen ? "open" : ""} />
-            </button>
-            {serviceMenuOpen && !sidebarCollapsed ? <div>{serviceCatalog.map(service => (
-              <Link key={service.slug} to={service.live ? serviceAppPath(service.slug) : `/app/services/${service.slug}`} onClick={() => setMobileSidebarOpen(false)}>
-                <span>{service.name.replace("SMAJ ", "")}</span><small>{service.live ? "Open" : "Soon"}</small>
-              </Link>
-            ))}</div> : null}
-          </section>
-          <div className="private-sidebar-account">
-            {profileMenuOpen ? <div className="private-profile-menu"><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Account</Link><Link to="/app/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings/preferences" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
-            <button type="button" className="private-sidebar-profile" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} title={sidebarCollapsed ? (user?.displayName || user?.username) : undefined}>
-              <span className="private-profile-avatar">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><span className="private-profile-copy"><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></span><KeyboardArrowUpIcon className="private-profile-chevron" />
-            </button>
-          </div>
-        </aside>
-        {mobileSidebarOpen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
+        {fullScreen ? null : (
+          <aside className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
+            <div className="private-sidebar-top">
+              <Link to="/dashboard" className="private-sidebar-brand" title="SMAJ PI HUB"><img src={logoImage} alt="" /></Link>
+              <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
+              </button>
+            </div>
+            <nav aria-label="Private navigation">
+              {links.map((link) => (
+                <NavLink key={link.to} to={link.to} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? link.label : undefined} aria-label={link.label}>
+                  {link.icon}
+                  <span className="private-nav-label">{link.label}</span>
+                  {link.to === "/notifications" && unreadCount ? <b className="sidebar-count">{notificationBadgeLabel}</b> : null}
+                </NavLink>
+              ))}
+            </nav>
+            <section className="private-service-menu">
+              <button type="button" onClick={() => setServiceMenuOpen(open => !open)} aria-expanded={serviceMenuOpen} title={sidebarCollapsed ? "All service apps" : undefined}>
+                <GridViewOutlinedIcon />
+                <span className="private-nav-label">All service apps</span>
+                <KeyboardArrowUpIcon className={serviceMenuOpen ? "open" : ""} />
+              </button>
+              {serviceMenuOpen && !sidebarCollapsed ? <div>{serviceCatalog.map(service => (
+                <Link key={service.slug} to={service.live ? serviceAppPath(service.slug) : `/app/services/${service.slug}`} onClick={() => setMobileSidebarOpen(false)}>
+                  <span>{service.name.replace("SMAJ ", "")}</span><small>{service.live ? "Open" : "Soon"}</small>
+                </Link>
+              ))}</div> : null}
+            </section>
+            <div className="private-sidebar-account">
+              {profileMenuOpen ? <div className="private-profile-menu"><Link to="/settings" onClick={() => setProfileMenuOpen(false)}><PersonOutlineIcon />Account</Link><Link to="/app/wallet" onClick={() => setProfileMenuOpen(false)}><AccountBalanceWalletOutlinedIcon />Wallet</Link><Link to="/settings/preferences" onClick={() => setProfileMenuOpen(false)}><SettingsOutlinedIcon />Settings</Link><Link to="/app/help-center" onClick={() => setProfileMenuOpen(false)}><HelpOutlineOutlinedIcon />Help Center</Link><button type="button" className="profile-menu-logout" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon />Logout</button></div> : null}
+              <button type="button" className="private-sidebar-profile" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} title={sidebarCollapsed ? (user?.displayName || user?.username) : undefined}>
+                <span className="private-profile-avatar">{user?.avatar ? <img src={user.avatar} alt="" /> : (user?.displayName || user?.username || "U").slice(0, 1).toUpperCase()}</span><span className="private-profile-copy"><strong>{user?.displayName || user?.username}</strong><small>{user?.role || "buyer"} account</small></span><KeyboardArrowUpIcon className="private-profile-chevron" />
+              </button>
+            </div>
+          </aside>
+        )}
+        {mobileSidebarOpen && !fullScreen ? <button className="private-overlay" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu" /> : null}
         <div className="private-content">
           {backFallback ? (
             <button
@@ -437,12 +440,12 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
               <span>Back</span>
             </button>
           ) : null}
-          <div className="private-tab-page">
+          <div className={`private-tab-page${fullScreen ? " full-screen-tab-page" : ""}`}>
             {children}
           </div>
         </div>
       </div>
-      {!isStreamImmersive ? <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
+      {!fullScreen && !isStreamImmersive ? <nav className="mobile-bottom-nav" aria-label="Mobile private navigation">
         {(isStreamShell ? [
           { to: "/app/services/stream", label: "Home", icon: <PlayArrowRoundedIcon /> },
           { to: "/app/services/stream/search", label: "Browse", icon: <SearchOutlinedIcon /> },
@@ -460,8 +463,8 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </NavLink>
         ))}
       </nav> : null}
-      {!isStreamImmersive ? <CommunityFollowPrompt /> : null}
-      {!isStreamShell && !isStreamImmersive && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
+      {!fullScreen && !isStreamImmersive ? <CommunityFollowPrompt /> : null}
+      {!fullScreen && !isStreamShell && !isStreamImmersive && location.pathname !== "/messages" && location.pathname !== "/add-product" ? (
         <aside className={`live-activity-float ${liveFeedOpen ? "open" : ""}`} aria-label="Live activity">
           {liveFeedOpen ? (
             <section className="live-activity-panel" aria-live="polite">
@@ -488,7 +491,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           </button>
         </aside>
       ) : null}
-      {showProfileReminder && !isStreamImmersive ? (
+      {showProfileReminder && !isStreamImmersive && !fullScreen ? (
         <aside className="profile-verify-reminder" role="alert" aria-live="polite">
           <span><VerifiedUserOutlinedIcon /></span>
           <div>
@@ -498,7 +501,7 @@ const PrivateLayout = ({ children }: PrivateLayoutProps) => {
           <button type="button" onClick={completeProfileFromReminder}>Go Complete</button>
         </aside>
       ) : null}
-      {!isStreamImmersive ? <WelcomeTour /> : null}
+      {!fullScreen && !isStreamImmersive ? <WelcomeTour /> : null}
       <ConfirmSignOutModal open={showSignOut} busy={isLoading} onCancel={() => setShowSignOut(false)} onConfirm={() => void logout()} />
     </div>
   );

@@ -579,7 +579,7 @@ export const router = createBrowserRouter([
     path: "/notifications",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
+        <PrivateLayout fullScreen>
           <NotificationsPage />
         </PrivateLayout>
       </ProtectedRoute>
