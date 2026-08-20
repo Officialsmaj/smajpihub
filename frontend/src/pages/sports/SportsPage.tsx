@@ -378,7 +378,6 @@ const ListingContent = ({
         <div className="sports-page-title">
           <span>NEWSROOM</span>
           <h1>SMAJ Sports stories</h1>
-          <p>Editorial previews from SMAJ Sports. Third-party sports news integration is coming soon.</p>
         </div>
         <NewsGrid stories={catalog.stories} query={query} />
         {!catalog.stories.length ? (
@@ -431,7 +430,6 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
         <span>{story.category} · SMAJ SPORTS EDITORIAL</span>
         <h1>{story.title}</h1>
         <p>{story.summary}</p>
-        <aside>This is an SMAJ Sports editorial preview. Third-party sports news integration is coming soon.</aside>
       </article>
     );
   }

@@ -129,44 +129,6 @@ const matches = [
   },
 ];
 
-const stories = [
-  {
-    id: "n1",
-    category: "Football",
-    title: "The final four are set after a dramatic night",
-    summary:
-      "Late goals, a packed stadium and one unforgettable comeback shaped the quarter-finals.",
-    time: "18 min ago",
-    tone: "blue",
-  },
-  {
-    id: "n2",
-    category: "Basketball",
-    title: "Royals extend their unbeaten home run",
-    summary: "A dominant fourth quarter keeps the league leaders in control.",
-    time: "1 hr ago",
-    tone: "purple",
-  },
-  {
-    id: "n3",
-    category: "Community",
-    title: "Fans choose the goal of the week",
-    summary:
-      "Watch the shortlist and cast your vote with the SMAJ Sports community.",
-    time: "3 hrs ago",
-    tone: "green",
-  },
-  {
-    id: "n4",
-    category: "Athletics",
-    title: "Rising stars to watch this season",
-    summary:
-      "Six young athletes are already rewriting personal and national records.",
-    time: "Yesterday",
-    tone: "orange",
-  },
-];
-
 const standings = [
   { team: atlas, played: 12, won: 9, draw: 2, lost: 1, points: 29 },
   { team: lions, played: 12, won: 8, draw: 2, lost: 2, points: 26 },
@@ -206,10 +168,18 @@ type Standing = {
   lost: number;
   points: number;
 };
+type Story = {
+  id: string;
+  category: string;
+  title: string;
+  summary: string;
+  time: string;
+  tone: string;
+};
 type SportsCatalog = {
   matches: Match[];
   teams: Team[];
-  stories: typeof stories;
+  stories: Story[];
   standings: Standing[];
   competitions: Array<{
     id: string;
@@ -333,7 +303,7 @@ const normalizeEvent = (event: SportsDbEvent): Match => {
 const demoCatalog = (): SportsCatalog => ({
   matches,
   teams,
-  stories,
+  stories: [],
   standings,
   competitions: [
     {
@@ -394,6 +364,88 @@ const buildStandings = (
     .sort((left, right) => right.points - left.points);
 };
 
+const timeAgo = (iso: string): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
+
+const newsTones = ["blue", "purple", "green", "orange"];
+
+const fetchSportsNews = async (): Promise<Story[]> => {
+  if (!env.news_api_key) return [];
+  const response = await axios.get(
+    "https://newsapi.org/v2/everything",
+    {
+      params: {
+        q: "sports",
+        sortBy: "publishedAt",
+        pageSize: 20,
+        apiKey: env.news_api_key,
+      },
+      timeout: 12_000,
+    },
+  );
+  const status = String(response.data?.status || "").toLowerCase();
+  if (status !== "ok") {
+    console.error(
+      "[sports-news] provider error:",
+      response.data?.message || status,
+    );
+    return [];
+  }
+  const articles = Array.isArray(response.data?.articles)
+    ? response.data.articles
+    : [];
+  return articles
+    .filter(
+      (article: any) => article?.title && article?.title !== "[Removed]",
+    )
+    .map((article: any, index: number) => ({
+      id: `newsapi-${index}-${Date.now()}`,
+      category: String(article.source?.name || "Sports News"),
+      title: String(article.title),
+      summary: String(article.description || article.title || ""),
+      time: timeAgo(article.publishedAt),
+      tone: newsTones[index % newsTones.length],
+    }));
+};
+
+let cachedNews: { expiresAt: number; value: Story[] } | null = null;
+let pendingNews: Promise<Story[]> | null = null;
+
+const getNews = async (): Promise<Story[]> => {
+  if (cachedNews && cachedNews.expiresAt > Date.now()) return cachedNews.value;
+  if (pendingNews) return pendingNews;
+  pendingNews = fetchSportsNews()
+    .then((value) => {
+      cachedNews = {
+        value,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+      };
+      return value;
+    })
+    .catch((error) => {
+      console.error(
+        "[sports-news]",
+        error instanceof Error ? error.message : error,
+      );
+      if (cachedNews) return cachedNews.value;
+      return [];
+    })
+    .finally(() => {
+      pendingNews = null;
+    });
+  return pendingNews;
+};
+
 let cachedCatalog: { expiresAt: number; value: SportsCatalog } | null = null;
 let pendingCatalog: Promise<SportsCatalog> | null = null;
 
@@ -446,7 +498,7 @@ const fetchProviderCatalog = async (): Promise<SportsCatalog> => {
   return {
     matches: providerMatches,
     teams: providerTeams,
-    stories,
+    stories: [],
     standings: buildStandings(providerMatches, providerTeams),
     competitions,
     meta: {
@@ -468,6 +520,10 @@ const getCatalog = async () => {
     return cachedCatalog.value;
   if (pendingCatalog) return pendingCatalog;
   pendingCatalog = fetchProviderCatalog()
+    .then(async (value) => {
+      const news = await getNews();
+      return { ...value, stories: news };
+    })
     .then((value) => {
       cachedCatalog = {
         value,
