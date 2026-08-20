@@ -5479,6 +5479,10 @@ html[data-private-theme="dark"] .confirm-modal { color: #fff; background: #11182
   margin-top: 0 !important;
   padding-top: 5px !important;
 }
+
+.full-screen-page .private-route-back {
+  margin-top: 5px;
+}
 .private-sidebar-top { justify-content: space-between; }
 .private-sidebar-brand { flex: 0 0 auto; }
 .private-sidebar-collapsed .private-sidebar-brand { display: inline-flex; }
