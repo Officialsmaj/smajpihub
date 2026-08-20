@@ -96,7 +96,7 @@ const backFallbackForPath = (pathname: string) => {
   if (pathname === "/add-product") return "/seller";
   if (pathname === "/cart" || pathname === "/checkout" || pathname === "/payment-method") return "/store";
   if (pathname === "/profile" || pathname === "/app/wallet" || pathname === "/settings/preferences") return "/settings";
-  if (pathname === "/saved" || pathname === "/orders") return "/settings";
+  if (pathname === "/saved" || pathname === "/orders" || pathname === "/seller") return "/settings";
   if (pathname === "/notifications" || pathname === "/app/help-center" || pathname === "/help") return "/dashboard";
   if (pathname === "/trending" || pathname === "/lifestyle" || pathname === "/categories") return "/dashboard";
   return "";
