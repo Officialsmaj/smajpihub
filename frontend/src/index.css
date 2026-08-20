@@ -7009,12 +7009,15 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
 
   .mobile-messages-heading {
     display: flex;
+    justify-content: center;
     padding: 12px;
   }
 
   .mobile-messages-heading .conversation-search {
     margin: 0;
     padding: 0 12px;
+    width: 100%;
+    max-width: 640px;
   }
 
   .messages-page .conversation-list > .conversation-search {
@@ -17645,7 +17648,7 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
 }
 
 .conversation-search {
-  margin: 12px;
+  margin: 12px auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -17654,6 +17657,7 @@ html[data-private-theme="light"] .messages-page.conversation-selected .chat-pane
   background: var(--smaj-input);
   border: 1px solid var(--smaj-border);
   border-radius: 11px;
+  max-width: 640px;
 }
 
 .conversation-search input {
