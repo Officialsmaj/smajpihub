@@ -234,19 +234,42 @@ const PrivateLayout = ({ children, fullScreen }: PrivateLayoutProps) => {
   }, [loadUnreadCount, location.pathname]);
 
   useEffect(() => {
-    const onRefresh = () => loadUnreadCount();
-    const timer = window.setInterval(loadUnreadCount, 15000);
+    let resumeTimer = 0;
+    const onRefresh = () => {
+      if (!document.hidden) loadUnreadCount();
+    };
+    const onVisibilityChange = () => {
+      window.clearTimeout(resumeTimer);
+      if (!document.hidden) resumeTimer = window.setTimeout(loadUnreadCount, 300);
+    };
+    const timer = window.setInterval(onRefresh, 15000);
     window.addEventListener("smaj:notifications-refresh", onRefresh);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.clearInterval(timer);
+      window.clearTimeout(resumeTimer);
       window.removeEventListener("smaj:notifications-refresh", onRefresh);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [loadUnreadCount]);
 
   useEffect(() => {
     loadLiveConversations();
-    const timer = window.setInterval(loadLiveConversations, 15000);
-    return () => window.clearInterval(timer);
+    let resumeTimer = 0;
+    const refreshWhenVisible = () => {
+      if (!document.hidden) loadLiveConversations();
+    };
+    const onVisibilityChange = () => {
+      window.clearTimeout(resumeTimer);
+      if (!document.hidden) resumeTimer = window.setTimeout(loadLiveConversations, 900);
+    };
+    const timer = window.setInterval(refreshWhenVisible, 15000);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(resumeTimer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [loadLiveConversations]);
   useEffect(() => { document.body.style.overflow = mobileSidebarOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [mobileSidebarOpen]);
   const toggleSidebar = () => {

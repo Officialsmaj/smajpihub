@@ -146,9 +146,10 @@ const toErrorMessage = (err: unknown) => {
 };
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(() => getStoredPiUser());
+  const initialUserRef = useRef<User | null>(getStoredPiUser());
+  const [user, setUser] = useState<User | null>(initialUserRef.current);
   const [showSignIn, setShowSignIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialUserRef.current);
   const [authFeedback, setAuthFeedback] = useState<AuthFeedback | null>(null);
   const loginInProgressRef = useRef(false);
   const showFeedback = useCallback((feedback: AuthFeedback | null) => {
@@ -165,7 +166,7 @@ export const useAuth = () => {
     let mounted = true;
     const checkSession = async () => {
       const startedAt = Date.now();
-      const stored = getStoredPiUser();
+      const stored = initialUserRef.current || getStoredPiUser();
       if (stored && mounted) setUser(stored);
       if (!getBaseURL()) { if (mounted) setIsLoading(false); return; }
       try {

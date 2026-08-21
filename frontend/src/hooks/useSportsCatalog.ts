@@ -40,14 +40,25 @@ const useSportsCatalog = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal);
+    let resumeTimer = 0;
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void refresh(controller.signal);
+    };
+    const onVisibilityChange = () => {
+      window.clearTimeout(resumeTimer);
+      if (!document.hidden) resumeTimer = window.setTimeout(refreshWhenVisible, 1500);
+    };
+    refreshWhenVisible();
     const interval = window.setInterval(
-      () => void refresh(controller.signal),
+      refreshWhenVisible,
       Math.max(30, catalog.meta?.refreshAfterSeconds || 45) * 1000
     );
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       controller.abort();
       window.clearInterval(interval);
+      window.clearTimeout(resumeTimer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [catalog.meta?.refreshAfterSeconds, refresh]);
 
