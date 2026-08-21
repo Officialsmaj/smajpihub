@@ -5,6 +5,7 @@ import ServiceArt from "../components/ServiceArt";
 import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
+import DashboardWelcomeLoader from "../components/DashboardWelcomeLoader";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -24,6 +25,7 @@ import { useTranslation } from "react-i18next";
 const publicServicePath = (service: ServiceDefinition) =>
   `/services/${service.slug === "food" ? "food-delivery" : service.slug}`;
 const publicServiceGroups = Array.from({ length: 5 }, (_, index) => serviceCatalog.slice(index * 3, index * 3 + 3));
+let initialDashboardWelcomeAvailable = window.location.pathname === "/";
 
 const valuePillars = [
   {
@@ -71,6 +73,14 @@ const HomePage = () => {
   const { isAuthenticated, isLoading } = useAuthContext();
   const [servicesPage, setServicesPage] = useState(0);
   const [isMobileServices, setIsMobileServices] = useState(false);
+  const [showDashboardWelcome, setShowDashboardWelcome] = useState(initialDashboardWelcomeAvailable);
+
+  useEffect(() => {
+    if (!isAuthenticated || !showDashboardWelcome) return;
+    initialDashboardWelcomeAvailable = false;
+    const timer = window.setTimeout(() => setShowDashboardWelcome(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, [isAuthenticated, showDashboardWelcome]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1023px)");
@@ -99,6 +109,7 @@ const HomePage = () => {
   const liveBadgeClass = (service: ServiceDefinition) => getServiceStatus(service) ? (boilSlugs.has(service.slug) ? "live-rating-badge live-badge-boil" : "live-rating-badge live-badge-static") : service.inProgress ? "status-chip in-progress" : undefined;
 
   if (isAuthenticated) {
+    if (showDashboardWelcome) return <DashboardWelcomeLoader />;
     return <Navigate to="/dashboard" replace />;
   }
 
