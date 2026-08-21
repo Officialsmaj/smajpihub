@@ -1,11 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import AppLayout from "../layouts/AppLayout";
 import ServiceArt from "../components/ServiceArt";
 import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
-import DashboardWelcomeLoader from "../components/DashboardWelcomeLoader";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -70,13 +69,8 @@ const mvpFeatures = [
 const HomePage = () => {
   const { t } = useTranslation();
   const { isAuthenticated, isLoading } = useAuthContext();
-  const navigate = useNavigate();
   const [servicesPage, setServicesPage] = useState(0);
   const [isMobileServices, setIsMobileServices] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard", { replace: true });
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 1023px)");
@@ -105,7 +99,7 @@ const HomePage = () => {
   const liveBadgeClass = (service: ServiceDefinition) => getServiceStatus(service) ? (boilSlugs.has(service.slug) ? "live-rating-badge live-badge-boil" : "live-rating-badge live-badge-static") : service.inProgress ? "status-chip in-progress" : undefined;
 
   if (isAuthenticated) {
-    return <DashboardWelcomeLoader />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
