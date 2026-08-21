@@ -4,6 +4,7 @@ import { getSportsCatalog } from "../lib/sportsApi";
 import type { SportsCatalog } from "../types/sports";
 
 const FAVORITES_KEY = "smaj_sports_favorite_teams";
+let sportsCatalogCache: SportsCatalog | null = null;
 
 const readFavorites = () => {
   try {
@@ -15,9 +16,9 @@ const readFavorites = () => {
 };
 
 const useSportsCatalog = () => {
-  const [catalog, setCatalog] = useState<SportsCatalog>(fallbackSportsCatalog);
+  const [catalog, setCatalog] = useState<SportsCatalog>(() => sportsCatalogCache || fallbackSportsCatalog);
   const [favorites, setFavorites] = useState<Set<string>>(readFavorites);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(sportsCatalogCache === null);
   const [usingFallback, setUsingFallback] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -30,7 +31,11 @@ const useSportsCatalog = () => {
     } catch (error) {
       if (signal?.aborted) return;
       setUsingFallback(true);
-      setCatalog(current => (current.matches.length ? current : fallbackSportsCatalog));
+      setCatalog(current => {
+        const fallback = current.matches.length ? current : fallbackSportsCatalog;
+        sportsCatalogCache = fallback;
+        return fallback;
+      });
       setLastUpdated(current => current || new Date());
       if (import.meta.env.DEV) console.warn("Sports API unavailable; using cached demo data.", error);
     } finally {

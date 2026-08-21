@@ -93,6 +93,9 @@ const servicePath = (service: ServiceDefinition) => {
 type RecentItem = { label: string; to: string; meta?: string };
 type SellerCard = { id: string; name: string; location: string; rating: string; listings: number; avatar?: string; verificationLevel?: VerificationLevel; verificationStatus?: VerificationStatus };
 type DashboardStreamRow = { title: string; description: string; seeAll: string; items: StreamCatalogTitle[] };
+let dashboardProductsCache: Product[] | null = null;
+let dashboardStreamRowsCache: DashboardStreamRow[] | null = null;
+let dashboardStartupComplete = false;
 
 const readRecentItems = (key: string) => {
   try {
@@ -440,12 +443,12 @@ const DashboardPage = () => {
   const [params, setParams] = useSearchParams();
   const initialTab = discoveryTabs.some(([, tab]) => tab === params.get("tab")) ? params.get("tab") as DiscoveryTab : "for-you";
   const [activeTab, setActiveTabState] = useState<DiscoveryTab>(initialTab);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => dashboardProductsCache || []);
+  const [productsLoading, setProductsLoading] = useState(dashboardProductsCache === null);
   const [productsError, setProductsError] = useState("");
   const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
-  const [streamRows, setStreamRows] = useState<DashboardStreamRow[]>([]);
-  const [streamLoading, setStreamLoading] = useState(true);
+  const [streamRows, setStreamRows] = useState<DashboardStreamRow[]>(() => dashboardStreamRowsCache || []);
+  const [streamLoading, setStreamLoading] = useState(dashboardStreamRowsCache === null);
   const { catalog: sportsCatalog, loading: sportsLoading } = useSportsCatalog();
   const setActiveTab = useCallback((tab: DiscoveryTab) => {
     setActiveTabState(tab);
@@ -457,14 +460,18 @@ const DashboardPage = () => {
     }, { replace: true });
   }, [setParams]);
   const loadProducts = useCallback(async (showSkeleton = false) => {
-    if (showSkeleton) setProductsLoading(true);
+    if (showSkeleton && dashboardProductsCache === null) setProductsLoading(true);
     try {
       const { data } = await axiosClient.get<{ products: Product[] }>("/marketplace/products");
-      setProducts(sortNewestProducts(data.products || []));
+      const nextProducts = sortNewestProducts(data.products || []);
+      dashboardProductsCache = nextProducts;
+      setProducts(nextProducts);
       setProductsError("");
     } catch {
-      setProducts([]);
-      setProductsError("Live marketplace data is not available right now.");
+      if (dashboardProductsCache === null) {
+        setProducts([]);
+        setProductsError("Live marketplace data is not available right now.");
+      }
     } finally {
       setProductsLoading(false);
     }
@@ -496,12 +503,16 @@ const DashboardPage = () => {
     ]).then(([trending, series, releases]) => {
       if (!active) return;
       const usable = (items: StreamCatalogTitle[]) => items.filter((item) => item.posterUrl || item.backdropUrl).slice(0, 8);
-      setStreamRows([
+      const nextRows = [
         { title: "Trending now", description: "Movies and series people are watching now.", seeAll: "/app/services/stream", items: usable(trending.results) },
         { title: "Popular series", description: "Popular shows ready to discover.", seeAll: "/app/services/stream/series", items: usable(series.results) },
         { title: "New releases", description: "Recently released entertainment.", seeAll: "/app/services/stream/movies", items: usable(releases.results) },
-      ].filter((row) => row.items.length));
-    }).catch(() => active && setStreamRows([])).finally(() => active && setStreamLoading(false));
+      ].filter((row) => row.items.length);
+      dashboardStreamRowsCache = nextRows;
+      setStreamRows(nextRows);
+    }).catch(() => {
+      if (active && dashboardStreamRowsCache === null) setStreamRows([]);
+    }).finally(() => active && setStreamLoading(false));
     return () => { active = false; };
   }, []);
 
@@ -530,8 +541,13 @@ const DashboardPage = () => {
   }, [products]);
 
   const recommendedServices = useMemo(() => recommendedServicesForCountry(user?.country), [user?.country]);
+  const dashboardLoading = productsLoading || streamLoading || sportsLoading;
 
-  if (productsLoading || streamLoading || sportsLoading) return <DashboardWelcomeLoader />;
+  useEffect(() => {
+    if (!dashboardLoading) dashboardStartupComplete = true;
+  }, [dashboardLoading]);
+
+  if (!dashboardStartupComplete && dashboardLoading) return <DashboardWelcomeLoader />;
 
   return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /></main>;
 };
