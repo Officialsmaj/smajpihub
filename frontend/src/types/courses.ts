@@ -1,9 +1,18 @@
 export type CourseType = "free" | "paid";
 export type CourseLevel = "beginner" | "intermediate" | "advanced" | "all";
-export type CourseStatus = "draft" | "submitted" | "under_review" | "changes_requested" | "approved" | "published" | "rejected" | "archived";
+export type CourseStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "changes_requested"
+  | "approved"
+  | "published"
+  | "rejected"
+  | "archived";
 export type LessonType = "video" | "text" | "pdf" | "document" | "quiz" | "assignment" | "project" | "external";
 export type EnrollmentStatus = "pending_payment" | "active" | "completed" | "cancelled" | "refunded" | "revoked";
 export type CertificateStatus = "valid" | "revoked" | "replaced";
+export type CertificateType = "enrollment" | "completion";
 export type ProviderType = "smaj" | "individual" | "training_provider" | "university_partner" | "organization";
 
 export interface Lesson {
@@ -144,7 +153,9 @@ export type Certificate = {
   instructor_name: string;
   provider_name?: string;
   learner_name: string;
-  completion_date: string;
+  certificate_type: CertificateType;
+  enrollment_date?: string;
+  completion_date?: string;
   issue_date: string;
   final_score?: number;
   certificate_url?: string;

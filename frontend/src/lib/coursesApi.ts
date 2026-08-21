@@ -16,7 +16,8 @@ const FALLBACK_COURSES: Course[] = [
     title: "Web Development Foundations",
     subtitle: "Learn HTML, CSS, and JavaScript from scratch",
     short_description: "Build modern websites with core web technologies.",
-    description: "This comprehensive course takes you from zero to building real websites using HTML, CSS, and JavaScript.",
+    description:
+      "This comprehensive course takes you from zero to building real websites using HTML, CSS, and JavaScript.",
     category: "Technology",
     course_type: "paid",
     price_pi: 0.05,
@@ -102,35 +103,57 @@ const FALLBACK_COURSES: Course[] = [
   },
 ];
 
-export const getCourses = async (params?: CourseSearchParams): Promise<{ courses: Course[]; total: number; page: number; pageSize: number; totalPages: number }> => {
+export const getCourses = async (
+  params?: CourseSearchParams
+): Promise<{ courses: Course[]; total: number; page: number; pageSize: number; totalPages: number }> => {
   try {
-    const response = await axiosClient.get<{ courses: Course[]; total: number; page: number; pageSize: number; totalPages: number }>("/courses", { params });
+    const response = await axiosClient.get<{
+      courses: Course[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>("/courses", { params });
     const data = response.data;
     if (data.courses.length === 0 && data.total === 0) {
-      const filtered = params?.q || params?.category || params?.level || params?.type
-        ? FALLBACK_COURSES.filter((c) => {
+      const filtered =
+        params?.q || params?.category || params?.level || params?.type
+          ? FALLBACK_COURSES.filter(c => {
+              const q = (params.q || "").toLowerCase();
+              if (
+                q &&
+                !c.title.toLowerCase().includes(q) &&
+                !c.description.toLowerCase().includes(q) &&
+                !c.tags.some(t => t.includes(q))
+              )
+                return false;
+              if (params.category && c.category !== params.category) return false;
+              if (params.level && c.level !== params.level) return false;
+              if (params.type && c.course_type !== params.type) return false;
+              return true;
+            })
+          : FALLBACK_COURSES;
+      return { courses: filtered, total: filtered.length, page: 1, pageSize: 20, totalPages: 1 };
+    }
+    return data;
+  } catch {
+    const filtered =
+      params?.q || params?.category || params?.level || params?.type
+        ? FALLBACK_COURSES.filter(c => {
             const q = (params.q || "").toLowerCase();
-            if (q && !c.title.toLowerCase().includes(q) && !c.description.toLowerCase().includes(q) && !c.tags.some((t) => t.includes(q))) return false;
+            if (
+              q &&
+              !c.title.toLowerCase().includes(q) &&
+              !c.description.toLowerCase().includes(q) &&
+              !c.tags.some(t => t.includes(q))
+            )
+              return false;
             if (params.category && c.category !== params.category) return false;
             if (params.level && c.level !== params.level) return false;
             if (params.type && c.course_type !== params.type) return false;
             return true;
           })
         : FALLBACK_COURSES;
-      return { courses: filtered, total: filtered.length, page: 1, pageSize: 20, totalPages: 1 };
-    }
-    return data;
-  } catch {
-    const filtered = params?.q || params?.category || params?.level || params?.type
-      ? FALLBACK_COURSES.filter((c) => {
-          const q = (params.q || "").toLowerCase();
-          if (q && !c.title.toLowerCase().includes(q) && !c.description.toLowerCase().includes(q) && !c.tags.some((t) => t.includes(q))) return false;
-          if (params.category && c.category !== params.category) return false;
-          if (params.level && c.level !== params.level) return false;
-          if (params.type && c.course_type !== params.type) return false;
-          return true;
-        })
-      : FALLBACK_COURSES;
     return { courses: filtered, total: filtered.length, page: 1, pageSize: 20, totalPages: 1 };
   }
 };
@@ -140,7 +163,7 @@ export const getCourse = async (idOrSlug: string): Promise<Course | undefined> =
     const response = await axiosClient.get<{ course: Course }>(`/courses/${encodeURIComponent(idOrSlug)}`);
     return response.data.course;
   } catch {
-    return FALLBACK_COURSES.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
+    return FALLBACK_COURSES.find(c => c.id === idOrSlug || c.slug === idOrSlug);
   }
 };
 
@@ -161,7 +184,7 @@ export const submitCourseForReview = async (idOrSlug: string): Promise<{ message
 
 export const getMyLearning = async (): Promise<Enrollment[]> => {
   try {
-    const response = await axiosClient.get<{ enrollments: Enrollment[] }>("/courses/my-learning");
+    const response = await axiosClient.get<{ enrollments: Enrollment[] }>("/my-learning");
     return response.data.enrollments;
   } catch {
     return [];
@@ -170,45 +193,101 @@ export const getMyLearning = async (): Promise<Enrollment[]> => {
 
 export const getEnrollment = async (enrollmentId: string): Promise<Enrollment | undefined> => {
   try {
-    const response = await axiosClient.get<{ enrollment: Enrollment }>(`/courses/my-learning/${encodeURIComponent(enrollmentId)}`);
+    const response = await axiosClient.get<{ enrollment: Enrollment }>(
+      `/my-learning/${encodeURIComponent(enrollmentId)}`
+    );
     return response.data.enrollment;
   } catch {
     return undefined;
   }
 };
 
-export const enrollInCourse = async (courseId: string): Promise<{ enrollment: Enrollment; payment?: CoursePayment; message: string }> => {
-  const response = await axiosClient.post<{ enrollment: Enrollment; payment?: CoursePayment; message: string }>(`/courses/${encodeURIComponent(courseId)}/enroll`, {});
+export const enrollInCourse = async (
+  courseId: string
+): Promise<{ enrollment: Enrollment; payment?: CoursePayment; message: string }> => {
+  const response = await axiosClient.post<{ enrollment: Enrollment; payment?: CoursePayment; message: string }>(
+    `/courses/${encodeURIComponent(courseId)}/enroll`,
+    {}
+  );
   return response.data;
 };
 
 export const completeLesson = async (enrollmentId: string, lessonId: string): Promise<{ enrollment: Enrollment }> => {
-  const response = await axiosClient.post<{ enrollment: Enrollment }>(`/courses/my-learning/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/complete`, {});
+  const response = await axiosClient.post<{ enrollment: Enrollment }>(
+    `/my-learning/${encodeURIComponent(enrollmentId)}/lessons/${encodeURIComponent(lessonId)}/complete`,
+    {}
+  );
   return response.data;
 };
 
 export const submitQuiz = async (courseId: string, answers: Record<string, unknown>): Promise<QuizSubmission> => {
-  const response = await axiosClient.post<{ submission: QuizSubmission }>(`/courses/${encodeURIComponent(courseId)}/quiz/submit`, { answers });
+  const response = await axiosClient.post<{ submission: QuizSubmission }>(
+    `/courses/${encodeURIComponent(courseId)}/quiz/submit`,
+    { answers }
+  );
   return response.data.submission;
 };
 
 export const requestCertificate = async (courseId: string): Promise<{ certificate: Certificate; message: string }> => {
-  const response = await axiosClient.post<{ certificate: Certificate; message: string }>(`/courses/${encodeURIComponent(courseId)}/certificate`, {});
+  const response = await axiosClient.post<{ certificate: Certificate; message: string }>(
+    `/courses/${encodeURIComponent(courseId)}/certificate`,
+    {}
+  );
   return response.data;
 };
 
+export const requestEnrollmentCertificate = async (
+  courseId: string
+): Promise<{ certificate: Certificate; message: string }> => {
+  const response = await axiosClient.post<{ certificate: Certificate; message: string }>(
+    `/courses/${encodeURIComponent(courseId)}/enrollment-certificate`,
+    {}
+  );
+  return response.data;
+};
+
+export const getCourseEnrollments = async (courseId: string): Promise<Enrollment[]> => {
+  const response = await axiosClient.get<{ enrollments: Enrollment[] }>(
+    `/courses/${encodeURIComponent(courseId)}/enrollments`
+  );
+  return response.data.enrollments;
+};
 export const verifyCertificate = async (certificateId: string): Promise<{ certificate: Record<string, unknown> }> => {
-  const response = await axiosClient.get<{ certificate: Record<string, unknown> }>(`/courses/certificates/${encodeURIComponent(certificateId)}`);
+  const response = await axiosClient.get<{ certificate: Record<string, unknown> }>(
+    `/courses/certificates/${encodeURIComponent(certificateId)}`
+  );
   return response.data;
 };
 
-export const authorizeCoursePayment = async (courseId: string, data: { amount_display: number; currency_display?: string }): Promise<CourseAuthorizePaymentResult> => {
-  const response = await axiosClient.post<CourseAuthorizePaymentResult>(`/courses/${encodeURIComponent(courseId)}/payments/approve`, data);
+export const authorizeCoursePayment = async (
+  courseId: string,
+  data: { amount_display: number; currency_display?: string }
+): Promise<CourseAuthorizePaymentResult> => {
+  const response = await axiosClient.post<CourseAuthorizePaymentResult>(
+    `/courses/${encodeURIComponent(courseId)}/payments/approve`,
+    data
+  );
   return response.data;
 };
 
-export const completeCoursePayment = async (paymentId: string, txid: string): Promise<{ message: string; payment_id: string; txid: string }> => {
-  const response = await axiosClient.post<{ message: string; payment_id: string; txid: string }>(`/courses/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+export const approveCoursePayment = async (
+  paymentRecordId: string,
+  piPaymentId: string
+): Promise<{ message: string }> => {
+  const response = await axiosClient.post<{ message: string }>(
+    `/courses/payments/${encodeURIComponent(paymentRecordId)}/approve`,
+    { pi_payment_identifier: piPaymentId }
+  );
+  return response.data;
+};
+export const completeCoursePayment = async (
+  paymentId: string,
+  txid: string
+): Promise<{ message: string; payment_id: string; txid: string }> => {
+  const response = await axiosClient.post<{ message: string; payment_id: string; txid: string }>(
+    `/courses/payments/${encodeURIComponent(paymentId)}/complete`,
+    { txid }
+  );
   return response.data;
 };
 

@@ -2,12 +2,41 @@ import { ObjectId } from "mongodb";
 
 export type CourseType = "free" | "paid";
 export type CourseLevel = "beginner" | "intermediate" | "advanced" | "all";
-export type CourseStatus = "draft" | "submitted" | "under_review" | "changes_requested" | "approved" | "published" | "rejected" | "archived";
-export type LessonType = "video" | "text" | "pdf" | "document" | "quiz" | "assignment" | "project" | "external";
-export type EnrollmentStatus = "pending_payment" | "active" | "completed" | "cancelled" | "refunded" | "revoked";
+export type CourseStatus =
+  | "draft"
+  | "submitted"
+  | "under_review"
+  | "changes_requested"
+  | "approved"
+  | "published"
+  | "rejected"
+  | "archived";
+export type LessonType =
+  | "video"
+  | "text"
+  | "pdf"
+  | "document"
+  | "quiz"
+  | "assignment"
+  | "project"
+  | "external";
+export type EnrollmentStatus =
+  | "pending_payment"
+  | "active"
+  | "completed"
+  | "cancelled"
+  | "refunded"
+  | "revoked";
 export type CertificateStatus = "valid" | "revoked" | "replaced";
-export type InstructorStatus = "unverified" | "pending" | "verified" | "suspended";
-export type ProviderType = "smaj" | "individual" | "training_provider" | "university_partner" | "organization";
+export type CertificateType = "enrollment" | "completion";
+export type InstructorStatus =
+  "unverified" | "pending" | "verified" | "suspended";
+export type ProviderType =
+  | "smaj"
+  | "individual"
+  | "training_provider"
+  | "university_partner"
+  | "organization";
 
 export interface CourseModule {
   title: string;
@@ -147,7 +176,9 @@ export interface CertificateData {
   instructor_name: string;
   provider_name?: string;
   learner_name: string;
-  completion_date: string;
+  certificate_type: CertificateType;
+  enrollment_date?: string;
+  completion_date?: string;
   issue_date: string;
   final_score?: number;
   certificate_url?: string;
@@ -174,7 +205,8 @@ export interface CoursePaymentData {
   amount_usdt: number;
   pi_payment_identifier?: string;
   transaction_identifier?: string;
-  status: "pending" | "processing" | "paid" | "cancelled" | "failed" | "refunded";
+  status:
+    "pending" | "processing" | "paid" | "cancelled" | "failed" | "refunded";
   approved_at?: string;
   completed_at?: string;
   failed_at?: string;

@@ -4,14 +4,21 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
-import { getCourse, enrollInCourse, completeCoursePayment } from "../../lib/coursesApi";
+import {
+  approveCoursePayment,
+  completeCoursePayment,
+  enrollInCourse,
+  getCourse,
+  getCourseEnrollments,
+  requestEnrollmentCertificate,
+} from "../../lib/coursesApi";
 import type { Course, Enrollment, CoursePayment } from "../../types/courses";
 import { formatPiAmount } from "../../lib/formatters";
 import "../../pages/EducationPage.css";
 import "../../components/education/courses.css";
 
 const CourseDetailPage = () => {
-  const { courseId } = useParams();
+  const { slug } = useParams();
   const [course, setCourse] = useState<Course | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,18 +30,39 @@ const CourseDetailPage = () => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!courseId) return;
+    if (!slug) {
+      setError("Course not found.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
-    getCourse(courseId).then((data) => {
-      if (!cancelled) setCourse(data);
-    }).catch(() => {
-      if (!cancelled) setError("Could not load course details.");
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [courseId]);
+    getCourse(slug)
+      .then(async data => {
+        if (cancelled) return;
+        setCourse(data);
+        if (data?.id) {
+          try {
+            const enrollments = await getCourseEnrollments(data.id);
+            if (!cancelled)
+              setEnrollment(
+                enrollments.find(item => !["cancelled", "refunded", "revoked"].includes(item.status)) || null
+              );
+          } catch {
+            // Public visitors can view the course without signing in.
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load course details.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   const handleEnroll = async () => {
     if (!course) return;
@@ -59,14 +87,45 @@ const CourseDetailPage = () => {
   const handlePayment = async () => {
     if (!course || !payment) return;
     setMessage("");
+    if (!window.Pi) {
+      setMessage("Open this course in Pi Browser to complete payment.");
+      return;
+    }
     try {
-      const txid = prompt("Enter Pi transaction ID (mock):");
-      if (!txid) return;
-      await completeCoursePayment(payment.id, txid);
-      setMessage("Payment completed! Course activated.");
-      setPayment(null);
+      await window.Pi.authenticate(["payments"]);
+      await window.Pi.createPayment(
+        {
+          amount: payment.amount_pi,
+          memo: `Enrollment: ${course.title}`,
+          metadata: { courseId: course.id, coursePaymentId: payment.id },
+        },
+        {
+          onReadyForServerApproval: async piPaymentId => {
+            await approveCoursePayment(payment.id, piPaymentId);
+          },
+          onReadyForServerCompletion: async (_piPaymentId, txid) => {
+            await completeCoursePayment(payment.id, txid);
+            setEnrollment(current => (current ? { ...current, status: "active" } : current));
+            setMessage("Payment completed. Your course is ready.");
+            setPayment(null);
+          },
+          onCancel: () => setMessage("Payment was cancelled. You can try again."),
+          onError: paymentError => setMessage(paymentError.message || "Payment failed"),
+        }
+      );
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Payment failed");
+    }
+  };
+
+  const handleEnrollmentCertificate = async () => {
+    if (!course) return;
+    setMessage("");
+    try {
+      const result = await requestEnrollmentCertificate(course.id);
+      window.location.assign(`/verify/certificate/${encodeURIComponent(result.certificate.certificate_id)}`);
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "Could not issue enrollment certificate");
     }
   };
 
@@ -114,7 +173,9 @@ const CourseDetailPage = () => {
           <div className="course-detail-hero">
             {course.cover_url && <img src={course.cover_url} alt="" className="course-detail-cover" />}
             <div className="course-detail-hero-content">
-              {course.thumbnail_url && <img src={course.thumbnail_url} alt={course.title} className="course-detail-thumbnail" />}
+              {course.thumbnail_url && (
+                <img src={course.thumbnail_url} alt={course.title} className="course-detail-thumbnail" />
+              )}
               <div>
                 <span className="course-kicker">{course.category}</span>
                 <h1>{course.title}</h1>
@@ -136,16 +197,27 @@ const CourseDetailPage = () => {
                     </button>
                   )}
                   {isEnrolled && (
-                    <Link to={`/services/education/courses/learn/${enrollment.id}`} className="course-primary-btn">
-                      Continue Learning
-                    </Link>
+                    <>
+                      <Link to={`/services/education/courses/learn/${enrollment.id}`} className="course-primary-btn">
+                        Continue Learning
+                      </Link>
+                      <button type="button" className="course-secondary-btn" onClick={handleEnrollmentCertificate}>
+                        Enrollment Certificate
+                      </button>
+                    </>
                   )}
                 </footer>
               </div>
             </div>
           </div>
 
-          {message && <div className={`course-alert ${message.includes("success") || message.includes("activated") ? "success" : "error"}`}>{message}</div>}
+          {message && (
+            <div
+              className={`course-alert ${message.includes("success") || message.includes("activated") ? "success" : "error"}`}
+            >
+              {message}
+            </div>
+          )}
           {needsPayment && (
             <div className="course-payment-pending">
               <p>Payment of {formatPiAmount(payment.amount_pi)} Pi required.</p>
@@ -165,7 +237,9 @@ const CourseDetailPage = () => {
             <section className="course-section">
               <h2>What You'll Learn</h2>
               <ul>
-                {course.learning_objectives.map((obj, i) => <li key={i}>{obj}</li>)}
+                {course.learning_objectives.map((obj, i) => (
+                  <li key={i}>{obj}</li>
+                ))}
               </ul>
             </section>
           )}
@@ -174,7 +248,9 @@ const CourseDetailPage = () => {
             <section className="course-section">
               <h2>Requirements</h2>
               <ul>
-                {course.requirements.map((req, i) => <li key={i}>{req}</li>)}
+                {course.requirements.map((req, i) => (
+                  <li key={i}>{req}</li>
+                ))}
               </ul>
             </section>
           )}

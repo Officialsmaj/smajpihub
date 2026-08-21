@@ -745,10 +745,6 @@ export const router = createBrowserRouter([
     element: <EducationPage />,
   },
   {
-    path: "/services/education/courses/:courseId",
-    element: <CourseDetailPage />,
-  },
-  {
     path: "/app/services/education/courses/:courseId",
     element: (
       <ProtectedRoute>

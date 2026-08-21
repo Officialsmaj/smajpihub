@@ -15,12 +15,16 @@ const CertificateVerifyPage = () => {
   useEffect(() => {
     let cancelled = false;
     if (!certificateId) return;
-    verifyCertificate(certificateId).then((data) => {
-      if (!cancelled) setCertificate(data.certificate as Certificate);
-    }).catch(() => {
-      if (!cancelled) setError("Certificate not found.");
-    });
-    return () => { cancelled = true; };
+    verifyCertificate(certificateId)
+      .then(data => {
+        if (!cancelled) setCertificate(data.certificate as Certificate);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Certificate not found.");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [certificateId]);
 
   if (error || !certificate) {
@@ -30,7 +34,9 @@ const CertificateVerifyPage = () => {
           <div className="courses-error">
             <h2>Certificate Not Found</h2>
             <p>{error || "This certificate could not be verified."}</p>
-            <Link to="/services/education/courses" className="courses-primary-btn">Browse Courses</Link>
+            <Link to="/services/education/courses" className="courses-primary-btn">
+              Browse Courses
+            </Link>
           </div>
         </main>
       </AppLayout>
@@ -43,21 +49,64 @@ const CertificateVerifyPage = () => {
         <div className="certificate-verify">
           <div className="certificate-verify-badge">
             <CheckCircleOutlineOutlinedIcon />
-            <h1>Verified Certificate</h1>
+            <h1>Verified {certificate.certificate_type === "enrollment" ? "Enrollment" : "Completion"} Certificate</h1>
           </div>
           <div className="certificate-verify-details">
-            <div><strong>Learner</strong><span>{certificate.learner_name}</span></div>
-            <div><strong>Course</strong><span>{certificate.course_title}</span></div>
-            {certificate.instructor_name && <div><strong>Instructor</strong><span>{certificate.instructor_name}</span></div>}
-            {certificate.provider_name && <div><strong>Provider</strong><span>{certificate.provider_name}</span></div>}
-            <div><strong>Completion Date</strong><span>{new Date(certificate.completion_date).toLocaleDateString()}</span></div>
-            <div><strong>Issue Date</strong><span>{new Date(certificate.issue_date).toLocaleDateString()}</span></div>
-            {certificate.final_score !== undefined && <div><strong>Final Score</strong><span>{certificate.final_score}%</span></div>}
-            <div><strong>Certificate ID</strong><span>{certificate.certificate_id}</span></div>
-            <div><strong>Status</strong><span className={`certificate-status ${certificate.status}`}>{certificate.status}</span></div>
+            <div>
+              <strong>Learner</strong>
+              <span>{certificate.learner_name}</span>
+            </div>
+            <div>
+              <strong>Course</strong>
+              <span>{certificate.course_title}</span>
+            </div>
+            {certificate.instructor_name && (
+              <div>
+                <strong>Instructor</strong>
+                <span>{certificate.instructor_name}</span>
+              </div>
+            )}
+            {certificate.provider_name && (
+              <div>
+                <strong>Provider</strong>
+                <span>{certificate.provider_name}</span>
+              </div>
+            )}
+            {certificate.enrollment_date && (
+              <div>
+                <strong>Enrollment Date</strong>
+                <span>{new Date(certificate.enrollment_date).toLocaleDateString()}</span>
+              </div>
+            )}
+            {certificate.completion_date && (
+              <div>
+                <strong>Completion Date</strong>
+                <span>{new Date(certificate.completion_date).toLocaleDateString()}</span>
+              </div>
+            )}
+            <div>
+              <strong>Issue Date</strong>
+              <span>{new Date(certificate.issue_date).toLocaleDateString()}</span>
+            </div>
+            {certificate.final_score !== undefined && (
+              <div>
+                <strong>Final Score</strong>
+                <span>{certificate.final_score}%</span>
+              </div>
+            )}
+            <div>
+              <strong>Certificate ID</strong>
+              <span>{certificate.certificate_id}</span>
+            </div>
+            <div>
+              <strong>Status</strong>
+              <span className={`certificate-status ${certificate.status}`}>{certificate.status}</span>
+            </div>
           </div>
           <p className="certificate-verify-footer">
-            Verified through SMAJ PI HUB. This certificate record is authentic and was issued by the authorized instructor/provider.
+            Verified through SMAJ PI HUB. This{" "}
+            {certificate.certificate_type === "enrollment" ? "enrollment" : "completion"} record is authentic and was
+            issued by the authorized instructor/provider.
           </p>
         </div>
       </main>
