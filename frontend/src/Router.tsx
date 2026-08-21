@@ -78,6 +78,7 @@ import CourseCenterPage from "./pages/education/CourseCenterPage";
 import OnlineCourseDetailPage from "./pages/education/OnlineCourseDetailPage";
 import CoursePlayerPage from "./pages/education/CoursePlayerPage";
 import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
+import CertificatesPage from "./pages/education/CertificatesPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
 import TutorsPage from "./pages/education/TutorsPage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
@@ -732,6 +733,10 @@ export const router = createBrowserRouter([
   {
     path: "/services/education/courses/learn/:enrollmentId",
     element: <CoursePlayerPage />,
+  },
+  {
+    path: "/services/education/certificates",
+    element: <CertificatesPage />,
   },
   {
     path: "/verify/certificate/:certificateId",

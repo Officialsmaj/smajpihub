@@ -252,6 +252,10 @@ export const getCourseEnrollments = async (courseId: string): Promise<Enrollment
   );
   return response.data.enrollments;
 };
+export const getMyCertificates = async (): Promise<Certificate[]> => {
+  const response = await axiosClient.get<{ certificates: Certificate[] }>("/courses/my-certificates");
+  return response.data.certificates;
+};
 export const verifyCertificate = async (certificateId: string): Promise<{ certificate: Record<string, unknown> }> => {
   const response = await axiosClient.get<{ certificate: Record<string, unknown> }>(
     `/courses/certificates/${encodeURIComponent(certificateId)}`

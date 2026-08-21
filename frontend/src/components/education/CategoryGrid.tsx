@@ -21,12 +21,19 @@ const CategoryGrid = ({ categories, selected }: CategoryGridProps) => (
             : category === "Exam Prep"
               ? "Exam Prep"
               : null;
-      const isTutors = category === "Tutors";
+      const directDestination =
+        category === "Tutors"
+          ? "/services/education/tutors"
+          : category === "Certificates"
+            ? "/services/education/certificates"
+            : null;
       const destination = isUniversities
         ? "/services/education/universities"
-        : courseCategory
-          ? `/services/education/courses?category=${encodeURIComponent(courseCategory)}`
-          : `/services/education/categories/${slug}`;
+        : directDestination
+          ? directDestination
+          : courseCategory
+            ? `/services/education/courses?category=${encodeURIComponent(courseCategory)}`
+            : `/services/education/categories/${slug}`;
       return (
         <Link
           key={category}

@@ -408,12 +408,10 @@ export default function mountCourseEndpoints(router: Router) {
         totalPages: Math.ceil(total / pageSize),
       });
     } catch (error: any) {
-      return res
-        .status(500)
-        .json({
-          error: "server_error",
-          message: error.message || "Failed to load courses",
-        });
+      return res.status(500).json({
+        error: "server_error",
+        message: error.message || "Failed to load courses",
+      });
     }
   });
 
@@ -441,12 +439,10 @@ export default function mountCourseEndpoints(router: Router) {
 
       return res.status(200).json({ course: serialize(course) });
     } catch (error: any) {
-      return res
-        .status(500)
-        .json({
-          error: "server_error",
-          message: error.message || "Failed to load course",
-        });
+      return res.status(500).json({
+        error: "server_error",
+        message: error.message || "Failed to load course",
+      });
     }
   });
 
@@ -457,12 +453,10 @@ export default function mountCourseEndpoints(router: Router) {
     try {
       const body = req.body || {};
       if (!isInstructor(currentUser)) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "Instructor or admin role required to create courses",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "Instructor or admin role required to create courses",
+        });
       }
 
       const courseType = validCourseTypes.includes(body.course_type)
@@ -472,12 +466,10 @@ export default function mountCourseEndpoints(router: Router) {
       const pricePi = courseType === "free" ? 0 : piFromUsdt(priceUsdt);
 
       if (courseType === "paid" && pricePi <= 0) {
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Paid courses require a valid price",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Paid courses require a valid price",
+        });
       }
 
       const slug = slugify(safeString(body.title, `course-${generateId()}`));
@@ -591,24 +583,20 @@ export default function mountCourseEndpoints(router: Router) {
       };
 
       if (!course.title || !course.description || !course.category) {
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Title, description, and category are required",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Title, description, and category are required",
+        });
       }
 
       const collection = req.app.locals.courseCollection;
       if (!collection) throw new Error("Course collection not available");
       const result = await collection.insertOne(course);
       const created = await collection.findOne({ _id: result.insertedId });
-      return res
-        .status(201)
-        .json({
-          course: serialize(created),
-          message: "Course created as draft",
-        });
+      return res.status(201).json({
+        course: serialize(created),
+        message: "Course created as draft",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -644,12 +632,10 @@ export default function mountCourseEndpoints(router: Router) {
       const isOwner = course.instructor_id === currentUser._id.toString();
       const isAdmin = currentUser.role === "admin";
       if (!isOwner && !isAdmin) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "You can only edit your own courses",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "You can only edit your own courses",
+        });
       }
 
       const updates: Record<string, any> = {
@@ -760,12 +746,10 @@ export default function mountCourseEndpoints(router: Router) {
         course.instructor_id !== currentUser._id.toString() &&
         currentUser.role !== "admin"
       ) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "You can only submit your own courses",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "You can only submit your own courses",
+        });
       }
 
       await collection.updateOne(
@@ -822,12 +806,10 @@ export default function mountCourseEndpoints(router: Router) {
           .status(404)
           .json({ error: "not_found", message: "Course not found" });
       if (course.status !== "published")
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Course is not available for enrollment",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Course is not available for enrollment",
+        });
 
       const existing = await enrollmentCollection.findOne({
         user_id: currentUser._id.toString(),
@@ -840,20 +822,16 @@ export default function mountCourseEndpoints(router: Router) {
             payment_id: existing.payment_id,
             user_id: currentUser._id.toString(),
           });
-          return res
-            .status(200)
-            .json({
-              enrollment: serialize(existing),
-              payment: serialize(existingPayment),
-              message: "Complete payment to access the course.",
-            });
-        }
-        return res
-          .status(200)
-          .json({
+          return res.status(200).json({
             enrollment: serialize(existing),
-            message: "Already enrolled in this course",
+            payment: serialize(existingPayment),
+            message: "Complete payment to access the course.",
           });
+        }
+        return res.status(200).json({
+          enrollment: serialize(existing),
+          message: "Already enrolled in this course",
+        });
       }
 
       const enrollmentType = course.course_type === "free" ? "free" : "paid";
@@ -909,14 +887,11 @@ export default function mountCourseEndpoints(router: Router) {
           { $inc: { enrollment_count: 1 } },
         );
 
-        return res
-          .status(201)
-          .json({
-            enrollment: serialize(enrollment),
-            payment: serialize(payment),
-            message:
-              "Enrollment created. Complete payment to access the course.",
-          });
+        return res.status(201).json({
+          enrollment: serialize(enrollment),
+          payment: serialize(payment),
+          message: "Enrollment created. Complete payment to access the course.",
+        });
       }
 
       await enrollmentCollection.insertOne(enrollment);
@@ -924,12 +899,10 @@ export default function mountCourseEndpoints(router: Router) {
         { _id: course._id },
         { $inc: { enrollment_count: 1 } },
       );
-      return res
-        .status(201)
-        .json({
-          enrollment: serialize(enrollment),
-          message: "Enrolled successfully",
-        });
+      return res.status(201).json({
+        enrollment: serialize(enrollment),
+        message: "Enrolled successfully",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -978,12 +951,10 @@ export default function mountCourseEndpoints(router: Router) {
       );
       return res.status(200).json({ message: "Payment approved" });
     } catch (error: any) {
-      return res
-        .status(400)
-        .json({
-          error: "bad_request",
-          message: error.message || "Failed to approve payment",
-        });
+      return res.status(400).json({
+        error: "bad_request",
+        message: error.message || "Failed to approve payment",
+      });
     }
   });
   router.post("/courses/payments/:paymentId/complete", async (req, res) => {
@@ -1008,22 +979,18 @@ export default function mountCourseEndpoints(router: Router) {
         payment.user_id !== currentUser._id.toString() &&
         currentUser.role !== "admin"
       ) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "You can only complete your own payments",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "You can only complete your own payments",
+        });
       }
 
       const txid = safeString(body.txid);
       if (!txid)
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Transaction ID is required",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Transaction ID is required",
+        });
 
       await platformAPIKeyClient.post(
         `/v2/payments/${payment.pi_payment_identifier || payment.payment_id}/complete`,
@@ -1053,20 +1020,16 @@ export default function mountCourseEndpoints(router: Router) {
         );
       }
 
-      return res
-        .status(200)
-        .json({
-          message: "Payment completed. Enrollment activated.",
-          payment_id: payment.payment_id,
-          txid,
-        });
+      return res.status(200).json({
+        message: "Payment completed. Enrollment activated.",
+        payment_id: payment.payment_id,
+        txid,
+      });
     } catch (error: any) {
-      return res
-        .status(400)
-        .json({
-          error: "bad_request",
-          message: error.message || "Failed to complete payment",
-        });
+      return res.status(400).json({
+        error: "bad_request",
+        message: error.message || "Failed to complete payment",
+      });
     }
   });
 
@@ -1341,13 +1304,11 @@ export default function mountCourseEndpoints(router: Router) {
           .status(404)
           .json({ error: "not_found", message: "Enrollment not found" });
       if (!["active", "completed"].includes(enrollment.status)) {
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message:
-              "Complete payment before requesting an enrollment certificate",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message:
+            "Complete payment before requesting an enrollment certificate",
+        });
       }
 
       const existing = await certificateCollection.findOne({
@@ -1356,12 +1317,10 @@ export default function mountCourseEndpoints(router: Router) {
         status: "valid",
       });
       if (existing)
-        return res
-          .status(200)
-          .json({
-            certificate: serialize(existing),
-            message: "Enrollment certificate already issued",
-          });
+        return res.status(200).json({
+          certificate: serialize(existing),
+          message: "Enrollment certificate already issued",
+        });
       const courseCollection = req.app.locals.courseCollection;
       const course = (await courseCollection?.findOne({
         _id: new ObjectId(enrollment.course_id),
@@ -1399,19 +1358,15 @@ export default function mountCourseEndpoints(router: Router) {
       const created = await certificateCollection.findOne({
         _id: result.insertedId,
       });
-      return res
-        .status(201)
-        .json({
-          certificate: serialize(created),
-          message: "Enrollment certificate issued",
-        });
+      return res.status(201).json({
+        certificate: serialize(created),
+        message: "Enrollment certificate issued",
+      });
     } catch (error: any) {
-      return res
-        .status(400)
-        .json({
-          error: "bad_request",
-          message: error.message || "Failed to issue enrollment certificate",
-        });
+      return res.status(400).json({
+        error: "bad_request",
+        message: error.message || "Failed to issue enrollment certificate",
+      });
     }
   });
   router.post("/courses/:courseId/certificate", async (req, res) => {
@@ -1437,24 +1392,20 @@ export default function mountCourseEndpoints(router: Router) {
           .status(400)
           .json({ error: "bad_request", message: "Course not yet completed" });
       if (enrollment.certificate_id)
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Certificate already issued",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Certificate already issued",
+        });
 
       const courseCollection = req.app.locals.courseCollection;
       const course = (await courseCollection?.findOne({
         _id: new ObjectId(enrollment.course_id),
       })) as CourseData | undefined;
       if (!course || !course.certificate_enabled)
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Certificate not available for this course",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Certificate not available for this course",
+        });
 
       const certificateId = generateCertificateId();
       const verificationUrl = `${req.protocol}://${req.get("host")}/verify/certificate/${certificateId}`;
@@ -1499,12 +1450,10 @@ export default function mountCourseEndpoints(router: Router) {
       const created = await certificateCollection.findOne({
         _id: result.insertedId,
       });
-      return res
-        .status(201)
-        .json({
-          certificate: serialize(created),
-          message: "Certificate issued",
-        });
+      return res.status(201).json({
+        certificate: serialize(created),
+        message: "Certificate issued",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -1512,6 +1461,29 @@ export default function mountCourseEndpoints(router: Router) {
     }
   });
 
+  router.get("/my-certificates", async (req, res) => {
+    const currentUser = await requireUser(req, res);
+    if (!currentUser) return;
+
+    try {
+      const collection = req.app.locals.certificateCollection;
+      if (!collection) return res.status(200).json({ certificates: [] });
+      const certificates = await collection
+        .find({ user_id: currentUser._id.toString() })
+        .sort({ issue_date: -1 })
+        .toArray();
+      return res
+        .status(200)
+        .json({ certificates: certificates.map(serialize) });
+    } catch (error: any) {
+      return res
+        .status(500)
+        .json({
+          error: "server_error",
+          message: error.message || "Failed to load certificates",
+        });
+    }
+  });
   router.get("/certificates/:certificateId", async (req, res) => {
     try {
       const collection = req.app.locals.certificateCollection;
