@@ -13,10 +13,16 @@ const CategoryGrid = ({ categories, selected }: CategoryGridProps) => (
     {categories.map(category => {
       const slug = toEducationCategorySlug(category);
       const isUniversities = category.toLowerCase() === "universities";
+      const courseCategory = category === "Tech Skills" ? "Technology" : category === "Business" ? "Business" : null;
+      const destination = isUniversities
+        ? "/services/education/universities"
+        : courseCategory
+          ? `/services/education/courses?category=${encodeURIComponent(courseCategory)}`
+          : `/services/education/categories/${slug}`;
       return (
         <Link
           key={category}
-          to={isUniversities ? "/services/education/universities" : `/services/education/categories/${slug}`}
+          to={destination}
           className={`education-category-tile${selected === category ? " selected" : ""}`}
         >
           <SchoolOutlinedIcon />
