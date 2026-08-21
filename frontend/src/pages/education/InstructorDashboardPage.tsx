@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AppLayout from "../../layouts/AppLayout";
 import { getMyLearning, getAdminCourses, getAdminCourseStats, updateAdminCourse } from "../../lib/coursesApi";
 import type { Course, Enrollment } from "../../types/courses";
@@ -47,57 +48,123 @@ const InstructorDashboardPage = () => {
           <span className="courses-kicker">INSTRUCTOR DASHBOARD</span>
           <h1>My Courses</h1>
           <p>Manage your courses, review enrollments, and track performance.</p>
+          <Link className="course-primary-btn instructor-create-course" to="/app/services/education/courses/new">
+            Create Course
+          </Link>
         </section>
-        {message && <div className="course-alert success" style={{ maxWidth: 900, margin: "1rem auto" }}>{message}</div>}
+        {message && (
+          <div className="course-alert success" style={{ maxWidth: 900, margin: "1rem auto" }}>
+            {message}
+          </div>
+        )}
         {stats && (
-          <section className="stats-grid admin-stats admin-summary-stats" style={{ maxWidth: 900, margin: "0 auto", padding: "0 1rem" }}>
-            <div><span>Total Courses</span><strong>{stats.totalCourses}</strong></div>
-            <div><span>Published</span><strong>{stats.publishedCourses}</strong></div>
-            <div><span>Drafts</span><strong>{stats.draftCourses}</strong></div>
-            <div><span>Pending Review</span><strong>{stats.pendingReview}</strong></div>
-            <div><span>Enrollments</span><strong>{stats.totalEnrollments}</strong></div>
-            <div><span>Certificates</span><strong>{stats.totalCertificates}</strong></div>
+          <section
+            className="stats-grid admin-stats admin-summary-stats"
+            style={{ maxWidth: 900, margin: "0 auto", padding: "0 1rem" }}
+          >
+            <div>
+              <span>Total Courses</span>
+              <strong>{stats.totalCourses}</strong>
+            </div>
+            <div>
+              <span>Published</span>
+              <strong>{stats.publishedCourses}</strong>
+            </div>
+            <div>
+              <span>Drafts</span>
+              <strong>{stats.draftCourses}</strong>
+            </div>
+            <div>
+              <span>Pending Review</span>
+              <strong>{stats.pendingReview}</strong>
+            </div>
+            <div>
+              <span>Enrollments</span>
+              <strong>{stats.totalEnrollments}</strong>
+            </div>
+            <div>
+              <span>Certificates</span>
+              <strong>{stats.totalCertificates}</strong>
+            </div>
           </section>
         )}
         <section style={{ maxWidth: 900, margin: "0 auto", padding: "1rem" }}>
           <h2>Your Courses</h2>
-          {loading ? <div className="courses-loading">Loading...</div> : courses.length === 0 ? (
-            <div className="courses-empty"><h3>No courses yet</h3><p>Create your first course to get started.</p></div>
+          {loading ? (
+            <div className="courses-loading">Loading...</div>
+          ) : courses.length === 0 ? (
+            <div className="courses-empty">
+              <h3>No courses yet</h3>
+              <p>Create your first course to get started.</p>
+            </div>
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>Course</th><th>Status</th><th>Enrollments</th><th>Actions</th></tr></thead>
-                <tbody>{courses.map((course) => (
-                  <tr key={course.id}>
-                    <td><strong>{course.title}</strong><small>{course.category}</small></td>
-                    <td>{course.status}</td>
-                    <td>{course.enrollment_count}</td>
-                    <td>
-                      <div className="row-actions">
-                        <button onClick={() => updateCourse(course.id, { status: course.status === "published" ? "archived" : "published" })}>
-                          {course.status === "published" ? "Unpublish" : "Publish"}
-                        </button>
-                      </div>
-                    </td>
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Status</th>
+                    <th>Enrollments</th>
+                    <th>Actions</th>
                   </tr>
-                ))}</tbody>
+                </thead>
+                <tbody>
+                  {courses.map(course => (
+                    <tr key={course.id}>
+                      <td>
+                        <strong>{course.title}</strong>
+                        <small>{course.category}</small>
+                      </td>
+                      <td>{course.status}</td>
+                      <td>{course.enrollment_count}</td>
+                      <td>
+                        <div className="row-actions">
+                          <Link to={`/app/services/education/courses/${course.id}/edit`}>Edit</Link>
+                          <button
+                            onClick={() =>
+                              updateCourse(course.id, {
+                                status: course.status === "published" ? "archived" : "published",
+                              })
+                            }
+                          >
+                            {course.status === "published" ? "Unpublish" : "Publish"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           )}
         </section>
         <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 1rem 2rem" }}>
           <h2>My Learning</h2>
-          {enrollments.length === 0 ? <div className="courses-empty"><h3>No enrollments</h3></div> : (
+          {enrollments.length === 0 ? (
+            <div className="courses-empty">
+              <h3>No enrollments</h3>
+            </div>
+          ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
-                <thead><tr><th>Course</th><th>Progress</th><th>Status</th></tr></thead>
-                <tbody>{enrollments.map((enrollment) => (
-                  <tr key={enrollment.id}>
-                    <td><strong>{enrollment.course_title}</strong></td>
-                    <td>{enrollment.progress_percentage}%</td>
-                    <td>{enrollment.status}</td>
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Progress</th>
+                    <th>Status</th>
                   </tr>
-                ))}</tbody>
+                </thead>
+                <tbody>
+                  {enrollments.map(enrollment => (
+                    <tr key={enrollment.id}>
+                      <td>
+                        <strong>{enrollment.course_title}</strong>
+                      </td>
+                      <td>{enrollment.progress_percentage}%</td>
+                      <td>{enrollment.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           )}

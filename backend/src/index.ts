@@ -293,33 +293,36 @@ app.use("/education", educationRouter);
 
 const coursesRouter = express.Router();
 mountCourseEndpoints(coursesRouter);
-app.use("/courses", coursesRouter);
+app.use(coursesRouter);
 
 app.get("/health", async (_, res) => {
-    const ready = Boolean(
-      app.locals.userCollection &&
-      app.locals.productCollection &&
-      app.locals.marketplaceOrderCollection &&
-      app.locals.notificationCollection &&
-      app.locals.heroBannerCollection &&
-      app.locals.transportBookingCollection &&
-      app.locals.transportDriverCollection &&
-      app.locals.universityCollection &&
-      app.locals.universityProgramCollection &&
-      app.locals.universityClaimCollection &&
-      app.locals.universityApplicationCollection &&
-      app.locals.universityPaymentCollection
-    );
+  const ready = Boolean(
+    app.locals.userCollection &&
+    app.locals.productCollection &&
+    app.locals.marketplaceOrderCollection &&
+    app.locals.notificationCollection &&
+    app.locals.heroBannerCollection &&
+    app.locals.transportBookingCollection &&
+    app.locals.transportDriverCollection &&
+    app.locals.universityCollection &&
+    app.locals.universityProgramCollection &&
+    app.locals.universityClaimCollection &&
+    app.locals.universityApplicationCollection &&
+    app.locals.universityPaymentCollection,
+  );
 
-    res.status(ready ? 200 : 503).json({
-      status: ready ? "ok" : "starting",
-      service: "smaj-pi-hub-backend",
-      database: env.use_memory_db ? "memory" : "mongodb",
-      uptimeSeconds: Math.round(process.uptime()),
-      startedAt: serviceStartedAt.toISOString(),
-      features: { heroBanners: Boolean(app.locals.heroBannerCollection), education: Boolean(app.locals.universityCollection) },
-    });
+  res.status(ready ? 200 : 503).json({
+    status: ready ? "ok" : "starting",
+    service: "smaj-pi-hub-backend",
+    database: env.use_memory_db ? "memory" : "mongodb",
+    uptimeSeconds: Math.round(process.uptime()),
+    startedAt: serviceStartedAt.toISOString(),
+    features: {
+      heroBanners: Boolean(app.locals.heroBannerCollection),
+      education: Boolean(app.locals.universityCollection),
+    },
   });
+});
 
 // Hello World page to check everything works:
 app.get("/", async (_, res) => {
@@ -382,12 +385,16 @@ const start = async () => {
         "transport_notifications",
       );
       app.locals.universityCollection = db.collection("universities");
-      app.locals.universityProgramCollection = db.collection("university_programs");
+      app.locals.universityProgramCollection = db.collection(
+        "university_programs",
+      );
       app.locals.universityClaimCollection = db.collection("university_claims");
       app.locals.universityApplicationCollection = db.collection(
         "university_applications",
       );
-      app.locals.universityPaymentCollection = db.collection("university_payments");
+      app.locals.universityPaymentCollection = db.collection(
+        "university_payments",
+      );
       app.locals.courseCollection = db.collection("courses");
       app.locals.coursePaymentCollection = db.collection("course_payments");
       app.locals.enrollmentCollection = db.collection("enrollments");
@@ -531,8 +538,15 @@ const start = async () => {
           targetId: 1,
           createdAt: -1,
         }),
-        app.locals.jobBillingCollection.createIndex({ billingId: 1 }, { unique: true }),
-        app.locals.jobBillingCollection.createIndex({ employerId: 1, status: 1, createdAt: -1 }),
+        app.locals.jobBillingCollection.createIndex(
+          { billingId: 1 },
+          { unique: true },
+        ),
+        app.locals.jobBillingCollection.createIndex({
+          employerId: 1,
+          status: 1,
+          createdAt: -1,
+        }),
         app.locals.streamContentCollection.createIndex(
           { cloudflareUid: 1 },
           { unique: true },
@@ -588,7 +602,10 @@ const start = async () => {
           userId: 1,
           createdAt: -1,
         }),
-        app.locals.universityCollection.createIndex({ slug: 1 }, { unique: true }),
+        app.locals.universityCollection.createIndex(
+          { slug: 1 },
+          { unique: true },
+        ),
         app.locals.universityCollection.createIndex({
           partnership_status: 1,
           country: 1,
@@ -633,7 +650,10 @@ const start = async () => {
           course_type: 1,
           status: 1,
         }),
-        app.locals.courseCollection.createIndex({ instructor_id: 1, created_at: -1 }),
+        app.locals.courseCollection.createIndex({
+          instructor_id: 1,
+          created_at: -1,
+        }),
         app.locals.enrollmentCollection.createIndex({
           user_id: 1,
           created_at: -1,
@@ -642,7 +662,10 @@ const start = async () => {
           course_id: 1,
           status: 1,
         }),
-        app.locals.certificateCollection.createIndex({ certificate_id: 1 }, { unique: true }),
+        app.locals.certificateCollection.createIndex(
+          { certificate_id: 1 },
+          { unique: true },
+        ),
         app.locals.certificateCollection.createIndex({
           user_id: 1,
           created_at: -1,

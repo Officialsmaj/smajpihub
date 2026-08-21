@@ -77,6 +77,7 @@ import EducationCatalogPage from "./pages/education/EducationCatalogPage";
 import CourseCenterPage from "./pages/education/CourseCenterPage";
 import OnlineCourseDetailPage from "./pages/education/OnlineCourseDetailPage";
 import CoursePlayerPage from "./pages/education/CoursePlayerPage";
+import CourseBuilderPage from "./pages/education/CourseBuilderPage";
 import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
 import CertificatesPage from "./pages/education/CertificatesPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
@@ -749,6 +750,26 @@ export const router = createBrowserRouter([
   {
     path: "/services/education/partners",
     element: <EducationPage />,
+  },
+  {
+    path: "/app/services/education/courses/new",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CourseBuilderPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/app/services/education/courses/:courseId/edit",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout>
+          <CourseBuilderPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/app/services/education/courses/:courseId",
