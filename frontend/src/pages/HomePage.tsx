@@ -5,7 +5,7 @@ import ServiceArt from "../components/ServiceArt";
 import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
-import PrivateSkeleton from "../components/PrivateSkeleton";
+import DashboardWelcomeLoader from "../components/DashboardWelcomeLoader";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ArrowBackIosNewOutlinedIcon from "@mui/icons-material/ArrowBackIosNewOutlined";
 import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
@@ -105,7 +105,7 @@ const HomePage = () => {
   const liveBadgeClass = (service: ServiceDefinition) => getServiceStatus(service) ? (boilSlugs.has(service.slug) ? "live-rating-badge live-badge-boil" : "live-rating-badge live-badge-static") : service.inProgress ? "status-chip in-progress" : undefined;
 
   if (isAuthenticated) {
-    return <main className="private-page private-route-loading"><PrivateSkeleton variant="home" count={6} /></main>;
+    return <DashboardWelcomeLoader />;
   }
 
   return (

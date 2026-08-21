@@ -17,6 +17,7 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import ServiceArt from "../../components/ServiceArt";
+import DashboardWelcomeLoader from "../../components/DashboardWelcomeLoader";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
 import TrustBadge from "../../components/TrustBadge";
@@ -529,6 +530,8 @@ const DashboardPage = () => {
   }, [products]);
 
   const recommendedServices = useMemo(() => recommendedServicesForCountry(user?.country), [user?.country]);
+
+  if (productsLoading || streamLoading || sportsLoading) return <DashboardWelcomeLoader />;
 
   return <main className="private-home"><PullToRefresh onRefresh={() => loadProducts(false)} /><DesktopFeedHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /><MobileHome activeTab={activeTab} onTabChange={setActiveTab} products={products} productsLoading={productsLoading} productsError={productsError} sellers={sellers} recentItems={recentItems} recommendedServices={recommendedServices} streamRows={streamRows} streamLoading={streamLoading} sportsCatalog={sportsCatalog} sportsLoading={sportsLoading} /></main>;
 };
