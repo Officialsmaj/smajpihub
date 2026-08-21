@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useAuthContext } from "../contexts/AuthContext";
 import PrivateSkeleton from "./PrivateSkeleton";
+import DashboardWelcomeLoader from "./DashboardWelcomeLoader";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -34,6 +35,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, [isAuthenticated, isLoading, requireAuth]);
 
   if (isLoading) {
+    if (location.pathname === "/dashboard") return <DashboardWelcomeLoader />;
+
     return (
       <main className="private-page private-route-loading">
         <PrivateSkeleton variant={skeleton.variant} count={skeleton.count} />
