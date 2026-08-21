@@ -13,7 +13,15 @@ const CategoryGrid = ({ categories, selected }: CategoryGridProps) => (
     {categories.map(category => {
       const slug = toEducationCategorySlug(category);
       const isUniversities = category.toLowerCase() === "universities";
-      const courseCategory = category === "Tech Skills" ? "Technology" : category === "Business" ? "Business" : null;
+      const courseCategory =
+        category === "Tech Skills"
+          ? "Technology"
+          : category === "Business"
+            ? "Business"
+            : category === "Exam Prep"
+              ? "Exam Prep"
+              : null;
+      const isTutors = category === "Tutors";
       const destination = isUniversities
         ? "/services/education/universities"
         : courseCategory

@@ -79,6 +79,7 @@ import OnlineCourseDetailPage from "./pages/education/OnlineCourseDetailPage";
 import CoursePlayerPage from "./pages/education/CoursePlayerPage";
 import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
+import TutorsPage from "./pages/education/TutorsPage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
 import UniversityProfilePage from "./pages/education/UniversityProfilePage";
 import UniversityClaimPage from "./pages/education/UniversityClaimPage";
