@@ -274,3 +274,16 @@
     padding: 1rem;
   }
 }
+
+.education-header-search,
+.education-mobile-search {
+  background: #ffffff;
+}
+
+.education-header-search input,
+.education-mobile-search input {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  box-shadow: none !important;
+}

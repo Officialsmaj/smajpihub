@@ -902,3 +902,74 @@
     font-size: 0.9rem;
   }
 }
+
+/* Keep the Education search surface clean and the compact trust points on one row. */
+.education-page .education-search input {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 480px) {
+  .education-page .education-hero-trust {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0.2rem;
+  }
+
+  .education-page .education-hero-trust span {
+    min-width: 0;
+    gap: 0.2rem;
+    font-size: 0.58rem;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .education-page .education-hero-trust span svg {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+  }
+}
+
+/* Education portal atmosphere and accessible trust-card contrast. */
+.education-page {
+  background-color: #f3f8fc;
+  background-image:
+    linear-gradient(rgba(35, 97, 146, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(35, 97, 146, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 8% 7%, rgba(35, 97, 146, 0.16), transparent 28rem),
+    radial-gradient(circle at 94% 24%, rgba(47, 111, 95, 0.12), transparent 30rem),
+    linear-gradient(145deg, #fbfdff 0%, #eef6fc 48%, #f4faf7 100%);
+  background-size: 28px 28px, 28px 28px, auto, auto, auto;
+  background-attachment: local, local, fixed, fixed, fixed;
+}
+
+.education-page .education-trust article {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 18px 42px rgba(19, 32, 51, 0.14);
+}
+
+.education-page .education-trust article h3 {
+  color: #ffffff;
+}
+
+.education-page .education-trust article p {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.education-page .education-trust article svg {
+  color: #fde68a;
+  filter: drop-shadow(0 3px 8px rgba(19, 32, 51, 0.2));
+}
+
+@media (max-width: 640px) {
+  .education-page {
+    background-attachment: scroll;
+    background-size: 22px 22px, 22px 22px, auto, auto, auto;
+  }
+
+  .education-page .education-trust article {
+    box-shadow: 0 12px 28px rgba(19, 32, 51, 0.12);
+  }
+}

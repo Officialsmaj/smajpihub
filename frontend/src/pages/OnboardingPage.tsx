@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { useAuthContext } from "../contexts/AuthContext";
 import AppLayout from "../layouts/AppLayout";
@@ -44,6 +44,9 @@ const readinessItems = [
 
 const OnboardingPage = () => {
   const [submitting, setSubmitting] = useState(false);
+  const [searchParams] = useSearchParams();
+  const requestedType = searchParams.get("type") || "";
+  const defaultApplicationType = ["Seller", "Service Provider", "Partner", "Community Contributor", "Tutor / Instructor"].includes(requestedType) ? requestedType : "";
   const { showFeedback } = useAuthContext();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -145,10 +148,11 @@ const OnboardingPage = () => {
             </label>
             <label htmlFor="onboarding-track">
               <span>Application Type</span>
-              <select id="onboarding-track" name="applicationType" defaultValue="" required>
+              <select id="onboarding-track" name="applicationType" defaultValue={defaultApplicationType} required>
                 <option value="" disabled>Select application type</option>
                 <option>Seller</option>
                 <option>Service Provider</option>
+                <option>Tutor / Instructor</option>
                 <option>Partner</option>
                 <option>Community Contributor</option>
               </select>
