@@ -21245,3 +21245,62 @@ svg {
 .stream-private-shell .mobile-bottom-nav-badge {
   border-color: #050507;
 }
+
+/* Services launcher: four active services boil softly and shed fading droplets. */
+.services-launcher .service-live-boil {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  animation: service-live-boil-pulse 1.45s ease-in-out infinite;
+}
+
+.services-launcher .service-live-boil::before,
+.services-launcher .service-live-boil::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 4px;
+  height: 4px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--smaj-primary);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.services-launcher .service-live-boil::before {
+  left: 22%;
+  top: 40%;
+  animation: service-live-drop-left 1.45s ease-out infinite;
+}
+
+.services-launcher .service-live-boil::after {
+  right: 20%;
+  top: 48%;
+  animation: service-live-drop-right 1.45s .55s ease-out infinite;
+}
+
+@keyframes service-live-boil-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(108, 63, 230, .22); }
+  45% { transform: scale(1.055); box-shadow: 0 0 0 4px rgba(108, 63, 230, .08); }
+}
+
+@keyframes service-live-drop-left {
+  0%, 25% { opacity: 0; transform: translate(0, 0) scale(.4); }
+  40% { opacity: .85; }
+  78%, 100% { opacity: 0; transform: translate(-8px, -10px) scale(.15); }
+}
+
+@keyframes service-live-drop-right {
+  0%, 20% { opacity: 0; transform: translate(0, 0) scale(.35); }
+  38% { opacity: .75; }
+  76%, 100% { opacity: 0; transform: translate(9px, -8px) scale(.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-launcher .service-live-boil,
+  .services-launcher .service-live-boil::before,
+  .services-launcher .service-live-boil::after {
+    animation: none !important;
+  }
+}
