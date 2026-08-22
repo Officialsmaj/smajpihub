@@ -617,8 +617,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
       if (event.key !== "Escape") return;
       setTrailerOpen(false);
       setTrailerLoaded(false);
-      try { screen.orientation.unlock?.(); } catch { /* Not supported by every mobile browser. */ }
-      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     };
     document.addEventListener("keydown", closeOnEscape);
     const previousOverflow = document.body.style.overflow;
@@ -636,8 +634,6 @@ const Detail = ({ series = false }: { series?: boolean }) => {
   const closeTrailer = () => {
     setTrailerOpen(false);
     setTrailerLoaded(false);
-    try { screen.orientation.unlock?.(); } catch { /* Not supported by every mobile browser. */ }
-    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   };
   if (state === "loading")
     return (
