@@ -724,6 +724,10 @@ export const router = createBrowserRouter([
     element: <UniversityClaimPage />,
   },
   {
+    path: "/services/education/tutors",
+    element: <TutorsPage />,
+  },
+  {
     path: "/services/education/courses",
     element: <CourseCenterPage />,
   },

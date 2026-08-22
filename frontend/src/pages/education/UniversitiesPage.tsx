@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import FilterListOutlinedIcon from "@mui/icons-material/FilterListOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
