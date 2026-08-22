@@ -6562,6 +6562,7 @@ html[data-private-theme="dark"] .environment-badge { color: #ffefb8; background:
   }
 
   .mobile-services-grid > a {
+    position: relative;
     min-width: 0;
     aspect-ratio: .82;
     padding: 12px 7px 10px;
@@ -14848,8 +14849,10 @@ html[data-private-theme="dark"] .product-detail-page .product-mobile-purchase {
 .mobile-services-grid .service-in-progress-badge,
 .mobile-services-grid .service-coming-soon-badge {
   position: absolute;
+  z-index: 2;
   top: 7px;
   right: 7px;
+  max-width: calc(100% - 14px);
   padding: 3px 5px;
   border-radius: 999px;
   font-size: 7px;
