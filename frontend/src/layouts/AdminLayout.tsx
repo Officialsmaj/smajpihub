@@ -30,6 +30,7 @@ const links = [
   ["/admin/heroes", "Hero Banners", <Inventory2OutlinedIcon />],
   ["/admin/users", "Users", <PeopleOutlineIcon />],
   ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
+  ["/admin/ambassadors", "Ambassadors", <PeopleOutlineIcon />],
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],
   ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
   ["/admin/jobs", "Jobs Review", <WorkOutlineOutlinedIcon />],

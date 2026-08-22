@@ -57,6 +57,7 @@ import {
   AdminDashboardPage,
   AdminJobsReviewPage,
   AdminOnboardingPage,
+  AdminAmbassadorsPage,
   AdminOrdersPage,
   AdminProductsPage,
   AdminReportsPage,
@@ -1165,6 +1166,15 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/admin/ambassadors",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminAmbassadorsPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },  {
     path: "/admin/products",
     element: (
       <ProtectedRoute>

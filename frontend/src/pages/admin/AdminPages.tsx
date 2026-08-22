@@ -112,6 +112,7 @@ export const AdminDashboardPage = () => {
   const attention = [
     ["Pending products", stats?.pendingProducts || 0, "/admin/products"],
     ["Seller applications", stats?.pendingOnboarding || 0, "/admin/onboarding"],
+    ["Ambassador applications", stats?.pendingAmbassadors || 0, "/admin/ambassadors"],
     ["Open reports", stats?.unreadReports || 0, "/admin/reports"],
     ["Failed or cancelled payments", stats?.failedCancelledPayments || 0, "/admin/orders"],
     ["Jobs moderation", stats?.pendingJobsModeration || 0, "/admin/jobs"],
@@ -237,6 +238,87 @@ export const AdminOnboardingPage = () => {
           <div className="row-actions"><button onClick={() => void update(item._id, "contacted")}>Contacted</button><button onClick={() => void update(item._id, "approved")}>Approve</button><button className="danger" onClick={() => void update(item._id, "rejected")}>Reject</button></div>
         </article>
       ))}</div> : <div className="private-state"><h2>No onboarding applications</h2><p>Try another filter or wait for new public applications.</p></div>}
+    </main>
+  );
+};
+
+type AmbassadorApplication = {
+  _id: string;
+  userId: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  countryName: string;
+  countryFlag?: string;
+  regionName: string;
+  services: string[];
+  message: string;
+  identity?: { idFrontUrl?: string; idBackUrl?: string; selfieUrl?: string };
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const AdminAmbassadorsPage = () => {
+  const [applications, setApplications] = useState<AmbassadorApplication[]>([]);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("pending");
+  const [updatingId, setUpdatingId] = useState("");
+  const load = useCallback(async () => {
+    try {
+      const { data } = await axiosClient.get<{ applications: AmbassadorApplication[] }>("/admin/ambassadors");
+      setApplications(data.applications || []);
+      setError("");
+    } catch {
+      setError("Ambassador applications could not load. Check admin access and the backend connection.");
+    }
+  }, []);
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  const update = async (id: string, status: AmbassadorApplication["status"]) => {
+    setUpdatingId(id);
+    setError("");
+    try {
+      await axiosClient.patch(`/admin/ambassadors/${id}`, { status });
+      setMessage(`Ambassador application ${status}. The applicant was notified.`);
+      await load();
+    } catch {
+      setError("The ambassador application could not be updated.");
+    } finally {
+      setUpdatingId("");
+    }
+  };
+  const visible = useMemo(() => filter === "all" ? applications : applications.filter((item) => item.status === filter), [applications, filter]);
+
+  return (
+    <main className="private-page">
+      <PullToRefresh onRefresh={load} />
+      <Head title="Ambassador Applications" description="Privately review regional ambassador applications, identity evidence, and service coverage." />
+      <Notice text={message} />
+      {error ? <div className="private-alert error">{error}</div> : null}
+      <section className="admin-filter-bar">
+        <label>Status filter<select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+        <span>{visible.length} applications</span>
+      </section>
+      {visible.length ? <div className="management-list">{visible.map((item) => (
+        <article className="report-card onboarding-admin-card ambassador-admin-card" key={item._id}>
+          <div>
+            <span>{item.countryFlag} {item.countryName} · {item.regionName}</span>
+            <h3>{item.displayName}</h3>
+            <p>{item.email} · {item.phone}</p>
+            <p><strong>Services:</strong> {item.services.includes("all") ? "All SMAJ services" : item.services.join(" · ")}</p>
+            <p>{item.message}</p>
+            <small>Submitted {new Date(item.createdAt || item.updatedAt).toLocaleString()}</small>
+            <div className="ambassador-admin-identity" aria-label="Private identity evidence">
+              {item.identity?.idFrontUrl ? <a href={item.identity.idFrontUrl} target="_blank" rel="noreferrer"><img src={item.identity.idFrontUrl} alt="ID front" /><span>ID front</span></a> : null}
+              {item.identity?.idBackUrl ? <a href={item.identity.idBackUrl} target="_blank" rel="noreferrer"><img src={item.identity.idBackUrl} alt="ID back" /><span>ID back</span></a> : null}
+              {item.identity?.selfieUrl ? <a href={item.identity.selfieUrl} target="_blank" rel="noreferrer"><img src={item.identity.selfieUrl} alt="Applicant selfie" /><span>Live selfie</span></a> : null}
+            </div>
+          </div>
+          <strong className={item.status === "approved" ? "resolved" : "open"}>{item.status}</strong>
+          <div className="row-actions"><button disabled={updatingId === item._id} onClick={() => void update(item._id, "pending")}>Pending</button><button disabled={updatingId === item._id} onClick={() => void update(item._id, "approved")}>Approve</button><button className="danger" disabled={updatingId === item._id} onClick={() => void update(item._id, "rejected")}>Reject</button></div>
+        </article>
+      ))}</div> : <div className="private-state"><h2>No ambassador applications</h2><p>No applications match this status filter.</p></div>}
     </main>
   );
 };

@@ -170,7 +170,7 @@ export default function mountAdminEndpoints(router: Router) {
 
   router.get("/stats", async (req, res) => {
     try {
-      const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, notificationCollection, jobCollection, jobCompanyCollection, jobProfileCollection } = req.app.locals;
+      const { userCollection, productCollection, marketplaceOrderCollection, reportCollection, supportCollection, onboardingCollection, ambassadorCollection, notificationCollection, jobCollection, jobCompanyCollection, jobProfileCollection } = req.app.locals;
       const sellerQuery = { $or: [{ role: "seller" }, { sellerActive: true }] };
       const activeProductQuery = { active: true, hidden: { $ne: true }, approved: true, reviewStatus: "approved" };
       const pendingProductQuery = { hidden: { $ne: true }, $or: [{ reviewStatus: "pending" }, { approved: false, reviewStatus: { $ne: "rejected" } }] };
@@ -199,6 +199,8 @@ export default function mountAdminEndpoints(router: Router) {
         unreadSupportRequests,
         onboardingApplications,
         pendingOnboarding,
+        ambassadorApplications,
+        pendingAmbassadors,
         notifications,
         unreadNotifications,
         pendingJobs,
@@ -226,6 +228,8 @@ export default function mountAdminEndpoints(router: Router) {
         safeCount(supportCollection, unreadReportQuery),
         safeCount(onboardingCollection),
         safeCount(onboardingCollection, { status: "pending" }),
+        safeCount(ambassadorCollection),
+        safeCount(ambassadorCollection, { status: "pending" }),
         safeCount(notificationCollection),
         safeCount(notificationCollection, { read: false }),
         safeCount(jobCollection, { moderationStatus: "pending" }),
@@ -260,6 +264,8 @@ export default function mountAdminEndpoints(router: Router) {
         unreadSupportRequests,
         onboardingApplications,
         pendingOnboarding,
+        ambassadorApplications,
+        pendingAmbassadors,
         notifications,
         unreadNotifications,
         reportedProducts: unreadMarketplaceReports,
@@ -310,9 +316,10 @@ export default function mountAdminEndpoints(router: Router) {
   });
 
   router.get("/activity", async (req, res) => {
-    const [users, applications, products, orders, reports, supportRequests] = await Promise.all([
+    const [users, applications, ambassadors, products, orders, reports, supportRequests] = await Promise.all([
       req.app.locals.userCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
       req.app.locals.onboardingCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
+      req.app.locals.ambassadorCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
       req.app.locals.productCollection.find({}).sort({ updatedAt: -1, reviewedAt: -1, createdAt: -1 }).limit(12).toArray(),
       req.app.locals.marketplaceOrderCollection.find({}).sort({ updatedAt: -1, createdAt: -1 }).limit(12).toArray(),
       req.app.locals.reportCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray(),
@@ -332,6 +339,13 @@ export default function mountAdminEndpoints(router: Router) {
         description: `${application.fullName || "Applicant"} - ${application.status || "pending"}`,
         createdAt: activityTime(application, "createdAt"),
         href: "/admin/onboarding",
+      })),
+      ...ambassadors.map((application: Record<string, any>) => ({
+        type: "ambassador_applied",
+        label: "Ambassador applied",
+        description: `${application.displayName || "Applicant"} - ${application.status || "pending"}`,
+        createdAt: activityTime(application, "updatedAt", "createdAt"),
+        href: "/admin/ambassadors",
       })),
       ...products.map((product: Record<string, any>) => {
         const status = product.reviewStatus === "approved" ? "Product approved" : product.reviewStatus === "rejected" ? "Product rejected" : "Product submitted";
@@ -477,6 +491,39 @@ export default function mountAdminEndpoints(router: Router) {
       { $set: { status, reviewedAt: new Date(), reviewedBy: req.session.user?.userId, updatedAt: new Date() } },
     );
     return res.status(200).json({ message: "Application updated" });
+  });
+
+  router.get("/ambassadors", async (req, res) => {
+    const applications = await req.app.locals.ambassadorCollection.find({}).sort({ createdAt: -1, updatedAt: -1 }).toArray();
+    return res.status(200).json({ applications: applications.map(serialize) });
+  });
+
+  router.patch("/ambassadors/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "bad_request", message: "Invalid ambassador application id" });
+    const status = req.body?.status;
+    if (!["pending", "approved", "rejected"].includes(status)) {
+      return res.status(400).json({ error: "bad_request", message: "Invalid ambassador application status" });
+    }
+    const application = await req.app.locals.ambassadorCollection.findOne({ _id: new ObjectId(req.params.id) });
+    if (!application) return res.status(404).json({ error: "not_found", message: "Ambassador application not found" });
+    const now = new Date();
+    const updates: Record<string, any> = {
+      status,
+      reviewedAt: now,
+      reviewedBy: req.session.user?.userId,
+      updatedAt: now,
+      approvedAt: status === "approved" ? now : null,
+    };
+    await req.app.locals.ambassadorCollection.updateOne({ _id: application._id }, { $set: updates });
+    await createNotification(req.app, {
+      userId: application.userId,
+      type: "ambassador_application_status",
+      title: status === "approved" ? "Ambassador application approved" : status === "rejected" ? "Ambassador application update" : "Ambassador application pending",
+      message: status === "approved" ? "Your SMAJ Ambassador application was approved. You are now visible in the ambassador directory." : status === "rejected" ? "Your SMAJ Ambassador application was not approved. You can update and resubmit it from Services." : "Your SMAJ Ambassador application is under review.",
+      relatedId: req.params.id,
+    });
+    const updated = await req.app.locals.ambassadorCollection.findOne({ _id: application._id });
+    return res.status(200).json({ message: `Ambassador application ${status}.`, application: serialize(updated) });
   });
 
   router.delete("/products/:id", async (req, res) => {
