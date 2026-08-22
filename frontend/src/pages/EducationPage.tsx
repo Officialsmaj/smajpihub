@@ -3,6 +3,9 @@ import { Link, useNavigationType, useSearchParams } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import PersonSearchOutlinedIcon from "@mui/icons-material/PersonSearchOutlined";
+import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AppLayout from "../layouts/AppLayout";
 import EducationHeader from "./education/EducationHeader";
@@ -12,12 +15,6 @@ import CategoryGrid from "../components/education/CategoryGrid";
 import CourseCard from "../components/education/CourseCard";
 import PartnerCard from "../components/education/PartnerCard";
 import "./EducationPage.css";
-
-const learningStats = [
-  ["7", "Learning paths"],
-  ["3", "Provider types"],
-  ["Pi", "Native checkout"],
-] as const;
 
 const EducationPage = () => {
   const [searchParams] = useSearchParams();
@@ -76,6 +73,10 @@ const EducationPage = () => {
     }
   }, [loading]);
 
+  const secondaryCategories = categories.filter(
+    category => !["Universities", "Online Courses", "Tutors", "Certificates"].includes(category)
+  );
+
   const filteredCourses = useMemo(() => {
     const q = query.trim().toLowerCase();
     return courses.filter(course => {
@@ -90,45 +91,67 @@ const EducationPage = () => {
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
-      {!educationReady ? <div className="store-loading-overlay" aria-label="Opening Education" aria-live="polite"><div className="store-loading-spinner" /><span>Opening education...</span></div> : null}
+      {!educationReady ? (
+        <div className="store-loading-overlay" aria-label="Opening Education" aria-live="polite">
+          <div className="store-loading-spinner" />
+          <span>Opening education...</span>
+        </div>
+      ) : null}
       <main className="education-page">
         <EducationHeader query={query} onQueryChange={setQuery} />
         <section className="education-hero">
           <div className="education-hero-copy">
             <span className="education-kicker">SMAJ PI EDUCATION</span>
-            <h1>Learn skills that move you forward.</h1>
-            <p>
-              Explore practical courses, trusted tutors, and certificate programs from verified education providers.
-            </p>
+            <h1>Learn, apply and grow with Pi.</h1>
+            <p>Courses, universities, tutors, and verified learning credentials in one place.</p>
             <div className="education-search" role="search">
               <SearchOutlinedIcon />
               <input
                 type="search"
-                placeholder="What do you want to learn?"
+                placeholder="Search courses, universities, or tutors"
                 value={query}
                 onChange={event => setQuery(event.target.value)}
               />
-              <Link
-                to={`/services/education/courses${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}
-              >
+              <Link to={`/services/education/courses${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}>
                 Explore courses
               </Link>
             </div>
+            <nav className="education-quick-services" aria-label="Main education services">
+              <Link to="/services/education/universities">
+                <SchoolOutlinedIcon />
+                <span>Universities</span>
+              </Link>
+              <Link to="/services/education/courses">
+                <MenuBookOutlinedIcon />
+                <span>Courses</span>
+              </Link>
+              <Link to="/services/education/tutors">
+                <PersonSearchOutlinedIcon />
+                <span>Tutors</span>
+              </Link>
+              <Link to="/services/education/certificates">
+                <WorkspacePremiumOutlinedIcon />
+                <span>Certificates</span>
+              </Link>
+            </nav>
             <div className="education-hero-trust" aria-label="Learning benefits">
-              <span>Verified providers</span>
-              <span>Flexible learning</span>
-              <span>Pay with Pi</span>
+              <span>
+                <CheckCircleOutlineOutlinedIcon /> Verified providers
+              </span>
+              <span>
+                <AccountBalanceWalletOutlinedIcon /> Pi payments
+              </span>
+              <span>
+                <WorkspacePremiumOutlinedIcon /> Verified certificates
+              </span>
             </div>
             <nav className="education-popular-links" aria-label="Popular education categories">
-              <b>Popular:</b>
-              <Link to="/services/education/categories/tech-skills">Technology</Link>
-              <Link to="/services/education/categories/business">Business</Link>
-              <Link to="/services/education/categories/exam-prep">Exam preparation</Link>
+              <b>Popular</b>
+              <Link to="/services/education/courses?category=Technology">Technology</Link>
+              <Link to="/services/education/courses?category=Business">Business</Link>
+              <Link to="/services/education/courses?category=Exam%20Prep">Exam Prep</Link>
+              <Link to="/services/education/courses?category=Languages">Languages</Link>
             </nav>
-            <div className="education-provider-cta">
-              <span>University, tutor, or course creator?</span>
-              <Link to="/onboarding">Join as a provider →</Link>
-            </div>
           </div>
           <aside className="education-hero-panel" aria-label="Education payment preview">
             <div className="education-live-class">
@@ -152,25 +175,16 @@ const EducationPage = () => {
           </aside>
         </section>
 
-        <section className="education-stats" aria-label="Education overview">
-          {learningStats.map(([value, label]) => (
-            <article key={label}>
-              <strong>{value}</strong>
-              <span>{label}</span>
-            </article>
-          ))}
-        </section>
-
         <section id="courses" className="education-section">
           <div className="education-section-head">
-            <span className="education-kicker">WHAT USERS CAN PAY FOR</span>
-            <h2>Universities, courses, tutoring, and certificates.</h2>
+            <span className="education-kicker">EXPLORE MORE</span>
+            <h2>Build the learning path that fits you.</h2>
             <p>
               Payments are enabled for SMAJ-verified schools and providers, so users only see Pi checkout where an
               education partner is approved.
             </p>
           </div>
-          <CategoryGrid categories={categories} />
+          <CategoryGrid categories={secondaryCategories} />
         </section>
 
         <section className="education-section">

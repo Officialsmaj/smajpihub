@@ -181,3 +181,34 @@
     font-weight: 800;
   }
 }
+
+.education-back-to-hub {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.education-back-to-hub svg {
+  font-size: 1.05rem;
+}
+@media (max-width: 480px) {
+  .education-header {
+    height: 58px;
+  }
+  .education-back-to-hub {
+    border: 0;
+    padding: 0.4rem;
+  }
+  .education-back-to-hub span {
+    display: none;
+  }
+  .education-brand {
+    font-size: 1.18rem;
+  }
+  .education-menu-button {
+    height: 2.35rem;
+    width: 2.35rem;
+  }
+  .education-mobile-menu {
+    top: 58px;
+  }
+}

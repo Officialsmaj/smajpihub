@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import "./EducationHeader.css";
@@ -12,7 +13,15 @@ const links = [
   ["/help", "Help"],
 ] as const;
 
-const EducationHeader = ({ query, onQueryChange, searchPath = "/services/education/courses" }: { query: string; onQueryChange: (value: string) => void; searchPath?: string }) => {
+const EducationHeader = ({
+  query,
+  onQueryChange,
+  searchPath = "/services/education/courses",
+}: {
+  query: string;
+  onQueryChange: (value: string) => void;
+  searchPath?: string;
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -26,7 +35,8 @@ const EducationHeader = ({ query, onQueryChange, searchPath = "/services/educati
   return (
     <header className="education-header">
       <Link to="/app/services" className="education-back-to-hub" aria-label="Back to SMAJ PI HUB services">
-        ← Hub
+        <ArrowBackRoundedIcon />
+        <span>Hub</span>
       </Link>
       <Link to="/services/education" className="education-brand">
         <b>Education</b>
