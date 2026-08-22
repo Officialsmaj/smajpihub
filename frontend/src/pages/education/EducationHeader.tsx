@@ -6,11 +6,22 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import "./EducationHeader.css";
 
-const links = [
-  ["/services/education/courses", "Explore Courses"],
+const primaryLinks = [
+  ["/services/education/universities", "Universities"],
+  ["/services/education/courses", "Online Courses"],
+  ["/services/education/tutors", "Tutors"],
+  ["/services/education/certificates", "Certificates"],
+] as const;
+
+const topicLinks = [
+  ["/services/education/courses?category=Technology", "Tech Skills"],
+  ["/services/education/courses?category=Business", "Business"],
+  ["/services/education/courses?category=Exam%20Prep", "Exam Prep"],
+] as const;
+
+const providerLinks = [
   ["/services/education/partners", "Partners"],
   ["/onboarding", "Teach on SMAJ"],
-  ["/help", "Help"],
 ] as const;
 
 const EducationHeader = ({
@@ -42,7 +53,7 @@ const EducationHeader = ({
         <b>Education</b>
       </Link>
       <nav className={menuOpen ? "open" : ""} aria-label="Education navigation">
-        {links.map(([to, label]) => (
+        {primaryLinks.map(([to, label]) => (
           <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
             {label}
           </NavLink>
@@ -80,11 +91,39 @@ const EducationHeader = ({
             />
             <button type="submit">Search</button>
           </form>
-          {links.map(([to, label]) => (
-            <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
-              {label}
-            </NavLink>
-          ))}
+          <section className="education-menu-group">
+            <span>Discover</span>
+            <div className="education-menu-primary">
+              {primaryLinks.map(([to, label]) => (
+                <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </section>
+          <section className="education-menu-group">
+            <span>Popular topics</span>
+            <div className="education-menu-topics">
+              {topicLinks.map(([to, label]) => (
+                <Link key={label} to={to} onClick={() => setMenuOpen(false)}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </section>
+          <section className="education-menu-group">
+            <span>For providers</span>
+            <div className="education-menu-provider">
+              {providerLinks.map(([to, label]) => (
+                <NavLink key={label} to={to} onClick={() => setMenuOpen(false)}>
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </section>
+          <Link className="education-menu-help" to="/help" onClick={() => setMenuOpen(false)}>
+            Help & support
+          </Link>
         </div>
       ) : null}
     </header>
