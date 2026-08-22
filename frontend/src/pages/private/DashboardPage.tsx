@@ -23,7 +23,7 @@ import PullToRefresh from "../../components/PullToRefresh";
 import TrustBadge from "../../components/TrustBadge";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { getHeroBanners } from "../../lib/heroBanners";
-import { serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
+import { getServiceLaunchLabel, getServiceLaunchStatus, serviceCatalog, type ServiceDefinition } from "../../content/serviceCatalog";
 import { axiosClient } from "../../lib/axiosClient";
 import { countryDisplayName, countryFlag, formatPiAmount } from "../../lib/formatters";
 import { getStreamCatalog, type StreamCatalogTitle } from "../../lib/streamCatalog";
@@ -35,7 +35,6 @@ type DiscoveryTab = "for-you" | "trending" | "lifestyle" | "categories";
 
 const why = [[PublicOutlinedIcon, "Access anywhere", "Access multiple digital services from anywhere you are."], [LockOutlinedIcon, "Simple access", "One account for your everyday needs."], [HubOutlinedIcon, "Connect everyone", "People, businesses, and opportunities connected together."], [RocketLaunchOutlinedIcon, "Built for the future", "A growing ecosystem designed for everyday life."]] as const;
 const discoveryTabs = [["For you", "for-you"], ["Trending", "trending"], ["Lifestyle", "lifestyle"], ["Categories", "categories"]] as const;
-const serviceRatings: Record<string, string> = { store: "4.8", food: "4.6", jobs: "4.5", education: "4.7", health: "4.6", transport: "4.4", agro: "4.3", energy: "4.5", charity: "4.9", housing: "4.4", events: "4.6", swap: "4.3", stream: "4.7", sports: "4.6", token: "4.5" };
 const serviceHints: Record<string, string> = { store: "Shopping - Deals", food: "Eat - Delivery", jobs: "Work - Hire", education: "Learn - Skills", health: "Care - Doctors", transport: "Ride - Move", agro: "Farm - Trade", energy: "Power - Bills", charity: "Give - Help", housing: "Rent - Buy", events: "Tickets - Fun", swap: "Trade - Exchange", stream: "Watch - Videos", sports: "Play - Scores", token: "Rewards - Utility" };
 const lifestyleSlugs = ["food", "health", "housing", "transport", "education", "charity", "events", "agro"];
 const trendingSlugs = ["store", "stream", "sports", "events", "food", "jobs", "education", "health", "housing", "transport"];
@@ -241,8 +240,11 @@ const DiscoveryTabButtons = ({ activeTab, onTabChange, className }: { activeTab:
   </nav>
 );
 
-const boilSlugs = new Set(["store", "stream", "jobs", "education"]);
-const liveBadgeClass = (service: ServiceDefinition) => service.live ? (boilSlugs.has(service.slug) ? "live-card-badge live-badge-boil" : "live-card-badge live-badge-static") : service.inProgress ? "service-in-progress-badge" : undefined;
+const serviceBadgeClass = (service: ServiceDefinition, kind: "card" | "rating" = "card") => {
+  const status = getServiceLaunchStatus(service.slug);
+  if (status === "live") return `${kind === "rating" ? "live-rating-badge" : "live-card-badge"} service-live-boil`;
+  return status === "coming-soon" ? "service-coming-soon-badge" : "service-in-progress-badge";
+};
 
 const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: "desktop" | "mobile" }) => (mode === "desktop" ? (
     <div className="desktop-suggested-grid">
@@ -250,7 +252,7 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
         <Link to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={`desktop-service-app ${service.inProgress ? "service-in-progress-card" : ""}`} key={service.slug} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
           <div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span></div>
-          <small className={liveBadgeClass(service)}>{service.live ? "LIVE" : service.inProgress ? "IN PROGRESS" : `${serviceRatings[service.slug]} star`}</small>
+          <small className={serviceBadgeClass(service, "rating")}>{getServiceLaunchLabel(service.slug)}</small>
         </Link>
       ))}
     </div>
@@ -259,7 +261,7 @@ const ServiceList = ({ services, mode }: { services: ServiceDefinition[]; mode: 
       {services.map((service) => (
         <Link key={service.slug} to={servicePath(service)} state={service.slug === "stream" ? { streamEntry: true } : undefined} className={service.inProgress ? "service-in-progress-card" : undefined} aria-disabled={service.inProgress || undefined} onClick={service.inProgress ? (event) => event.preventDefault() : undefined}>
           <ServiceArt index={service.atlasIndex} />
-          {service.live ? <em className={liveBadgeClass(service)}>LIVE</em> : service.inProgress ? <em className="service-in-progress-badge">IN PROGRESS</em> : null}
+          <em className={serviceBadgeClass(service)}>{getServiceLaunchLabel(service.slug)}</em>
           <strong>{service.name.replace("SMAJ ", "")}</strong>
           <span>{serviceHints[service.slug] || service.items.slice(0, 2).join(" - ")}</span>
         </Link>
@@ -402,7 +404,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
       <FeaturedSellersSection compact sellers={sellers} loading={productsLoading} error={productsError} />
       <ActivityFeedSection compact products={products} loading={productsLoading} error={productsError} />
       <TrustSection compact />
-      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Suggested for you</h2><Link to="/app/services">See all</Link></div><div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span><small className={service.live ? "live-rating-badge" : undefined}>{service.live ? "LIVE" : `${serviceRatings[service.slug]} star`}</small></div></Link>)}</div>)}</div></section>
+      <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Suggested for you</h2><Link to="/app/services">See all</Link></div><div className="mobile-service-groups">{serviceGroups.map((group, index) => <div className="mobile-service-group" key={index}>{group.map((service) => <Link to={servicePath(service)} className="mobile-service-app" key={service.slug}><ServiceArt index={service.atlasIndex} /><div><strong>{service.name}</strong><span>{service.items.slice(0, 2).join(" - ")}</span><small className={serviceBadgeClass(service, "rating")}>{getServiceLaunchLabel(service.slug)}</small></div></Link>)}</div>)}</div></section>
       <section className="mobile-feed-section"><div className="mobile-section-heading"><h2>Discover what's new</h2></div><div className="mobile-feature-strip">{featureCards.map((card) => <Link className="mobile-feature-card" to={card.slug === "store" ? "/store" : `/app/services/${card.slug}`} key={card.slug}><img src={card.image} alt="" />{card.slug === "store" ? <b className="live-card-badge feature-live-badge">LIVE</b> : null}<div><h3>{card.title}</h3><p>{card.text}</p><span>Explore <ArrowForwardOutlinedIcon /></span></div></Link>)}</div></section>
       <DashboardStreamSections rows={streamRows} loading={streamLoading} compact />
       <DashboardSportsSection catalog={sportsCatalog} loading={sportsLoading} compact />
@@ -413,7 +415,7 @@ const MobileHome = ({ activeTab, onTabChange, products, productsLoading, product
 };
 
 const DesktopFeedHome = ({ activeTab, onTabChange, products, productsLoading, productsError, sellers, recentItems, streamRows, streamLoading, sportsCatalog, sportsLoading }: { activeTab: DiscoveryTab; onTabChange: (tab: DiscoveryTab) => void; products: Product[]; productsLoading: boolean; productsError: string; sellers: SellerCard[]; recentItems: RecentItem[]; streamRows: DashboardStreamRow[]; streamLoading: boolean; sportsCatalog: SportsCatalog; sportsLoading: boolean }) => <div className="desktop-private-home desktop-feed-home">
-  <section className="desktop-feed-hero"><div><p className="private-kicker">SMAJ PI HUB</p><h1>Everything you need.<br />One place.</h1><p>Discover services, products, media, support, and everyday tools from one connected dashboard.</p><div className="desktop-feed-hero-actions"><Link className="private-primary-button" to="/app/services">Explore Services <ArrowForwardOutlinedIcon /></Link><Link className="private-secondary-button" to="/store">Open SMAJ Store</Link></div></div><div className="desktop-feed-hero-icons">{serviceCatalog.slice(0, 6).map((service) => <Link key={service.slug} to={servicePath(service)} title={service.name}><ServiceArt index={service.atlasIndex} />{service.live ? <em>LIVE</em> : null}</Link>)}</div></section>
+  <section className="desktop-feed-hero"><div><p className="private-kicker">SMAJ PI HUB</p><h1>Everything you need.<br />One place.</h1><p>Discover services, products, media, support, and everyday tools from one connected dashboard.</p><div className="desktop-feed-hero-actions"><Link className="private-primary-button" to="/app/services">Explore Services <ArrowForwardOutlinedIcon /></Link><Link className="private-secondary-button" to="/store">Open SMAJ Store</Link></div></div><div className="desktop-feed-hero-icons">{serviceCatalog.slice(0, 6).map((service) => <Link key={service.slug} to={servicePath(service)} title={service.name}><ServiceArt index={service.atlasIndex} /><em className={serviceBadgeClass(service)}>{getServiceLaunchLabel(service.slug)}</em></Link>)}</div></section>
   <DiscoveryTabButtons className="desktop-feed-tabs" activeTab={activeTab} onTabChange={onTabChange} />
   {activeTab === "for-you" ? <>
     <div className="desktop-feed-priority-grid">

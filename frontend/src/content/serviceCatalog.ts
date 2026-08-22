@@ -27,6 +27,20 @@ export const serviceCatalog: ServiceDefinition[] = [
   { slug: "token", name: "SMAJ Token", experience: "Earn more", description: "Rewards, loyalty, and ecosystem utility.", items: ["Rewards", "Loyalty", "Benefits", "Ecosystem utility"], atlasIndex: 14 },
 ];
 
+export type ServiceLaunchStatus = "live" | "in-progress" | "coming-soon";
+
+const liveServiceSlugs = new Set(["store", "stream", "jobs"]);
+
+export const getServiceLaunchStatus = (slug: string): ServiceLaunchStatus => {
+  if (liveServiceSlugs.has(slug)) return "live";
+  if (slug === "education") return "coming-soon";
+  return "in-progress";
+};
+
+export const getServiceLaunchLabel = (slug: string) => {
+  const status = getServiceLaunchStatus(slug);
+  return status === "live" ? "LIVE" : status === "coming-soon" ? "COMING SOON" : "IN PROGRESS";
+};
 export const serviceRoute = (slug: string) => `/services/${slug}`;
 
 export const serviceAppPath = (slug: string) => {
