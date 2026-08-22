@@ -269,15 +269,24 @@ export default function mountEducationEndpoints(router: Router) {
       const pageSize = clamp(safeNumber(req.query.limit, 20), 1, 100);
 
       if (partnership !== "smaj_verified_partner") {
+        const countryCode = /^[a-z]{2}$/i.test(country)
+          ? country.toUpperCase()
+          : "";
+        const directoryType =
+          institutionType === "other" ? "other" : "education";
+        const providerSearch = [query, city, countryCode ? "" : country]
+          .filter(Boolean)
+          .join(" ");
         const filters = [
-          "type:education",
-          ...(country ? [`country_code:${country.toUpperCase()}`] : []),
+          `type:${directoryType}`,
+          ...(countryCode ? [`country_code:${countryCode}`] : []),
         ];
         const live = await axios.get("https://api.openalex.org/institutions", {
           params: {
             api_key: process.env.OPENALEX_API_KEY || undefined,
-            search: query || undefined,
+            search: providerSearch || undefined,
             filter: filters.join(","),
+            page,
             per_page: pageSize,
           },
           timeout: 10000,
@@ -288,7 +297,7 @@ export default function mountEducationEndpoints(router: Router) {
           official_name: item.display_name,
           short_name: item.display_name_acronyms?.[0],
           logo_url: item.image_url,
-          institution_type: "other",
+          institution_type: item.type || "education",
           country: item.geo?.country || "",
           country_code: item.country_code || "",
           city: item.geo?.city || "",
@@ -313,7 +322,7 @@ export default function mountEducationEndpoints(router: Router) {
         return res.json({
           universities,
           total: live.data.meta?.count || universities.length,
-          page: 1,
+          page,
           pageSize,
           totalPages: Math.ceil(
             (live.data.meta?.count || universities.length) / pageSize,
@@ -329,13 +338,11 @@ export default function mountEducationEndpoints(router: Router) {
           country || undefined,
           100,
         );
-        return res
-          .status(200)
-          .json({
-            universities: providerResults.map(serialize),
-            source: "demo_provider",
-            total: providerResults.length,
-          });
+        return res.status(200).json({
+          universities: providerResults.map(serialize),
+          source: "demo_provider",
+          total: providerResults.length,
+        });
       }
 
       await ensureSeedUniversities(req);
@@ -383,12 +390,10 @@ export default function mountEducationEndpoints(router: Router) {
         totalPages: Math.ceil(total / pageSize),
       });
     } catch (error: any) {
-      return res
-        .status(500)
-        .json({
-          error: "server_error",
-          message: error.message || "Failed to load universities",
-        });
+      return res.status(500).json({
+        error: "server_error",
+        message: error.message || "Failed to load universities",
+      });
     }
   });
 
@@ -440,12 +445,10 @@ export default function mountEducationEndpoints(router: Router) {
       }
       if (!collection) {
         const providerResult = await getProvider().getInstitution(idOrSlug);
-        return res
-          .status(200)
-          .json({
-            university: serialize(providerResult),
-            source: "demo_provider",
-          });
+        return res.status(200).json({
+          university: serialize(providerResult),
+          source: "demo_provider",
+        });
       }
 
       let university: UniversityData | null = null;
@@ -479,12 +482,10 @@ export default function mountEducationEndpoints(router: Router) {
         authorization: ensureServiceAuthorization(university),
       });
     } catch (error: any) {
-      return res
-        .status(500)
-        .json({
-          error: "server_error",
-          message: error.message || "Failed to load university",
-        });
+      return res.status(500).json({
+        error: "server_error",
+        message: error.message || "Failed to load university",
+      });
     }
   });
 
@@ -556,12 +557,10 @@ export default function mountEducationEndpoints(router: Router) {
       if (!collection) throw new Error("University collection not available");
       const result = await collection.insertOne(university);
       const created = await collection.findOne({ _id: result.insertedId });
-      return res
-        .status(201)
-        .json({
-          university: serialize(created),
-          message: "University created",
-        });
+      return res.status(201).json({
+        university: serialize(created),
+        message: "University created",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -657,12 +656,10 @@ export default function mountEducationEndpoints(router: Router) {
 
       await collection.updateOne({ _id: university._id }, { $set: updates });
       const updated = await collection.findOne({ _id: university._id });
-      return res
-        .status(200)
-        .json({
-          university: serialize(updated),
-          message: "University updated",
-        });
+      return res.status(200).json({
+        university: serialize(updated),
+        message: "University updated",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -709,12 +706,10 @@ export default function mountEducationEndpoints(router: Router) {
       const collection = req.app.locals.universityProgramCollection;
       if (!collection) {
         const providerResults = await getProvider().getPrograms(universityId);
-        return res
-          .status(200)
-          .json({
-            programs: providerResults.map(serialize),
-            source: "demo_provider",
-          });
+        return res.status(200).json({
+          programs: providerResults.map(serialize),
+          source: "demo_provider",
+        });
       }
 
       const programs = await collection
@@ -723,12 +718,10 @@ export default function mountEducationEndpoints(router: Router) {
         .toArray();
       return res.status(200).json({ programs: programs.map(serialize) });
     } catch (error: any) {
-      return res
-        .status(500)
-        .json({
-          error: "server_error",
-          message: error.message || "Failed to load programs",
-        });
+      return res.status(500).json({
+        error: "server_error",
+        message: error.message || "Failed to load programs",
+      });
     }
   });
 
@@ -943,12 +936,10 @@ export default function mountEducationEndpoints(router: Router) {
         !claim.institutional_email ||
         !claim.proof_of_authority
       ) {
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: "Missing required claim fields",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: "Missing required claim fields",
+        });
       }
 
       const collection = req.app.locals.universityClaimCollection;
@@ -956,12 +947,10 @@ export default function mountEducationEndpoints(router: Router) {
         throw new Error("University claim collection not available");
       const result = await collection.insertOne(claim);
       const created = await collection.findOne({ _id: result.insertedId });
-      return res
-        .status(201)
-        .json({
-          claim: serialize(created),
-          message: "Claim submitted for review",
-        });
+      return res.status(201).json({
+        claim: serialize(created),
+        message: "Claim submitted for review",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -1053,12 +1042,10 @@ export default function mountEducationEndpoints(router: Router) {
           .json({ error: "not_found", message: "University not found" });
 
       if (!isApplicationsEnabled(university)) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "Applications are not enabled for this university",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "Applications are not enabled for this university",
+        });
       }
 
       const application: UniversityApplicationData = {
@@ -1090,12 +1077,10 @@ export default function mountEducationEndpoints(router: Router) {
         throw new Error("University application collection not available");
       const result = await collection.insertOne(application);
       const created = await collection.findOne({ _id: result.insertedId });
-      return res
-        .status(201)
-        .json({
-          application: serialize(created),
-          message: "Application submitted",
-        });
+      return res.status(201).json({
+        application: serialize(created),
+        message: "Application submitted",
+      });
     } catch (error: any) {
       return res
         .status(400)
@@ -1150,12 +1135,10 @@ export default function mountEducationEndpoints(router: Router) {
         application.applicant_id !== currentUser._id.toString() &&
         currentUser.role !== "admin"
       ) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "You can only update your own applications",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "You can only update your own applications",
+        });
       }
 
       const updates: Record<string, any> = {
@@ -1209,12 +1192,10 @@ export default function mountEducationEndpoints(router: Router) {
             .json({ error: "not_found", message: "University not found" });
 
         if (!isPiEnabled(university)) {
-          return res
-            .status(403)
-            .json({
-              error: "forbidden",
-              message: "Pi payments are not enabled for this university",
-            });
+          return res.status(403).json({
+            error: "forbidden",
+            message: "Pi payments are not enabled for this university",
+          });
         }
 
         const purpose = body.payment_purpose || "application_fee";
@@ -1228,12 +1209,10 @@ export default function mountEducationEndpoints(router: Router) {
             purpose,
           )
         ) {
-          return res
-            .status(403)
-            .json({
-              error: "forbidden",
-              message: `Payment category ${purpose} is not authorized for this university`,
-            });
+          return res.status(403).json({
+            error: "forbidden",
+            message: `Payment category ${purpose} is not authorized for this university`,
+          });
         }
 
         const amountDisplay = safeNumber(body.amount_display, 0);
@@ -1317,22 +1296,18 @@ export default function mountEducationEndpoints(router: Router) {
           payment.user_id !== currentUser._id.toString() &&
           currentUser.role !== "admin"
         ) {
-          return res
-            .status(403)
-            .json({
-              error: "forbidden",
-              message: "You can only complete your own payments",
-            });
+          return res.status(403).json({
+            error: "forbidden",
+            message: "You can only complete your own payments",
+          });
         }
 
         const txid = safeString(body.txid);
         if (!txid)
-          return res
-            .status(400)
-            .json({
-              error: "bad_request",
-              message: "Transaction ID is required",
-            });
+          return res.status(400).json({
+            error: "bad_request",
+            message: "Transaction ID is required",
+          });
 
         await platformAPIKeyClient.post(
           `/v2/payments/${payment.pi_payment_identifier || payment.payment_id}/complete`,
@@ -1367,20 +1342,16 @@ export default function mountEducationEndpoints(router: Router) {
           }
         }
 
-        return res
-          .status(200)
-          .json({
-            message: "Payment completed",
-            payment_id: payment.payment_id,
-            txid,
-          });
+        return res.status(200).json({
+          message: "Payment completed",
+          payment_id: payment.payment_id,
+          txid,
+        });
       } catch (error: any) {
-        return res
-          .status(400)
-          .json({
-            error: "bad_request",
-            message: error.message || "Failed to complete payment",
-          });
+        return res.status(400).json({
+          error: "bad_request",
+          message: error.message || "Failed to complete payment",
+        });
       }
     },
   );
@@ -1409,12 +1380,10 @@ export default function mountEducationEndpoints(router: Router) {
         payment.user_id !== currentUser._id.toString() &&
         currentUser.role !== "admin"
       ) {
-        return res
-          .status(403)
-          .json({
-            error: "forbidden",
-            message: "You can only cancel your own payments",
-          });
+        return res.status(403).json({
+          error: "forbidden",
+          message: "You can only cancel your own payments",
+        });
       }
 
       await collection.updateOne(

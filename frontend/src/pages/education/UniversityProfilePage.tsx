@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import { getUniversity, createUniversityApplication } from "../../lib/educationApi";
 import type { University, UniversityProgram } from "../../types/education";
@@ -11,24 +17,44 @@ const UniversityProfilePage = () => {
   const [university, setUniversity] = useState<University | null>(null);
   const [programs, setPrograms] = useState<UniversityProgram[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logoFailed, setLogoFailed] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "programs" | "admissions" | "apply">("overview");
 
   useEffect(() => {
     let cancelled = false;
     if (!slug) return;
-    getUniversity(slug).then((data) => {
-      if (!cancelled) {
-        setUniversity(data.university);
-        setPrograms(data.programs);
-      }
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => { cancelled = true; };
+    getUniversity(slug)
+      .then(data => {
+        if (!cancelled) {
+          setUniversity(data.university);
+          setPrograms(data.programs);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
-  if (loading) return <AppLayout showHeader={false} showFooter={false}><main className="universities-page"><p>Loading university...</p></main></AppLayout>;
-  if (!university) return <AppLayout showHeader={false} showFooter={false}><main className="universities-page"><h2>University not found</h2><Link to="/services/education/universities">Back to universities</Link></main></AppLayout>;
+  if (loading)
+    return (
+      <AppLayout showHeader={false} showFooter={false}>
+        <main className="universities-page">
+          <p>Loading university...</p>
+        </main>
+      </AppLayout>
+    );
+  if (!university)
+    return (
+      <AppLayout showHeader={false} showFooter={false}>
+        <main className="universities-page">
+          <h2>University not found</h2>
+          <Link to="/services/education/universities">Back to universities</Link>
+        </main>
+      </AppLayout>
+    );
 
   const isPartner = university.partnership_status === "smaj_verified_partner";
   const isApplicationsEnabled = isPartner && university.applications_enabled;
@@ -36,29 +62,79 @@ const UniversityProfilePage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="universities-page">
-        <div className="university-profile-header">
-          {university.cover_image_url && <img src={university.cover_image_url} alt="" className="university-profile-cover" />}
+        <div className={`university-profile-header${university.cover_image_url ? " has-cover" : " no-cover"}`}>
+          {university.cover_image_url ? (
+            <img src={university.cover_image_url} alt="" className="university-profile-cover" />
+          ) : (
+            <div className="university-profile-cover university-profile-cover-fallback" />
+          )}
+          <Link className="university-profile-back" to="/services/education/universities">
+            <ArrowBackOutlinedIcon /> Back to Universities
+          </Link>
           <div className="university-profile-header-content">
-            {university.logo_url ? (
-              <img src={university.logo_url} alt={`${university.short_name || university.official_name} logo`} className="university-profile-logo" />
+            {university.logo_url && !logoFailed ? (
+              <img
+                src={university.logo_url}
+                onError={() => setLogoFailed(true)}
+                alt={`${university.short_name || university.official_name} logo`}
+                className="university-profile-logo"
+              />
             ) : (
               <div className="university-profile-logo-placeholder">
                 {(university.short_name || university.official_name).slice(0, 2).toUpperCase()}
               </div>
             )}
-            <div>
+            <div className="university-profile-identity">
+              <div className="university-profile-badges">
+                <span className={isPartner ? "partner" : "directory"}>
+                  {isPartner ? <VerifiedOutlinedIcon /> : <SchoolOutlinedIcon />}
+                  {isPartner ? "SMAJ Verified Partner" : "Global Directory Listing"}
+                </span>
+              </div>
               <h1>{university.official_name}</h1>
-              {university.short_name && <p className="university-profile-short-name">{university.short_name}</p>}
-              <p>{university.city}{university.city && university.country ? ", " : ""}{university.country}</p>
+              {university.short_name && university.short_name !== university.official_name && (
+                <p className="university-profile-short-name">{university.short_name}</p>
+              )}
+              <p className="university-profile-location">
+                <LocationOnOutlinedIcon />{" "}
+                {[university.city, university.state_region, university.country].filter(Boolean).join(", ") ||
+                  "Location unavailable"}
+              </p>
+              <div className="university-profile-quick-actions">
+                {university.official_website && (
+                  <a href={university.official_website} target="_blank" rel="noopener noreferrer">
+                    <LanguageOutlinedIcon /> Official Website
+                  </a>
+                )}
+                {(university.admissions_website || university.official_website) && (
+                  <a
+                    href={university.admissions_website || university.official_website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Admissions <OpenInNewOutlinedIcon />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         <div className="university-profile-tabs">
-          <button className={activeTab === "overview" ? "active" : ""} onClick={() => setActiveTab("overview")}>Overview</button>
-          <button className={activeTab === "programs" ? "active" : ""} onClick={() => setActiveTab("programs")}>Programs</button>
-          <button className={activeTab === "admissions" ? "active" : ""} onClick={() => setActiveTab("admissions")}>Admissions</button>
-          {isApplicationsEnabled && <button className={activeTab === "apply" ? "active" : ""} onClick={() => setActiveTab("apply")}>Apply</button>}
+          <button className={activeTab === "overview" ? "active" : ""} onClick={() => setActiveTab("overview")}>
+            Overview
+          </button>
+          <button className={activeTab === "programs" ? "active" : ""} onClick={() => setActiveTab("programs")}>
+            Programs
+          </button>
+          <button className={activeTab === "admissions" ? "active" : ""} onClick={() => setActiveTab("admissions")}>
+            Admissions
+          </button>
+          {isApplicationsEnabled && (
+            <button className={activeTab === "apply" ? "active" : ""} onClick={() => setActiveTab("apply")}>
+              Apply
+            </button>
+          )}
         </div>
 
         {activeTab === "overview" && (
@@ -72,7 +148,10 @@ const UniversityProfilePage = () => {
               ) : (
                 <div className="university-partner-notice non-partner">
                   <strong>Not yet a SMAJ Verified Partner</strong>
-                  <p>This institution is currently listed for informational purposes. Applications and Pi payments through SMAJ PI HUB are not yet available.</p>
+                  <p>
+                    This institution is currently listed for informational purposes. Applications and Pi payments
+                    through SMAJ PI HUB are not yet available.
+                  </p>
                 </div>
               )}
             </div>
@@ -80,24 +159,88 @@ const UniversityProfilePage = () => {
             {university.description && <p>{university.description}</p>}
 
             <div className="university-profile-details">
-              {university.institution_type && <div><strong>Institution type</strong><span>{university.institution_type}</span></div>}
-              {university.founded_year && <div><strong>Founded</strong><span>{university.founded_year}</span></div>}
-              {university.address && <div><strong>Address</strong><span>{university.address}</span></div>}
-              {university.contact_email && <div><strong>Email</strong><a href={`mailto:${university.contact_email}`}>{university.contact_email}</a></div>}
-              {university.contact_phone && <div><strong>Phone</strong><a href={`tel:${university.contact_phone}`}>{university.contact_phone}</a></div>}
-              {university.official_website && <div><strong>Official Website</strong><a href={university.official_website} target="_blank" rel="noopener noreferrer">Visit Website</a></div>}
-              {university.admissions_website && <div><strong>Admissions Website</strong><a href={university.admissions_website} target="_blank" rel="noopener noreferrer">Visit Admissions</a></div>}
-              {university.languages && university.languages.length > 0 && <div><strong>Languages</strong><span>{university.languages.join(", ")}</span></div>}
-              {university.recognition_status && <div><strong>Recognition Status</strong><span>{university.recognition_status.replace(/_/g, " ")}</span></div>}
-              {university.recognition_authority && <div><strong>Recognition Authority</strong><span>{university.recognition_authority}</span></div>}
-              {university.data_last_verified_at && <div><strong>Information last checked</strong><span>{new Date(university.data_last_verified_at).toLocaleDateString()}</span></div>}
+              {university.institution_type && (
+                <div>
+                  <strong>Institution type</strong>
+                  <span>{university.institution_type}</span>
+                </div>
+              )}
+              {university.founded_year && (
+                <div>
+                  <strong>Founded</strong>
+                  <span>{university.founded_year}</span>
+                </div>
+              )}
+              {university.address && (
+                <div>
+                  <strong>Address</strong>
+                  <span>{university.address}</span>
+                </div>
+              )}
+              {university.contact_email && (
+                <div>
+                  <strong>Email</strong>
+                  <a href={`mailto:${university.contact_email}`}>{university.contact_email}</a>
+                </div>
+              )}
+              {university.contact_phone && (
+                <div>
+                  <strong>Phone</strong>
+                  <a href={`tel:${university.contact_phone}`}>{university.contact_phone}</a>
+                </div>
+              )}
+              {university.official_website && (
+                <div>
+                  <strong>Official Website</strong>
+                  <a href={university.official_website} target="_blank" rel="noopener noreferrer">
+                    Visit Website
+                  </a>
+                </div>
+              )}
+              {university.admissions_website && (
+                <div>
+                  <strong>Admissions Website</strong>
+                  <a href={university.admissions_website} target="_blank" rel="noopener noreferrer">
+                    Visit Admissions
+                  </a>
+                </div>
+              )}
+              {university.languages && university.languages.length > 0 && (
+                <div>
+                  <strong>Languages</strong>
+                  <span>{university.languages.join(", ")}</span>
+                </div>
+              )}
+              {university.recognition_status && (
+                <div>
+                  <strong>Recognition Status</strong>
+                  <span>{university.recognition_status.replace(/_/g, " ")}</span>
+                </div>
+              )}
+              {university.recognition_authority && (
+                <div>
+                  <strong>Recognition Authority</strong>
+                  <span>{university.recognition_authority}</span>
+                </div>
+              )}
+              {university.data_last_verified_at && (
+                <div>
+                  <strong>Information last checked</strong>
+                  <span>{new Date(university.data_last_verified_at).toLocaleDateString()}</span>
+                </div>
+              )}
             </div>
 
             {!university.profile_claimed && (
               <div className="university-claim-cta">
                 <h3>Represent this university?</h3>
                 <p>If you are an official representative, you can request ownership of this profile.</p>
-                <Link to={`/services/education/universities/${university.slug}/claim`} className="university-primary-btn">Request to Claim</Link>
+                <Link
+                  to={`/services/education/universities/${university.slug}/claim`}
+                  className="university-primary-btn"
+                >
+                  Request to Claim
+                </Link>
               </div>
             )}
           </section>
@@ -107,10 +250,27 @@ const UniversityProfilePage = () => {
           <section className="university-profile-section">
             <h2>Programs</h2>
             {programs.length === 0 ? (
-              <p>No programs listed yet.</p>
+              <div className="university-data-empty">
+                <SchoolOutlinedIcon />
+                <h3>Programs are not imported yet</h3>
+                <p>
+                  SMAJ does not invent degree information. Use the official university website for the latest faculties,
+                  degrees, tuition, and study options.
+                </p>
+                {university.official_website && (
+                  <a
+                    href={university.official_website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="university-primary-btn"
+                  >
+                    Explore Official Programs <OpenInNewOutlinedIcon />
+                  </a>
+                )}
+              </div>
             ) : (
               <div className="programs-list">
-                {programs.map((program) => (
+                {programs.map(program => (
                   <ProgramCard key={program.id} program={program} />
                 ))}
               </div>
@@ -122,19 +282,62 @@ const UniversityProfilePage = () => {
           <section className="university-profile-section">
             <h2>Admissions</h2>
             {programs.length === 0 ? (
-              <p>No admissions information available yet.</p>
+              <div className="university-data-empty">
+                <VerifiedOutlinedIcon />
+                <h3>Check current admission information</h3>
+                <p>
+                  Requirements, deadlines, fees, and intakes can change. Continue to the official university source for
+                  accurate information.
+                </p>
+                {(university.admissions_website || university.official_website) && (
+                  <a
+                    href={university.admissions_website || university.official_website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="university-primary-btn"
+                  >
+                    Visit Official Admissions <OpenInNewOutlinedIcon />
+                  </a>
+                )}
+              </div>
             ) : (
               <div className="programs-list">
-                {programs.map((program) => (
+                {programs.map(program => (
                   <div key={program.id} className="admission-card">
                     <h3>{program.name}</h3>
-                    {program.admission_requirements && <p><strong>Requirements:</strong> {program.admission_requirements}</p>}
-                    {program.intake && program.intake.length > 0 && <p><strong>Intake:</strong> {program.intake.join(", ")}</p>}
-                    {program.application_opening_date && <p><strong>Opening:</strong> {program.application_opening_date}</p>}
-                    {program.application_deadline && <p><strong>Deadline:</strong> {program.application_deadline}</p>}
-                    {program.application_fee && <p><strong>Application Fee:</strong> {program.application_fee} {program.application_fee_currency || ""}</p>}
+                    {program.admission_requirements && (
+                      <p>
+                        <strong>Requirements:</strong> {program.admission_requirements}
+                      </p>
+                    )}
+                    {program.intake && program.intake.length > 0 && (
+                      <p>
+                        <strong>Intake:</strong> {program.intake.join(", ")}
+                      </p>
+                    )}
+                    {program.application_opening_date && (
+                      <p>
+                        <strong>Opening:</strong> {program.application_opening_date}
+                      </p>
+                    )}
+                    {program.application_deadline && (
+                      <p>
+                        <strong>Deadline:</strong> {program.application_deadline}
+                      </p>
+                    )}
+                    {program.application_fee && (
+                      <p>
+                        <strong>Application Fee:</strong> {program.application_fee}{" "}
+                        {program.application_fee_currency || ""}
+                      </p>
+                    )}
                     {program.official_program_url && (
-                      <a href={program.official_program_url} target="_blank" rel="noopener noreferrer" className="university-secondary-btn">
+                      <a
+                        href={program.official_program_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="university-secondary-btn"
+                      >
                         Visit Official Program Page
                       </a>
                     )}
@@ -144,7 +347,12 @@ const UniversityProfilePage = () => {
             )}
             {!isPartner && university.admissions_website && (
               <div className="university-official-admissions">
-                <a href={university.admissions_website} target="_blank" rel="noopener noreferrer" className="university-primary-btn">
+                <a
+                  href={university.admissions_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="university-primary-btn"
+                >
                   Visit Official Admissions Website
                 </a>
               </div>
@@ -167,7 +375,15 @@ const UniversityProfilePage = () => {
   );
 };
 
-const ApplyForm = ({ university, programs, onApplied }: { university: University; programs: UniversityProgram[]; onApplied: () => void }) => {
+const ApplyForm = ({
+  university,
+  programs,
+  onApplied,
+}: {
+  university: University;
+  programs: UniversityProgram[];
+  onApplied: () => void;
+}) => {
   const [selectedProgram, setSelectedProgram] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -188,7 +404,7 @@ const ApplyForm = ({ university, programs, onApplied }: { university: University
         },
         education_history: [],
         required_documents: [],
-        statement_essay: formData.get("statement") as string || undefined,
+        statement_essay: (formData.get("statement") as string) || undefined,
       });
       setMessage("Application submitted successfully!");
       onApplied();
@@ -204,9 +420,13 @@ const ApplyForm = ({ university, programs, onApplied }: { university: University
       {message && <div className="university-alert">{message}</div>}
       <label>
         Program
-        <select value={selectedProgram} onChange={(e) => setSelectedProgram(e.target.value)} required>
+        <select value={selectedProgram} onChange={e => setSelectedProgram(e.target.value)} required>
           <option value="">Select a program</option>
-          {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {programs.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
       </label>
       <label>

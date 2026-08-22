@@ -673,3 +673,293 @@
   flex-direction: column;
   gap: 0.75rem;
 }
+
+/* Refined university directory and profile */
+.university-profile-header {
+  background: #fff;
+  overflow: hidden;
+}
+.university-profile-cover {
+  height: clamp(9rem, 28vw, 16rem);
+}
+.university-profile-cover-fallback {
+  background:
+    radial-gradient(circle at 85% 20%, rgb(59 130 246 / 22%), transparent 34%),
+    linear-gradient(135deg, #0d1b33, #15365f 62%, #1d6ea5);
+}
+.university-profile-back {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: rgb(255 255 255 / 92%);
+  border-radius: 999px;
+  color: #173a5e;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  left: 1rem;
+  padding: 0.55rem 0.8rem;
+  position: absolute;
+  text-decoration: none;
+  top: 1rem;
+  z-index: 2;
+}
+.university-profile-header-content {
+  align-items: center;
+  background: #fff;
+  border-radius: 1rem 1rem 0 0;
+  margin: -3.5rem auto 0;
+  max-width: 72rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  position: relative;
+}
+.university-profile-logo,
+.university-profile-logo-placeholder {
+  border: 1px solid #e1e8ef;
+  border-radius: 0.85rem;
+  box-shadow: 0 0.5rem 1.5rem rgb(15 35 60 / 12%);
+  flex: 0 0 auto;
+  height: 7rem;
+  padding: 0.65rem;
+  width: 7rem;
+}
+.university-profile-identity {
+  min-width: 0;
+}
+.university-profile-header-content h1 {
+  color: #101d33;
+  font-size: clamp(1.55rem, 4vw, 2.5rem);
+  line-height: 1.12;
+  margin: 0.45rem 0;
+}
+.university-profile-badges span {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 800;
+  gap: 0.3rem;
+  padding: 0.3rem 0.55rem;
+  text-transform: uppercase;
+}
+.university-profile-badges .directory {
+  background: #edf4fa;
+  color: #225e8d;
+}
+.university-profile-badges .partner {
+  background: #eaf8ef;
+  color: #177642;
+}
+.university-profile-badges svg,
+.university-profile-location svg,
+.university-profile-quick-actions svg {
+  font-size: 1rem;
+}
+.university-profile-location {
+  align-items: center;
+  color: #5c6c80;
+  display: flex;
+  gap: 0.3rem;
+  margin: 0.25rem 0 0.75rem;
+}
+.university-profile-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.university-profile-quick-actions a {
+  align-items: center;
+  border: 1px solid #cbd9e5;
+  border-radius: 0.5rem;
+  color: #1d6294;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  padding: 0.5rem 0.7rem;
+  text-decoration: none;
+}
+.university-profile-tabs {
+  justify-content: center;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.university-profile-tabs button {
+  flex: 0 1 12rem;
+  padding: 1rem;
+}
+.university-profile-section {
+  max-width: 72rem;
+  padding: 1.5rem 1rem 3rem;
+}
+.university-partnership-banner {
+  border: 0;
+  box-shadow: 0 0.35rem 1.2rem rgb(15 35 60 / 7%);
+}
+.university-profile-details {
+  background: transparent;
+  border: 0;
+  gap: 0.8rem;
+  padding: 0;
+}
+.university-profile-details div {
+  background: #fff;
+  border: 1px solid #e1e8ef;
+  border-radius: 0.7rem;
+  box-shadow: 0 0.25rem 0.9rem rgb(15 35 60 / 5%);
+  min-height: 5rem;
+  padding: 0.85rem 1rem;
+}
+.university-claim-cta {
+  background: linear-gradient(135deg, #fff, #f4f8fc);
+  border: 1px solid #d6e2ec;
+}
+.university-data-empty {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dfe8f0;
+  border-radius: 0.9rem;
+  box-shadow: 0 0.5rem 1.5rem rgb(15 35 60 / 6%);
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  padding: clamp(1.5rem, 6vw, 3rem);
+  text-align: center;
+}
+.university-data-empty > svg {
+  background: #edf5fb;
+  border-radius: 50%;
+  color: #2871a8;
+  font-size: 3.2rem;
+  padding: 0.7rem;
+}
+.university-data-empty h3 {
+  margin: 1rem 0 0.4rem;
+}
+.university-data-empty p {
+  color: #607086;
+  line-height: 1.55;
+  margin: 0 0 1.2rem;
+  max-width: 38rem;
+}
+.university-data-empty .university-primary-btn {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.universities-filter-heading {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+.universities-filter-heading span {
+  color: #2871a8;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+.universities-filter-heading h2 {
+  margin: 0.2rem 0 0.8rem;
+}
+.universities-filter-heading > button {
+  background: transparent;
+  border: 0;
+  display: none;
+}
+.universities-filter-actions {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr 1.4fr;
+}
+.universities-apply-filters {
+  background: #246d9f;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0.7rem;
+}
+.universities-results-toolbar > button {
+  background: transparent;
+  border: 0;
+  color: #246d9f;
+  cursor: pointer;
+  font-weight: 750;
+}
+.universities-filter-toggle > span {
+  background: #246d9f;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.4rem;
+}
+.universities-filter-backdrop {
+  display: none;
+}
+@media (max-width: 639px) {
+  .university-profile-cover {
+    height: 9.5rem;
+  }
+  .university-profile-header-content {
+    align-items: flex-start;
+    margin-top: -2.25rem;
+    padding: 1rem;
+  }
+  .university-profile-logo,
+  .university-profile-logo-placeholder {
+    height: 4.75rem;
+    padding: 0.4rem;
+    width: 4.75rem;
+  }
+  .university-profile-header-content h1 {
+    font-size: 1.45rem;
+  }
+  .university-profile-tabs {
+    justify-content: flex-start;
+  }
+  .university-profile-tabs button {
+    flex: 1 0 auto;
+    min-width: 7rem;
+    padding: 0.85rem 0.65rem;
+  }
+  .universities-filter-backdrop {
+    background: rgb(9 18 31 / 55%);
+    border: 0;
+    display: block;
+    inset: 0;
+    position: fixed;
+    z-index: 39;
+  }
+  .universities-catalog-filters {
+    background: #fff;
+    border: 0;
+    border-radius: 1.1rem 1.1rem 0 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    left: 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 1.2rem;
+    position: fixed;
+    right: 0;
+    transform: translateY(105%);
+    transition: transform 0.22s ease;
+    z-index: 40;
+  }
+  .universities-catalog-filters.open {
+    display: flex;
+    transform: translateY(0);
+  }
+  .universities-filter-heading > button {
+    display: inline-flex;
+  }
+  .universities-filter-actions {
+    background: #fff;
+    bottom: 0;
+    padding: 0.65rem 0 max(0.2rem, env(safe-area-inset-bottom));
+    position: sticky;
+  }
+}
