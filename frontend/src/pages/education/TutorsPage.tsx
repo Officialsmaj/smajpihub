@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
@@ -7,28 +7,14 @@ import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
 import "../../pages/EducationPage.css";
 import "../../components/education/courses.css";
-
-type TutorSummary = {
-  id: string;
-  name: string;
-  headline: string;
-  subjects: string[];
-  languages: string[];
-  location: string;
-  ratePi: number;
-  rating: number;
-  reviewCount: number;
-  verified: boolean;
-};
-
-// Only approved tutor records should be supplied here by the tutor API.
-// Keeping this empty prevents unverified or invented providers from appearing publicly.
-const verifiedTutors: TutorSummary[] = [];
+import { getVerifiedTutors, type TutorSummary } from "../../lib/educationApi";
 
 const TutorsPage = () => {
   const [query, setQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [language, setLanguage] = useState("");
+  const [verifiedTutors, setVerifiedTutors] = useState<TutorSummary[]>([]);
+  useEffect(() => { void getVerifiedTutors().then(setVerifiedTutors).catch(() => setVerifiedTutors([])); }, []);
 
   const tutors = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -91,7 +77,7 @@ const TutorsPage = () => {
                 <span>
                   {tutor.languages.join(", ")} · {tutor.location}
                 </span>
-                <strong>{tutor.ratePi} Pi / hour</strong>
+                <strong>{tutor.ratePi} Pi / lesson</strong>
                 <Link className="course-primary-btn" to={`/services/education/tutors/${tutor.id}`}>
                   View Profile
                 </Link>
@@ -110,7 +96,7 @@ const TutorsPage = () => {
               <Link className="course-primary-btn" to="/services/education/courses?category=Exam%20Prep">
                 Browse Exam Prep Courses
               </Link>
-              <Link className="course-secondary-btn" to="/services/education/partners">
+              <Link className="course-secondary-btn" to="/services/education/teach">
                 Become a Tutor
               </Link>
             </div>

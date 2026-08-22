@@ -1418,6 +1418,88 @@ export default function mountEducationEndpoints(router: Router) {
     }
   });
 
+  router.get("/tutors", async (req, res) => {
+    const rows = await req.app.locals.teacherApplicationCollection?.find({ status: "approved", applicant_role: "tutor" }).sort({ reviewed_at: -1 }).toArray() || [];
+    const tutors = rows.map((item: any) => ({ id: item._id.toString(), name: item.full_name, avatar_url: item.avatar_url, headline: item.headline, biography: item.biography, subjects: item.subjects || [], languages: item.languages || [], location: item.country, experience_years: item.experience_years || 0, ratePi: item.proposed_price_pi || 0, verified: true }));
+    return res.status(200).json({ tutors });
+  });
+
+  router.get("/tutors/:id", async (req, res) => {
+    if (!ObjectId.isValid(req.params.id)) return res.status(404).json({ error: "Tutor not found" });
+    const item = await req.app.locals.teacherApplicationCollection?.findOne({ _id: new ObjectId(req.params.id), status: "approved", applicant_role: "tutor" });
+    if (!item) return res.status(404).json({ error: "Tutor not found" });
+    return res.status(200).json({ tutor: { id: item._id.toString(), name: item.full_name, avatar_url: item.avatar_url, headline: item.headline, biography: item.biography, subjects: item.subjects || [], languages: item.languages || [], location: item.country, experience_years: item.experience_years || 0, education: item.education, certifications: item.certifications, ratePi: item.proposed_price_pi || 0, verified: true } });
+  });
+  router.get("/teacher-applications/me", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const application = await req.app.locals.teacherApplicationCollection?.findOne({ user_id: user._id.toString() });
+    return res.status(200).json({ application: serialize(application) });
+  });
+
+  router.post("/teacher-applications", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const collection = req.app.locals.teacherApplicationCollection;
+    if (!collection) return res.status(503).json({ error: "Teacher applications are unavailable" });
+    const body = req.body || {};
+    const submit = body.action === "submit";
+    const existing = await collection.findOne({ user_id: user._id.toString() });
+    if (existing?.status === "approved") return res.status(409).json({ error: "Application is already approved" });
+    const required = [body.full_name, body.email, body.country, body.headline, body.biography, body.proposed_course_title];
+    if (submit && (required.some((value) => !safeString(value)) || !body.identity_confirmed || !body.quality_agreed || !body.terms_agreed)) {
+      return res.status(400).json({ error: "Complete all required fields and confirmations before submitting." });
+    }
+    const now = new Date().toISOString();
+    const application = {
+      user_id: user._id.toString(),
+      applicant_role: body.applicant_role === "education_provider" ? "education_provider" : "tutor",
+      full_name: safeString(body.full_name || user.displayName || user.piUsername),
+      email: safeString(body.email || user.contactEmail), phone: safeString(body.phone || user.contactPhone),
+      country: safeString(body.country || user.country), avatar_url: safeString(body.avatar_url || user.avatar),
+      headline: safeString(body.headline), biography: safeString(body.biography),
+      subjects: Array.isArray(body.subjects) ? body.subjects.map((v: unknown) => safeString(v)).filter(Boolean).slice(0, 20) : [],
+      experience_years: clamp(safeNumber(body.experience_years), 0, 80),
+      languages: Array.isArray(body.languages) ? body.languages.map((v: unknown) => safeString(v)).filter(Boolean).slice(0, 15) : [],
+      education: safeString(body.education), certifications: safeString(body.certifications),
+      proposed_course_title: safeString(body.proposed_course_title), proposed_category: safeString(body.proposed_category),
+      proposed_level: safeString(body.proposed_level), delivery_method: safeString(body.delivery_method),
+      proposed_price_pi: Math.max(0, safeNumber(body.proposed_price_pi)),
+      evidence_documents: Array.isArray(body.evidence_documents) ? body.evidence_documents.filter((v: any) => safeString(v?.url)).slice(0, 8).map((v: any) => ({ name: safeString(v.name), url: safeString(v.url) })) : [],
+      sample_lesson_url: safeString(body.sample_lesson_url), pi_username: safeString(body.pi_username || user.piUsername),
+      identity_confirmed: Boolean(body.identity_confirmed), quality_agreed: Boolean(body.quality_agreed), terms_agreed: Boolean(body.terms_agreed),
+      status: submit ? "submitted" : "draft", submitted_at: submit ? now : existing?.submitted_at,
+      reviewer_notes: existing?.reviewer_notes || "", created_at: existing?.created_at || now, updated_at: now,
+    };
+    await collection.updateOne({ user_id: application.user_id }, { $set: application }, { upsert: true });
+    const saved = await collection.findOne({ user_id: application.user_id });
+    return res.status(existing ? 200 : 201).json({ application: serialize(saved) });
+  });
+
+  router.get("/admin/teacher-applications", async (req, res) => {
+    const admin = await requireAdmin(req, res); if (!admin) return;
+    const applications = await req.app.locals.teacherApplicationCollection?.find({}).sort({ submitted_at: -1, updated_at: -1 }).toArray() || [];
+    return res.status(200).json({ applications: applications.map(serialize) });
+  });
+
+  router.patch("/admin/teacher-applications/:id", async (req, res) => {
+    const admin = await requireAdmin(req, res); if (!admin) return;
+    if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "Invalid application" });
+    const collection = req.app.locals.teacherApplicationCollection;
+    const application = await collection?.findOne({ _id: new ObjectId(req.params.id) });
+    if (!application) return res.status(404).json({ error: "Application not found" });
+    const statuses = ["under_review", "changes_required", "approved", "rejected"];
+    const status = safeString(req.body?.status);
+    if (!statuses.includes(status)) return res.status(400).json({ error: "Invalid review status" });
+    const now = new Date().toISOString();
+    await collection.updateOne({ _id: application._id }, { $set: { status, reviewer_notes: safeString(req.body?.reviewer_notes), reviewed_at: now, reviewed_by: admin._id.toString(), updated_at: now } });
+    if (status === "approved" && ObjectId.isValid(application.user_id)) {
+      const role = application.applicant_role === "education_provider" ? "training_provider" : "verified_instructor";
+      await req.app.locals.userCollection?.updateOne({ _id: new ObjectId(application.user_id) }, { $addToSet: { roles: role } });
+    }
+    if (application.user_id) await createNotification(req.app, { userId: application.user_id, type: "education_teacher_application", title: `Teaching application ${status.replace(/_/g, " ")}`, message: safeString(req.body?.reviewer_notes) || `Your Teach on SMAJ application is now ${status.replace(/_/g, " ")}.`, relatedId: "education-teacher-application" });
+    return res.status(200).json({ application: serialize(await collection.findOne({ _id: application._id })) });
+  });
   router.get("/admin/universities", async (req, res) => {
     const admin = await requireAdmin(req, res);
     if (!admin) return;

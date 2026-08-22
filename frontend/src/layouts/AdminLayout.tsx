@@ -18,6 +18,7 @@ import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -30,6 +31,7 @@ const links = [
   ["/admin/heroes", "Hero Banners", <Inventory2OutlinedIcon />],
   ["/admin/users", "Users", <PeopleOutlineIcon />],
   ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
+  ["/admin/education/teachers", "Teacher Review", <SchoolOutlinedIcon />],
   ["/admin/ambassadors", "Ambassadors", <PeopleOutlineIcon />],
   ["/admin/products", "Products", <Inventory2OutlinedIcon />],
   ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],

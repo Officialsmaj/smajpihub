@@ -182,3 +182,41 @@ export type UniversityServiceAuthorization = {
   pi_payments_enabled: boolean;
   payment_categories: UniversityPaymentPurpose[];
 };
+
+export type TeacherApplicationStatus = "draft" | "submitted" | "under_review" | "changes_required" | "approved" | "rejected";
+
+export interface TeacherApplicationData {
+  _id: ObjectId;
+  user_id: string;
+  applicant_role: "tutor" | "education_provider";
+  full_name: string;
+  email: string;
+  phone?: string;
+  country: string;
+  avatar_url?: string;
+  headline: string;
+  biography: string;
+  subjects: string[];
+  experience_years: number;
+  languages: string[];
+  education: string;
+  certifications: string;
+  proposed_course_title: string;
+  proposed_category: string;
+  proposed_level: string;
+  delivery_method: string;
+  proposed_price_pi: number;
+  evidence_documents: Array<{ name: string; url: string }>;
+  sample_lesson_url?: string;
+  pi_username: string;
+  identity_confirmed: boolean;
+  quality_agreed: boolean;
+  terms_agreed: boolean;
+  status: TeacherApplicationStatus;
+  reviewer_notes?: string;
+  submitted_at?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  created_at: string;
+  updated_at: string;
+}

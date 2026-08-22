@@ -21,7 +21,7 @@ const topicLinks = [
 
 const providerLinks = [
   ["/services/education/partners", "Partners"],
-  ["/onboarding?type=Tutor%20%2F%20Instructor&source=education#onboarding-form", "Teach on SMAJ · Apply to join"],
+  ["/services/education/teach", "Teach on SMAJ"],
 ] as const;
 
 const EducationHeader = ({

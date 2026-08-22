@@ -1,0 +1,12 @@
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
+import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import AppLayout from "../../layouts/AppLayout";
+import EducationHeader from "./EducationHeader";
+import { getVerifiedTutor, type TutorSummary } from "../../lib/educationApi";
+import "../../components/education/courses.css";
+import "./TeachOnSmajPage.css";
+const TutorProfilePage = () => { const { id = "" } = useParams(); const [tutor, setTutor] = useState<TutorSummary | null>(null); const [loading, setLoading] = useState(true); useEffect(() => { void getVerifiedTutor(id).then(setTutor).catch(() => setTutor(null)).finally(() => setLoading(false)); }, [id]); return <AppLayout showHeader={false} showFooter={false}><main className="teach-page"><EducationHeader query="" onQueryChange={() => undefined} searchPath="/services/education/tutors" />{loading ? <section className="teach-status">Loading verified tutor...</section> : !tutor ? <section className="teach-status"><h1>Tutor not found</h1><Link to="/services/education/tutors">Back to tutors</Link></section> : <><section className="teach-hero"><span>VERIFIED SMAJ TUTOR</span><h1>{tutor.name}</h1><p>{tutor.headline}</p><div><VerifiedOutlinedIcon /> Identity and qualifications reviewed <LanguageOutlinedIcon /> {tutor.languages.join(", ")} <SchoolOutlinedIcon /> {tutor.experience_years} years experience</div></section><section className="teach-review"><div className="teach-profile-preview">{tutor.avatar_url ? <img src={tutor.avatar_url} alt="" /> : <span>{tutor.name.slice(0,1)}</span>}<div><b>{tutor.name}</b><small>{tutor.location}</small></div></div><h2>About this tutor</h2><p>{tutor.biography}</p><h3>Subjects</h3><p>{tutor.subjects.join(" · ")}</p>{tutor.education && <><h3>Education</h3><p>{tutor.education}</p></>}{tutor.certifications && <><h3>Certifications</h3><p>{tutor.certifications}</p></>}<h3>{tutor.ratePi} Pi per lesson</h3><div className="teach-actions"><Link className="secondary" to="/services/education/tutors">Back to tutors</Link><Link to="/messages">Request a lesson</Link></div></section></>}</main></AppLayout>; };
+export default TutorProfilePage;

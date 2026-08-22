@@ -83,9 +83,12 @@ import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
 import CertificatesPage from "./pages/education/CertificatesPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
 import TutorsPage from "./pages/education/TutorsPage";
+import TutorProfilePage from "./pages/education/TutorProfilePage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
 import UniversityProfilePage from "./pages/education/UniversityProfilePage";
 import UniversityClaimPage from "./pages/education/UniversityClaimPage";
+import TeachOnSmajPage from "./pages/education/TeachOnSmajPage";
+import AdminTeacherApplicationsPage from "./pages/admin/AdminTeacherApplicationsPage";
 import FoodDeliveryPage from "./pages/food-delivery/FoodDeliveryPage";
 import RestaurantDetailPage from "./pages/food-delivery/RestaurantDetailPage";
 import CartPage from "./pages/food-delivery/CartPage";
@@ -725,8 +728,20 @@ export const router = createBrowserRouter([
     element: <UniversityClaimPage />,
   },
   {
+    path: "/services/education/teach",
+    element: (
+      <ProtectedRoute>
+        <TeachOnSmajPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/services/education/tutors",
     element: <TutorsPage />,
+  },
+  {
+    path: "/services/education/tutors/:id",
+    element: <TutorProfilePage />,
   },
   {
     path: "/services/education/courses",
@@ -1151,6 +1166,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminUsersPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/education/teachers",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminTeacherApplicationsPage />
         </AdminLayout>
       </ProtectedRoute>
     ),

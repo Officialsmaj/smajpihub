@@ -263,3 +263,14 @@ export const cancelUniversityPayment = async (paymentId: string): Promise<{ mess
   const response = await axiosClient.post<{ message: string }>(`/education/universities/payments/${encodeURIComponent(paymentId)}/cancel`);
   return response.data;
 };
+
+export type TeacherApplication = {
+  id: string; applicant_role: "tutor" | "education_provider"; full_name: string; email: string; phone?: string; country: string; avatar_url?: string; headline: string; biography: string; subjects: string[]; experience_years: number; languages: string[]; education: string; certifications: string; proposed_course_title: string; proposed_category: string; proposed_level: string; delivery_method: string; proposed_price_pi: number; evidence_documents: Array<{ name: string; url: string }>; sample_lesson_url?: string; pi_username: string; identity_confirmed: boolean; quality_agreed: boolean; terms_agreed: boolean; status: "draft" | "submitted" | "under_review" | "changes_required" | "approved" | "rejected"; reviewer_notes?: string; submitted_at?: string; created_at: string; updated_at: string;
+};
+export const getMyTeacherApplication = async () => (await axiosClient.get<{ application: TeacherApplication | null }>("/education/teacher-applications/me")).data.application;
+export const saveTeacherApplication = async (data: Record<string, unknown>) => (await axiosClient.post<{ application: TeacherApplication }>("/education/teacher-applications", data)).data.application;
+const fileToDataUrl = (file: File) => new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = () => reject(new Error("Could not read this file.")); reader.readAsDataURL(file); });
+export const uploadTeacherEvidence = async (file: File) => { if (file.type !== "application/pdf") throw new Error("Upload a PDF document."); const document = await fileToDataUrl(file); const { data } = await axiosClient.post<{ url: string }>("/uploads/document", { document, name: file.name, purpose: "education-teacher-evidence" }); return { name: file.name, url: data.url }; };
+export type TutorSummary = { id: string; name: string; avatar_url?: string; headline: string; biography?: string; subjects: string[]; languages: string[]; location: string; experience_years: number; education?: string; certifications?: string; ratePi: number; verified: boolean };
+export const getVerifiedTutors = async () => (await axiosClient.get<{ tutors: TutorSummary[] }>("/education/tutors")).data.tutors;
+export const getVerifiedTutor = async (id: string) => (await axiosClient.get<{ tutor: TutorSummary }>(`/education/tutors/${encodeURIComponent(id)}`)).data.tutor;
