@@ -20692,9 +20692,10 @@ svg {
 .dashboard-welcome-loader h1 {
   margin: 14px 0 0;
   color: #6d28d9;
-  font-size: clamp(1.8rem, 7vw, 3rem);
+  font-size: clamp(1.22rem, 5.2vw, 3rem);
   line-height: 1.08;
   letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .dashboard-welcome-loader p {
@@ -20704,6 +20705,13 @@ svg {
   font-weight: 850;
   letter-spacing: .16em;
   text-transform: uppercase;
+}
+.dashboard-welcome-loader small {
+  margin-top: -7px;
+  color: #7c6f8d;
+  font-size: clamp(.62rem, 2.25vw, .78rem);
+  font-weight: 700;
+  letter-spacing: .035em;
 }
 
 @keyframes dashboardWelcomePulse {
