@@ -84,6 +84,7 @@ import CertificatesPage from "./pages/education/CertificatesPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
 import TutorsPage from "./pages/education/TutorsPage";
 import TutorProfilePage from "./pages/education/TutorProfilePage";
+import EducationProfilePage from "./pages/education/EducationProfilePage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
 import UniversityProfilePage from "./pages/education/UniversityProfilePage";
 import UniversityClaimPage from "./pages/education/UniversityClaimPage";
@@ -726,6 +727,14 @@ export const router = createBrowserRouter([
   {
     path: "/services/education/universities/:slug/claim",
     element: <UniversityClaimPage />,
+  },
+  {
+    path: "/services/education/profile",
+    element: (
+      <ProtectedRoute>
+        <EducationProfilePage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/services/education/teach",

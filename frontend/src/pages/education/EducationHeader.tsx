@@ -124,7 +124,7 @@ const EducationHeader = ({
           <section className="education-menu-group">
             <span>Account</span>
             <div className="education-menu-provider">
-              <NavLink to="/profile" onClick={() => setMenuOpen(false)}>
+              <NavLink to="/services/education/profile" onClick={() => setMenuOpen(false)}>
                 Profile
               </NavLink>
             </div>

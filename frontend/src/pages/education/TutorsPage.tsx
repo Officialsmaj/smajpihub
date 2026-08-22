@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
 import "../../pages/EducationPage.css";
@@ -14,7 +15,11 @@ const TutorsPage = () => {
   const [subject, setSubject] = useState("");
   const [language, setLanguage] = useState("");
   const [verifiedTutors, setVerifiedTutors] = useState<TutorSummary[]>([]);
-  useEffect(() => { void getVerifiedTutors().then(setVerifiedTutors).catch(() => setVerifiedTutors([])); }, []);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { void getVerifiedTutors().then(setVerifiedTutors).catch(() => setVerifiedTutors([])).finally(() => setLoading(false)); }, []);
+  const subjects = useMemo(() => [...new Set(verifiedTutors.flatMap(tutor => tutor.subjects))].sort(), [verifiedTutors]);
+  const languages = useMemo(() => [...new Set(verifiedTutors.flatMap(tutor => tutor.languages))].sort(), [verifiedTutors]);
+  const hasFilters = Boolean(query || subject || language);
 
   const tutors = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -41,32 +46,17 @@ const TutorsPage = () => {
           <p>Search approved tutors by subject and language. Review their profile before requesting a lesson.</p>
         </section>
 
-        <section className="tutors-toolbar" aria-label="Tutor filters">
-          <label className="courses-filter-search">
-            <SearchOutlinedIcon />
-            <input
-              value={query}
-              onChange={event => setQuery(event.target.value)}
-              placeholder="Tutor, subject, or skill"
-            />
-          </label>
-          <select value={subject} onChange={event => setSubject(event.target.value)} aria-label="Subject">
-            <option value="">All subjects</option>
-            <option value="English">English</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Technology">Technology</option>
-            <option value="Business">Business</option>
-            <option value="Exam Prep">Exam Prep</option>
-          </select>
-          <select value={language} onChange={event => setLanguage(event.target.value)} aria-label="Teaching language">
-            <option value="">All languages</option>
-            <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
-            <option value="French">French</option>
-          </select>
+        <section className="tutors-search-panel" aria-label="Find a tutor">
+          <div className="tutors-search-title"><span><TuneRoundedIcon /><b>Find your tutor</b></span>{hasFilters && <button type="button" onClick={() => { setQuery(""); setSubject(""); setLanguage(""); }}>Clear filters</button>}</div>
+          <div className="tutors-toolbar">
+            <label className="tutors-search-input"><SearchOutlinedIcon /><input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search tutor, subject, or skill" aria-label="Search verified tutors" /></label>
+            <label><span>Subject</span><select value={subject} onChange={event => setSubject(event.target.value)}><option value="">All subjects</option>{subjects.map(value => <option key={value}>{value}</option>)}</select></label>
+            <label><span>Language</span><select value={language} onChange={event => setLanguage(event.target.value)}><option value="">All languages</option>{languages.map(value => <option key={value}>{value}</option>)}</select></label>
+          </div>
+          <p className="tutors-results-count">{loading ? "Loading verified tutors…" : `${tutors.length} verified ${tutors.length === 1 ? "tutor" : "tutors"} found`}</p>
         </section>
 
-        {tutors.length > 0 ? (
+        {loading ? <section className="tutors-empty tutors-loading"><span /><h2>Finding verified tutors</h2><p>Please wait while we load approved profiles.</p></section> : tutors.length > 0 ? (
           <section className="tutors-grid">
             {tutors.map(tutor => (
               <article className="tutor-card" key={tutor.id}>
@@ -87,7 +77,7 @@ const TutorsPage = () => {
         ) : (
           <section className="tutors-empty">
             <SchoolOutlinedIcon />
-            <h2>No verified tutors available yet</h2>
+            <h2>{hasFilters ? "No tutors match these filters" : "No verified tutors available yet"}</h2>
             <p>
               We only publish tutors after identity, qualification, pricing, and service checks. No demo profiles are
               shown as real providers.
