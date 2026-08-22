@@ -684,8 +684,8 @@
 }
 .university-profile-cover-fallback {
   background:
-    radial-gradient(circle at 85% 20%, rgb(59 130 246 / 22%), transparent 34%),
-    linear-gradient(135deg, #0d1b33, #15365f 62%, #1d6ea5);
+    radial-gradient(circle at 85% 20%, rgb(255 255 255 / 18%), transparent 34%),
+    linear-gradient(135deg, #0b172a, #173555 58%, var(--university-brand, #1d6ea5));
 }
 .university-profile-back {
   align-items: center;
@@ -744,7 +744,7 @@
 }
 .university-profile-badges .directory {
   background: #edf4fa;
-  color: #225e8d;
+  color: var(--university-brand, #225e8d);
 }
 .university-profile-badges .partner {
   background: #eaf8ef;
@@ -771,7 +771,7 @@
   align-items: center;
   border: 1px solid #cbd9e5;
   border-radius: 0.5rem;
-  color: #1d6294;
+  color: var(--university-brand, #1d6294);
   display: inline-flex;
   font-size: 0.8rem;
   font-weight: 800;

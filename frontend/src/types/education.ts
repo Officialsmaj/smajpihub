@@ -30,6 +30,7 @@ export type University = {
   local_name?: string;
   logo_url?: string;
   cover_image_url?: string;
+  brand_primary_color?: string;
   description?: string;
   institution_type: string;
   founded_year?: number;

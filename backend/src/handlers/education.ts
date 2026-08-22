@@ -506,6 +506,9 @@ export default function mountEducationEndpoints(router: Router) {
         local_name: safeString(body.local_name),
         logo_url: safeString(body.logo_url),
         cover_image_url: safeString(body.cover_image_url),
+        brand_primary_color: /^#[0-9a-f]{6}$/i.test(safeString(body.brand_primary_color))
+          ? safeString(body.brand_primary_color).toUpperCase()
+          : undefined,
         description: safeString(body.description),
         institution_type: validInstitutionTypes.includes(body.institution_type)
           ? body.institution_type
@@ -602,6 +605,7 @@ export default function mountEducationEndpoints(router: Router) {
         "local_name",
         "logo_url",
         "cover_image_url",
+        "brand_primary_color",
         "description",
         "institution_type",
         "founded_year",
@@ -650,6 +654,15 @@ export default function mountEducationEndpoints(router: Router) {
             continue;
           if (key === "languages" && !Array.isArray(body[key])) continue;
           if (key === "external_ids" && !Array.isArray(body[key])) continue;
+          if (
+            key === "brand_primary_color" &&
+            !/^#[0-9a-f]{6}$/i.test(safeString(body[key]))
+          )
+            continue;
+          if (key === "brand_primary_color") {
+            updates[key] = safeString(body[key]).toUpperCase();
+            continue;
+          }
           updates[key] = body[key];
         }
       }

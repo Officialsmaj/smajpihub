@@ -41,6 +41,7 @@ export interface UniversityData {
   local_name?: string;
   logo_url?: string;
   cover_image_url?: string;
+  brand_primary_color?: string;
   description?: string;
   institution_type: UniversityInstitutionType;
   founded_year?: number;

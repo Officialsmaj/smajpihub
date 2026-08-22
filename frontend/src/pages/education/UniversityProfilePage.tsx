@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useParams, Link } from "react-router-dom";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
@@ -58,10 +58,14 @@ const UniversityProfilePage = () => {
 
   const isPartner = university.partnership_status === "smaj_verified_partner";
   const isApplicationsEnabled = isPartner && university.applications_enabled;
+  const brandColor = /^#[0-9a-f]{6}$/i.test(university.brand_primary_color || "")
+    ? university.brand_primary_color
+    : "#1D6EA5";
+  const universityTheme = { "--university-brand": brandColor } as CSSProperties;
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
-      <main className="universities-page">
+      <main className="universities-page university-branded-page" style={universityTheme}>
         <div className={`university-profile-header${university.cover_image_url ? " has-cover" : " no-cover"}`}>
           {university.cover_image_url ? (
             <img src={university.cover_image_url} alt="" className="university-profile-cover" />

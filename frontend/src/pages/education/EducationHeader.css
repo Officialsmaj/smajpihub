@@ -195,11 +195,11 @@
     height: 58px;
   }
   .education-back-to-hub {
-    border: 0;
-    padding: 0.4rem;
+    border: 1px solid rgba(19, 32, 51, 0.08);
+    padding: 0.4rem 0.55rem;
   }
   .education-back-to-hub span {
-    display: none;
+    display: inline;
   }
   .education-brand {
     font-size: 1.18rem;
