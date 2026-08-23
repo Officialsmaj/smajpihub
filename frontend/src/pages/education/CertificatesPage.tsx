@@ -150,10 +150,10 @@ const CertificatesPage = () => {
             <CertificateArtwork certificate={selected} />
             <div className="certificate-actions">
               <Link className="course-primary-btn" to={`/verify/certificate/${selected.certificate_id}`}>
-                Verify Certificate
+                Verify
               </Link>
-              <button className="course-secondary-btn" onClick={() => window.print()}>
-                <DownloadOutlinedIcon /> Print / Save PDF
+              <button className="course-secondary-btn" aria-label="Print or save certificate as PDF" onClick={() => window.print()}>
+                <DownloadOutlinedIcon /> Print PDF
               </button>
               <button className="course-secondary-btn" onClick={() => void shareCertificate()}>
                 <ShareOutlinedIcon /> Share
