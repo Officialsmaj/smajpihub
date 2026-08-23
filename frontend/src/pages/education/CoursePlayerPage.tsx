@@ -5,6 +5,8 @@ import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import QuizOutlinedIcon from "@mui/icons-material/QuizOutlined";
+import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import AppLayout from "../../layouts/AppLayout";
 import { getEnrollment, completeLesson, getCourse } from "../../lib/coursesApi";
 import type { Enrollment, Course, Lesson } from "../../types/courses";
@@ -53,6 +55,7 @@ const CoursePlayerPage = () => {
           setCourse(courseData);
           const first = findLessonById(courseData.modules, data.current_lesson_id || "");
           if (first) setActiveLesson(first);
+          else if (courseData.modules[0]?.lessons[0]) setActiveLesson({ moduleIndex: 0, lessonIndex: 0, lesson: courseData.modules[0].lessons[0] });
         }
       }
     }).finally(() => {
@@ -107,20 +110,25 @@ const CoursePlayerPage = () => {
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
-      <main className="courses-page">
+      <main className="courses-page course-player-page">
+        <EducationBackBar current="Course Learning" />
         <div className="course-player">
           <aside className="course-player-sidebar">
             <div className="course-player-sidebar-header">
-              <h3>{enrollment.course_title}</h3>
-              <p>{enrollment.progress_percentage}% Complete</p>
-              <div className="course-player-progress">
+              <span className="course-player-eyebrow">MY LEARNING</span>
+              <div className="course-player-course-heading">
+                <h1>{enrollment.course_title}</h1>
+                <strong>{enrollment.progress_percentage}%</strong>
+              </div>
+              <p>{enrollment.completed_lesson_ids.length} lessons completed</p>
+              <div className="course-player-progress" aria-label={`${enrollment.progress_percentage}% complete`}>
                 <div className="course-player-progress-bar" style={{ width: `${enrollment.progress_percentage}%` }} />
               </div>
             </div>
             <nav className="course-player-curriculum">
               {course.modules.map((module, mi) => (
                 <div key={mi} className="course-player-module">
-                  <h4>{module.title}</h4>
+                  <h4><span>Module {mi + 1}</span><strong>{module.title}</strong></h4>
                   {module.lessons.map((lesson, li) => {
                     const lessonId = `${module.order}-${lesson.order}`;
                     const isActive = activeLesson?.moduleIndex === mi && activeLesson?.lessonIndex === li;
@@ -143,7 +151,7 @@ const CoursePlayerPage = () => {
           <div className="course-player-main">
             {activeLesson ? (
               <div className="course-player-content">
-                <h2>{activeLesson.lesson.title}</h2>
+                <header className="course-player-content-header"><span>{activeLesson.lesson.type} lesson</span><h2>{activeLesson.lesson.title}</h2></header>
                 {activeLesson.lesson.description && <p>{activeLesson.lesson.description}</p>}
                 {activeLesson.lesson.type === "video" && activeLesson.lesson.video_url && (
                   <div className="course-player-video">
@@ -178,7 +186,9 @@ const CoursePlayerPage = () => {
               </div>
             ) : (
               <div className="course-player-empty">
-                <h3>Select a lesson to begin</h3>
+                <SchoolOutlinedIcon />
+                <h3>Your learning starts here</h3>
+                <p>Select a lesson from the course outline to begin.</p>
               </div>
             )}
           </div>
