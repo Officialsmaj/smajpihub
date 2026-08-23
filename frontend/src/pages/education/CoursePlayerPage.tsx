@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
@@ -6,6 +6,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import QuizOutlinedIcon from "@mui/icons-material/QuizOutlined";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import FullscreenOutlinedIcon from "@mui/icons-material/FullscreenOutlined";
 import EducationBackBar from "../../components/education/EducationBackBar";
 import AppLayout from "../../layouts/AppLayout";
 import { getEnrollment, completeLesson, getCourse } from "../../lib/coursesApi";
@@ -41,6 +42,7 @@ const CoursePlayerPage = () => {
   const [activeLesson, setActiveLesson] = useState<{ moduleIndex: number; lessonIndex: number; lesson: Lesson } | null>(null);
   const [completing, setCompleting] = useState(false);
   const [message, setMessage] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +70,17 @@ const CoursePlayerPage = () => {
     setActiveLesson({ moduleIndex, lessonIndex, lesson });
   };
 
+
+  const openVideoFullscreen = async () => {
+    const video = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (!video) return;
+    try {
+      if (video.requestFullscreen) await video.requestFullscreen();
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    } catch {
+      video.webkitEnterFullscreen?.();
+    }
+  };
   const handleCompleteLesson = async () => {
     if (!enrollmentId || !activeLesson || !course) return;
     const module = course.modules[activeLesson.moduleIndex];
@@ -155,7 +168,16 @@ const CoursePlayerPage = () => {
                 {activeLesson.lesson.description && <p>{activeLesson.lesson.description}</p>}
                 {activeLesson.lesson.type === "video" && activeLesson.lesson.video_url && (
                   <div className="course-player-video">
-                    <video controls src={activeLesson.lesson.video_url} style={{ width: "100%", borderRadius: "0.5rem" }} />
+                    <video
+                      ref={videoRef}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      src={activeLesson.lesson.video_url}
+                    />
+                    <button type="button" className="course-player-fullscreen" onClick={() => void openVideoFullscreen()}>
+                      <FullscreenOutlinedIcon /> Full screen
+                    </button>
                   </div>
                 )}
                 {activeLesson.lesson.type === "text" && activeLesson.lesson.content && (
