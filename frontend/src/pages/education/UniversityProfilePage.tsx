@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useParams, Link } from "react-router-dom";
-import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
@@ -66,15 +66,13 @@ const UniversityProfilePage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="universities-page university-branded-page" style={universityTheme}>
+        <EducationBackBar current="University Profile" />
         <div className={`university-profile-header${university.cover_image_url ? " has-cover" : " no-cover"}`}>
           {university.cover_image_url ? (
             <img src={university.cover_image_url} alt="" className="university-profile-cover" />
           ) : (
             <div className="university-profile-cover university-profile-cover-fallback" />
           )}
-          <Link className="university-profile-back" to="/services/education/universities">
-            <ArrowBackOutlinedIcon /> Back to Universities
-          </Link>
           <div className="university-profile-header-content">
             {university.logo_url && !logoFailed ? (
               <img

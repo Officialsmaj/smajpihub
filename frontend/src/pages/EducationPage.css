@@ -950,6 +950,9 @@
   box-shadow: 0 18px 42px rgba(19, 32, 51, 0.14);
 }
 
+.education-page .education-trust article:first-child { background: #132033; }
+.education-page .education-trust article:nth-child(2) { background: #236192; }
+.education-page .education-trust article:nth-child(3) { background: #2f6f5f; }
 .education-page .education-trust article h3 {
   color: #ffffff;
 }

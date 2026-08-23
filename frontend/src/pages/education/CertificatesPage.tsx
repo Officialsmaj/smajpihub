@@ -33,7 +33,49 @@ const sampleCertificate: Certificate = {
   updated_at: "2026-03-01T00:00:00.000Z",
 };
 
-const CertificateArtwork = ({ certificate, sample = false }: { certificate: Certificate; sample?: boolean }) => {
+const safeFileName = (value: string) => value.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+
+const downloadCertificate = async (certificate: Certificate) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1800; canvas.height = 1273;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const verifyUrl = new URL(`/verify/certificate/${encodeURIComponent(certificate.certificate_id)}`, window.location.origin).toString();
+  const qr = new Image();
+  qr.src = await QRCode.toDataURL(verifyUrl, { width: 360, margin: 1, errorCorrectionLevel: "H" });
+  await qr.decode();
+  const navy = "#10245f", gold = "#d9ac3d", ink = "#182033";
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 1800, 1273);
+  ctx.strokeStyle = navy; ctx.lineWidth = 18; ctx.strokeRect(32, 32, 1736, 1209);
+  ctx.lineWidth = 3; ctx.strokeRect(55, 55, 1690, 1163);
+  ctx.fillStyle = navy; ctx.fillRect(1430, 32, 225, 1209);
+  ctx.fillStyle = navy; ctx.font = "700 34px Arial"; ctx.fillText("SMAJ PI EDUCATION", 130, 145);
+  ctx.fillStyle = "#657087"; ctx.font = "24px Arial"; ctx.fillText("Verified learning credentials", 130, 180);
+  const title = certificate.certificate_type === "enrollment" ? "Enrollment Certificate" : "Completion Certificate";
+  ctx.fillStyle = ink; ctx.font = "56px Arial"; ctx.fillText(title, 130, 315);
+  ctx.fillStyle = "#616b7d"; ctx.font = "25px Arial"; ctx.fillText("This verified certificate is presented to", 130, 405);
+  ctx.fillStyle = ink; ctx.font = "76px Georgia"; ctx.fillText(certificate.learner_name, 130, 500, 1200);
+  ctx.strokeStyle = gold; ctx.beginPath(); ctx.moveTo(130, 530); ctx.lineTo(1330, 530); ctx.stroke();
+  ctx.fillStyle = "#616b7d"; ctx.font = "25px Arial"; ctx.fillText(certificate.certificate_type === "enrollment" ? "For official enrollment in" : "For successfully completing", 130, 615);
+  ctx.fillStyle = ink; ctx.font = "700 38px Arial"; ctx.fillText(certificate.course_title, 130, 675, 1180);
+  const issuer = certificate.provider_name || certificate.instructor_name || "SMAJ PI Education";
+  const dateValue = certificate.certificate_type === "enrollment" ? certificate.enrollment_date : certificate.completion_date;
+  const date = new Date(dateValue || certificate.issue_date).toLocaleDateString();
+  ctx.strokeStyle = "#51596a"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(130, 900); ctx.lineTo(510, 900); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(690, 900); ctx.lineTo(1110, 900); ctx.stroke();
+  ctx.fillStyle = ink; ctx.font = "700 25px Arial"; ctx.fillText(date, 130, 940); ctx.fillText(certificate.instructor_name || issuer, 690, 940, 420);
+  ctx.fillStyle = "#697489"; ctx.font = "20px Arial"; ctx.fillText("DATE AWARDED", 130, 972); ctx.fillText("AUTHORIZED ISSUER", 690, 972);
+  ctx.fillStyle = ink; ctx.font = "22px Arial"; ctx.fillText(`Certificate ID: ${certificate.certificate_id}`, 130, 1095); ctx.fillText(`Issued by: ${issuer}`, 690, 1095, 620);
+  ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(1542, 230, 82, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "#f7e8a2"; ctx.lineWidth = 7; ctx.stroke();
+  ctx.fillStyle = navy; ctx.textAlign = "center"; ctx.font = "700 24px Arial"; ctx.fillText("VERIFIED", 1542, 225); ctx.font = "18px Arial"; ctx.fillText(certificate.certificate_type.toUpperCase(), 1542, 258);
+  ctx.fillStyle = "#fff"; ctx.fillRect(1460, 850, 164, 164); ctx.drawImage(qr, 1468, 858, 148, 148); ctx.font = "700 17px Arial"; ctx.fillText("SCAN TO VERIFY", 1542, 1055);
+  const link = document.createElement("a");
+  link.download = `${safeFileName(certificate.course_title)}-${safeFileName(certificate.learner_name)}-certificate.png`;
+  link.href = canvas.toDataURL("image/png", 1);
+  link.click();
+};
+export const CertificateArtwork = ({ certificate, sample = false }: { certificate: Certificate; sample?: boolean }) => {
   const [qrCode, setQrCode] = useState("");
   const verificationUrl = useMemo(() => {
     const path = sample
@@ -126,7 +168,7 @@ const CertificatesPage = () => {
           <span className="courses-kicker">VERIFIED CREDENTIALS</span>
           <h1>My Certificates</h1>
           <p>
-            View enrollment and completion credentials, print a PDF, share them, or scan their QR code to verify the
+            View enrollment and completion credentials, download them, share them, or scan their QR code to verify the
             official record.
           </p>
         </section>
@@ -152,8 +194,8 @@ const CertificatesPage = () => {
               <Link className="course-primary-btn" to={`/verify/certificate/${selected.certificate_id}`}>
                 Verify
               </Link>
-              <button className="course-secondary-btn" aria-label="Print or save certificate as PDF" onClick={() => window.print()}>
-                <DownloadOutlinedIcon /> Print PDF
+              <button className="course-secondary-btn" aria-label="Download certificate" onClick={() => void downloadCertificate(selected)}>
+                <DownloadOutlinedIcon /> Download
               </button>
               <button className="course-secondary-btn" onClick={() => void shareCertificate()}>
                 <ShareOutlinedIcon /> Share

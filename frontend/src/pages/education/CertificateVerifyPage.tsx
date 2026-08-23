@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import { CertificateArtwork } from "./CertificatesPage";
 import AppLayout from "../../layouts/AppLayout";
 import { verifyCertificate } from "../../lib/coursesApi";
 import type { Certificate } from "../../types/courses";
@@ -46,69 +47,16 @@ const CertificateVerifyPage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page">
-        <div className="certificate-verify">
-          <header className="certificate-verify-brand"><img src="/logo.png" alt="SMAJ PI HUB" /><div><strong>SMAJ PI EDUCATION</strong><span>Credential verification</span></div></header>
-          <div className="certificate-verify-badge">
+        <div className="certificate-verify-result">
+          <div className="certificate-valid-banner">
             <CheckCircleOutlineOutlinedIcon />
-            <h1>Verified {certificate.certificate_type === "enrollment" ? "Enrollment" : "Completion"} Certificate</h1>
+            <div><strong>Verified and authentic</strong><span>This credential matches the official SMAJ PI Education record.</span></div>
           </div>
-          <div className="certificate-verify-details">
-            <div>
-              <strong>Learner</strong>
-              <span>{certificate.learner_name}</span>
-            </div>
-            <div>
-              <strong>Course</strong>
-              <span>{certificate.course_title}</span>
-            </div>
-            {certificate.instructor_name && (
-              <div>
-                <strong>Instructor</strong>
-                <span>{certificate.instructor_name}</span>
-              </div>
-            )}
-            {certificate.provider_name && (
-              <div>
-                <strong>Provider</strong>
-                <span>{certificate.provider_name}</span>
-              </div>
-            )}
-            {certificate.enrollment_date && (
-              <div>
-                <strong>Enrollment Date</strong>
-                <span>{new Date(certificate.enrollment_date).toLocaleDateString()}</span>
-              </div>
-            )}
-            {certificate.completion_date && (
-              <div>
-                <strong>Completion Date</strong>
-                <span>{new Date(certificate.completion_date).toLocaleDateString()}</span>
-              </div>
-            )}
-            <div>
-              <strong>Issue Date</strong>
-              <span>{new Date(certificate.issue_date).toLocaleDateString()}</span>
-            </div>
-            {certificate.final_score !== undefined && (
-              <div>
-                <strong>Final Score</strong>
-                <span>{certificate.final_score}%</span>
-              </div>
-            )}
-            <div>
-              <strong>Certificate ID</strong>
-              <span>{certificate.certificate_id}</span>
-            </div>
-            <div>
-              <strong>Status</strong>
-              <span className={`certificate-status ${certificate.status}`}>{certificate.status}</span>
-            </div>
+          <CertificateArtwork certificate={certificate} />
+          <div className="certificate-verify-summary">
+            <span>Certificate ID <strong>{certificate.certificate_id}</strong></span>
+            <span>Status <strong>{certificate.status.toUpperCase()}</strong></span>
           </div>
-          <p className="certificate-verify-footer">
-            Verified through SMAJ PI HUB. This{" "}
-            {certificate.certificate_type === "enrollment" ? "enrollment" : "completion"} record is authentic and was
-            issued by the authorized instructor/provider.
-          </p>
         </div>
       </main>
     </AppLayout>
