@@ -8,11 +8,11 @@ import { Link } from "react-router-dom";
 const TokenRewardsPage = () => (
   <main className="token-rewards-page">
     <header className="token-rewards-header">
-      <Link to="/profile" aria-label="Back to profile"><ArrowBackRoundedIcon /></Link>
+      <Link to="/settings" aria-label="Back to account"><ArrowBackRoundedIcon /></Link>
       <div>
-        <span>SMAJ ECOSYSTEM</span>
-        <h1>SMAJ Token Rewards</h1>
-        <p>Your future home for ecosystem rewards, packages, and gift codes.</p>
+        <span>SMAJ PI HUB</span>
+        <h1>Token Rewards</h1>
+        <p>Collect rewards, unlock member packages, and redeem gift codes—all in one place.</p>
       </div>
       <span className="token-rewards-soon">COMING SOON</span>
     </header>
@@ -28,10 +28,10 @@ const TokenRewardsPage = () => (
     </section>
     <section className="token-rewards-preview">
       <span>REWARDS PREVIEW</span>
-      <h2>More ways to benefit from the SMAJ ecosystem</h2>
-      <p>Reward packages, milestones, and redemption options will appear here as they become available.</p>
+      <h2>More rewards from SMAJ PI HUB</h2>
+      <p>Packages, milestones, and redemption options will appear here as each SMAJ PI HUB reward becomes available.</p>
       <div>
-        <article><CardGiftcardOutlinedIcon /><strong>Member packages</strong><small>Unlock future ecosystem benefits.</small></article>
+        <article><CardGiftcardOutlinedIcon /><strong>Member packages</strong><small>Unlock future SMAJ PI HUB benefits.</small></article>
         <article><StarsRoundedIcon /><strong>Activity rewards</strong><small>Earn recognition for eligible activity.</small></article>
       </div>
     </section>
