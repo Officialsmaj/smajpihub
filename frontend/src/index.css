@@ -21382,3 +21382,32 @@ svg {
   background: #f0eaff !important;
   border-color: #dfd0ff !important;
 }
+
+/* Dashboard data loading stays inside the already-visible private app shell. */
+.dashboard-circle-loading {
+  min-height: calc(100dvh - 150px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--smaj-bg);
+}
+
+.dashboard-circle-loading > span {
+  width: 38px;
+  height: 38px;
+  border: 4px solid color-mix(in srgb, var(--smaj-primary) 16%, transparent);
+  border-top-color: var(--smaj-primary);
+  border-right-color: #f59e0b;
+  border-radius: 50%;
+  animation: dashboard-circle-spin 0.8s linear infinite;
+}
+
+@keyframes dashboard-circle-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-circle-loading > span {
+    animation: none;
+  }
+}
