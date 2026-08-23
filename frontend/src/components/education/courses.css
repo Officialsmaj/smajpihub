@@ -1022,14 +1022,6 @@
   white-space: nowrap;
 }
 
-.certificate-actions .course-primary-btn {
-  background: #4f46e5;
-}
-
-.certificate-actions .course-secondary-btn {
-  border-color: #4f46e5;
-  color: #4f46e5;
-}
 
 .certificate-actions svg {
   font-size: 0.95rem;
