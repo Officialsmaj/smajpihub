@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
@@ -61,6 +62,15 @@ const AccountDashboardPage = () => {
           <h1 className="profile-name-line"><span className="profile-name-text">{name}</span><TrustBadge level={user?.verificationLevel} status={user?.verificationStatus} /></h1>
           <p>@{user?.piUsername || user?.username}</p>
         </div>
+        <Link
+          className="profile-package-shortcut"
+          to="/app/services/token/rewards"
+          aria-label="Open SMAJ Token Rewards package preview"
+        >
+          <span className="profile-package-icon" aria-hidden="true"><CardGiftcardOutlinedIcon /></span>
+          <span>Package</span>
+          <small>SOON</small>
+        </Link>
       </section>
 
       <section className="account-quick-grid">

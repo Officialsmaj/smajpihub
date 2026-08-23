@@ -21413,7 +21413,6 @@ svg {
 }
 
 /* SMAJ Token rewards package preview */
-.real-profile-identity { grid-template-columns: auto minmax(0,1fr) auto auto; }
 .profile-package-shortcut { position: relative; width: 86px; min-height: 76px; padding: 10px 8px 8px; display: grid; place-items: center; align-content: center; gap: 3px; overflow: hidden; color: var(--smaj-text); background: linear-gradient(145deg,#fff,#f8f5ff); border: 1px solid var(--smaj-border); border-radius: 16px; box-shadow: 0 10px 24px rgba(76,29,149,.1); text-decoration: none; transition: transform .2s ease,border-color .2s ease; }
 .profile-package-shortcut:hover { border-color: #c4b5fd; transform: translateY(-1px); }
 .profile-package-icon { width: 34px; height: 34px; display: grid; place-items: center; color: #7c3aed !important; background: #ede9fe; border-radius: 11px; }
@@ -21446,5 +21445,6 @@ svg {
 .token-rewards-preview article { padding: 14px; display: grid; gap: 5px; background: rgba(255,255,255,.8); border-radius: 14px; }
 .token-rewards-preview article svg { color: #7c3aed; }
 .token-rewards-preview article small { color: var(--smaj-text-secondary); }
-@media (max-width: 1023px) { .real-profile-identity { grid-template-columns: auto minmax(0,1fr) auto; align-items: center; } .real-profile-actions { grid-column: 1/-1; } .profile-package-shortcut { width: 78px; min-height: 72px; } }
+.account-dashboard-identity > .profile-package-shortcut { flex: 0 0 78px; width: 78px; min-height: 72px; margin-left: auto; }
+@media (min-width: 768px) { .account-dashboard-identity { grid-template-columns: auto minmax(0,1fr) auto; } }
 @media (max-width: 640px) { .token-rewards-page { padding: 12px; } .token-rewards-header { grid-template-columns: auto minmax(0,1fr); padding: 18px; border-radius: 18px; } .token-rewards-header .token-rewards-soon { grid-column: 2; justify-self: start; } .token-rewards-summary { gap: 7px; } .token-rewards-summary article { min-height: 112px; padding: 11px 8px; } .token-rewards-summary strong { font-size: .95rem; } .token-rewards-summary small { font-size: 9px; } .token-redeem-card { grid-template-columns: auto minmax(0,1fr); } .token-redeem-card button { grid-column: 1/-1; } .token-rewards-preview > div { grid-template-columns: 1fr; } }
