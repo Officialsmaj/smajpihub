@@ -47,6 +47,7 @@ const CertificateVerifyPage = () => {
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page">
         <div className="certificate-verify">
+          <header className="certificate-verify-brand"><img src="/logo.png" alt="SMAJ PI HUB" /><div><strong>SMAJ PI EDUCATION</strong><span>Credential verification</span></div></header>
           <div className="certificate-verify-badge">
             <CheckCircleOutlineOutlinedIcon />
             <h1>Verified {certificate.certificate_type === "enrollment" ? "Enrollment" : "Completion"} Certificate</h1>

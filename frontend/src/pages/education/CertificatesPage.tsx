@@ -51,48 +51,37 @@ const CertificateArtwork = ({ certificate, sample = false }: { certificate: Cert
   const credentialDate =
     certificate.certificate_type === "enrollment" ? certificate.enrollment_date : certificate.completion_date;
 
+  const issuedDate = new Date(credentialDate || certificate.issue_date).toLocaleDateString();
+  const issuer = certificate.provider_name || certificate.instructor_name || "SMAJ PI Education";
   return (
-    <article className="credential-sheet">
-      {sample && <div className="credential-watermark">SAMPLE · NOT VALID</div>}
-      <header className="credential-brand">
-        <img src="/smaj_ecosystem_logo.png" alt="SMAJ PI HUB" />
-        <div>
-          <strong>SMAJ PI EDUCATION</strong>
-          <span>Verified Learning Credentials</span>
+    <div className="credential-preview-shell">
+      <article className={`credential-sheet credential-${certificate.certificate_type}`}>
+        {sample && <div className="credential-watermark">SAMPLE · NOT VALID</div>}
+        <div className="credential-main">
+          <header className="credential-brand">
+            <img src="/logo.png" alt="SMAJ PI HUB" />
+            <div><strong>SMAJ PI EDUCATION</strong><span>Verified learning credentials</span></div>
+          </header>
+          <div className="credential-body">
+            <span className="credential-kicker">{title.toUpperCase()}</span>
+            <p>is proudly presented to</p>
+            <h1>{certificate.learner_name}</h1>
+            <p className="credential-award-copy">for {certificate.certificate_type === "enrollment" ? "official enrollment in" : "successfully completing"}</p>
+            <h2>{certificate.course_title}</h2>
+            <p className="credential-provider">Issued by <strong>{issuer}</strong></p>
+          </div>
+          <footer className="credential-signatures">
+            <div><strong>{issuedDate}</strong><span>Date awarded</span></div>
+            <div><strong>{certificate.instructor_name || issuer}</strong><span>Authorized issuer</span></div>
+          </footer>
+          <div className="credential-meta"><span>Certificate ID: <strong>{certificate.certificate_id}</strong></span><span>Verify at {new URL(verificationUrl).host}</span></div>
         </div>
-      </header>
-      <div className="credential-body">
-        <span className="credential-kicker">THIS CERTIFIES THAT</span>
-        <h1>{certificate.learner_name}</h1>
-        <p>has been officially awarded this</p>
-        <h2>{title}</h2>
-        <p>
-          for <strong>{certificate.course_title}</strong>
-        </p>
-        {certificate.provider_name && <p>Issued by {certificate.provider_name}</p>}
-      </div>
-      <footer className="credential-footer">
-        <div>
-          <span>Date</span>
-          <strong>
-            {credentialDate
-              ? new Date(credentialDate).toLocaleDateString()
-              : new Date(certificate.issue_date).toLocaleDateString()}
-          </strong>
-        </div>
-        <div className="credential-seal">
-          <CheckCircleOutlineOutlinedIcon />
-          <span>VERIFIED</span>
-        </div>
-        <div className="credential-qr">
-          {qrCode && <img src={qrCode} alt="Scan to verify certificate" />}
-          <span>Scan to verify</span>
-        </div>
-      </footer>
-      <div className="credential-id">
-        Certificate ID: {certificate.certificate_id} · {verificationUrl}
-      </div>
-    </article>
+        <aside className="credential-verify-rail">
+          <div className="credential-seal"><CheckCircleOutlineOutlinedIcon /><strong>VERIFIED</strong><span>{certificate.certificate_type === "enrollment" ? "ENROLLMENT" : "COMPLETION"}</span></div>
+          <div className="credential-qr">{qrCode && <img src={qrCode} alt="Scan to verify certificate" />}<strong>SCAN TO VERIFY</strong><span>Authentic SMAJ record</span></div>
+        </aside>
+      </article>
+    </div>
   );
 };
 
