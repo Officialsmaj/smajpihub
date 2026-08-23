@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
@@ -635,7 +636,18 @@ const ProfilePage = () => {
               <b>{sellerActive ? "Seller enabled" : "Buyer account"}</b>
             </div>
           </div>
-          <div className="real-profile-actions">
+          <Link
+              className="profile-package-shortcut"
+              to="/app/services/token/rewards"
+              aria-label="Open SMAJ Token Rewards package preview"
+            >
+              <span className="profile-package-icon" aria-hidden="true">
+                <CardGiftcardOutlinedIcon />
+              </span>
+              <span>Package</span>
+              <small>SOON</small>
+            </Link>          <div className="real-profile-actions">
+
             <button className="private-primary-button" type="button" onClick={() => setEditing(true)}>
               Edit Profile
             </button>

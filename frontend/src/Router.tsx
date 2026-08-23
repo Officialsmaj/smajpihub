@@ -36,6 +36,7 @@ import ProductDetailPage from "./pages/private/ProductDetailPage";
 import AddProductPage from "./pages/private/AddProductPage";
 import OrdersPage from "./pages/private/OrdersPage";
 import ProfilePage from "./pages/private/ProfilePage";
+import TokenRewardsPage from "./pages/private/TokenRewardsPage";
 import SettingsPage from "./pages/private/SettingsPage";
 import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import SellerPage from "./pages/private/SellerPage";
@@ -986,6 +987,16 @@ export const router = createBrowserRouter([
     ),
   },
   { path: "/app/services/sports", element: <Navigate to="/services/sports" replace /> },
+  {
+    path: "/app/services/token/rewards",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout fullScreen>
+          <TokenRewardsPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "/app/services/:slug",
     element: (
