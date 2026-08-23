@@ -1108,3 +1108,5 @@
   .certificate-valid-banner { margin: .75rem; }
   .certificate-verify-summary { display: grid; }
 }
+
+.credential-signature-image{width:min(14cqw,100%);height:4.5cqw;margin:-4.2cqw 0 .25cqw;object-fit:contain;object-position:left bottom}.certificate-signature-control{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;max-width:70rem;margin:.75rem auto;padding:.85rem 1rem;border:1px solid #d9e3ec;border-radius:.75rem;background:#fff}.certificate-signature-control>div{display:grid;flex:1 1 18rem;text-align:left}.certificate-signature-control span{color:#677487;font-size:.78rem}.certificate-signature-control label{cursor:pointer}.certificate-signature-control input{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0}@media(max-width:600px){.certificate-signature-control{margin-inline:.75rem}}
