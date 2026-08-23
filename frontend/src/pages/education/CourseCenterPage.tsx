@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import FilterListOutlinedIcon from "@mui/icons-material/FilterListOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import OnlineCourseCard from "../../components/education/OnlineCourseCard";
@@ -72,6 +73,8 @@ const CourseCenterPage = () => {
   }, [query, category, level, courseType, certificate, sort, page]);
 
   const visibleCourses = useMemo(() => courses, [courses]);
+  const activeFilterCount = [query, category, level, courseType, certificate].filter(Boolean).length;
+  const resetFilters = () => { setPage(1); setSearchParams(new URLSearchParams()); };
 
   return (
     <AppLayout showHeader={false} showFooter={false}>
@@ -85,11 +88,12 @@ const CourseCenterPage = () => {
         </section>
 
         <section className="courses-catalog-layout">
-          <button className="courses-filter-toggle" type="button" onClick={() => setFiltersOpen(open => !open)}>
-            <FilterListOutlinedIcon /> Filters
+          <button className="courses-filter-toggle" type="button" onClick={() => setFiltersOpen(true)}>
+            <FilterListOutlinedIcon /> Filters {activeFilterCount > 0 && <span>{activeFilterCount}</span>}
           </button>
+          {filtersOpen && <button className="courses-filter-backdrop" type="button" aria-label="Close filters" onClick={() => setFiltersOpen(false)} />}
           <aside className={`courses-catalog-filters${filtersOpen ? " open" : ""}`} aria-label="Course filters">
-            <h2>Filter courses</h2>
+            <div className="courses-filter-heading"><div><span>REFINE RESULTS</span><h2>Filter courses</h2></div><button type="button" aria-label="Close filters" onClick={() => setFiltersOpen(false)}><CloseOutlinedIcon /></button></div>
             <label>
               Search
               <span className="courses-filter-search">
@@ -143,9 +147,10 @@ const CourseCenterPage = () => {
                 <option value="price-high">Price: High to Low</option>
               </select>
             </label>
-            <button className="courses-clear-filters" type="button" onClick={() => { setPage(1); setSearchParams(new URLSearchParams()); }}>
-              Clear all filters
-            </button>
+            <div className="courses-filter-actions">
+              <button className="courses-clear-filters" type="button" onClick={resetFilters}>Reset</button>
+              <button className="courses-apply-filters" type="button" onClick={() => setFiltersOpen(false)}>Show results</button>
+            </div>
           </aside>
 
           <div className="courses-catalog-results">
