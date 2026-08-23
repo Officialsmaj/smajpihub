@@ -710,11 +710,10 @@ export const router = createBrowserRouter([
     path: "/app/services/education/courses",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
-          <InstructorDashboardPage />
-        </PrivateLayout>
+        <InstructorDashboardPage />
       </ProtectedRoute>
     ),
+
   },
   {
     path: "/services/education/universities",
@@ -784,21 +783,19 @@ export const router = createBrowserRouter([
     path: "/app/services/education/courses/new",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
-          <CourseBuilderPage />
-        </PrivateLayout>
+        <CourseBuilderPage />
       </ProtectedRoute>
     ),
+
   },
   {
     path: "/app/services/education/courses/:courseId/edit",
     element: (
       <ProtectedRoute>
-        <PrivateLayout>
-          <CourseBuilderPage />
-        </PrivateLayout>
+        <CourseBuilderPage />
       </ProtectedRoute>
     ),
+
   },
   {
     path: "/app/services/education/courses/:courseId",

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import { createCourse, getCourse, submitCourseForReview, updateCourse } from "../../lib/coursesApi";
 import { uploadImage } from "../../lib/uploadImage";
 import type { CourseLevel, CourseModule, CourseType, LessonType } from "../../types/courses";
@@ -212,13 +213,13 @@ const CourseBuilderPage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page course-builder-page">
+        <EducationHeader query="" onQueryChange={() => undefined} searchPath="/services/education/courses" />
+        <EducationBackBar current={editing ? "Edit Course" : "Create Course"} />
         <div className="course-builder-heading">
-          <Link to="/app/services/education/courses">
-            <ArrowBackOutlinedIcon /> Courses
-          </Link>
           <div>
-            <span className="courses-kicker">ADMIN COURSE BUILDER</span>
-            <h1>{editing ? "Edit Course" : "Create Online Course"}</h1>
+            <span className="courses-kicker">INSTRUCTOR STUDIO</span>
+            <h1>{editing ? "Edit your course" : "Create an online course"}</h1>
+            <p>Build clear lessons, set completion rules, and submit when your course is ready.</p>
           </div>
           <div className="course-builder-actions">
             <button className="course-secondary-btn" disabled={saving || uploading} onClick={() => void save(false)}>
