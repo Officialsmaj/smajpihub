@@ -5,6 +5,8 @@ import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutli
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import AppLayout from "../../layouts/AppLayout";
+import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import { getMyCertificates } from "../../lib/coursesApi";
 import type { Certificate } from "../../types/courses";
 import "../../pages/EducationPage.css";
@@ -129,6 +131,8 @@ const CertificatesPage = () => {
   return (
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page certificates-center">
+        <EducationHeader query="" onQueryChange={() => undefined} searchPath="/services/education/certificates" />
+        <EducationBackBar current="Certificates" />
         <section className="courses-hero certificates-center-hero">
           <span className="courses-kicker">VERIFIED CREDENTIALS</span>
           <h1>My Certificates</h1>

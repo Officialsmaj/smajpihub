@@ -9,6 +9,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { getMyTeacherApplication, type TeacherApplication } from "../../lib/educationApi";
 import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import "./EducationProfilePage.css";
 
 const PHOTO_KEY = "smaj_education_confirmed_avatar";
@@ -25,6 +26,7 @@ const EducationProfilePage = () => {
   const confirm = () => { if (avatar) window.localStorage.setItem(PHOTO_KEY, avatar); setPhotoChoice("confirmed"); };
   const shownAvatar = photoChoice === "confirmed" ? avatar : "";
   return <AppLayout showHeader={false} showFooter={false}><main className="edu-profile-page"><EducationHeader query="" onQueryChange={() => undefined} searchPath="/services/education/courses" />
+    <EducationBackBar current="My Profile" />
     <section className="edu-profile-hero"><span>MY EDUCATION</span><h1>Your learning profile</h1><p>Keep your courses, certificates, tutor activity, and education identity together.</p></section>
     <section className="edu-profile-card"><div className="edu-profile-avatar">{shownAvatar ? <img src={shownAvatar} alt={`${displayName} profile`} /> : initials}</div><div><span className="edu-profile-label">SMAJ PI EDUCATION PROFILE</span><h2>{displayName}</h2><p><LocationOnOutlinedIcon /> {user?.country || "Add your country in SMAJ profile"}</p><p><VerifiedOutlinedIcon /> @{user?.piUsername || user?.username || "Pi user"}</p></div><Link to="/profile">Edit SMAJ profile</Link></section>
     <section className="edu-profile-progress"><div><span>Profile completed</span><strong>{completion}%</strong></div><progress value={completion} max="100" /><p>Education uses your confirmed SMAJ identity while keeping learning activity separate.</p></section>

@@ -5,6 +5,7 @@ import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { getMyTeacherApplication, saveTeacherApplication, uploadTeacherEvidence, type TeacherApplication } from "../../lib/educationApi";
 import "./TeachOnSmajPage.css";
@@ -36,6 +37,7 @@ const TeachOnSmajPage = () => {
   const locked = application?.status === "approved" || application?.status === "under_review" || application?.status === "submitted";
 
   return <AppLayout showHeader={false} showFooter={false}><main className="teach-page"><EducationHeader query="" onQueryChange={() => undefined} searchPath="/services/education/courses" />
+    <EducationBackBar current="Teach on SMAJ" />
     <section className="teach-hero"><span>TEACH ON SMAJ</span><h1>Share your expertise. Teach worldwide. Earn Pi.</h1><p>Apply as an individual tutor or education provider. Every public instructor is reviewed before publishing courses or accepting learners.</p><div><VerifiedOutlinedIcon /> Identity reviewed <VerifiedOutlinedIcon /> Qualifications checked <VerifiedOutlinedIcon /> Quality-first courses</div></section>
     {application && <section className={`teach-status ${application.status}`}><b>Application status: {application.status.replace(/_/g, " ")}</b><p>{application.reviewer_notes || (application.status === "approved" ? "You are approved to create courses and manage learners." : "We will notify you when the review status changes.")}</p>{application.status === "approved" && <Link to="/app/services/education/courses">Open Instructor Dashboard</Link>}</section>}
     {review ? <section className="teach-review"><header><SchoolOutlinedIcon /><div><span>FINAL REVIEW</span><h2>Confirm your teaching application</h2></div></header><dl><div><dt>Applicant</dt><dd>{form.full_name} · {form.applicant_role.replace(/_/g, " ")}</dd></div><div><dt>Teaching</dt><dd>{form.headline}<br />{form.subjects}</dd></div><div><dt>Proposed course</dt><dd>{form.proposed_course_title} · {form.proposed_category} · {form.proposed_level}</dd></div><div><dt>Price and delivery</dt><dd>{form.proposed_price_pi} Pi · {form.delivery_method}</dd></div><div><dt>Evidence</dt><dd>{documents.length} document(s) · {form.sample_lesson_url || "No sample link"}</dd></div></dl><div className="teach-actions"><button type="button" className="secondary" onClick={() => setReview(false)}>Edit application</button><button type="button" disabled={busy} onClick={() => void save("submit")}>Submit for review</button></div></section> :

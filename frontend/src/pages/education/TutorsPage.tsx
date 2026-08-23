@@ -6,6 +6,7 @@ import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import "../../pages/EducationPage.css";
 import "../../components/education/courses.css";
 import { getVerifiedTutors, type TutorSummary } from "../../lib/educationApi";
@@ -40,6 +41,7 @@ const TutorsPage = () => {
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page">
         <EducationHeader query={query} onQueryChange={setQuery} searchPath="/services/education/tutors" />
+        <EducationBackBar current="Tutors" />
         <section className="courses-hero">
           <span className="courses-kicker">VERIFIED TUTORS</span>
           <h1>Find the right tutor for your goals</h1>

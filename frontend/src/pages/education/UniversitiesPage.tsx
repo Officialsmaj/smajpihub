@@ -8,6 +8,7 @@ import UniversityCard from "../../components/education/UniversityCard";
 import { getUniversities } from "../../lib/educationApi";
 import type { University } from "../../types/education";
 import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import "../../components/education/education.css";
 
 type UniversityFilters = { q: string; country: string; city: string; institution_type: string; partnership: string };
@@ -101,6 +102,7 @@ const UniversitiesPage = () => {
           }}
           searchPath="/services/education/universities"
         />
+        <EducationBackBar current="Universities" />
         <section className="universities-hero">
           <span className="universities-kicker">GLOBAL DISCOVERY</span>
           <h1>Universities</h1>

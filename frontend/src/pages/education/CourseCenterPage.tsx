@@ -7,6 +7,7 @@ import OnlineCourseCard from "../../components/education/OnlineCourseCard";
 import { getCourses } from "../../lib/coursesApi";
 import type { Course, CourseType, CourseLevel } from "../../types/courses";
 import EducationHeader from "./EducationHeader";
+import EducationBackBar from "../../components/education/EducationBackBar";
 import "../../components/education/courses.css";
 
 const FALLBACK_CATEGORIES = [
@@ -76,6 +77,7 @@ const CourseCenterPage = () => {
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page">
         <EducationHeader query={query} onQueryChange={(value) => { setPage(1); updateFilter("q", value); }} searchPath="/services/education/courses" />
+        <EducationBackBar current="Online Courses" />
         <section className="courses-hero">
           <span className="courses-kicker">ONLINE COURSES</span>
           <h1>Learn from verified instructors</h1>
