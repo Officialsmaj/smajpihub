@@ -1,4 +1,5 @@
 import { axiosClient } from "./axiosClient";
+import axios from "axios";
 import type {
   Course,
   Enrollment,
@@ -177,6 +178,26 @@ export const updateCourse = async (idOrSlug: string, data: Record<string, unknow
   return response.data.course;
 };
 
+export const uploadCourseVideo = async (
+  file: File,
+  rightsConfirmed: boolean,
+  onProgress?: (percentage: number) => void
+): Promise<{ uid: string; playbackUrl: string }> => {
+  const session = await axiosClient.post<{ uid: string; uploadURL: string; playbackUrl: string }>(
+    "/course-video-uploads",
+    { fileSize: file.size, contentType: file.type, rightsConfirmed }
+  );
+  const body = new FormData();
+  body.append("file", file);
+  await axios.post(session.data.uploadURL, body, {
+    withCredentials: false,
+    timeout: 0,
+    onUploadProgress: event => {
+      if (event.total) onProgress?.(Math.round((event.loaded / event.total) * 100));
+    },
+  });
+  return { uid: session.data.uid, playbackUrl: session.data.playbackUrl };
+};
 export const submitCourseForReview = async (idOrSlug: string): Promise<{ message: string }> => {
   const response = await axiosClient.post<{ message: string }>(`/courses/${encodeURIComponent(idOrSlug)}/submit`);
   return response.data;

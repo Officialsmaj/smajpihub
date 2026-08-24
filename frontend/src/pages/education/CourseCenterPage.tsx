@@ -80,7 +80,7 @@ const CourseCenterPage = () => {
     <AppLayout showHeader={false} showFooter={false}>
       <main className="courses-page">
         <EducationHeader query={query} onQueryChange={(value) => { setPage(1); updateFilter("q", value); }} searchPath="/services/education/courses" />
-        <EducationBackBar current="Online Courses" />
+        <EducationBackBar current="Online Courses" to="/services/education" />
         <section className="courses-hero">
           <span className="courses-kicker">ONLINE COURSES</span>
           <h1>Learn from verified instructors</h1>

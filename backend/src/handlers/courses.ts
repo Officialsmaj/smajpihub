@@ -1,5 +1,7 @@
 import type { Request, Response, Router } from "express";
+import axios from "axios";
 import { ObjectId } from "mongodb";
+import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
 import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
 import { platformAPIKeyClient } from "../services/platformAPIClient";
@@ -446,6 +448,52 @@ export default function mountCourseEndpoints(router: Router) {
     }
   });
 
+  router.post("/course-video-uploads", async (req, res) => {
+    const currentUser = await requireUser(req, res);
+    if (!currentUser) return;
+    if (!isInstructor(currentUser)) {
+      return res.status(403).json({ error: "forbidden", message: "An approved instructor or admin account is required." });
+    }
+
+    const { fileSize, contentType, rightsConfirmed } = req.body || {};
+    const size = safeNumber(fileSize);
+    const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    if (rightsConfirmed !== true) {
+      return res.status(400).json({ error: "rights_required", message: "Confirm that you own or are allowed to publish this video." });
+    }
+    if (!allowedTypes.includes(safeString(contentType)) || size <= 0 || size > 200 * 1024 * 1024) {
+      return res.status(400).json({ error: "invalid_video", message: "Upload an MP4, WebM, or MOV video no larger than 200 MB." });
+    }
+    if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) {
+      return res.status(503).json({ error: "video_upload_not_configured", message: "Course video uploads are not configured yet." });
+    }
+
+    try {
+      const response = await axios.post<{
+        success: boolean;
+        result?: { uid?: string; uploadURL?: string };
+        errors?: Array<{ message?: string }>;
+      }>(
+        `https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/direct_upload`,
+        { maxDurationSeconds: 14_400, requireSignedURLs: false },
+        {
+          headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, "Content-Type": "application/json" },
+          timeout: 15_000,
+        },
+      );
+      const uid = response.data.result?.uid;
+      const uploadURL = response.data.result?.uploadURL;
+      if (!response.data.success || !uid || !uploadURL) {
+        throw new Error(response.data.errors?.[0]?.message || "Cloudflare did not create an upload session");
+      }
+      return res.status(201).json({ uid, uploadURL, playbackUrl: `https://iframe.videodelivery.net/${uid}` });
+    } catch (error: any) {
+      return res.status(502).json({
+        error: "video_upload_session_failed",
+        message: error?.response?.data?.errors?.[0]?.message || error.message || "Could not start the video upload",
+      });
+    }
+  });
   router.post("/courses", async (req, res) => {
     const currentUser = await requireUser(req, res);
     if (!currentUser) return;
@@ -1125,15 +1173,17 @@ export default function mountCourseEndpoints(router: Router) {
           ? lessonId
           : undefined;
 
+        if (!actualLessonId) {
+          return res.status(400).json({
+            error: "invalid_lesson",
+            message: "This lesson does not belong to the enrolled course.",
+          });
+        }
+        const shouldAddLesson =
+          !enrollment.completed_lesson_ids.includes(actualLessonId);
         const updates: Record<string, any> = {
           updated_at: new Date().toISOString(),
         };
-        if (
-          actualLessonId &&
-          !enrollment.completed_lesson_ids.includes(actualLessonId)
-        ) {
-          updates.$addToSet = { completed_lesson_ids: actualLessonId };
-        }
 
         const totalLessons = allLessons.length;
         const completedCount =
@@ -1174,7 +1224,12 @@ export default function mountCourseEndpoints(router: Router) {
 
         await enrollmentCollection.updateOne(
           { _id: enrollment._id },
-          { $set: updates },
+          {
+            $set: updates,
+            ...(shouldAddLesson
+              ? { $addToSet: { completed_lesson_ids: actualLessonId } }
+              : {}),
+          },
         );
 
         if (lessonProgressCollection) {

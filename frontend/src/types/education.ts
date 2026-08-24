@@ -7,6 +7,7 @@ export type EducationCourse = {
   duration: string;
   priceUsdt: number;
   rating: string;
+  enrollmentCount?: number;
   image: string;
   description?: string;
 };

@@ -7,6 +7,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import "./EducationHeader.css";
 
 const primaryLinks = [
+  ["/services/education/my-courses", "My Courses"],
   ["/services/education/universities", "Universities"],
   ["/services/education/courses", "Online Courses"],
   ["/services/education/tutors", "Tutors"],

@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import type { Course } from "../../types/courses";
 import { formatPiAmount } from "../../lib/formatters";
 import "./courses.css";
+
+const formatStudents = (count: number) => new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(count);
 
 const courseTypeBadge = (course: Course) => {
   if (course.course_type === "free") {
     return <span className="course-badge free">FREE</span>;
   }
-  return <span className="course-badge paid">π {formatPiAmount(course.price_pi)}</span>;
+  return <span className="course-badge paid">{"p"} {formatPiAmount(course.price_pi)}</span>;
 };
 
 export const OnlineCourseCard = ({ course }: { course: Course }) => {
@@ -27,6 +30,11 @@ export const OnlineCourseCard = ({ course }: { course: Course }) => {
           <Link to={`/services/education/courses/${course.slug}`}>{course.title}</Link>
         </h3>
         {course.subtitle && <p className="course-card-subtitle">{course.subtitle}</p>}
+        <div className="course-card-popularity" aria-label={`${course.rating_average} rating, ${course.enrollment_count} students`}>
+          <strong><StarRoundedIcon /> {course.rating_average ? course.rating_average.toFixed(1) : "New"}</strong>
+          <span aria-hidden="true">&bull;</span>
+          <span>{formatStudents(course.enrollment_count)} {course.enrollment_count === 1 ? "student" : "students"}</span>
+        </div>
         <div className="course-card-meta">
           <span>{course.level}</span>
           {course.estimated_duration && <span>{course.estimated_duration}</span>}

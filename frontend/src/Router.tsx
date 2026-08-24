@@ -79,6 +79,7 @@ import EducationCatalogPage from "./pages/education/EducationCatalogPage";
 import CourseCenterPage from "./pages/education/CourseCenterPage";
 import OnlineCourseDetailPage from "./pages/education/OnlineCourseDetailPage";
 import CoursePlayerPage from "./pages/education/CoursePlayerPage";
+import MyCoursesPage from "./pages/education/MyCoursesPage";
 import CourseBuilderPage from "./pages/education/CourseBuilderPage";
 import CertificateVerifyPage from "./pages/education/CertificateVerifyPage";
 import CertificatesPage from "./pages/education/CertificatesPage";
@@ -753,6 +754,13 @@ export const router = createBrowserRouter([
     element: <TutorProfilePage />,
   },
   {
+    path: "/services/education/my-courses",
+    element: (
+      <ProtectedRoute>
+        <MyCoursesPage />
+      </ProtectedRoute>
+    ),
+  },  {
     path: "/services/education/courses",
     element: <CourseCenterPage />,
   },

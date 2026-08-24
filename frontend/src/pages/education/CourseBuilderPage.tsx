@@ -6,7 +6,7 @@ import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import AppLayout from "../../layouts/AppLayout";
 import EducationHeader from "./EducationHeader";
 import EducationBackBar from "../../components/education/EducationBackBar";
-import { createCourse, getCourse, submitCourseForReview, updateCourse } from "../../lib/coursesApi";
+import { createCourse, getCourse, submitCourseForReview, updateCourse, uploadCourseVideo } from "../../lib/coursesApi";
 import { uploadImage } from "../../lib/uploadImage";
 import type { CourseLevel, CourseModule, CourseType, LessonType } from "../../types/courses";
 import "../../components/education/courses.css";
@@ -21,6 +21,9 @@ const emptyLesson = (order: number) => ({
   preview: false,
   content: "",
   video_url: "",
+  video_provider: "",
+  video_asset_id: "",
+  video_playback_id: "",
   document_url: "",
   external_url: "",
   resources: [] as string[],
@@ -34,6 +37,7 @@ const CourseBuilderPage = () => {
   const editing = Boolean(courseId);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [videoUpload, setVideoUpload] = useState<{ key: string; progress: number } | null>(null);
   const [message, setMessage] = useState("");
   const [createdId, setCreatedId] = useState("");
   const [form, setForm] = useState({
@@ -158,6 +162,30 @@ const CourseBuilderPage = () => {
     }
   };
 
+  const uploadLessonVideo = async (moduleIndex: number, lessonIndex: number, file?: File) => {
+    if (!file) return;
+    if (!form.copyright_agreed) {
+      setMessage("Confirm the publishing-rights checkbox before uploading a course video.");
+      return;
+    }
+    const key = `${moduleIndex}-${lessonIndex}`;
+    setMessage("");
+    setVideoUpload({ key, progress: 0 });
+    try {
+      const uploaded = await uploadCourseVideo(file, true, progress => setVideoUpload({ key, progress }));
+      updateLesson(moduleIndex, lessonIndex, {
+        video_url: uploaded.playbackUrl,
+        video_provider: "cloudflare",
+        video_asset_id: uploaded.uid,
+        video_playback_id: uploaded.uid,
+      });
+      setMessage("Video uploaded. Cloudflare may need a few moments to finish processing it.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Video upload failed");
+    } finally {
+      setVideoUpload(null);
+    }
+  };
   const payload = () => ({
     ...form,
     learning_objectives: form.learning_objectives
@@ -529,14 +557,41 @@ const CourseBuilderPage = () => {
                       Free preview
                     </label>
                     {lesson.type === "video" && (
-                      <label className="wide">
-                        Video URL
-                        <input
-                          type="url"
-                          value={lesson.video_url || ""}
-                          onChange={event => updateLesson(moduleIndex, lessonIndex, { video_url: event.target.value })}
-                        />
-                      </label>
+                      <div className="wide course-video-source">
+                        <label>
+                          Upload lesson video
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/quicktime"
+                            disabled={videoUpload !== null}
+                            onChange={event => void uploadLessonVideo(moduleIndex, lessonIndex, event.target.files?.[0])}
+                          />
+                        </label>
+                        {videoUpload?.key === `${moduleIndex}-${lessonIndex}` && (
+                          <div className="course-video-upload-progress" role="status">
+                            <span style={{ width: `${videoUpload.progress}%` }} />
+                            <strong>{videoUpload.progress}% uploaded</strong>
+                          </div>
+                        )}
+                        {lesson.video_provider === "cloudflare" && lesson.video_playback_id && (
+                          <p className="course-video-uploaded">Video uploaded securely · ID {lesson.video_playback_id}</p>
+                        )}
+                        <label>
+                          Or use a direct video URL
+                          <input
+                            type="url"
+                            value={lesson.video_provider === "cloudflare" ? "" : lesson.video_url || ""}
+                            placeholder="https://example.com/lesson.mp4"
+                            onChange={event => updateLesson(moduleIndex, lessonIndex, {
+                              video_url: event.target.value,
+                              video_provider: "external",
+                              video_asset_id: "",
+                              video_playback_id: "",
+                            })}
+                          />
+                        </label>
+                        <small>MP4, WebM, or MOV · maximum 200 MB. Confirm publishing rights below before uploading.</small>
+                      </div>
                     )}
                     {lesson.type === "text" && (
                       <label className="wide">

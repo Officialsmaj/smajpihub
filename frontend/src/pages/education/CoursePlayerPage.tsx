@@ -166,7 +166,17 @@ const CoursePlayerPage = () => {
               <div className="course-player-content">
                 <header className="course-player-content-header"><span>{activeLesson.lesson.type} lesson</span><h2>{activeLesson.lesson.title}</h2></header>
                 {activeLesson.lesson.description && <p>{activeLesson.lesson.description}</p>}
-                {activeLesson.lesson.type === "video" && activeLesson.lesson.video_url && (
+                {activeLesson.lesson.type === "video" && activeLesson.lesson.video_provider === "cloudflare" && activeLesson.lesson.video_playback_id && (
+                  <div className="course-player-video">
+                    <iframe
+                      src={`https://iframe.videodelivery.net/${encodeURIComponent(activeLesson.lesson.video_playback_id)}`}
+                      title={activeLesson.lesson.title}
+                      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+                {activeLesson.lesson.type === "video" && activeLesson.lesson.video_provider !== "cloudflare" && activeLesson.lesson.video_url && (
                   <div className="course-player-video">
                     <video
                       ref={videoRef}
