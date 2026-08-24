@@ -21565,3 +21565,217 @@ svg {
     margin-top: -4px;
   }
 }
+/* Public service directories use the same compact tiles as the private Services hub. */
+@media (max-width: 1023px) {
+  .public-home-service-viewport,
+  .public-home-service-track,
+  .public-home-service-grid,
+  .public-home-service-group,
+  .services-directory-grid,
+  .services-directory-card,
+  .services-directory-card * {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .public-home-service-carousel {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .public-home-service-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .public-home-service-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .public-home-service-card,
+  .public-home-service-card + .public-home-service-card {
+    position: relative;
+    min-width: 0;
+    min-height: 142px;
+    aspect-ratio: .82;
+    padding: 12px 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    color: var(--smaj-text);
+    background: var(--smaj-card);
+    border: 1px solid var(--smaj-border);
+    border-radius: 17px;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .06);
+    text-align: center;
+  }
+
+  .public-home-service-card:active {
+    transform: scale(.97);
+  }
+
+  .public-home-service-card:hover {
+    background: var(--smaj-card);
+  }
+
+  .public-home-service-card .service-art {
+    width: clamp(52px, 16vw, 66px);
+    height: clamp(52px, 16vw, 66px);
+    flex: 0 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .14);
+  }
+
+  .public-home-service-card > div {
+    width: 100%;
+    display: contents;
+  }
+
+  .public-home-service-card h3,
+  .public-home-service-card p {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .public-home-service-card h3 {
+    margin: 9px 0 0;
+    color: var(--smaj-text);
+    font-size: clamp(11px, 3.2vw, 13px);
+    line-height: 1.2;
+  }
+
+  .public-home-service-card p {
+    margin: 4px 0 0;
+    color: var(--smaj-text-secondary);
+    font-size: clamp(8px, 2.45vw, 10px);
+    line-height: 1.2;
+  }
+
+  .public-home-service-card > small,
+  .public-home-service-card > small.live-rating-badge,
+  .public-home-service-card > small.status-chip {
+    position: absolute;
+    z-index: 2;
+    top: 7px;
+    right: 7px;
+    max-width: calc(100% - 14px);
+    margin: 0;
+    padding: 3px 5px;
+    border-radius: 999px;
+    font-size: 7px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .services-directory-grid {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .services-company-page .services-directory-card,
+  .services-company-page .services-directory-card.service-in-progress-card {
+    position: relative;
+    min-width: 0;
+    min-height: 142px;
+    aspect-ratio: .82;
+    padding: 12px 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 17px;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .06);
+    text-align: center;
+  }
+
+  .services-company-page .services-directory-card .service-art {
+    width: clamp(52px, 16vw, 66px);
+    height: clamp(52px, 16vw, 66px);
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .14);
+  }
+
+  .services-company-page .services-directory-card > div {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .services-company-page .services-directory-card h3,
+  .services-company-page .services-directory-card p {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .services-company-page .services-directory-card h3 {
+    order: 1;
+    margin: 9px 0 0;
+    font-size: clamp(11px, 3.2vw, 13px);
+    line-height: 1.2;
+  }
+
+  .services-company-page .services-directory-card p {
+    order: 2;
+    margin: 4px 0 0;
+    font-size: clamp(8px, 2.45vw, 10px);
+    line-height: 1.2;
+  }
+
+  .services-company-page .services-directory-card .live-rating-badge,
+  .services-company-page .services-directory-card .status-chip {
+    position: absolute;
+    z-index: 2;
+    top: 7px;
+    right: 7px;
+    max-width: calc(100% - 14px);
+    margin: 0;
+    padding: 3px 5px;
+    border-radius: 999px;
+    font-size: 7px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .services-company-page .services-directory-card > svg:last-child {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .services-directory-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .public-home-service-group {
+    gap: 12px;
+  }
+
+  .public-home-service-card,
+  .services-company-page .services-directory-card,
+  .services-company-page .services-directory-card.service-in-progress-card {
+    min-height: 150px;
+    aspect-ratio: auto;
+  }
+}
