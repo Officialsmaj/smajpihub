@@ -35,6 +35,7 @@ export type JobsApiCompany = {
   verificationStatus?: "unclaimed" | "claimed" | "pending" | "verified" | "pi_kyb" | "rejected";
   ownerId?: string;
   website?: string;
+  moderationStatus?: "pending" | "approved" | "rejected";
 };
 
 export type JobsApiInterview = { id: string; scheduledAt: string; note?: string; createdAt: string; createdBy: string };

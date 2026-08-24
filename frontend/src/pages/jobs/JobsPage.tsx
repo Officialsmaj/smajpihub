@@ -347,6 +347,11 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const [jobs, setJobs] = useState<Job[]>(fallbackJobs);
   const [companies, setCompanies] = useState<JobsApiCompany[]>(fallbackCompanies);
   const [companyQuery, setCompanyQuery] = useState("");
+  const [employerCompanyQuery, setEmployerCompanyQuery] = useState("");
+  const [employerCompanyStatus, setEmployerCompanyStatus] = useState("all");
+  const [companyRegistrationOpen, setCompanyRegistrationOpen] = useState(false);
+  const [companySubmitting, setCompanySubmitting] = useState(false);
+  const [verificationCompanyId, setVerificationCompanyId] = useState("");
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [applications, setApplications] = useState<JobsApiApplication[]>([]);
   const [readApplicationUpdates, setReadApplicationUpdates] = useState<Set<string>>(() => {
@@ -576,7 +581,20 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
     return companies.filter(company =>
       [company.name, company.field].some(value => value.toLowerCase().includes(term)),
     );
-  }, [companies, companyQuery]);
+  }, [companies, companyQuery]);  const filteredEmployerCompanies = useMemo(() => {
+    const term = employerCompanyQuery.trim().toLowerCase();
+    return employerCompanies.filter(company => {
+      const status = company.moderationStatus === "pending"
+        ? "review"
+        : company.moderationStatus === "rejected"
+          ? "rejected"
+          : company.verificationStatus || "claimed";
+      const matchesSearch = !term || [company.name, company.field, company.mark].some(value =>
+        String(value || "").toLowerCase().includes(term),
+      );
+      return matchesSearch && (employerCompanyStatus === "all" || status === employerCompanyStatus);
+    });
+  }, [employerCompanies, employerCompanyQuery, employerCompanyStatus]);
   useEffect(() => {
     if (kind === "activity" && searchParams.get("tab") === "actions") setActivityTab("actions");
   }, [kind, searchParams]);
@@ -1100,7 +1118,7 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   const jobAlertsCount = Math.min(9, recommendedJobs.length || metrics.opportunities);
   const jobAlertsLabel = jobAlertsCount >= 9 ? "9+" : String(jobAlertsCount);
   const selectedJob = jobs.find(job => job.id === id) || fetchedJob || undefined;
-  const selectedCompany = companies.find(company => company.id === id) || fetchedCompany?.company || undefined;
+  const selectedCompany = companies.find(company => company.id === id) || employerCompanies.find(company => company.id === id) || fetchedCompany?.company || undefined;
   const selectedCompanyJobs =
     fetchedCompany?.jobs || jobs.filter(job => selectedCompany && job.company === selectedCompany.name);
   useEffect(() => {
@@ -1433,18 +1451,26 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
   };
   const createCompany = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    if (companySubmitting) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setCompanySubmitting(true);
     try {
       await enrollEmployer();
       const company = await createJobCompany({
-        name: String(data.get("name") || ""),
-        field: String(data.get("field") || ""),
+        name: String(data.get("name") || "").trim(),
+        field: String(data.get("field") || "").trim(),
       });
-      setEmployerCompanies(current => [...current, company]);
-      setActionMessage("Company submitted for moderation.");
-      event.currentTarget.reset();
-    } catch {
-      setActionMessage("Employer enrollment or company creation failed. Please try again from your SMAJ account.");
+      setEmployerCompanies(current => [company, ...current]);
+      setCompanies(current => [company, ...current.filter(item => item.id !== company.id)]);
+      setActionMessage(`${company.name} was submitted for admin listing review.`);
+      setCompanyRegistrationOpen(false);
+      form.reset();
+    } catch (error) {
+      const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message;
+      setActionMessage(message || "Company could not be submitted. Please check the details and try again.");
+    } finally {
+      setCompanySubmitting(false);
     }
   };
   const changeApplicationStatus = async (applicationId: string, status: string) => {
@@ -1478,7 +1504,8 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
       setEmployerCompanies(current =>
         current.map(company => (company.id === companyId ? { ...company, verificationStatus: "pending" } : company))
       );
-      setActionMessage("Company verification submitted for review.");
+      setActionMessage("Company verification submitted for admin review.");
+      setVerificationCompanyId("");
     } catch {
       setActionMessage("Company verification request could not be submitted.");
     }
@@ -4075,54 +4102,137 @@ const JobsPage = ({ kind = "home" }: { kind?: JobsPageKind }) => {
                   <span>Your companies</span>
                 </article>
                 <Link to="/services/jobs/post">Post another job</Link>
-                <form className="job-form" onSubmit={createCompany}>
-                  <h2>Register an employer company</h2>
-                  <label>
-                    Company name
-                    <input name="name" required />
-                  </label>
-                  <label>
-                    Industry
-                    <input name="field" required />
-                  </label>
-                  <button type="submit">Submit company for review</button>
-                </form>
-                <section className="jobs-trust-section">
-                  <h2>Company verification</h2>
-                  <p>Submit business identity and representative evidence. A badge appears only after review.</p>
-                  {employerCompanies.map(company => (
-                    <form
-                      className="job-form jobs-verification-form"
-                      key={company.id}
-                      onSubmit={event => void submitCompanyVerification(event, company.id)}
-                    >
-                      <h3>
-                        {company.name} <small>{company.verificationStatus || "unverified"}</small>
-                      </h3>
+                <section className="jobs-company-workspace">
+                  <header className="jobs-company-workspace-head">
+                    <div>
+                      <span className="jobs-kicker">COMPANY WORKSPACE</span>
+                      <h2>Your companies</h2>
+                      <p>Manage company profiles, listing review, and verification from one place.</p>
+                    </div>
+                    <button type="button" onClick={() => setCompanyRegistrationOpen(open => !open)}>
+                      {companyRegistrationOpen ? "Close" : "+ Add company"}
+                    </button>
+                  </header>
+
+                  {companyRegistrationOpen || !employerCompanies.length ? (
+                    <form className="job-form jobs-company-register-form" onSubmit={createCompany}>
+                      <div>
+                        <h3>Register an employer company</h3>
+                        <p>Add the basic company details first. Admin listing review happens before verification.</p>
+                      </div>
                       <label>
-                        Registration number
-                        <input name="registrationNumber" />
+                        Company name
+                        <input name="name" required minLength={2} maxLength={120} placeholder="Company name" />
                       </label>
                       <label>
-                        Business email
-                        <input name="businessEmail" type="email" required />
+                        Industry
+                        <input name="field" required maxLength={100} placeholder="e.g. Software, Retail, Education" />
                       </label>
-                      <label>
-                        Your role
-                        <input name="representativeRole" required placeholder="Owner, director, recruiter..." />
-                      </label>
-                      <label>
-                        Evidence notes
-                        <textarea name="notes" rows={3} />
-                      </label>
-                      <button
-                        type="submit"
-                        disabled={company.verificationStatus === "verified" || company.verificationStatus === "pi_kyb"}
-                      >
-                        Request company verification
+                      <button type="submit" disabled={companySubmitting} aria-busy={companySubmitting}>
+                        {companySubmitting ? "Submitting…" : "Submit company for review"}
                       </button>
                     </form>
-                  ))}
+                  ) : null}
+
+                  <div className="jobs-company-toolbar">
+                    <label>
+                      <SearchRoundedIcon />
+                      <input
+                        type="search"
+                        value={employerCompanyQuery}
+                        onChange={event => setEmployerCompanyQuery(event.target.value)}
+                        placeholder="Search your companies"
+                        aria-label="Search your companies"
+                      />
+                    </label>
+                    <select
+                      value={employerCompanyStatus}
+                      onChange={event => setEmployerCompanyStatus(event.target.value)}
+                      aria-label="Filter companies by status"
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="review">Listing review</option>
+                      <option value="claimed">Needs verification</option>
+                      <option value="pending">Verification pending</option>
+                      <option value="verified">Verified</option>
+                      <option value="pi_kyb">Pi KYB</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  {filteredEmployerCompanies.length ? (
+                    <div className="jobs-company-card-grid">
+                      {filteredEmployerCompanies.map(company => {
+                        const reviewStatus = company.moderationStatus === "pending"
+                          ? "review"
+                          : company.moderationStatus === "rejected"
+                            ? "rejected"
+                            : company.verificationStatus || "claimed";
+                        const statusLabel = reviewStatus === "review"
+                          ? "Listing review"
+                          : reviewStatus === "pi_kyb"
+                            ? "Pi KYB verified"
+                            : reviewStatus === "claimed"
+                              ? "Needs verification"
+                              : reviewStatus.replace(/_/g, " ");
+                        const canRequestVerification = company.moderationStatus === "approved" &&
+                          !["pending", "verified", "pi_kyb"].includes(company.verificationStatus || "claimed");
+                        return (
+                          <article className="jobs-company-manage-card" key={company.id}>
+                            <Link to={`/services/jobs/company/${company.id}`} className="jobs-company-card-main">
+                              <span className="jobs-company-mark">{company.mark}</span>
+                              <div>
+                                <small className={`jobs-company-status ${reviewStatus}`}>{statusLabel}</small>
+                                <h3>{company.name}</h3>
+                                <p>{company.field}</p>
+                              </div>
+                              <ArrowForwardRoundedIcon />
+                            </Link>
+                            <footer>
+                              <Link to={`/services/jobs/company/${company.id}`}>Open company profile</Link>
+                              {canRequestVerification ? (
+                                <button type="button" onClick={() => setVerificationCompanyId(current => current === company.id ? "" : company.id)}>
+                                  {verificationCompanyId === company.id ? "Close form" : "Verify company"}
+                                </button>
+                              ) : (
+                                <span>{reviewStatus === "review" ? "Waiting for listing review" : statusLabel}</span>
+                              )}
+                            </footer>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="jobs-company-empty-state">
+                      <SearchRoundedIcon />
+                      <h3>No matching companies</h3>
+                      <p>Change the search or status filter.</p>
+                    </div>
+                  )}
+
+                  {verificationCompanyId ? (() => {
+                    const company = employerCompanies.find(item => item.id === verificationCompanyId);
+                    return company ? (
+                      <form
+                        className="job-form jobs-verification-form jobs-verification-panel"
+                        onSubmit={event => void submitCompanyVerification(event, company.id)}
+                      >
+                        <div className="jobs-verification-panel-head">
+                          <span className="jobs-company-mark">{company.mark}</span>
+                          <div><small>VERIFICATION REQUEST</small><h3>{company.name}</h3></div>
+                          <button type="button" onClick={() => setVerificationCompanyId("")} aria-label="Close verification form">×</button>
+                        </div>
+                        <p>Provide business identity and representative evidence for admin review.</p>
+                        <div className="jobs-verification-fields">
+                          <label>Registration number<input name="registrationNumber" required placeholder="Official registration number" /></label>
+                          <label>Business email<input name="businessEmail" type="email" required placeholder="name@company.com" /></label>
+                          <label>Your role<input name="representativeRole" required placeholder="Owner, director, recruiter…" /></label>
+                          <label className="wide">Evidence notes<textarea name="notes" rows={3} placeholder="Explain what the reviewer should confirm" /></label>
+                        </div>
+                        <button type="submit">Send verification request</button>
+                      </form>
+                    ) : null;
+                  })() : null}
                 </section>
                 <section className="jobs-trust-section jobs-billing-plans">
                   <h2>Employer plans</h2>

@@ -21779,3 +21779,80 @@ svg {
     aspect-ratio: auto;
   }
 }
+/* Jobs company admin review */
+.admin-company-review-filter {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(170px, 240px) auto;
+  align-items: end;
+}
+
+.admin-company-review-filter label {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-company-review-filter input,
+.admin-company-review-filter select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  color: var(--smaj-text);
+  background: var(--smaj-input);
+  border: 1px solid var(--smaj-border);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.admin-company-review-card {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.admin-company-review-card h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-company-review-card h3 a:hover {
+  color: var(--smaj-primary);
+}
+
+.admin-company-evidence {
+  margin: 10px 0;
+  padding: 11px;
+  display: grid;
+  gap: 5px;
+  background: var(--smaj-secondary-bg);
+  border: 1px solid var(--smaj-border);
+  border-radius: 10px;
+}
+
+.admin-company-evidence p {
+  overflow-wrap: anywhere;
+}
+
+.admin-company-stage-note {
+  margin: 8px 0 !important;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  .admin-company-review-filter,
+  .admin-company-review-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-company-review-filter > span,
+  .admin-company-review-card > strong {
+    justify-self: start;
+  }
+
+  .admin-company-review-card .row-actions {
+    justify-content: stretch;
+  }
+
+  .admin-company-review-card .row-actions > * {
+    flex: 1 1 calc(50% - 5px);
+    text-align: center;
+  }
+}

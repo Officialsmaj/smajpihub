@@ -326,6 +326,9 @@ export const AdminAmbassadorsPage = () => {
 export const AdminJobsReviewPage = () => {
   const [jobs, setJobs] = useState<JobsAdminReviewJob[]>([]);
   const [companies, setCompanies] = useState<JobsAdminReviewCompany[]>([]);
+  const [companyReviewQuery, setCompanyReviewQuery] = useState("");
+  const [companyReviewFilter, setCompanyReviewFilter] = useState("all");
+  const [companyUpdatingId, setCompanyUpdatingId] = useState("");
   const [profiles, setProfiles] = useState<JobsAdminReviewProfile[]>([]);
   const [message, setMessage] = useState("");
   const load = useCallback(async () => {
@@ -335,6 +338,15 @@ export const AdminJobsReviewPage = () => {
     setProfiles(data.profiles);
   }, []);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  const visibleCompanies = useMemo(() => {
+    const query = companyReviewQuery.trim().toLowerCase();
+    return companies.filter(company => {
+      const stage = company.verificationEvidence && company.verificationStatus === "pending" ? "verification" : "listing";
+      const matchesQuery = !query || [company.name, company.field, company.website, company.verificationEvidence?.businessEmail]
+        .some(value => String(value || "").toLowerCase().includes(query));
+      return matchesQuery && (companyReviewFilter === "all" || companyReviewFilter === stage);
+    });
+  }, [companies, companyReviewFilter, companyReviewQuery]);
   const reportError = (error: unknown, fallback: string) =>
     showFeedback((error as { response?: { data?: { message?: string } } }).response?.data?.message || fallback, "error");
   const decideJob = async (id: string, status: "approved" | "rejected") => {
@@ -346,16 +358,29 @@ export const AdminJobsReviewPage = () => {
       reportError(error, "Job could not be updated.");
     }
   };
-  const decideCompany = async (id: string, status: "verified" | "rejected") => {
+  const decideCompany = async (company: JobsAdminReviewCompany, action: "approved" | "verified" | "pi_kyb" | "rejected") => {
+    if (companyUpdatingId) return;
+    setCompanyUpdatingId(company.id);
     try {
-      await Promise.all([
-        verifyJobsCompany(id, status),
-        moderateJobCompany(id, status === "verified" ? "approved" : "rejected"),
-      ]);
-      setMessage(`Company ${status === "verified" ? "verified and listed" : "rejected"}.`);
+      const hasVerificationEvidence = Boolean(company.verificationEvidence && company.verificationStatus === "pending");
+      if (action === "approved") {
+        await moderateJobCompany(company.id, "approved");
+        setMessage(`${company.name} approved for the company directory.`);
+      } else if (action === "rejected") {
+        await Promise.all([
+          moderateJobCompany(company.id, "rejected"),
+          ...(hasVerificationEvidence ? [verifyJobsCompany(company.id, "rejected")] : []),
+        ]);
+        setMessage(`${company.name} rejected.`);
+      } else {
+        await Promise.all([verifyJobsCompany(company.id, action), moderateJobCompany(company.id, "approved")]);
+        setMessage(`${company.name} ${action === "pi_kyb" ? "approved with Pi KYB" : "verified"}.`);
+      }
       await load();
     } catch (error) {
       reportError(error, "Company could not be updated.");
+    } finally {
+      setCompanyUpdatingId("");
     }
   };
   const decideCandidate = async (userId: string, status: "verified" | "rejected") => {
@@ -389,24 +414,41 @@ export const AdminJobsReviewPage = () => {
         </article>
       ))}</div> : <div className="private-state"><h2>No job postings awaiting review</h2><p>New postings will show here until approved.</p></div>}
 
-      <section className="admin-filter-bar"><span>{companies.length} company verification requests</span></section>
-      {companies.length ? <div className="management-list">{companies.map((company) => (
-        <article className="report-card" key={company.id}>
-          <div>
-            <span>{company.field}</span>
-            <h3>{company.name}</h3>
-            <p>{company.website || "No website provided"}</p>
-            {company.verificationEvidence ? (
-              <p>Reg. {company.verificationEvidence.registrationNumber || "—"} · {company.verificationEvidence.businessEmail || "—"}</p>
-            ) : null}
-            <small>{company.verificationRequestedAt ? new Date(company.verificationRequestedAt).toLocaleString() : ""}</small>
-          </div>
-          <div className="row-actions">
-            <button onClick={() => void decideCompany(company.id, "verified")}>Verify</button>
-            <button className="danger" onClick={() => void decideCompany(company.id, "rejected")}>Reject</button>
-          </div>
-        </article>
-      ))}</div> : <div className="private-state"><h2>No company verification requests</h2><p>Employer verification submissions will show here.</p></div>}
+      <section className="admin-filter-bar admin-company-review-filter">
+        <label>Search companies<input type="search" value={companyReviewQuery} onChange={event => setCompanyReviewQuery(event.target.value)} placeholder="Name, industry, or email" /></label>
+        <label>Review stage<select value={companyReviewFilter} onChange={event => setCompanyReviewFilter(event.target.value)}><option value="all">All stages</option><option value="listing">Listing review</option><option value="verification">Verification evidence</option></select></label>
+        <span>{visibleCompanies.length} company requests</span>
+      </section>
+      {visibleCompanies.length ? <div className="management-list admin-company-review-list">{visibleCompanies.map((company) => {
+        const hasVerificationEvidence = Boolean(company.verificationEvidence && company.verificationStatus === "pending");
+        return (
+          <article className="report-card admin-company-review-card" key={company.id}>
+            <div>
+              <span>{hasVerificationEvidence ? "Verification evidence" : "Company listing"} · {company.field}</span>
+              <h3><Link to={`/services/jobs/company/${company.id}`}>{company.name}</Link></h3>
+              <p>{company.website || "No website provided"}</p>
+              {company.verificationEvidence ? (
+                <div className="admin-company-evidence">
+                  <p><b>Registration:</b> {company.verificationEvidence.registrationNumber || "Not supplied"}</p>
+                  <p><b>Business email:</b> {company.verificationEvidence.businessEmail || "Not supplied"}</p>
+                  <p><b>Representative:</b> {company.verificationEvidence.representativeRole || "Not supplied"}</p>
+                  {company.verificationEvidence.notes ? <p><b>Evidence notes:</b> {company.verificationEvidence.notes}</p> : null}
+                </div>
+              ) : <p className="admin-company-stage-note">Basic listing details only. Verification evidence has not been submitted.</p>}
+              <small>{company.verificationRequestedAt ? new Date(company.verificationRequestedAt).toLocaleString() : "Awaiting listing review"}</small>
+            </div>
+            <strong className="open">{hasVerificationEvidence ? "VERIFY" : "LISTING"}</strong>
+            <div className="row-actions">
+              <Link to={`/services/jobs/company/${company.id}`}>Profile</Link>
+              {hasVerificationEvidence ? <>
+                <button disabled={companyUpdatingId === company.id} onClick={() => void decideCompany(company, "verified")}>Verify</button>
+                <button disabled={companyUpdatingId === company.id} onClick={() => void decideCompany(company, "pi_kyb")}>Pi KYB</button>
+              </> : <button disabled={companyUpdatingId === company.id} onClick={() => void decideCompany(company, "approved")}>Approve listing</button>}
+              <button className="danger" disabled={companyUpdatingId === company.id} onClick={() => void decideCompany(company, "rejected")}>Reject</button>
+            </div>
+          </article>
+        );
+      })}</div> : <div className="private-state"><h2>No matching company requests</h2><p>New listing and verification submissions will appear here.</p></div>}
 
       <section className="admin-filter-bar"><span>{profiles.length} candidate verification requests</span></section>
       {profiles.length ? <div className="management-list">{profiles.map((profile) => (

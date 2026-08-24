@@ -390,7 +390,15 @@ const ensureSeedData = async (req: Request) => {
   );
   await req.app.locals.jobCompanyCollection.updateMany(
     { verificationStatus: { $exists: false }, ownerId: { $exists: true } },
-    { $set: { verificationStatus: "pending", verified: false } },
+    { $set: { verificationStatus: "claimed", verified: false } },
+  );
+  await req.app.locals.jobCompanyCollection.updateMany(
+    {
+      verificationStatus: "pending",
+      ownerId: { $exists: true },
+      verificationEvidence: { $exists: false },
+    },
+    { $set: { verificationStatus: "claimed", verified: false } },
   );
   await req.app.locals.jobCompanyCollection.updateMany(
     { verificationStatus: { $exists: false }, ownerId: { $exists: false } },
@@ -486,14 +494,7 @@ export default function mountJobsEndpoints(router: Router) {
         message: "Company name is required.",
       });
     const ownerId = userId(user);
-    const existing = await req.app.locals.jobCompanyCollection.findOne({
-      ownerId,
-    });
-    if (existing)
-      return res.status(409).json({
-        error: "company_exists",
-        company: serializeJobDocument(existing),
-      });
+
     const slug = `${name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -513,7 +514,7 @@ export default function mountJobsEndpoints(router: Router) {
         .toUpperCase(),
       ownerId,
       verified: false,
-      verificationStatus: "pending",
+      verificationStatus: "claimed",
       website: String(req.body?.website || "").trim().slice(0, 500),
       country: String(req.body?.country || "").trim().slice(0, 120),
       registrationNumber: String(req.body?.registrationNumber || "").trim().slice(0, 120),
@@ -609,14 +610,16 @@ export default function mountJobsEndpoints(router: Router) {
   });
   router.get("/companies/:id", async (req, res) => {
     await ensureSeedData(req);
-    const company = await req.app.locals.jobCompanyCollection.findOne({
-      slug: req.params.id,
-      moderationStatus: "approved",
-    });
+    const company = await req.app.locals.jobCompanyCollection.findOne({ slug: req.params.id });
     if (!company)
       return res
         .status(404)
         .json({ error: "not_found", message: "Company not found." });
+    if (company.moderationStatus !== "approved") {
+      const currentUser = await resolveCurrentUser(req);
+      if (!currentUser || (!isAdmin(currentUser) && company.ownerId !== userId(currentUser)))
+        return res.status(404).json({ error: "not_found", message: "Company not found." });
+    }
     const openings = await req.app.locals.jobCollection
       .find({ companyId: company.slug, ...ACTIVE })
       .toArray();
@@ -1252,7 +1255,7 @@ export default function mountJobsEndpoints(router: Router) {
         .sort({ createdAt: -1 })
         .toArray(),
       req.app.locals.jobCompanyCollection
-        .find({ verificationStatus: "pending" })
+        .find({ $or: [{ moderationStatus: "pending" }, { verificationStatus: "pending" }] })
         .sort({ verificationRequestedAt: -1 })
         .toArray(),
       req.app.locals.jobProfileCollection
