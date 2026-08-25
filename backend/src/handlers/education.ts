@@ -1430,6 +1430,31 @@ export default function mountEducationEndpoints(router: Router) {
     if (!item) return res.status(404).json({ error: "Tutor not found" });
     return res.status(200).json({ tutor: { id: item._id.toString(), name: item.full_name, avatar_url: item.avatar_url, headline: item.headline, biography: item.biography, subjects: item.subjects || [], languages: item.languages || [], location: item.country, experience_years: item.experience_years || 0, education: item.education, certifications: item.certifications, ratePi: item.proposed_price_pi || 0, verified: true } });
   });
+  router.post("/tutors/:id/lesson-requests", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    if (!ObjectId.isValid(req.params.id)) return res.status(404).json({ error: "Tutor not found" });
+    const tutor = await req.app.locals.teacherApplicationCollection?.findOne({ _id: new ObjectId(req.params.id), status: "approved", applicant_role: "tutor" });
+    if (!tutor) return res.status(404).json({ error: "Tutor not found" });
+    const body = req.body || {};
+    const subject = safeString(body.subject);
+    const preferred_date = safeString(body.preferred_date);
+    const preferred_time = safeString(body.preferred_time);
+    const delivery_mode = ["video", "audio", "chat", "in_person"].includes(body.delivery_mode) ? body.delivery_mode : "video";
+    if (!subject || !preferred_date || !preferred_time) return res.status(400).json({ error: "Choose a subject, preferred date, and time." });
+    const now = new Date().toISOString();
+    const request = {
+      tutor_id: tutor._id.toString(), tutor_user_id: tutor.user_id, tutor_name: tutor.full_name,
+      student_id: user._id.toString(), student_name: user.displayName || user.piUsername || "Student",
+      subject, preferred_date, preferred_time, timezone: safeString(body.timezone, "UTC"), delivery_mode,
+      duration_minutes: Math.max(30, Math.min(180, Number(body.duration_minutes) || 60)),
+      message: safeString(body.message), rate_pi: Number(tutor.proposed_price_pi) || 0,
+      status: "pending", created_at: now, updated_at: now,
+    };
+    const result = await req.app.locals.tutorLessonRequestCollection.insertOne(request);
+    if (tutor.user_id) await createNotification(req.app, { userId: tutor.user_id, type: "education_lesson_request", title: "New lesson request", message: `${request.student_name} requested a ${subject} lesson.`, relatedId: result.insertedId.toString() });
+    return res.status(201).json({ request: { ...request, id: result.insertedId.toString() }, message: "Lesson request sent to the tutor." });
+  });
   router.get("/teacher-applications/me", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;

@@ -86,6 +86,7 @@ import CertificatesPage from "./pages/education/CertificatesPage";
 import InstructorDashboardPage from "./pages/education/InstructorDashboardPage";
 import TutorsPage from "./pages/education/TutorsPage";
 import TutorProfilePage from "./pages/education/TutorProfilePage";
+import TutorLessonRequestPage from "./pages/education/TutorLessonRequestPage";
 import EducationProfilePage from "./pages/education/EducationProfilePage";
 import UniversitiesPage from "./pages/education/UniversitiesPage";
 import UniversityProfilePage from "./pages/education/UniversityProfilePage";
@@ -752,6 +753,9 @@ export const router = createBrowserRouter([
   {
     path: "/services/education/tutors/:id",
     element: <TutorProfilePage />,
+  },  {
+    path: "/services/education/tutors/:id/request",
+    element: <ProtectedRoute><TutorLessonRequestPage /></ProtectedRoute>,
   },
   {
     path: "/services/education/my-courses",

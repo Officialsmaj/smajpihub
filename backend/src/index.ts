@@ -385,6 +385,7 @@ const start = async () => {
         "transport_notifications",
       );
       app.locals.teacherApplicationCollection = db.collection("teacher_applications");
+      app.locals.tutorLessonRequestCollection = db.collection("tutor_lesson_requests");
       app.locals.universityCollection = db.collection("universities");
       app.locals.universityProgramCollection = db.collection(
         "university_programs",
@@ -605,6 +606,8 @@ const start = async () => {
         }),
         app.locals.teacherApplicationCollection.createIndex({ user_id: 1 }, { unique: true }),
         app.locals.teacherApplicationCollection.createIndex({ status: 1, submitted_at: -1 }),
+        app.locals.tutorLessonRequestCollection.createIndex({ student_id: 1, created_at: -1 }),
+        app.locals.tutorLessonRequestCollection.createIndex({ tutor_id: 1, status: 1, created_at: -1 }),
         app.locals.universityCollection.createIndex(
           { slug: 1 },
           { unique: true },
