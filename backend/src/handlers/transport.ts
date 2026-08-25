@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
+import { platformAPIKeyClient } from "../services/platformAPIClient";
 import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
 
 const TIMELINE = (status: string, label: string, note?: string) => ({
@@ -146,14 +147,13 @@ export default function mountTransportEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Required flight fields are missing" });
     }
     const bookingId = generateId("FLT");
-    const ticketNumber = `SMJ-${Date.now().toString(36).toUpperCase()}`;
     const booking: any = {
       bookingId,
       userId: user.uid,
       userName: user.displayName || user.piUsername || user.username,
       userEmail: user.contactEmail || user.piUsername || user.username || "",
       type: "flight",
-      status: "confirmed",
+      status: "pending",
       paymentStatus: "pending",
       paymentId: null,
       paymentTxid: null,
@@ -175,21 +175,21 @@ export default function mountTransportEndpoints(router: Router) {
       passengerName,
       passengerEmail,
       passengerNationality,
-      ticketNumber,
+      ticketNumber: null,
       eTicketUrl: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       timeline: [
-        TIMELINE("confirmed", "Booking Confirmed", `Flight ${flightCode} booked for ${passengerName}.`),
+        TIMELINE("pending", "Flight Reserved", `Flight ${flightCode} is reserved for ${passengerName} pending payment.`),
         TIMELINE("payment_pending", "Payment Pending", "Complete Pi payment to confirm your flight."),
       ],
     };
     const result = await req.app.locals.transportBookingCollection.insertOne(booking);
     await createNotification(req.app, {
       userId: user.uid,
-      type: "flight_booked",
-      title: "Flight booked",
-      message: `Your flight ${flightCode} from ${departureAirport} to ${arrivalAirport} is confirmed.`,
+      type: "flight_payment_pending",
+      title: "Flight reserved",
+      message: `Complete Pi payment to issue your ticket for ${flightCode}.`,
       relatedId: result.insertedId.toString(),
       image: "",
     });
@@ -234,6 +234,88 @@ export default function mountTransportEndpoints(router: Router) {
     return res.status(200).json({ message: "Booking updated", bookingId: booking.bookingId });
   });
 
+  router.post("/bookings/:id/payment/approve", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const { paymentId } = req.body || {};
+    if (!paymentId) return res.status(400).json({ error: "bad_request", message: "paymentId is required" });
+    const booking = await req.app.locals.transportBookingCollection.findOne({
+      ...objectOrPublicId(req.params.id, "bookingId"), userId: user.uid, type: "flight",
+    });
+    if (!booking) return res.status(404).json({ error: "not_found", message: "Flight booking not found" });
+    if (!booking.providerRef) {
+      return res.status(409).json({ error: "inventory_not_live", message: "This flight is demo inventory and cannot accept payment" });
+    }
+    if (booking.status !== "pending" || !["pending", "processing"].includes(booking.paymentStatus)) {
+      return res.status(409).json({ error: "invalid_state", message: "This flight is not awaiting payment" });
+    }
+    try {
+      const remote = await platformAPIKeyClient.get(`/v2/payments/${encodeURIComponent(paymentId)}`);
+      const payment = remote.data;
+      const metadataBookingId = payment?.metadata?.bookingId;
+      if (metadataBookingId !== booking.bookingId || Math.abs(Number(payment?.amount) - Number(booking.farePi)) > 0.000001) {
+        return res.status(400).json({ error: "payment_mismatch", message: "Pi payment does not match this flight booking" });
+      }
+      await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/approve`);
+      await req.app.locals.transportBookingCollection.updateOne(
+        { _id: booking._id },
+        { $set: { paymentId, paymentStatus: "processing", updatedAt: new Date() } },
+      );
+      return res.status(200).json({ message: "Flight payment approved", paymentId });
+    } catch (error: any) {
+      return res.status(error?.response?.status || 502).json({ error: "pi_approval_failed", message: "Pi could not approve this flight payment" });
+    }
+  });
+
+  router.post("/bookings/:id/payment/complete", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const { paymentId, txid } = req.body || {};
+    if (!paymentId || !txid) return res.status(400).json({ error: "bad_request", message: "paymentId and txid are required" });
+    const booking = await req.app.locals.transportBookingCollection.findOne({
+      ...objectOrPublicId(req.params.id, "bookingId"), userId: user.uid, type: "flight",
+    });
+    if (!booking) return res.status(404).json({ error: "not_found", message: "Flight booking not found" });
+    if (!booking.providerRef) {
+      return res.status(409).json({ error: "inventory_not_live", message: "This flight is demo inventory and cannot accept payment" });
+    }
+    if (booking.paymentId && booking.paymentId !== paymentId) {
+      return res.status(409).json({ error: "payment_mismatch", message: "Payment identifier does not match" });
+    }
+    try {
+      await platformAPIKeyClient.post(`/v2/payments/${encodeURIComponent(paymentId)}/complete`, { txid });
+      const ticketNumber = booking.ticketNumber || `SMJ-${Date.now().toString(36).toUpperCase()}`;
+      const timeline = [...(Array.isArray(booking.timeline) ? booking.timeline : []), TIMELINE("confirmed", "Ticket Issued", "Pi payment confirmed and electronic ticket issued.")];
+      await req.app.locals.transportBookingCollection.updateOne(
+        { _id: booking._id },
+        { $set: { status: "confirmed", paymentStatus: "paid", paymentId, paymentTxid: txid, ticketNumber, eTicketUrl: `/services/transport/flights/ticket/${booking.bookingId}`, timeline, updatedAt: new Date() } },
+      );
+      await createNotification(req.app, {
+        userId: user.uid, type: "flight_booked", title: "Flight ticket issued",
+        message: `Ticket ${ticketNumber} for ${booking.flightCode} is ready.`, relatedId: booking._id.toString(), image: "",
+      });
+      return res.status(200).json({ booking: { ...booking, status: "confirmed", paymentStatus: "paid", paymentId, paymentTxid: txid, ticketNumber, eTicketUrl: `/services/transport/flights/ticket/${booking.bookingId}` } });
+    } catch (error: any) {
+      return res.status(error?.response?.status || 502).json({ error: "pi_completion_failed", message: "Pi could not complete this flight payment" });
+    }
+  });
+
+  router.post("/bookings/:id/payment/cancel", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const { paymentId } = req.body || {};
+    const booking = await req.app.locals.transportBookingCollection.findOne({
+      ...objectOrPublicId(req.params.id, "bookingId"), userId: user.uid, type: "flight",
+    });
+    if (!booking) return res.status(404).json({ error: "not_found", message: "Flight booking not found" });
+    if (!booking.providerRef) {
+      return res.status(409).json({ error: "inventory_not_live", message: "This flight is demo inventory and cannot accept payment" });
+    }
+    await req.app.locals.transportBookingCollection.updateOne(
+      { _id: booking._id }, { $set: { paymentId: paymentId || booking.paymentId, paymentStatus: "cancelled", updatedAt: new Date() } },
+    );
+    return res.status(200).json({ message: "Flight payment cancelled" });
+  });
   router.post("/bookings/:id/cancel", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;

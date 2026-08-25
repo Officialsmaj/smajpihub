@@ -11,7 +11,8 @@ import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import AirlineSeatReclineNormalRoundedIcon from "@mui/icons-material/AirlineSeatReclineNormalRounded";
-import { transportApi } from "../../lib/transportApi";
+import { transportApi, type FlightBooking } from "../../lib/transportApi";
+import { requestPiBrowserHandoff } from "../../lib/piBrowserHandoff";
 import { formatServicePrice, piFromUsdt } from "../../lib/piPricing";
 import "./FlightsPage.css";
 
@@ -25,6 +26,7 @@ type Flight = {
   duration: string;
   stops: string;
   price: number;
+  bookable: boolean;
 };
 
 const airportName = (value: string) => value.split("—")[0]?.trim() || value;
@@ -39,6 +41,7 @@ const defaultFlight: Flight = {
   duration: "6h 45m",
   stops: "1 stop · ACC",
   price: 184.6,
+  bookable: false,
 };
 
 const FlightsPage = () => {
@@ -60,6 +63,8 @@ const FlightsPage = () => {
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState<FlightBooking | null>(null);
+  const [issuedBooking, setIssuedBooking] = useState<FlightBooking | null>(null);
 
   const extras = useMemo(() => (seat === "18A" ? 4.2 : 0) + (bag === "Checked 23 kg" ? 12.5 : 0), [bag, seat]);
   const total = selected.price * travellers + extras;
@@ -76,6 +81,7 @@ const FlightsPage = () => {
         duration: "6h 45m",
         stops: "1 stop · ACC",
         price: 184.6,
+        bookable: false,
       },
       {
         id: "PA228",
@@ -87,6 +93,7 @@ const FlightsPage = () => {
         duration: "9h 35m",
         stops: "1 stop · CMN",
         price: 206.4,
+        bookable: false,
       },
       {
         id: "AO610",
@@ -98,6 +105,7 @@ const FlightsPage = () => {
         duration: "5h 30m",
         stops: "Direct",
         price: 238.9,
+        bookable: false,
       },
     ];
     setFlights(mockFlights);
@@ -124,14 +132,23 @@ const FlightsPage = () => {
   };
 
   const handleCheckout = async () => {
+    if (!selected.bookable) {
+      setError("This is demo inventory. Payment and ticket issuance are disabled until a live airline provider confirms the fare.");
+      return;
+    }
     if (!terms) {
       setError("Accept the booking conditions to continue.");
+      return;
+    }
+    if (!window.Pi) {
+      setError("Open SMAJ PI HUB in Pi Browser to pay and issue your ticket.");
+      requestPiBrowserHandoff("Pi payment required for flight ticket");
       return;
     }
     setLoading(true);
     setError("");
     try {
-      await transportApi.createFlightBooking({
+      const booking = pendingBooking || await transportApi.createFlightBooking({
         airline: selected.airline,
         flightCode: selected.code,
         departureAirport: from,
@@ -148,14 +165,44 @@ const FlightsPage = () => {
         farePi: piFromUsdt(total),
         fareUsd: total,
       });
-      navigate("/services/transport/flights/ticket");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Booking failed. Please try again.");
+      setPendingBooking(booking);
+      await window.Pi.authenticate(["payments"], () => setError("An incomplete Pi payment was found. Finish or cancel it before retrying."));
+      await window.Pi.createPayment(
+        {
+          amount: booking.farePi,
+          memo: `SMAJ flight ${booking.flightCode} (${booking.bookingId})`,
+          metadata: { bookingId: booking.bookingId, type: "flight" },
+        },
+        {
+          onReadyForServerApproval: async paymentId => {
+            await transportApi.approveFlightPayment(booking.bookingId, paymentId);
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            try {
+              const issued = await transportApi.completeFlightPayment(booking.bookingId, paymentId, txid);
+              setIssuedBooking(issued);
+              setPendingBooking(issued);
+              navigate("/services/transport/flights/ticket");
+            } catch (completionError) {
+              setError(completionError instanceof Error ? completionError.message : "Payment confirmation failed. Please contact support with your Pi transaction ID.");
+            }
+          },
+          onCancel: paymentId => {
+            void transportApi.cancelFlightPayment(booking.bookingId, paymentId);
+            setPendingBooking(null);
+            setError("Pi payment was cancelled. No ticket was issued.");
+          },
+          onError: paymentError => {
+            setError(paymentError.message || "Pi payment failed. No ticket was issued.");
+          },
+        },
+      );
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error ? checkoutError.message : "Booking failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-
   const searchScreen = (
     <div className="flight-search-page">
       <section className="flight-search-hero">
@@ -262,8 +309,8 @@ const FlightsPage = () => {
         <article>
           <CheckCircleRoundedIcon />
           <div>
-            <b>Verified airline inventory</b>
-            <small>Live provider connection ready</small>
+            <b>Demo flight inventory</b>
+            <small>Provider connection required before public sale</small>
           </div>
         </article>
         <article>
@@ -371,7 +418,7 @@ const FlightsPage = () => {
                     navigate("/services/transport/flights/passengers");
                   }}
                 >
-                  Select
+                  {flight.bookable ? "Select" : "Preview"}
                 </button>
               </div>
             </article>
@@ -467,7 +514,7 @@ const FlightsPage = () => {
         <div>
           <small>STEP 3 OF 3</small>
           <h1>Review and pay</h1>
-          <p>Your seat is held for 12 minutes during checkout.</p>
+          <p>Demo checkout preview. No seat is held and no payment will be taken.</p>
         </div>
       </header>
       <div className="flight-details-layout">
@@ -524,7 +571,7 @@ const FlightsPage = () => {
         </span>
         <small>BOOKING CONFIRMED</small>
         <h1>Your trip is booked.</h1>
-        <p>Your electronic ticket has been sent to {passenger.email || "your email"}.</p>
+        <p>Your paid electronic ticket is ready below for {passenger.email || "your email"}.</p>
       </div>
       <article className="flight-ticket">
         <header>
@@ -538,7 +585,7 @@ const FlightsPage = () => {
           </div>
           <div>
             <small>BOOKING REFERENCE</small>
-            <strong>{`FLT-${Date.now().toString(36).toUpperCase()}`}</strong>
+            <strong>{issuedBooking?.ticketNumber || issuedBooking?.bookingId}</strong>
           </div>
         </header>
         <div className="ticket-route">
@@ -601,7 +648,7 @@ const FlightsPage = () => {
   if (stage === "results") return resultsScreen;
   if (stage === "passengers") return passengerScreen;
   if (stage === "checkout") return checkoutScreen;
-  if (stage === "ticket") return ticketScreen;
+  if (stage === "ticket") return issuedBooking ? ticketScreen : checkoutScreen;
   return searchScreen;
 };
 

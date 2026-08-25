@@ -233,6 +233,20 @@ export const transportApi = {
     return response.data.booking;
   },
 
+  approveFlightPayment: async (bookingId: string, paymentId: string) => {
+    const response = await axiosClient.post(`/transport/bookings/${bookingId}/payment/approve`, { paymentId });
+    return response.data;
+  },
+
+  completeFlightPayment: async (bookingId: string, paymentId: string, txid: string) => {
+    const response = await axiosClient.post<{ booking: FlightBooking }>(`/transport/bookings/${bookingId}/payment/complete`, { paymentId, txid });
+    return response.data.booking;
+  },
+
+  cancelFlightPayment: async (bookingId: string, paymentId: string) => {
+    const response = await axiosClient.post(`/transport/bookings/${bookingId}/payment/cancel`, { paymentId });
+    return response.data;
+  },
   updateBookingStatus: async (
     id: string,
     data: {
