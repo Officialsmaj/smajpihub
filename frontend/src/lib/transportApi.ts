@@ -115,6 +115,7 @@ export type TransportTrip = {
   vehiclePlate: string;
   status: "requested" | "driver_assigned" | "driver_on_the_way" | "in_progress" | "completed" | "cancelled";
   farePi: number;
+  fareUsd?: number;
   distanceKm: number;
   durationMin: number;
   pickupLocation: { lat: number; lng: number; address: string } | null;
@@ -207,8 +208,8 @@ export const transportApi = {
     distanceKm?: number;
     durationMin?: number;
   }) => {
-    const response = await axiosClient.post<{ booking: RideBooking }>("/transport/bookings/ride", data);
-    return response.data.booking;
+    const response = await axiosClient.post<{ booking: RideBooking; trip: TransportTrip }>("/transport/bookings/ride", data);
+    return response.data;
   },
 
   createFlightBooking: async (data: {

@@ -35,6 +35,16 @@ function generateId(prefix: string): string {
   return `${prefix}_${timestamp}_${random}`;
 }
 
+const objectOrPublicId = (value: string, publicField: string) =>
+  ObjectId.isValid(value) ? { _id: new ObjectId(value) } : { [publicField]: value };
+
+const RIDE_USD_PER_KM: Record<string, number> = {
+  bike: 1.8,
+  economy: 3.6,
+  comfort: 5.2,
+  delivery: 4.4,
+};
+
 export default function mountTransportEndpoints(router: Router) {
   router.get("/bookings", async (req, res) => {
     const user = await requireUser(req, res);
@@ -76,46 +86,51 @@ export default function mountTransportEndpoints(router: Router) {
       return res.status(400).json({ error: "bad_request", message: "Pickup and destination are required" });
     }
     const bookingId = generateId("RIDE");
+    const normalizedVehicleType = String(vehicleType || "economy");
+    const normalizedDistance = Math.max(1, Math.min(250, Number(distanceKm) || 1));
+    const fareUsd = Number(((RIDE_USD_PER_KM[normalizedVehicleType] || RIDE_USD_PER_KM.economy) * normalizedDistance).toFixed(2));
+    const driver = await req.app.locals.transportDriverCollection.findOne(
+      { isOnline: true, isApproved: true },
+      { sort: { updatedAt: -1 } },
+    );
+    const tripId = generateId("TRIP");
+    const tripStatus = driver ? "driver_assigned" : "requested";
     const booking: any = {
-      bookingId,
-      userId: user.uid,
+      bookingId, userId: user.uid,
       userName: user.displayName || user.piUsername || user.username,
       userEmail: user.contactEmail || user.piUsername || user.username || "",
-      type: "ride",
-      status: "pending",
-      paymentStatus: "pending",
-      paymentId: null,
-      paymentTxid: null,
-      providerRef: null,
-      farePi: 0,
-      fareUsd: 0,
-      currency: "PI",
-      pickup,
-      destination,
-      vehicleType: vehicleType || "economy",
-      vehicleName: "",
-      vehiclePlate: "",
-      driverId: null,
-      driverName: null,
-      etaMinutes: Number(etaMinutes) || 0,
-      distanceKm: Number(distanceKm) || 0,
-      durationMin: Number(durationMin) || 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      timeline: [
-        TIMELINE("pending", "Ride Requested", `Ride from ${pickup} to ${destination} has been requested.`),
-      ],
+      type: "ride", status: driver ? "active" : "pending", paymentStatus: "pending",
+      paymentId: null, paymentTxid: null, providerRef: null,
+      farePi: piFromUsdt(fareUsd), fareUsd, piRateUsed: PI_USDT_RATE, currency: "PI",
+      pickup, destination, vehicleType: normalizedVehicleType,
+      vehicleName: driver?.vehicleName || "", vehiclePlate: driver?.vehiclePlate || "",
+      driverId: driver?.driverId || null, driverName: driver?.displayName || null,
+      etaMinutes: Number(etaMinutes) || 0, distanceKm: normalizedDistance,
+      durationMin: Number(durationMin) || 0, createdAt: new Date(), updatedAt: new Date(),
+      timeline: [TIMELINE("pending", "Ride Requested", `Ride from ${pickup} to ${destination} has been requested.`)],
     };
     const result = await req.app.locals.transportBookingCollection.insertOne(booking);
+    const trip: any = {
+      tripId, userId: user.uid, bookingId, bookingObjectId: result.insertedId.toString(),
+      driverId: driver?.driverId || "", driverName: driver?.displayName || "",
+      pickup, destination, vehicleType: normalizedVehicleType,
+      vehicleName: driver?.vehicleName || "", vehiclePlate: driver?.vehiclePlate || "",
+      status: tripStatus, farePi: booking.farePi, fareUsd, distanceKm: normalizedDistance,
+      durationMin: Number(durationMin) || 0, pickupLocation: null, destinationLocation: null,
+      routePolyline: null, timeline: [TIMELINE(tripStatus, driver ? "Driver Assigned" : "Ride Requested")],
+      createdAt: new Date(), updatedAt: new Date(), completedAt: null,
+    };
+    const tripResult = await req.app.locals.transportTripCollection.insertOne(trip);
     await createNotification(req.app, {
-      userId: user.uid,
-      type: "ride_requested",
-      title: "Ride requested",
-      message: `Your ride from ${pickup} to ${destination} is being processed.`,
-      relatedId: result.insertedId.toString(),
-      image: "",
+      userId: user.uid, type: driver ? "driver_assigned" : "ride_requested",
+      title: driver ? "Driver assigned" : "Ride requested",
+      message: driver ? `${driver.displayName} has been assigned to your ride.` : "Your ride is waiting for a driver.",
+      relatedId: result.insertedId.toString(), image: "",
     });
-    return res.status(201).json({ booking: { ...booking, _id: result.insertedId.toString() } });
+    return res.status(201).json({
+      booking: { ...booking, _id: result.insertedId.toString() },
+      trip: { ...trip, _id: tripResult.insertedId.toString() },
+    });
   });
 
   router.post("/bookings/flight", async (req, res) => {
@@ -222,11 +237,8 @@ export default function mountTransportEndpoints(router: Router) {
   router.post("/bookings/:id/cancel", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    if (!ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "bad_request", message: "Invalid booking id" });
-    }
     const booking = await req.app.locals.transportBookingCollection.findOne({
-      _id: new ObjectId(req.params.id),
+      ...objectOrPublicId(req.params.id, "bookingId"),
       userId: user.uid,
     });
     if (!booking) {
@@ -240,6 +252,10 @@ export default function mountTransportEndpoints(router: Router) {
     await req.app.locals.transportBookingCollection.updateOne(
       { _id: booking._id },
       { $set: { status: "cancelled", paymentStatus: "cancelled", updatedAt: new Date(), timeline } },
+    );
+    await req.app.locals.transportTripCollection.updateOne(
+      { bookingId: booking.bookingId, userId: user.uid },
+      { $set: { status: "cancelled", updatedAt: new Date() } },
     );
     await createNotification(req.app, {
       userId: user.uid,
@@ -282,15 +298,12 @@ export default function mountTransportEndpoints(router: Router) {
   router.patch("/trips/:id/status", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    if (!ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "bad_request", message: "Invalid trip id" });
-    }
     const { status } = req.body || {};
     if (!status || !["requested", "driver_assigned", "driver_on_the_way", "in_progress", "completed", "cancelled"].includes(status)) {
       return res.status(400).json({ error: "bad_request", message: "Invalid trip status" });
     }
     const trip = await req.app.locals.transportTripCollection.findOne({
-      _id: new ObjectId(req.params.id),
+      ...objectOrPublicId(req.params.id, "tripId"),
       userId: user.uid,
     });
     if (!trip) {
@@ -303,9 +316,26 @@ export default function mountTransportEndpoints(router: Router) {
       updates.completedAt = new Date();
     }
     await req.app.locals.transportTripCollection.updateOne(
-      { _id: new ObjectId(req.params.id) },
+      { _id: trip._id },
       { $set: updates },
     );
+    await req.app.locals.transportBookingCollection.updateOne(
+      { bookingId: trip.bookingId, userId: user.uid },
+      { $set: { status: status === "requested" ? "pending" : status === "completed" || status === "cancelled" ? status : "active", updatedAt: new Date() } },
+    );
+    if (status === "completed") {
+      const existingReceipt = await req.app.locals.transportReceiptCollection.findOne({ tripId: trip.tripId });
+      if (!existingReceipt) {
+        await req.app.locals.transportReceiptCollection.insertOne({
+          receiptId: generateId("RCT"), tripId: trip.tripId, bookingId: trip.bookingId,
+          userId: user.uid, driverId: trip.driverId || "", driverName: trip.driverName || "",
+          pickup: trip.pickup, destination: trip.destination, vehicleName: trip.vehicleName || "",
+          vehiclePlate: trip.vehiclePlate || "", farePi: trip.farePi || 0, fareUsd: trip.fareUsd || 0,
+          distanceKm: trip.distanceKm || 0, durationMin: trip.durationMin || 0,
+          paymentStatus: "pending", paymentTxid: null, createdAt: new Date(),
+        });
+      }
+    }
     return res.status(200).json({ message: `Trip marked as ${status}`, tripId: trip.tripId });
   });
 

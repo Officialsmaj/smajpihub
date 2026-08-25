@@ -125,7 +125,8 @@ const TransportPage = () => {
   const [receipts, setReceipts] = useState<TransportReceipt[]>([]);
   const [adminStats, setAdminStats] = useState<AdminTransportStats | null>(null);
   const [notice, setNotice] = useState("");
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [tripFilter, setTripFilter] = useState<"all" | "completed" | "cancelled">("all");
   const [nearbyDrivers, setNearbyDrivers] = useState<
     Array<{
       driverId: string;
@@ -227,8 +228,9 @@ const TransportPage = () => {
 
   const confirmBooking = async () => {
     setBookingStep("matching");
+    setLoading(true);
     try {
-      const booking = await transportApi.createRideBooking({
+      const { booking, trip: persistedTrip } = await transportApi.createRideBooking({
         pickup,
         destination,
         vehicleType: activeRide.id,
@@ -237,30 +239,38 @@ const TransportPage = () => {
         durationMin: activeRide.seats > 0 ? 15 : 30,
       });
       const trip = {
-        id: booking.bookingId,
+        id: persistedTrip.tripId,
         pickup,
         destination,
         rideName: activeRide.name,
         price: booking.fareUsd || usdtFromPi(booking.farePi),
-        status: "active" as const,
+        status: normalizeStatus(persistedTrip.status),
         date: "Now",
         bookingId: booking.bookingId,
       };
-      setTrips(current => [trip, ...current.filter(item => item.status !== "active")]);
-      setBookingStep("confirmed");
+      setTrips(current => [trip, ...current.filter(item => item.id !== trip.id)]);
+      if (persistedTrip.status === "requested") {
+        setBookingStep("idle");
+        setNotice("Ride requested. We will notify you when a driver accepts.");
+        navigate("/services/transport/trips");
+      } else {
+        setBookingStep("confirmed");
+      }
     } catch {
       setBookingStep("idle");
       setNotice("Booking failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
-
   const completeTrip = async () => {
     const active = trips.find(t => t.status === "active");
     if (active?.bookingId) {
       try {
-        await transportApi.updateTripStatus(active.bookingId, "completed");
+        await transportApi.updateTripStatus(active.id, "completed");
       } catch {
-        // Silently fail; UI still updates
+        setNotice("The trip could not be completed. Please try again.");
+        return;
       }
     }
     setTrips(current =>
@@ -281,6 +291,33 @@ const TransportPage = () => {
     }
   };
 
+  const setDrivingAvailability = async (online: boolean) => {
+    const driver = drivers.find(item => item.isApproved);
+    if (!driver) {
+      setNotice(drivers.length ? "Your driver profile must be approved before you can go online." : "Register as a driver first.");
+      return;
+    }
+    try {
+      if (online && navigator.geolocation) {
+        await new Promise<void>(resolve => {
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              void transportApi.updateDriverLocation(driver._id, position.coords.latitude, position.coords.longitude)
+                .finally(resolve);
+            },
+            () => resolve(),
+            { enableHighAccuracy: true, timeout: 8000 },
+          );
+        });
+      }
+      await transportApi.setDriverOnline(driver._id, online);
+      setDrivers(current => current.map(item => item._id === driver._id ? { ...item, isOnline: online } : item));
+      setDriverOnline(online);
+      setNotice(online ? "You are online and available for ride requests." : "You are offline.");
+    } catch {
+      setNotice("Driver availability could not be updated.");
+    }
+  };
   const registerDriver = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -510,12 +547,12 @@ const TransportPage = () => {
         <p>Track an active ride or revisit where you have been.</p>
       </header>
       <div className="transport-trip-tabs">
-        <button className="active">All trips</button>
-        <button>Completed</button>
-        <button>Cancelled</button>
+        <button className={tripFilter === "all" ? "active" : ""} onClick={() => setTripFilter("all")}>All trips</button>
+        <button className={tripFilter === "completed" ? "active" : ""} onClick={() => setTripFilter("completed")}>Completed</button>
+        <button className={tripFilter === "cancelled" ? "active" : ""} onClick={() => setTripFilter("cancelled")}>Cancelled</button>
       </div>
       <div className="transport-trip-list">
-        {trips.map(trip => (
+        {trips.filter(trip => tripFilter === "all" || trip.status === tripFilter).map(trip => (
           <article key={trip.id} className={trip.status === "active" ? "active-trip" : ""}>
             <div className="trip-date">
               <span>
@@ -610,7 +647,7 @@ const TransportPage = () => {
           </h1>
           <p>Join a verified driver community, choose your hours, and earn directly in Pi.</p>
           <div>
-            <button className="transport-main-button" onClick={() => setDriverOnline(true)}>
+            <button className="transport-main-button" onClick={() => void setDrivingAvailability(true)}>
               Start driving
             </button>
             <a href="#driver-requirements">See requirements</a>
@@ -674,7 +711,7 @@ const TransportPage = () => {
       </section>
       {driverOnline ? (
         <div className="driver-online-card">
-          <button onClick={() => setDriverOnline(false)}>
+          <button onClick={() => void setDrivingAvailability(false)}>
             <CloseRoundedIcon />
           </button>
           <span className="online-pulse" />
@@ -926,7 +963,7 @@ const MapCanvas = ({
       <MyLocationRoundedIcon />
     </button>
     <div className="map-status">
-      <span /> Live driver network <b>{drivers.length || 128} nearby</b>
+      <span /> Live driver network <b>{drivers.length} nearby</b>
     </div>
   </div>
 );
