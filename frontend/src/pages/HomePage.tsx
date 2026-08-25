@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import AppLayout from "../layouts/AppLayout";
 import ServiceArt from "../components/ServiceArt";
-import { serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
+import { getServiceLaunchLabel, getServiceLaunchStatus, serviceCatalog, type ServiceDefinition } from "../content/serviceCatalog";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoginWithPiButton from "../components/LoginWithPiButton";
 import DashboardWelcomeLoader from "../components/DashboardWelcomeLoader";
@@ -104,9 +104,11 @@ const HomePage = () => {
   const goToPreviousServicesPage = () => setServicesPage((currentPage) => Math.max(currentPage - 1, 0));
   const goToNextServicesPage = () =>
     setServicesPage((currentPage) => Math.min(currentPage + 1, serviceCarouselPages.length - 1));
-  const getServiceStatus = (service: ServiceDefinition) => service.live || service.slug === "store";
-  const boilSlugs = new Set(["store", "stream", "jobs", "education"]);
-  const liveBadgeClass = (service: ServiceDefinition) => getServiceStatus(service) ? (boilSlugs.has(service.slug) ? "live-rating-badge live-badge-boil" : "live-rating-badge live-badge-static") : service.inProgress ? "status-chip in-progress" : undefined;
+  const liveBadgeClass = (service: ServiceDefinition) => {
+    const status = getServiceLaunchStatus(service.slug);
+    if (status === "live") return "live-rating-badge service-live-boil";
+    return status === "coming-soon" ? "service-coming-soon-badge" : "service-in-progress-badge";
+  };
 
   if (isAuthenticated) {
     if (showDashboardWelcome) return <DashboardWelcomeLoader />;
@@ -213,7 +215,7 @@ const HomePage = () => {
                               <p>{service.items.slice(0, 2).join(" • ")}</p>
                             </div>
                              <small className={liveBadgeClass(service)}>
-                              {getServiceStatus(service) ? t("home.live") : service.inProgress ? t("home.inProgress") : t("home.soon")}
+                              {getServiceLaunchLabel(service.slug)}
                             </small>
                           </Link>
                         ))}

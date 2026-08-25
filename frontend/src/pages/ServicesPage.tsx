@@ -8,7 +8,7 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { orderedPlatformDefinitions } from "../content/platforms";
-import { serviceCatalog } from "../content/serviceCatalog";
+import { getServiceLaunchLabel, getServiceLaunchStatus, serviceCatalog } from "../content/serviceCatalog";
 import useSliceReveal from "../hooks/useSliceReveal";
 
 const servicePath = (routeSegment: string) => `/services/${routeSegment}`;
@@ -78,12 +78,13 @@ const ServicesPage = () => {
           <div className="services-directory-grid">
             {orderedPlatformDefinitions.map((platform) => {
               const catalogItem = serviceCatalog.find((item) => item.slug === (platform.routeSegment === "food-delivery" ? "food" : platform.routeSegment));
-              const isLive = platform.status === "Live" || platform.routeSegment === "store";
-              const inProgress = platform.status === "In Progress";
+              const status = getServiceLaunchStatus(catalogItem?.slug || platform.routeSegment);
+              const isLive = status === "live";
+              const inProgress = status === "in-progress";
               const card = <>
                 {catalogItem ? <ServiceArt index={catalogItem.atlasIndex} /> : <StorefrontOutlinedIcon />}
                 <div>
-                  <span className={isLive ? "live-rating-badge" : inProgress ? "status-chip in-progress" : "status-chip"}>{isLive ? "LIVE" : inProgress ? "IN PROGRESS" : "SOON"}</span>
+                  <span className={isLive ? "live-rating-badge service-live-boil" : status === "coming-soon" ? "service-coming-soon-badge" : "service-in-progress-badge"}>{getServiceLaunchLabel(catalogItem?.slug || platform.routeSegment)}</span>
                   <h3>{platform.name}</h3>
                   <p>{platform.description}</p>
                 </div>
