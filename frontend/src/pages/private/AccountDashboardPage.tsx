@@ -102,7 +102,8 @@ const AccountDashboardPage = () => {
           <span>App version</span>
           <small>0.1.0</small>
         </div>
-        <div className="settings-social-row">
+        <div className="settings-social-row" aria-label="Official social handles">
+          <span className="settings-social-title">Official social handles</span>
           {socialLinks.map(([label, href, Icon]) => (
             <a href={href} key={label} aria-label={label} target="_blank" rel="noreferrer">
               <Icon fontSize="small" />
