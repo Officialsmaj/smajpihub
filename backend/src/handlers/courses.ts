@@ -49,6 +49,17 @@ const safeDate = (value: unknown): string => {
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 const generateId = () => new ObjectId().toString();
+const enrollmentIdentifierQuery = (enrollmentId: string) => {
+  const publicEnrollmentId = safeString(enrollmentId);
+  return ObjectId.isValid(publicEnrollmentId)
+    ? {
+        $or: [
+          { _id: new ObjectId(publicEnrollmentId) },
+          { enrollment_id: publicEnrollmentId },
+        ],
+      }
+    : { enrollment_id: publicEnrollmentId };
+};
 const slugify = (value: string) =>
   value
     .toLowerCase()
@@ -1109,9 +1120,9 @@ export default function mountCourseEndpoints(router: Router) {
       const collection = req.app.locals.enrollmentCollection;
       if (!collection) return res.status(404).json({ error: "not_found" });
 
-      const enrollment = await collection.findOne({
-        _id: new ObjectId(req.params.enrollmentId),
-      });
+      const enrollment = await collection.findOne(
+        enrollmentIdentifierQuery(req.params.enrollmentId),
+      );
       if (!enrollment)
         return res
           .status(404)
@@ -1144,9 +1155,9 @@ export default function mountCourseEndpoints(router: Router) {
         if (!enrollmentCollection)
           throw new Error("Enrollment collection not available");
 
-        const enrollment = await enrollmentCollection.findOne({
-          _id: new ObjectId(req.params.enrollmentId),
-        });
+        const enrollment = await enrollmentCollection.findOne(
+          enrollmentIdentifierQuery(req.params.enrollmentId),
+        );
         if (!enrollment)
           return res
             .status(404)
