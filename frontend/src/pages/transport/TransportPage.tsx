@@ -20,6 +20,7 @@ import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import FlightRoundedIcon from "@mui/icons-material/FlightRounded";
 import AppLayout from "../../layouts/AppLayout";
+import { useAuthContext } from "../../contexts/AuthContext";
 import { transportApi } from "../../lib/transportApi";
 import { formatPiRate, formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 import type { AdminTransportStats, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
@@ -102,6 +103,7 @@ const normalizeStatus = (status: string): "active" | "completed" | "cancelled" |
 const TransportPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickup, setPickup] = useState("Current location");
   const [destination, setDestination] = useState("");
@@ -645,17 +647,17 @@ const TransportPage = () => {
   const walletPage = (
     <section className="transport-inner-page transport-wallet-page">
       <header>
-        <span className="transport-eyebrow">PAYMENTS & REWARDS</span>
-        <h1>Transport wallet</h1>
-        <p>Manage ride payments and see your transport rewards.</p>
+        <span className="transport-eyebrow">TRANSPORT PAYMENTS</span>
+        <h1>Pi payment account</h1>
+        <p>Review your connected account and verified Transport payment records.</p>
       </header>
-      <div className="wallet-balance-card">
-        <span>AVAILABLE PI BALANCE</span>
-        <strong>π 248.60</strong>
-        <small>Connected as pioneer@smaj</small>
+      <div className="wallet-balance-card wallet-account-card">
+        <span>PI WALLET STATUS</span>
+        <strong>{isAuthenticated ? "Connected" : "Sign in required"}</strong>
+        <small>{isAuthenticated ? `@${user?.piUsername || user?.username || "Pi user"}` : "Sign in with Pi to make Transport payments."}</small>
+        <p>SMAJ PI HUB does not read or display your private Pi wallet balance.</p>
         <div>
-          <button>Add Pi</button>
-          <button>View activity</button>
+          <button type="button" onClick={() => navigate("/services/transport/receipts")}>View receipts</button>
         </div>
       </div>
       <div className="wallet-content-grid">
@@ -665,17 +667,18 @@ const TransportPage = () => {
             <span>π</span>
             <div>
               <b>Pi Wallet</b>
-              <small>Primary · Connected</small>
+              <small>{isAuthenticated ? "Connected through your Pi account" : "Authentication required"}</small>
             </div>
-            <CheckCircleRoundedIcon />
+            {isAuthenticated ? <CheckCircleRoundedIcon /> : null}
           </div>
+          <p className="wallet-rate-reference">SMAJ reference: {formatPiRate()}</p>
         </article>
         <article>
-          <h2>SMAJ rewards</h2>
-          <strong>1,280</strong>
-          <p>points earned from safe, completed trips</p>
-          <button>
-            Explore rewards <ArrowForwardRoundedIcon />
+          <h2>Transport activity</h2>
+          <strong>{receipts.length}</strong>
+          <p>verified completed-trip receipt{receipts.length === 1 ? "" : "s"}</p>
+          <button type="button" onClick={() => navigate("/services/transport/receipts")}>
+            View payment history <ArrowForwardRoundedIcon />
           </button>
         </article>
       </div>

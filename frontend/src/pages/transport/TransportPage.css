@@ -1527,3 +1527,15 @@
   letter-spacing: -0.035em;
 }
 .driver-hero aside div small { overflow-wrap: anywhere; }
+.wallet-account-card > p {
+  max-width: 520px;
+  margin: 12px 0 0;
+  color: #c7dcd3;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.wallet-rate-reference {
+  margin: 14px 0 0;
+  color: #687a73;
+  font-size: 12px;
+}
