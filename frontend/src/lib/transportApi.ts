@@ -29,6 +29,7 @@ export type RideBooking = TransportBooking & {
   type: "ride";
   pickup: string;
   destination: string;
+  scheduledPickupAt?: string | null;
   vehicleType: string;
   vehicleName: string;
   vehiclePlate: string;
@@ -110,6 +111,7 @@ export type TransportTrip = {
   driverName: string;
   pickup: string;
   destination: string;
+  scheduledPickupAt?: string | null;
   vehicleType: string;
   vehicleName: string;
   vehiclePlate: string;
@@ -207,6 +209,7 @@ export const transportApi = {
     etaMinutes?: number;
     distanceKm?: number;
     durationMin?: number;
+    scheduledPickupAt?: string;
   }) => {
     const response = await axiosClient.post<{ booking: RideBooking; trip: TransportTrip }>("/transport/bookings/ride", data);
     return response.data;

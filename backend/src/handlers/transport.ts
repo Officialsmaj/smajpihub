@@ -82,15 +82,20 @@ export default function mountTransportEndpoints(router: Router) {
   router.post("/bookings/ride", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const { pickup, destination, vehicleType, etaMinutes, distanceKm, durationMin } = req.body || {};
+    const { pickup, destination, vehicleType, etaMinutes, distanceKm, durationMin, scheduledPickupAt } = req.body || {};
     if (!pickup || !destination) {
       return res.status(400).json({ error: "bad_request", message: "Pickup and destination are required" });
     }
+    const scheduledDate = scheduledPickupAt ? new Date(scheduledPickupAt) : null;
+    if (scheduledDate && (!Number.isFinite(scheduledDate.getTime()) || scheduledDate.getTime() < Date.now() + 5 * 60_000 || scheduledDate.getTime() > Date.now() + 30 * 24 * 60 * 60_000)) {
+      return res.status(400).json({ error: "bad_request", message: "Scheduled pickup must be between 5 minutes and 30 days from now" });
+    }
+    const isScheduled = Boolean(scheduledDate);
     const bookingId = generateId("RIDE");
     const normalizedVehicleType = String(vehicleType || "economy");
     const normalizedDistance = Math.max(1, Math.min(250, Number(distanceKm) || 1));
     const fareUsd = Number(((RIDE_USD_PER_KM[normalizedVehicleType] || RIDE_USD_PER_KM.economy) * normalizedDistance).toFixed(2));
-    const driver = await req.app.locals.transportDriverCollection.findOne(
+    const driver = isScheduled ? null : await req.app.locals.transportDriverCollection.findOne(
       { isOnline: true, isApproved: true },
       { sort: { updatedAt: -1 } },
     );
@@ -103,29 +108,29 @@ export default function mountTransportEndpoints(router: Router) {
       type: "ride", status: driver ? "active" : "pending", paymentStatus: "pending",
       paymentId: null, paymentTxid: null, providerRef: null,
       farePi: piFromUsdt(fareUsd), fareUsd, piRateUsed: PI_USDT_RATE, currency: "PI",
-      pickup, destination, vehicleType: normalizedVehicleType,
+      pickup, destination, scheduledPickupAt: scheduledDate, vehicleType: normalizedVehicleType,
       vehicleName: driver?.vehicleName || "", vehiclePlate: driver?.vehiclePlate || "",
       driverId: driver?.driverId || null, driverName: driver?.displayName || null,
       etaMinutes: Number(etaMinutes) || 0, distanceKm: normalizedDistance,
       durationMin: Number(durationMin) || 0, createdAt: new Date(), updatedAt: new Date(),
-      timeline: [TIMELINE("pending", "Ride Requested", `Ride from ${pickup} to ${destination} has been requested.`)],
+      timeline: [TIMELINE("pending", isScheduled ? "Ride Scheduled" : "Ride Requested", isScheduled ? `Pickup scheduled for ${scheduledDate?.toISOString()}.` : `Ride from ${pickup} to ${destination} has been requested.`)],
     };
     const result = await req.app.locals.transportBookingCollection.insertOne(booking);
     const trip: any = {
       tripId, userId: user.uid, bookingId, bookingObjectId: result.insertedId.toString(),
       driverId: driver?.driverId || "", driverName: driver?.displayName || "",
-      pickup, destination, vehicleType: normalizedVehicleType,
+      pickup, destination, scheduledPickupAt: scheduledDate, vehicleType: normalizedVehicleType,
       vehicleName: driver?.vehicleName || "", vehiclePlate: driver?.vehiclePlate || "",
       status: tripStatus, farePi: booking.farePi, fareUsd, distanceKm: normalizedDistance,
       durationMin: Number(durationMin) || 0, pickupLocation: null, destinationLocation: null,
-      routePolyline: null, timeline: [TIMELINE(tripStatus, driver ? "Driver Assigned" : "Ride Requested")],
+      routePolyline: null, timeline: [TIMELINE(tripStatus, driver ? "Driver Assigned" : isScheduled ? "Ride Scheduled" : "Ride Requested")],
       createdAt: new Date(), updatedAt: new Date(), completedAt: null,
     };
     const tripResult = await req.app.locals.transportTripCollection.insertOne(trip);
     await createNotification(req.app, {
       userId: user.uid, type: driver ? "driver_assigned" : "ride_requested",
-      title: driver ? "Driver assigned" : "Ride requested",
-      message: driver ? `${driver.displayName} has been assigned to your ride.` : "Your ride is waiting for a driver.",
+      title: driver ? "Driver assigned" : isScheduled ? "Ride scheduled" : "Ride requested",
+      message: driver ? `${driver.displayName} has been assigned to your ride.` : isScheduled ? `Pickup scheduled for ${scheduledDate?.toLocaleString()}.` : "Your ride is waiting for a driver.",
       relatedId: result.insertedId.toString(), image: "",
     });
     return res.status(201).json({

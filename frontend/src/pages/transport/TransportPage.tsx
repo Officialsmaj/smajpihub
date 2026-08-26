@@ -11,7 +11,6 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SafetyCheckRoundedIcon from "@mui/icons-material/SafetyCheckRounded";
@@ -25,6 +24,7 @@ import { transportApi } from "../../lib/transportApi";
 import { formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 import type { AdminTransportStats, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
 import FlightsPage from "./FlightsPage";
+import TransportMap from "./TransportMap";
 import "./TransportPage.css";
 
 type RideOption = {
@@ -106,6 +106,10 @@ const TransportPage = () => {
   const [pickup, setPickup] = useState("Current location");
   const [destination, setDestination] = useState("");
   const [selectedRide, setSelectedRide] = useState("economy");
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [pickupTiming, setPickupTiming] = useState<"now" | "later">("now");
+  const [pickupDate, setPickupDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [pickupTime, setPickupTime] = useState(() => new Date(Date.now() + 15 * 60_000).toTimeString().slice(0, 5));
   const [bookingStep, setBookingStep] = useState<"idle" | "choose" | "review" | "matching" | "confirmed">("idle");
   const [trips, setTrips] = useState<
     Array<{
@@ -136,9 +140,18 @@ const TransportPage = () => {
       rating: number;
       isOnline: boolean;
       distanceKm?: number;
+      currentLocation?: { lat: number; lng: number; address: string } | null;
     }>
   >([]);
   const activeRide = rideOptions.find(ride => ride.id === selectedRide) ?? rideOptions[1];
+  const pickupDateTime = pickupDate && pickupTime ? new Date(`${pickupDate}T${pickupTime}`) : null;
+  const scheduledPickupAt = pickupTiming === "later" && pickupDateTime && Number.isFinite(pickupDateTime.getTime())
+    ? pickupDateTime.toISOString()
+    : undefined;
+  const maxPickupDate = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString().slice(0, 10);
+  const pickupTimingLabel = pickupTiming === "now"
+    ? "Now"
+    : new Date(scheduledPickupAt || "").toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const path = location.pathname.replace("/app/services/transport", "/services/transport");
   const section = path.split("/services/transport/")[1] || "home";
 
@@ -181,6 +194,7 @@ const TransportPage = () => {
                 rating: d.rating,
                 isOnline: d.isOnline,
                 distanceKm: d.distanceKm,
+                currentLocation: d.currentLocation,
               }))
             );
           },
@@ -221,6 +235,10 @@ const TransportPage = () => {
       setNotice("Choose a destination to see available rides.");
       return;
     }
+    if (pickupTiming === "later" && (!scheduledPickupAt || new Date(scheduledPickupAt).getTime() < Date.now() + 5 * 60_000)) {
+      setNotice("Choose a pickup time at least 5 minutes from now.");
+      return;
+    }
     setNotice("");
     setBookingStep("choose");
     navigate("/services/transport/book");
@@ -237,6 +255,7 @@ const TransportPage = () => {
         etaMinutes: activeRide.seats > 0 ? 5 : 10,
         distanceKm: Math.max(1, Math.min(25, destination.trim().length / 3)),
         durationMin: activeRide.seats > 0 ? 15 : 30,
+        scheduledPickupAt,
       });
       const trip = {
         id: persistedTrip.tripId,
@@ -245,7 +264,7 @@ const TransportPage = () => {
         rideName: activeRide.name,
         price: booking.fareUsd || usdtFromPi(booking.farePi),
         status: normalizeStatus(persistedTrip.status),
-        date: "Now",
+        date: pickupTimingLabel,
         bookingId: booking.bookingId,
       };
       setTrips(current => [trip, ...current.filter(item => item.id !== trip.id)]);
@@ -395,6 +414,11 @@ const TransportPage = () => {
               autoComplete="street-address"
             />
           </label>
+          <button className="transport-schedule-trigger" type="button" onClick={() => setScheduleOpen(true)}>
+            <ScheduleRoundedIcon />
+            <span><small>PICKUP TIME</small><b>{pickupTimingLabel}</b></span>
+            <ArrowForwardRoundedIcon />
+          </button>
           <div className="transport-saved-places">
             {savedPlaces.map(place => (
               <button type="button" key={place.label} onClick={() => setDestination(place.address)}>
@@ -416,8 +440,36 @@ const TransportPage = () => {
           </button>
         </form>
       </section>
+      {scheduleOpen ? (
+        <div className="transport-schedule-layer" role="presentation" onMouseDown={() => setScheduleOpen(false)}>
+          <section className="transport-schedule-sheet" role="dialog" aria-modal="true" aria-labelledby="pickup-time-title" onMouseDown={event => event.stopPropagation()}>
+            <div className="transport-schedule-handle" />
+            <header>
+              <button type="button" aria-label="Close pickup scheduler" onClick={() => setScheduleOpen(false)}>×</button>
+              <h2 id="pickup-time-title">When do you want to be picked up?</h2>
+              <button type="button" onClick={() => { setPickupTiming("now"); setScheduleOpen(false); }}>Clear</button>
+            </header>
+            <div className="transport-timing-options">
+              <button type="button" className={pickupTiming === "now" ? "active" : ""} onClick={() => setPickupTiming("now")}>
+                <ScheduleRoundedIcon /><span><b>Now</b><small>Request a driver immediately</small></span>
+              </button>
+              <button type="button" className={pickupTiming === "later" ? "active" : ""} onClick={() => setPickupTiming("later")}>
+                <ScheduleRoundedIcon /><span><b>Schedule for later</b><small>Choose up to 30 days in advance</small></span>
+              </button>
+            </div>
+            {pickupTiming === "later" ? (
+              <div className="transport-schedule-fields">
+                <label><span>Date</span><input type="date" min={new Date().toISOString().slice(0, 10)} max={maxPickupDate} value={pickupDate} onChange={event => setPickupDate(event.target.value)} /></label>
+                <label><span>Time</span><input type="time" value={pickupTime} onChange={event => setPickupTime(event.target.value)} /></label>
+              </div>
+            ) : null}
+            <ul><li>Choose your pickup time up to 30 days in advance.</li><li>Extra wait time is included to meet your ride.</li><li>Cancel at no charge up to 60 minutes before pickup.</li></ul>
+            <button className="transport-main-button" type="button" onClick={() => setScheduleOpen(false)}>Confirm pickup time</button>
+          </section>
+        </div>
+      ) : null}
       <section className="transport-map-section">
-        <MapCanvas pickup={pickup} destination={destination} drivers={nearbyDrivers} />
+        <TransportMap pickup={pickup} destination={destination} drivers={nearbyDrivers} onDestinationSelected={setDestination} />
       </section>
       <section className="transport-promise">
         <div>
@@ -535,7 +587,7 @@ const TransportPage = () => {
           Choose {activeRide.name} · {formatServicePrice(quote)}
         </button>
       </div>
-      <MapCanvas pickup={pickup} destination={destination} drivers={nearbyDrivers} />
+      <TransportMap pickup={pickup} destination={destination} drivers={nearbyDrivers} onDestinationSelected={setDestination} />
     </section>
   );
 
@@ -762,7 +814,7 @@ const TransportPage = () => {
   const activeTrip = trips.find(trip => trip.status === "active");
   const trackingPage = (
     <section className="transport-tracking">
-      <MapCanvas pickup={activeTrip?.pickup || pickup} destination={activeTrip?.destination || destination} tracking />
+      <TransportMap pickup={activeTrip?.pickup || pickup} destination={activeTrip?.destination || destination} drivers={nearbyDrivers} tracking />
       <aside>
         <div className="tracking-handle" />
         <span className="transport-eyebrow">DRIVER IS ON THE WAY</span>
@@ -845,7 +897,7 @@ const TransportPage = () => {
               </h2>
               <div>
                 <p>
-                  <small>PICKUP</small>
+                  <small>PICKUP · {pickupTimingLabel}</small>
                   <b>{pickup}</b>
                 </p>
                 <p>
@@ -906,67 +958,6 @@ const TransportPage = () => {
     </AppLayout>
   );
 };
-
-const MapCanvas = ({
-  pickup,
-  destination,
-  tracking = false,
-  drivers = [],
-}: {
-  pickup: string;
-  destination: string;
-  tracking?: boolean;
-  drivers?: Array<{
-    driverId: string;
-    displayName: string;
-    vehicleName: string;
-    vehiclePlate: string;
-    rating: number;
-    isOnline: boolean;
-    distanceKm?: number;
-  }>;
-}) => (
-  <div className={`transport-map ${tracking ? "is-tracking" : ""}`} aria-label="Route preview map">
-    <div className="map-grid" />
-    <div className="map-road road-one" />
-    <div className="map-road road-two" />
-    <div className="map-road road-three" />
-    <span className="map-place place-one">Pioneer Park</span>
-    <span className="map-place place-two">Central Market</span>
-    <span className="map-place place-three">Innovation District</span>
-    <span className="map-pin pickup-pin">
-      <i />
-      {pickup || "Pickup"}
-    </span>
-    {destination ? (
-      <>
-        <span className="map-route-line" />
-        <span className="map-pin destination-pin">
-          <i />
-          {destination}
-        </span>
-      </>
-    ) : null}
-    {tracking ? (
-      <span className="driver-marker">
-        <DirectionsCarRoundedIcon />
-        <i>3 min</i>
-      </span>
-    ) : null}
-    {drivers.length > 0 && !tracking ? (
-      <div className="driver-marker" style={{ left: "60%", top: "55%" }}>
-        <DirectionsCarRoundedIcon />
-        <i>{drivers[0]?.displayName || "Driver"}</i>
-      </div>
-    ) : null}
-    <button type="button" className="map-location-button" aria-label="Use my current location">
-      <MyLocationRoundedIcon />
-    </button>
-    <div className="map-status">
-      <span /> Live driver network <b>{drivers.length} nearby</b>
-    </div>
-  </div>
-);
 
 const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenuOpen: (open: boolean) => void }) => (
   <header className="transport-header">

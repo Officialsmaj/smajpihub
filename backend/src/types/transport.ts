@@ -29,6 +29,7 @@ export interface RideBooking extends TransportBooking {
   type: "ride";
   pickup: string;
   destination: string;
+  scheduledPickupAt?: Date | null;
   vehicleType: string;
   vehicleName: string;
   vehiclePlate: string;
@@ -110,6 +111,7 @@ export interface Trip {
   driverName: string;
   pickup: string;
   destination: string;
+  scheduledPickupAt?: Date | null;
   vehicleType: string;
   vehicleName: string;
   vehiclePlate: string;
