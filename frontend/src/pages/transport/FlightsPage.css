@@ -853,3 +853,19 @@
     margin: 0 auto;
   }
 }
+
+.flight-search-fields label > div,
+.flight-search-fields input,
+.flight-search-fields select,
+.flight-passenger-form input,
+.flight-passenger-form select {
+  background-color: #fff !important;
+  color: var(--transport-ink) !important;
+  -webkit-text-fill-color: var(--transport-ink) !important;
+}
+.flight-search-fields input:-webkit-autofill,
+.flight-passenger-form input:-webkit-autofill {
+  -webkit-text-fill-color: var(--transport-ink) !important;
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  transition: background-color 9999s ease-out;
+}

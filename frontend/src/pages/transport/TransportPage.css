@@ -100,7 +100,6 @@
 .transport-header-actions svg {
   font-size: 18px;
 }
-.transport-header-actions .transport-profile,
 .transport-header-actions button {
   width: 40px;
   height: 40px;
@@ -203,9 +202,17 @@
   font-size: 24px;
   margin: 7px 0;
 }
-.transport-card-heading > svg {
-  color: #91a29c;
+.transport-heading-schedule {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--transport-line);
+  border-radius: 50%;
+  place-items: center;
+  color: var(--transport-green);
+  background: #fff;
 }
+.transport-heading-schedule svg { font-size: 20px; }
 .transport-search-card > label {
   display: grid;
   grid-template-columns: 18px 1fr;
@@ -1438,28 +1445,10 @@
 .transport-real-map .map-location-button,
 .transport-real-map .map-status { z-index: 500; }
 .transport-real-map .map-location-button span { font-size: 25px; line-height: 1; }
-.transport-schedule-trigger,
 .transport-schedule-layer { display: none; }
 
 @media (max-width: 1023px) {
-  .transport-schedule-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 14px 0 4px;
-    padding: 13px 14px;
-    border: 1px solid var(--transport-line);
-    border-radius: 12px;
-    color: var(--transport-ink);
-    background: #f5f7f6;
-    text-align: left;
-  }
-  .transport-schedule-trigger > svg:first-child { color: var(--transport-green); }
-  .transport-schedule-trigger > svg:last-child { margin-left: auto; font-size: 18px; }
-  .transport-schedule-trigger span { display: grid; gap: 2px; }
-  .transport-schedule-trigger small { color: #74827d; font-size: 9px; font-weight: 800; letter-spacing: .09em; }
-  .transport-schedule-trigger b { font-size: 14px; }
+  .transport-heading-schedule { display: grid; }
   .transport-schedule-layer {
     position: fixed;
     inset: 0;
@@ -1512,4 +1501,22 @@
   .transport-schedule-layer { padding: 0; }
   .transport-schedule-sheet { width: 100%; max-height: 88vh; border-radius: 24px 24px 0 0; }
   .transport-schedule-fields { grid-template-columns: 1fr; }
+}
+.transport-app input,
+.transport-app select,
+.transport-search-card input,
+.transport-management-form input,
+.transport-management-form select,
+.transport-schedule-fields input {
+  background-color: #fff !important;
+  color: var(--transport-ink) !important;
+  -webkit-text-fill-color: var(--transport-ink) !important;
+  box-shadow: none;
+}
+.transport-app input:-webkit-autofill,
+.transport-app input:-webkit-autofill:hover,
+.transport-app input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--transport-ink) !important;
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  transition: background-color 9999s ease-out;
 }

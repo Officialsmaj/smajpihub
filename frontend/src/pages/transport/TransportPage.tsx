@@ -206,7 +206,6 @@ const TransportPage = () => {
     }
   };
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     fetchTrips();
     fetchNearbyDrivers();
@@ -222,7 +221,6 @@ const TransportPage = () => {
       setAdminStats(admin?.stats || null);
     });
   }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const quote = useMemo(() => {
     const distanceFactor = Math.max(1, Math.min(2.4, destination.trim().length / 12));
@@ -395,7 +393,9 @@ const TransportPage = () => {
               <span>BOOK A RIDE</span>
               <h2>Where are you going?</h2>
             </div>
-            <ScheduleRoundedIcon />
+            <button className="transport-heading-schedule" type="button" aria-label={`Pickup time: ${pickupTimingLabel}`} onClick={() => setScheduleOpen(true)}>
+              <ScheduleRoundedIcon />
+            </button>
           </div>
           <label>
             <i className="pickup-dot" />
@@ -414,11 +414,6 @@ const TransportPage = () => {
               autoComplete="street-address"
             />
           </label>
-          <button className="transport-schedule-trigger" type="button" onClick={() => setScheduleOpen(true)}>
-            <ScheduleRoundedIcon />
-            <span><small>PICKUP TIME</small><b>{pickupTimingLabel}</b></span>
-            <ArrowForwardRoundedIcon />
-          </button>
           <div className="transport-saved-places">
             {savedPlaces.map(place => (
               <button type="button" key={place.label} onClick={() => setDestination(place.address)}>
@@ -445,7 +440,7 @@ const TransportPage = () => {
           <section className="transport-schedule-sheet" role="dialog" aria-modal="true" aria-labelledby="pickup-time-title" onMouseDown={event => event.stopPropagation()}>
             <div className="transport-schedule-handle" />
             <header>
-              <button type="button" aria-label="Close pickup scheduler" onClick={() => setScheduleOpen(false)}>×</button>
+              <button type="button" aria-label="Close pickup scheduler" onClick={() => setScheduleOpen(false)}><CloseRoundedIcon /></button>
               <h2 id="pickup-time-title">When do you want to be picked up?</h2>
               <button type="button" onClick={() => { setPickupTiming("now"); setScheduleOpen(false); }}>Clear</button>
             </header>
@@ -977,9 +972,7 @@ const TransportHeader = ({ menuOpen, setMenuOpen }: { menuOpen: boolean; setMenu
       <NavLink to="/services/transport/driver">Drive with us</NavLink>
     </nav>
     <div className="transport-header-actions">
-      <Link className="transport-profile" to="/profile">
-        <PersonRoundedIcon />
-      </Link>
+
       <button type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation">
         <MenuRoundedIcon />
       </button>

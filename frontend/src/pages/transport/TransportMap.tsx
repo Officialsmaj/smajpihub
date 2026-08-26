@@ -45,6 +45,21 @@ const TransportMap = ({ pickup, destination, tracking = false, drivers = [], onD
   const destinationPosition = parseCoordinates(destination);
   const [mapMessage, setMapMessage] = useState("Tap the map to choose a destination.");
 
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) { setMapMessage("Location is unavailable in this browser."); return; }
+    setMapMessage("Locating you…");
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const next = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setPickupPosition(next);
+        mapRef.current?.flyTo([next.lat, next.lng], 15);
+        setMapMessage(`Location accuracy: ${Math.round(position.coords.accuracy)} m`);
+      },
+      () => setMapMessage("Allow location access to show your position."),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: true, attributionControl: true }).setView(DEFAULT_CENTER, 12);
@@ -63,20 +78,7 @@ const TransportMap = ({ pickup, destination, tracking = false, drivers = [], onD
     return () => { window.clearTimeout(timer); map.remove(); mapRef.current = null; layerRef.current = null; };
   }, [locate, onDestinationSelected]);
 
-  const locate = useCallback(() => {
-    if (!navigator.geolocation) { setMapMessage("Location is unavailable in this browser."); return; }
-    setMapMessage("Locating you…");
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const next = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setPickupPosition(next);
-        mapRef.current?.flyTo([next.lat, next.lng], 15);
-        setMapMessage(`Location accuracy: ${Math.round(position.coords.accuracy)} m`);
-      },
-      () => setMapMessage("Allow location access to show your position."),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
-    );
-  }, []);
+
 
   useEffect(() => {
     const map = mapRef.current;
