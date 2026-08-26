@@ -256,6 +256,42 @@
   border-left: 1px dashed #a7b8b0;
   margin-left: 4px;
 }
+.transport-place-status {
+  margin: 7px 0 0 28px;
+  color: #667a72;
+  font-size: 11px;
+}
+.transport-place-status.is-error { color: #b84235; }
+.transport-place-suggestions {
+  margin: 8px 0 0 28px;
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--transport-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(5, 43, 31, 0.12);
+}
+.transport-place-suggestions button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--transport-line);
+  background: #fff;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  color: var(--transport-ink);
+}
+.transport-place-suggestions button:last-child { border-bottom: 0; }
+.transport-place-suggestions button:hover,
+.transport-place-suggestions button:focus-visible { background: #f1f8f4; }
+.transport-place-suggestions svg { color: var(--transport-green); font-size: 19px; flex: 0 0 auto; }
+.transport-place-suggestions span { display: flex; min-width: 0; flex-direction: column; }
+.transport-place-suggestions b,
+.transport-place-suggestions small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transport-place-suggestions b { font-size: 12px; }
+.transport-place-suggestions small { margin-top: 2px; color: #71837c; font-size: 10px; }
 .transport-saved-places {
   display: flex;
   gap: 8px;

@@ -13,9 +13,10 @@ type MapDriver = {
 type Props = {
   pickup: string;
   destination: string;
+  destinationCoordinates?: Coordinates | null;
   tracking?: boolean;
   drivers?: MapDriver[];
-  onDestinationSelected?: (value: string) => void;
+  onDestinationSelected?: (value: string, coordinates: Coordinates) => void;
 };
 
 const DEFAULT_CENTER: LatLngExpression = [25.2048, 55.2708];
@@ -37,12 +38,12 @@ const markerIcon = (className: string, label: string) => L.divIcon({
   iconAnchor: [21, 38],
 });
 
-const TransportMap = ({ pickup, destination, tracking = false, drivers = [], onDestinationSelected }: Props) => {
+const TransportMap = ({ pickup, destination, destinationCoordinates, tracking = false, drivers = [], onDestinationSelected }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
   const [pickupPosition, setPickupPosition] = useState<Coordinates | null>(null);
-  const destinationPosition = parseCoordinates(destination);
+  const destinationPosition = destinationCoordinates || parseCoordinates(destination);
   const [mapMessage, setMapMessage] = useState("Tap the map to choose a destination.");
 
   const locate = useCallback(() => {
@@ -69,7 +70,7 @@ const TransportMap = ({ pickup, destination, tracking = false, drivers = [], onD
     }).addTo(map);
     map.on("click", event => {
       const next = { lat: event.latlng.lat, lng: event.latlng.lng };
-      onDestinationSelected?.(coordinateLabel(next));
+      onDestinationSelected?.(coordinateLabel(next), next);
       setMapMessage("Destination selected on map.");
     });
     mapRef.current = map;

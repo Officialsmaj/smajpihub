@@ -4,6 +4,8 @@ import { resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
 import { platformAPIKeyClient } from "../services/platformAPIClient";
 import { PI_USDT_RATE, piFromUsdt } from "../services/piPricing";
+import env from "../environments";
+import axios from "axios";
 
 const TIMELINE = (status: string, label: string, note?: string) => ({
   status,
@@ -47,6 +49,35 @@ const RIDE_USD_PER_KM: Record<string, number> = {
 };
 
 export default function mountTransportEndpoints(router: Router) {
+  router.get("/places/autocomplete", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const input = String(req.query.input || "").trim().slice(0, 160);
+    if (input.length < 3) return res.status(200).json({ suggestions: [] });
+    if (!env.google_maps_api_key) return res.status(503).json({ error: "places_unavailable", message: "Address search is not configured" });
+    try {
+      const response = await axios.post("https://places.googleapis.com/v1/places:autocomplete", { input, sessionToken: String(req.query.sessionToken || "").trim().slice(0, 64) || undefined }, { headers: { "Content-Type": "application/json", "X-Goog-Api-Key": env.google_maps_api_key, "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat" }, timeout: 8000 });
+      const suggestions = (response.data?.suggestions || []).slice(0, 5).flatMap((item: any) => {
+        const prediction = item.placePrediction;
+        return prediction?.placeId && prediction?.text?.text ? [{ placeId: prediction.placeId, label: prediction.structuredFormat?.mainText?.text || prediction.text.text, description: prediction.structuredFormat?.secondaryText?.text || prediction.text.text }] : [];
+      });
+      return res.status(200).json({ suggestions });
+    } catch { return res.status(502).json({ error: "places_failed", message: "Address search is temporarily unavailable" }); }
+  });
+
+  router.get("/places/:placeId", async (req, res) => {
+    const user = await requireUser(req, res);
+    if (!user) return;
+    const placeId = String(req.params.placeId || "").trim();
+    if (!placeId || placeId.length > 256) return res.status(400).json({ error: "bad_request", message: "Invalid place" });
+    if (!env.google_maps_api_key) return res.status(503).json({ error: "places_unavailable", message: "Address search is not configured" });
+    try {
+      const response = await axios.get(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, { headers: { "X-Goog-Api-Key": env.google_maps_api_key, "X-Goog-FieldMask": "id,displayName,formattedAddress,location" }, params: { sessionToken: String(req.query.sessionToken || "").trim().slice(0, 64) || undefined }, timeout: 8000 });
+      const place = response.data;
+      return res.status(200).json({ place: { placeId: place.id, label: place.formattedAddress || place.displayName?.text || "Selected destination", lat: place.location?.latitude, lng: place.location?.longitude } });
+    } catch { return res.status(502).json({ error: "places_failed", message: "Could not load that address" }); }
+  });
+
   router.get("/bookings", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
@@ -82,7 +113,7 @@ export default function mountTransportEndpoints(router: Router) {
   router.post("/bookings/ride", async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const { pickup, destination, vehicleType, etaMinutes, distanceKm, durationMin, scheduledPickupAt } = req.body || {};
+    const { pickup, destination, destinationLocation, vehicleType, etaMinutes, distanceKm, durationMin, scheduledPickupAt } = req.body || {};
     if (!pickup || !destination) {
       return res.status(400).json({ error: "bad_request", message: "Pickup and destination are required" });
     }
@@ -122,7 +153,10 @@ export default function mountTransportEndpoints(router: Router) {
       pickup, destination, scheduledPickupAt: scheduledDate, vehicleType: normalizedVehicleType,
       vehicleName: driver?.vehicleName || "", vehiclePlate: driver?.vehiclePlate || "",
       status: tripStatus, farePi: booking.farePi, fareUsd, distanceKm: normalizedDistance,
-      durationMin: Number(durationMin) || 0, pickupLocation: null, destinationLocation: null,
+      durationMin: Number(durationMin) || 0, pickupLocation: null,
+      destinationLocation: Number.isFinite(Number(destinationLocation?.lat)) && Number.isFinite(Number(destinationLocation?.lng))
+        ? { lat: Number(destinationLocation.lat), lng: Number(destinationLocation.lng), address: String(destinationLocation.address || destination) }
+        : null,
       routePolyline: null, timeline: [TIMELINE(tripStatus, driver ? "Driver Assigned" : isScheduled ? "Ride Scheduled" : "Ride Requested")],
       createdAt: new Date(), updatedAt: new Date(), completedAt: null,
     };

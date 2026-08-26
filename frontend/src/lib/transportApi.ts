@@ -191,7 +191,19 @@ export type TransportNotification = {
   createdAt: string;
 };
 
+export type PlaceSuggestion = { placeId: string; label: string; description: string };
+export type PlaceDetails = { placeId: string; label: string; lat: number; lng: number };
+
 export const transportApi = {
+  searchPlaces: async (input: string, sessionToken: string) => {
+    const response = await axiosClient.get<{ suggestions: PlaceSuggestion[] }>("/transport/places/autocomplete", { params: { input, sessionToken } });
+    return response.data.suggestions;
+  },
+
+  getPlace: async (placeId: string, sessionToken: string) => {
+    const response = await axiosClient.get<{ place: PlaceDetails }>(`/transport/places/${encodeURIComponent(placeId)}`, { params: { sessionToken } });
+    return response.data.place;
+  },
   getBookings: async (params?: { type?: string; status?: string }) => {
     const response = await axiosClient.get<{ bookings: TransportBooking[] }>("/transport/bookings", { params });
     return response.data.bookings;
@@ -210,6 +222,7 @@ export const transportApi = {
     distanceKm?: number;
     durationMin?: number;
     scheduledPickupAt?: string;
+    destinationLocation?: { lat: number; lng: number; address: string };
   }) => {
     const response = await axiosClient.post<{ booking: RideBooking; trip: TransportTrip }>("/transport/bookings/ride", data);
     return response.data;

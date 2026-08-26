@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
@@ -23,7 +23,7 @@ import AppLayout from "../../layouts/AppLayout";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { transportApi } from "../../lib/transportApi";
 import { formatPiRate, formatServicePrice, usdtFromPi } from "../../lib/piPricing";
-import type { AdminTransportStats, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
+import type { AdminTransportStats, PlaceSuggestion, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
 import FlightsPage from "./FlightsPage";
 import TransportMap from "./TransportMap";
 import "./TransportPage.css";
@@ -107,6 +107,12 @@ const TransportPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickup, setPickup] = useState("Current location");
   const [destination, setDestination] = useState("");
+  const [destinationCoordinates, setDestinationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [placeSearching, setPlaceSearching] = useState(false);
+  const [placeSearchError, setPlaceSearchError] = useState(false);
+  const suppressPlaceSearch = useRef(false);
+  const placeSessionToken = useRef(globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));
   const [selectedRide, setSelectedRide] = useState("economy");
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [pickupTiming, setPickupTiming] = useState<"now" | "later">("now");
@@ -145,6 +151,52 @@ const TransportPage = () => {
       currentLocation?: { lat: number; lng: number; address: string } | null;
     }>
   >([]);
+  useEffect(() => {
+    const query = destination.trim();
+    if (suppressPlaceSearch.current || query.length < 3 || !isAuthenticated) {
+      setPlaceSuggestions([]);
+      setPlaceSearching(false);
+      return;
+    }
+    const timer = window.setTimeout(async () => {
+      setPlaceSearching(true);
+      setPlaceSearchError(false);
+      try {
+        setPlaceSuggestions(await transportApi.searchPlaces(query, placeSessionToken.current));
+      } catch {
+        setPlaceSuggestions([]);
+        setPlaceSearchError(true);
+      } finally {
+        setPlaceSearching(false);
+      }
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [destination, isAuthenticated]);
+
+  const choosePlace = async (suggestion: PlaceSuggestion) => {
+    setPlaceSearching(true);
+    try {
+      const place = await transportApi.getPlace(suggestion.placeId, placeSessionToken.current);
+      if (!Number.isFinite(place.lat) || !Number.isFinite(place.lng)) throw new Error("Missing place coordinates");
+      suppressPlaceSearch.current = true;
+      setDestination(place.label);
+      setDestinationCoordinates({ lat: place.lat, lng: place.lng });
+      setPlaceSuggestions([]);
+      setPlaceSearchError(false);
+      placeSessionToken.current = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2);
+    } catch {
+      setPlaceSearchError(true);
+    } finally {
+      setPlaceSearching(false);
+    }
+  };
+
+  const chooseDestinationOnMap = (value: string, coordinates: { lat: number; lng: number }) => {
+    suppressPlaceSearch.current = true;
+    setDestination(value);
+    setDestinationCoordinates(coordinates);
+    setPlaceSuggestions([]);
+  };
   const activeRide = rideOptions.find(ride => ride.id === selectedRide) ?? rideOptions[1];
   const pickupDateTime = pickupDate && pickupTime ? new Date(`${pickupDate}T${pickupTime}`) : null;
   const scheduledPickupAt = pickupTiming === "later" && pickupDateTime && Number.isFinite(pickupDateTime.getTime())
@@ -256,6 +308,7 @@ const TransportPage = () => {
         distanceKm: Math.max(1, Math.min(25, destination.trim().length / 3)),
         durationMin: activeRide.seats > 0 ? 15 : 30,
         scheduledPickupAt,
+        destinationLocation: destinationCoordinates ? { ...destinationCoordinates, address: destination } : undefined,
       });
       const trip = {
         id: persistedTrip.tripId,
@@ -410,15 +463,31 @@ const TransportPage = () => {
             <span>Destination</span>
             <input
               value={destination}
-              onChange={event => setDestination(event.target.value)}
-              placeholder="Enter destination"
+              onChange={event => {
+                suppressPlaceSearch.current = false;
+                setDestination(event.target.value);
+                setDestinationCoordinates(null);
+              }}
+              placeholder="Search destination"
               aria-label="Destination"
               autoComplete="street-address"
             />
           </label>
+          {placeSearching ? <p className="transport-place-status">Searching addresses…</p> : null}
+          {placeSuggestions.length ? (
+            <div className="transport-place-suggestions" role="listbox" aria-label="Destination suggestions">
+              {placeSuggestions.map(suggestion => (
+                <button type="button" role="option" aria-selected="false" key={suggestion.placeId} onClick={() => void choosePlace(suggestion)}>
+                  <LocationOnRoundedIcon />
+                  <span><b>{suggestion.label}</b><small>{suggestion.description}</small></span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {placeSearchError && destination.trim().length >= 3 ? <p className="transport-place-status is-error">Address search unavailable. You can tap the map below.</p> : null}
           <div className="transport-saved-places">
             {savedPlaces.map(place => (
-              <button type="button" key={place.label} onClick={() => setDestination(place.address)}>
+              <button type="button" key={place.label} onClick={() => { suppressPlaceSearch.current = false; setDestination(place.address); setDestinationCoordinates(null); }}>
                 <HomeRoundedIcon />
                 <span>
                   <b>{place.label}</b>
@@ -466,7 +535,7 @@ const TransportPage = () => {
         </div>
       ) : null}
       <section className="transport-map-section">
-        <TransportMap pickup={pickup} destination={destination} drivers={nearbyDrivers} onDestinationSelected={setDestination} />
+        <TransportMap pickup={pickup} destination={destination} destinationCoordinates={destinationCoordinates} drivers={nearbyDrivers} onDestinationSelected={chooseDestinationOnMap} />
       </section>
       <section className="transport-promise">
         <div>
@@ -584,7 +653,7 @@ const TransportPage = () => {
           Choose {activeRide.name} · {formatServicePrice(quote)}
         </button>
       </div>
-      <TransportMap pickup={pickup} destination={destination} drivers={nearbyDrivers} onDestinationSelected={setDestination} />
+      <TransportMap pickup={pickup} destination={destination} destinationCoordinates={destinationCoordinates} drivers={nearbyDrivers} onDestinationSelected={chooseDestinationOnMap} />
     </section>
   );
 

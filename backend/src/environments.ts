@@ -52,6 +52,7 @@ interface Environment {
   news_api_key: string;
   translation_api_url: string;
   translation_api_key: string;
+  google_maps_api_key: string;
 }
 
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -126,6 +127,7 @@ const env: Environment = {
   news_api_key: String(process.env.NEWS_API_KEY || "").trim(),
   translation_api_url: String(process.env.TRANSLATION_API_URL || "http://localhost:5000").trim(),
   translation_api_key: String(process.env.TRANSLATION_API_KEY || "").trim(),
+  google_maps_api_key: String(process.env.GOOGLE_MAPS_API_KEY || "").trim(),
 };
 
 if (
