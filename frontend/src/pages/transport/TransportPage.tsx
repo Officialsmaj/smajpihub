@@ -21,7 +21,7 @@ import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import FlightRoundedIcon from "@mui/icons-material/FlightRounded";
 import AppLayout from "../../layouts/AppLayout";
 import { transportApi } from "../../lib/transportApi";
-import { formatServicePrice, usdtFromPi } from "../../lib/piPricing";
+import { formatPiRate, formatServicePrice, usdtFromPi } from "../../lib/piPricing";
 import type { AdminTransportStats, TransportDriver, TransportReceipt, TransportVehicle } from "../../lib/transportApi";
 import FlightsPage from "./FlightsPage";
 import TransportMap from "./TransportMap";
@@ -701,16 +701,16 @@ const TransportPage = () => {
           </div>
         </div>
         <aside>
-          <span>ESTIMATED WEEKLY EARNINGS</span>
-          <strong>π 186–260</strong>
-          <p>Based on 25 active hours</p>
+          <span>DRIVER EARNINGS</span>
+          <strong className="driver-fare-message">See the fare before accepting</strong>
+          <p>Earnings depend on completed trips, distance, ride type, demand, and applicable service fees.</p>
           <div>
-            <b>0%</b>
-            <small>sign-up fee</small>
+            <b>Per trip</b>
+            <small>transparent fare</small>
           </div>
           <div>
-            <b>24/7</b>
-            <small>driver support</small>
+            <b>Hub rate</b>
+            <small>{formatPiRate()}</small>
           </div>
         </aside>
       </div>

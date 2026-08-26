@@ -1520,3 +1520,10 @@
   box-shadow: 0 0 0 1000px #fff inset !important;
   transition: background-color 9999s ease-out;
 }
+.driver-hero aside .driver-fare-message {
+  max-width: 360px;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.driver-hero aside div small { overflow-wrap: anywhere; }
