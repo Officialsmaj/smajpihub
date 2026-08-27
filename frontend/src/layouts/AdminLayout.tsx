@@ -3,10 +3,8 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import WorkOutlineOutlinedIcon from "@mui/icons-material/WorkOutlineOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -16,38 +14,20 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
-import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
 import useRouteScrollTop from "../hooks/useRouteScrollTop";
+import { adminNavigation, searchableAdminNavigation, type AdminNavGroup } from "../content/adminNavigation";
 
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
-const links = [
-  ["/admin", "Dashboard", <DashboardOutlinedIcon />],
-  ["/admin/heroes", "Hero Banners", <Inventory2OutlinedIcon />],
-  ["/admin/users", "Users", <PeopleOutlineIcon />],
-  ["/admin/onboarding", "Onboarding", <AssignmentTurnedInOutlinedIcon />],
-  ["/admin/education/teachers", "Teacher Review", <SchoolOutlinedIcon />],
-  ["/admin/ambassadors", "Ambassadors", <PeopleOutlineIcon />],
-  ["/admin/products", "Products", <Inventory2OutlinedIcon />],
-  ["/admin/orders", "Orders", <ReceiptLongOutlinedIcon />],
-  ["/admin/jobs", "Jobs Review", <WorkOutlineOutlinedIcon />],
-  ["/admin/reports", "Reports", <ReportProblemOutlinedIcon />],
-  ["/admin/stream", "Stream", <LiveTvOutlinedIcon />],
-  ["/admin/stream/moderation", "Stream Review", <ShieldOutlinedIcon />],
-  ["/admin/stream/creators", "Creators", <PeopleOutlineIcon />],
-  ["/admin/stream/catalog", "Stream Catalogue", <Inventory2OutlinedIcon />],
-  ["/admin/stream/analytics", "Stream Analytics", <AnalyticsOutlinedIcon />],
-  ["/admin/stream/settings", "Stream Settings", <SettingsOutlinedIcon />],
-  ["/admin/settings", "Settings", <SettingsOutlinedIcon />],
-] as const;
+const groupIcon = (icon: AdminNavGroup["icon"]) => icon === "overview" ? <DashboardOutlinedIcon /> : icon === "users" ? <PeopleOutlineIcon /> : icon === "payments" ? <ReceiptLongOutlinedIcon /> : icon === "safety" ? <ShieldOutlinedIcon /> : icon === "system" ? <SettingsOutlinedIcon /> : <Inventory2OutlinedIcon />;
 
 const adminSearchItems = [
-  ...links.map(([to, label, icon]) => ({ to, label, icon, keywords: [label, "admin"] })),
+  ...searchableAdminNavigation.map((item) => ({ to: item.to, label: item.label, icon: groupIcon(item.icon), keywords: [item.label, item.group, "admin"] })),
   { to: "/store", label: "SMAJ Store", icon: <Inventory2OutlinedIcon />, keywords: ["store", "shop", "products", "marketplace", "commerce"] },
   { to: "/seller", label: "Seller Dashboard", icon: <Inventory2OutlinedIcon />, keywords: ["seller", "vendor", "listings", "products"] },
   { to: "/add-product", label: "Add Product", icon: <Inventory2OutlinedIcon />, keywords: ["add", "new product", "listing"] },
@@ -69,6 +49,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true");
   const [showSignOut, setShowSignOut] = useState(false);
   const [adminSearch, setAdminSearch] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<number[]>([1]);
   const navigate = useNavigate();
   const location = useLocation();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
@@ -93,18 +74,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     return () => { document.body.style.overflow = ""; };
   }, [mobileSidebarOpen]);
 
-  if (user?.role !== "admin") {
-    return (
-      <main className="private-page">
-        <section className="private-state">
-          <h2>You do not have admin access.</h2>
-          <p>Use an authorized SMAJ PI HUB admin account to open this area.</p>
-          <Link className="private-primary-button" to="/dashboard">Back to Home</Link>
-        </section>
-      </main>
-    );
-  }
-
   const logout = async () => {
     await signOut();
     navigate("/home", { replace: true });
@@ -118,6 +87,8 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const toggleGroup = (number: number) => setExpandedGroups((groups) => groups.includes(number) ? groups.filter((item) => item !== number) : [...groups, number]);
+
   const searchResults = useMemo(() => {
     const query = adminSearch.trim().toLowerCase();
     if (!query) return [];
@@ -125,6 +96,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       .filter((item) => [item.label, item.to, ...item.keywords].some((value) => value.toLowerCase().includes(query) || query.includes(value.toLowerCase())))
       .slice(0, 8);
   }, [adminSearch]);
+
+  if (user?.role !== "admin") {
+    return (
+      <main className="private-page">
+        <section className="private-state">
+          <h2>You do not have admin access.</h2>
+          <p>Use an authorized SMAJ PI HUB admin account to open this area.</p>
+          <Link className="private-primary-button" to="/dashboard">Back to Home</Link>
+        </section>
+      </main>
+    );
+  }
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -147,7 +130,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           {adminSearch.trim() ? (
             <div className="admin-search-results">
               {searchResults.length ? searchResults.map((item) => (
-                <button type="button" key={item.to} onClick={() => { setAdminSearch(""); setMobileSidebarOpen(false); navigate(item.to); }}>
+                <button type="button" key={item.group + "-" + item.label} onClick={() => { setAdminSearch(""); setMobileSidebarOpen(false); navigate(item.to); }}>
                   {item.icon}<span>{item.label}</span>
                 </button>
               )) : <button type="submit">Open Admin Dashboard</button>}
@@ -168,12 +151,29 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <span className="admin-sidebar-avatar">{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span>
             <div><strong>{adminName}</strong><small>Admin account</small></div>
           </div>
-          <nav>
-            {links.map(([to, label, icon]) => (
-              <NavLink key={to} to={to} end={to === "/admin"} onClick={() => setMobileSidebarOpen(false)} title={sidebarCollapsed ? label : undefined} aria-label={label}>
-                {icon}<span className="private-nav-label">{label}</span>
-              </NavLink>
-            ))}
+          <nav className="admin-navigation">
+            {adminNavigation.map((group) => {
+              const active = group.items.some((item) => item.to === location.pathname);
+              const open = active || expandedGroups.includes(group.number);
+              return <section className={"admin-nav-group " + (open ? "open " : "") + (active ? "active" : "")} key={group.number}>
+                <button type="button" className="admin-nav-group-toggle" onClick={() => toggleGroup(group.number)} aria-expanded={open} title={sidebarCollapsed ? group.label : undefined}>
+                  <span className="admin-nav-group-icon">{groupIcon(group.icon)}</span>
+                  <span className="private-nav-label admin-nav-group-label"><b>{group.number}.</b> {group.label}</span>
+                  <KeyboardArrowDownOutlinedIcon className="private-nav-label admin-nav-chevron" />
+                </button>
+                {open ? <div className="admin-nav-children">
+                  {group.items.map((item, index) => item.to ? (
+                    <Link className={location.pathname === item.to && group.items.findIndex((candidate) => candidate.to === item.to) === index ? "active" : ""} to={item.to} onClick={() => setMobileSidebarOpen(false)} key={group.number + "-" + item.label}>
+                      <span>{item.label}</span>
+                    </Link>
+                  ) : (
+                    <button type="button" className="planned" disabled title="Planned admin module" key={group.number + "-" + item.label}>
+                      <span>{item.label}</span><small>Planned</small>
+                    </button>
+                  ))}
+                </div> : null}
+              </section>;
+            })}
           </nav>
           <button className="private-sidebar-logout" type="button" onClick={() => setShowSignOut(true)} title={sidebarCollapsed ? "Logout" : undefined} aria-label="Logout"><LogoutIcon /><span className="private-nav-label">Logout</span></button>
         </aside>
