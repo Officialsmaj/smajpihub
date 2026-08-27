@@ -31,7 +31,6 @@ import {
   getStreamAdminOverview,
   getStreamAdminSettings,
   getTitleAvailability,
-  importInternetArchiveTitle,
   saveStreamAdminSettings,
   type StreamAdminOverview,
   type StreamAdminSettings,
@@ -66,6 +65,8 @@ import {
   type StreamSubscription,
 } from "../../lib/streamSubscription";
 import { requestPiBrowserHandoff } from "../../lib/piBrowserHandoff";
+
+import { uploadR2Movie } from '../../lib/streamR2';
 
 export type StreamPageKind =
   | "movies"
@@ -1216,7 +1217,12 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [archiveImport, setArchiveImport] = useState({ identifier: "", tmdbId: "", mediaType: "movie" as "movie" | "tv", title: "", license: "Public Domain", rightsUrl: "", rightsConfirmed: false, downloadAllowed: false });
+  const [r2Query, setR2Query] = useState('');
+  const [r2Results, setR2Results] = useState<StreamCatalogTitle[]>([]);
+  const [r2Movie, setR2Movie] = useState<StreamCatalogTitle | null>(null);
+  const [r2File, setR2File] = useState<File | null>(null);
+  const [r2Progress, setR2Progress] = useState(0);
+  const [r2Searching, setR2Searching] = useState(false);
   const load = useCallback(async () => {
     try {
       const data = await getStreamAdminOverview();
@@ -1259,16 +1265,25 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
       setSaving(false);
     }
   };
-  const importArchive = async (event: FormEvent) => {
-    event.preventDefault();
+  const searchR2Movies = async () => {
+    if (!r2Query.trim()) return;
     try {
-      setSaving(true); setMessage("");
-      await importInternetArchiveTitle({ ...archiveImport, tmdbId: Number(archiveImport.tmdbId) });
-      setMessage("Internet Archive title verified, approved, and attached to the catalogue.");
-      setArchiveImport(current => ({ ...current, identifier: "", tmdbId: "", title: "", rightsUrl: "", rightsConfirmed: false, downloadAllowed: false }));
+      setR2Searching(true); setMessage(''); setR2Movie(null);
+      const data = await searchStreamCatalog(r2Query.trim());
+      setR2Results(data.results.filter(item => item.mediaType === 'movie').slice(0, 8));
+    } catch { setMessage('TMDB movies could not be searched.'); }
+    finally { setR2Searching(false); }
+  };
+  const uploadMovie = async () => {
+    if (!r2Movie || !r2File) return;
+    try {
+      setSaving(true); setMessage(''); setR2Progress(0);
+      await uploadR2Movie(r2Movie.tmdbId, r2File, setR2Progress);
+      setMessage(`${r2Movie.title} is uploaded and available to watch.`);
+      setR2File(null); setR2Movie(null); setR2Results([]); setR2Query('');
       await load();
     } catch (error) {
-      setMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Internet Archive item could not be imported.");
+      setMessage((error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || (error as Error).message || 'The R2 movie upload failed.');
     } finally { setSaving(false); }
   };
   const videos = overview?.recent || [];
@@ -1360,13 +1375,15 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
         ) : null}
         {kind === "reports" || kind === "catalog-admin" ? (
           <>
-          {kind === "catalog-admin" ? <form className="sw-archive-import" onSubmit={event => void importArchive(event)}>
-            <h2>Import permitted Internet Archive film</h2>
-            <p>Only import an item after reviewing its license and rights evidence.</p>
-            <div><label>Archive identifier<input required value={archiveImport.identifier} onChange={event => setArchiveImport(current => ({ ...current, identifier: event.target.value }))} /></label><label>TMDB ID<input required inputMode="numeric" value={archiveImport.tmdbId} onChange={event => setArchiveImport(current => ({ ...current, tmdbId: event.target.value }))} /></label><label>Type<select value={archiveImport.mediaType} onChange={event => setArchiveImport(current => ({ ...current, mediaType: event.target.value as "movie" | "tv" }))}><option value="movie">Movie</option><option value="tv">Series</option></select></label><label>Catalogue title<input required value={archiveImport.title} onChange={event => setArchiveImport(current => ({ ...current, title: event.target.value }))} /></label><label>License<input required value={archiveImport.license} onChange={event => setArchiveImport(current => ({ ...current, license: event.target.value }))} /></label><label>Rights evidence URL<input required type="url" value={archiveImport.rightsUrl} onChange={event => setArchiveImport(current => ({ ...current, rightsUrl: event.target.value }))} /></label></div>
-            <label className="check"><input type="checkbox" checked={archiveImport.rightsConfirmed} onChange={event => setArchiveImport(current => ({ ...current, rightsConfirmed: event.target.checked }))} /> I reviewed the item and confirm SMAJ may stream it.</label>
-            <label className="check"><input type="checkbox" checked={archiveImport.downloadAllowed} onChange={event => setArchiveImport(current => ({ ...current, downloadAllowed: event.target.checked }))} /> The license also permits user downloads.</label>
-            <button className="sw-admin-save" type="submit" disabled={saving || !archiveImport.rightsConfirmed}>{saving ? "Verifying..." : "Verify and import"}</button>
+          {kind === "catalog-admin" ? <form className="sw-r2-upload" onSubmit={event => { event.preventDefault(); void uploadMovie(); }}>
+            <h2>Add movie</h2>
+            <p>Choose the TMDB title, then upload only its MP4 movie file to the private SMAJ Stream R2 bucket.</p>
+            <div className="sw-r2-search"><SearchRoundedIcon /><input value={r2Query} onChange={event => setR2Query(event.target.value)} placeholder="Search TMDB movies" /><button type="button" onClick={() => void searchR2Movies()} disabled={r2Searching || !r2Query.trim()}>{r2Searching ? "Searching..." : "Search"}</button></div>
+            {r2Results.length ? <div className="sw-r2-results">{r2Results.map(movie => <button type="button" key={movie.id} className={r2Movie?.tmdbId === movie.tmdbId ? "selected" : ""} onClick={() => setR2Movie(movie)}>{movie.posterUrl ? <img src={movie.posterUrl} alt="" /> : <span className="poster-empty" />}<span><b>{movie.title}</b><small>{movie.releaseDate?.slice(0, 4) || "Year unavailable"} · TMDB #{movie.tmdbId}</small></span></button>)}</div> : null}
+            {r2Movie ? <div className="sw-r2-selected">{r2Movie.posterUrl ? <img src={r2Movie.posterUrl} alt="" /> : null}<div><small>SELECTED FROM TMDB</small><strong>{r2Movie.title}</strong><p>{r2Movie.overview || "No overview available."}</p></div></div> : null}
+            <label className="sw-r2-file">Movie file (.mp4)<input type="file" accept="video/mp4,.mp4" onChange={event => setR2File(event.target.files?.[0] || null)} /></label>
+            {saving ? <div className="sw-r2-progress"><span style={{ width: `${r2Progress}%` }} /><b>{r2Progress}% uploaded</b></div> : null}
+            <button className="sw-admin-save" type="submit" disabled={saving || !r2Movie || !r2File}>{saving ? "Uploading movie..." : "Upload movie to R2"}</button>
           </form> : null}
           <div className="sw-admin-list">
             {rows.map(video => (

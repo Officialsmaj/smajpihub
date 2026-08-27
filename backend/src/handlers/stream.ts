@@ -4,6 +4,16 @@ import { ObjectId } from "mongodb";
 import env from "../environments";
 import { resolveCurrentUser } from "../services/auth";
 import { platformAPIKeyClient } from "../services/platformAPIClient";
+import {
+  abortMovieMultipartUpload,
+  completeMovieMultipartUpload,
+  createMovieMultipartUpload,
+  privateMovieUrl,
+  signMoviePlayback,
+  signMovieUploadPart,
+  streamMovieKey,
+  streamR2Configured,
+} from '../services/streamR2';
 
 const TMDB_API_URL = "https://api.themoviedb.org/3";
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -1073,6 +1083,76 @@ const mountStreamEndpoints = (router: Router) => {
     });
   });
 
+  router.post('/admin/r2/movies/upload/start', async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    if (!streamR2Configured()) return res.status(503).json({ error: 'r2_not_configured', message: 'Cloudflare R2 is not configured on the backend.' });
+    const tmdbId = Number(req.body?.tmdbId);
+    const fileSize = Number(req.body?.fileSize);
+    const contentType = String(req.body?.contentType || '').toLowerCase();
+    if (!Number.isInteger(tmdbId) || tmdbId < 1) return res.status(400).json({ error: 'invalid_movie', message: 'Choose a valid TMDB movie.' });
+    if (!Number.isFinite(fileSize) || fileSize < 1 || fileSize > 1000 * 1024 * 1024 * 1024) return res.status(400).json({ error: 'invalid_file', message: 'Choose a valid movie video file.' });
+    if (contentType && contentType !== 'video/mp4') return res.status(415).json({ error: 'invalid_file_type', message: 'Movie uploads must be MP4 video files.' });
+    try {
+      const movie = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }> }>(`/movie/${tmdbId}`, { language: 'en-US' });
+      const key = streamMovieKey(tmdbId);
+      const uploadId = await createMovieMultipartUpload(key);
+      const now = new Date();
+      const partSize = 25 * 1024 * 1024;
+      const title = String(movie.title || 'TMDB movie').slice(0, 180);
+      const record = {
+        cloudflareUid: `r2-movie-${tmdbId}`, contentSource: 'cloudflare_r2', contentType: 'movie', tmdbId, title,
+        description: String(movie.overview || '').slice(0, 4000), overview: String(movie.overview || '').slice(0, 4000),
+        posterPath: movie.poster_path || null, backdropPath: movie.backdrop_path || null, releaseDate: movie.release_date || null,
+        year: movie.release_date ? Number(movie.release_date.slice(0, 4)) || null : null,
+        genres: Array.isArray(movie.genres) ? movie.genres.map(genre => ({ id: genre.id, name: genre.name })) : [],
+        rating: Number.isFinite(movie.vote_average) ? movie.vote_average : null,
+        videoKey: key, videoUrl: privateMovieUrl(key), r2UploadId: uploadId, r2UploadFileSize: fileSize,
+        status: 'uploading', processingStatus: 'uploading', moderationStatus: 'approved', visibility: 'private', playbackAllowed: false, downloadAllowed: false,
+        creatorName: 'SMAJ Stream', catalogAttachment: { tmdbId, mediaType: 'movie', title, attachedAt: now, attachedBy: String(admin._id) }, updatedAt: now,
+      };
+      await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: record.cloudflareUid }, { $set: record, $setOnInsert: { createdAt: now } }, { upsert: true });
+      return res.status(201).json({ uploadId, key, partSize, totalParts: Math.ceil(fileSize / partSize), movie: { tmdbId, title, overview: record.overview, posterPath: record.posterPath, backdropPath: record.backdropPath, releaseDate: record.releaseDate, year: record.year, genres: record.genres, rating: record.rating } });
+    } catch (error) {
+      const status = Number((error as { response?: { status?: number } }).response?.status || 502);
+      return res.status(status).json({ error: 'movie_upload_start_failed', message: error instanceof Error ? error.message : 'Could not start the R2 movie upload.' });
+    }
+  });
+
+  router.post('/admin/r2/movies/upload/part-url', async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const tmdbId = Number(req.body?.tmdbId); const uploadId = String(req.body?.uploadId || ''); const partNumber = Number(req.body?.partNumber);
+    if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > 10_000) return res.status(400).json({ error: 'invalid_part' });
+    const movie = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: `r2-movie-${tmdbId}`, r2UploadId: uploadId, status: 'uploading' });
+    if (!movie?.videoKey) return res.status(404).json({ error: 'upload_not_found', message: 'This R2 upload session is no longer active.' });
+    try { return res.json({ url: await signMovieUploadPart(String(movie.videoKey), uploadId, partNumber), partNumber, expiresIn: 900 }); }
+    catch (error) { return res.status(502).json({ error: 'part_url_failed', message: error instanceof Error ? error.message : 'Could not sign this upload part.' }); }
+  });
+
+  router.post('/admin/r2/movies/upload/complete', async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const tmdbId = Number(req.body?.tmdbId); const uploadId = String(req.body?.uploadId || '');
+    const parts = Array.isArray(req.body?.parts) ? req.body.parts.map((part: Record<string, unknown>) => ({ PartNumber: Number(part.partNumber), ETag: String(part.etag || '') })).filter((part: { PartNumber: number; ETag: string }) => Number.isInteger(part.PartNumber) && part.PartNumber > 0 && part.ETag) : [];
+    const movie = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: `r2-movie-${tmdbId}`, r2UploadId: uploadId, status: 'uploading' });
+    if (!movie?.videoKey || !parts.length) return res.status(404).json({ error: 'upload_not_found', message: 'The R2 upload session or its parts were not found.' });
+    try {
+      const object = await completeMovieMultipartUpload(String(movie.videoKey), uploadId, parts);
+      const now = new Date();
+      await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: movie.cloudflareUid }, { $set: { status: 'ready', processingStatus: 'ready', moderationStatus: 'approved', visibility: 'public', playbackAllowed: true, r2UploadId: null, r2ObjectSize: Number(object.ContentLength || movie.r2UploadFileSize || 0), updatedAt: now } });
+      const updated = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: movie.cloudflareUid });
+      return res.json({ video: { ...updated, _id: String(updated?._id), r2UploadId: undefined } });
+    } catch (error) { return res.status(502).json({ error: 'upload_complete_failed', message: error instanceof Error ? error.message : 'Could not complete the R2 movie upload.' }); }
+  });
+
+  router.post('/admin/r2/movies/upload/abort', async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const tmdbId = Number(req.body?.tmdbId); const uploadId = String(req.body?.uploadId || '');
+    const movie = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: `r2-movie-${tmdbId}`, r2UploadId: uploadId });
+    if (!movie?.videoKey) return res.status(404).json({ error: 'upload_not_found' });
+    try { await abortMovieMultipartUpload(String(movie.videoKey), uploadId); } catch { /* The upload may already be closed. */ }
+    await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: movie.cloudflareUid }, { $set: { status: 'failed', processingStatus: 'error', playbackAllowed: false, visibility: 'private', r2UploadId: null, updatedAt: new Date() } });
+    return res.status(204).send();
+  });
+
   const defaultStreamSettings = {
     uploadsEnabled: true,
     liveStreamingEnabled: true,
@@ -1219,6 +1299,14 @@ const mountStreamEndpoints = (router: Router) => {
       return res.json({ video: { id: String(video.cloudflareUid), sourceType: "mp4", playbackUrl: proxyUrl, downloadUrl: video.downloadAllowed === true ? video.downloadUrl : null, downloadAllowed: video.downloadAllowed === true, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null, license: video.license, rightsUrl: video.rightsUrl } });
     }
     if (video.contentSource === "youtube" && video.youtubeVideoId) return res.json({ video: { id: String(video.cloudflareUid), sourceType: "youtube", youtubeVideoId: video.youtubeVideoId, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl, duration: video.duration || null } });
+    if (video.contentSource === 'cloudflare_r2' && video.videoKey) {
+      try {
+        const playbackUrl = await signMoviePlayback(String(video.videoKey));
+        return res.json({ video: { id: String(video.cloudflareUid), sourceType: 'mp4', playbackUrl, downloadAllowed: false, title: video.title, description: video.overview || video.description, creatorName: video.creatorName, thumbnailUrl: video.posterPath ? `https://image.tmdb.org/t/p/w500${video.posterPath}` : null, duration: video.duration || null } });
+      } catch {
+        return res.status(503).json({ error: 'r2_playback_failed', message: 'This movie is temporarily unavailable.' });
+      }
+    }
     let playback = video.playback as { hls?: string; dash?: string } | undefined;
     if ((!playback?.hls || video.processingStatus !== "ready") && env.cloudflare_stream_account_id && env.cloudflare_stream_api_token) {
       try {

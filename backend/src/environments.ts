@@ -42,6 +42,10 @@ interface Environment {
   tmdb_access_token: string;
   cloudflare_stream_account_id: string;
   cloudflare_stream_api_token: string;
+  cloudflare_r2_account_id: string;
+  cloudflare_r2_access_key_id: string;
+  cloudflare_r2_secret_access_key: string;
+  cloudflare_r2_bucket: string;
   youtube_api_key: string;
   youtube_live_channel_ids: string[];
   youtube_live_refresh_minutes: number;
@@ -71,6 +75,10 @@ const platformApiURL =
   process.env.PLATFORM_API_URL || productionPiPlatformAPIURL;
 
 const env: Environment = {
+  cloudflare_r2_account_id: process.env.CLOUDFLARE_R2_ACCOUNT_ID || String(),
+  cloudflare_r2_access_key_id: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || String(),
+  cloudflare_r2_secret_access_key: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || String(),
+  cloudflare_r2_bucket: process.env.CLOUDFLARE_R2_BUCKET || `smaj-stream`,
   node_env: nodeEnv,
   is_production: isProduction,
   is_render: isRender,
