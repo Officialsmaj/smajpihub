@@ -68,20 +68,26 @@ export const AdminDashboardPage = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [activity, setActivity] = useState<AdminActivity[]>([]);
   const [streamOverview, setStreamOverview] = useState<StreamAdminOverview | null>(null);
+  const [dashboardUsers, setDashboardUsers] = useState<AdminUser[]>([]);
+  const [dashboardOrders, setDashboardOrders] = useState<Order[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const load = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
-      const [statsResponse, activityResponse, streamResponse] = await Promise.all([
+      const [statsResponse, activityResponse, streamResponse, usersResponse, ordersResponse] = await Promise.all([
         adminFetch<{ stats: AdminStats; updatedAt: string }>("/admin/stats"),
         adminFetch<{ activity: AdminActivity[]; updatedAt: string }>("/admin/activity"),
         getStreamAdminOverview().catch(() => null),
+        axiosClient.get<{ users: AdminUser[] }>("/admin/users").catch(() => null),
+        axiosClient.get<{ orders: Order[] }>("/admin/orders").catch(() => null),
       ]);
       setStats(statsResponse.stats);
       setActivity(activityResponse.activity);
       setStreamOverview(streamResponse);
+      setDashboardUsers(usersResponse?.data.users || []);
+      setDashboardOrders(ordersResponse?.data.orders || []);
       setLastUpdated(new Date(statsResponse.updatedAt || activityResponse.updatedAt || Date.now()));
       setError("");
     } catch {
@@ -119,6 +125,28 @@ export const AdminDashboardPage = () => {
     ["Stream moderation", streamOverview?.stats.pendingVideos || 0, "/admin/stream/moderation"],
   ] as const;
   const updatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not loaded";
+  const monthlyOperations = useMemo(() => {
+    const year = new Date().getFullYear();
+    const values = Array.from({ length: 12 }, () => ({ orders: 0, volume: 0 }));
+    dashboardOrders.forEach((order) => {
+      const date = new Date(order.createdAt);
+      if (!Number.isNaN(date.getTime()) && date.getFullYear() === year) {
+        values[date.getMonth()].orders += 1;
+        values[date.getMonth()].volume += Number(order.pricePi || 0);
+      }
+    });
+    return values;
+  }, [dashboardOrders]);
+  const monthlyMaximum = Math.max(...monthlyOperations.flatMap((month) => [month.orders, month.volume]), 1);
+  const chartPoints = (key: "orders" | "volume") => monthlyOperations.map((month, index) => (index * 100) + "," + (230 - (month[key] / monthlyMaximum) * 200)).join(" ");
+  const demographics = useMemo(() => {
+    const countries = new Map<string, number>();
+    dashboardUsers.forEach((entry) => {
+      const country = entry.country?.trim() || "Not provided";
+      countries.set(country, (countries.get(country) || 0) + 1);
+    });
+    return [...countries.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [dashboardUsers]);
 
   return (
     <main className="private-page admin-dashboard-page">
@@ -158,6 +186,24 @@ export const AdminDashboardPage = () => {
           <section className="admin-attention-panel">
             <div className="section-title compact"><div><p className="private-kicker">ACTION CENTER</p><h2>Needs attention</h2><p>One queue for marketplace and Stream operations.</p></div></div>
             <div>{attention.map(([label, count, to]) => <Link to={to} key={label}><span>{label}</span><strong>{count}</strong><small>{count ? "Review now" : "All clear"}</small></Link>)}</div>
+          </section>
+          <section className="admin-statistics-card">
+            <header><div><h2>Statistics</h2><p>Real monthly marketplace orders and Pi volume for {new Date().getFullYear()}.</p></div><span>Live · 15 sec</span></header>
+            <div className="admin-statistics-legend"><span><i /> Orders</span><span><i /> Pi volume</span></div>
+            <div className="admin-statistics-chart">
+              <svg viewBox="0 0 1100 250" role="img" aria-label="Monthly orders and Pi volume statistics" preserveAspectRatio="none"><polyline className="orders" points={chartPoints("orders")} /><polyline className="volume" points={chartPoints("volume")} /></svg>
+              <div>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((month) => <span key={month}>{month}</span>)}</div>
+            </div>
+          </section>
+          <section className="admin-dashboard-lower">
+            <article className="admin-demographic-card">
+              <header><h2>Customers Demographic</h2><p>Real users grouped by country.</p></header>
+              {demographics.length ? <div>{demographics.map(([country, count]) => <div key={country}><span><b>{country}</b><small>{count} customer{count === 1 ? "" : "s"}</small></span><i><b style={{ width: ((count / Math.max(dashboardUsers.length, 1)) * 100) + "%" }} /></i><strong>{Math.round((count / Math.max(dashboardUsers.length, 1)) * 100)}%</strong></div>)}</div> : <div className="private-state compact"><p>No customer country data yet.</p></div>}
+            </article>
+            <article className="admin-recent-orders-card">
+              <header><div><h2>Recent Orders</h2><p>Latest real marketplace orders.</p></div><Link to="/admin/orders">See all</Link></header>
+              {dashboardOrders.length ? <div className="admin-recent-orders-table">{dashboardOrders.slice(0,5).map((order) => <Link to="/admin/orders" key={order._id}><span><img src={order.productImage} alt="" /><b>{order.productTitle}</b></span><small>{order.sellerName}</small><strong>{formatPiAmount(order.pricePi)}</strong><em className={order.status}>{order.status}</em></Link>)}</div> : <div className="private-state compact"><p>No orders yet.</p></div>}
+            </article>
           </section>
           <section className="management-list admin-activity-list">
             {activity.length ? activity.map((item) => (
