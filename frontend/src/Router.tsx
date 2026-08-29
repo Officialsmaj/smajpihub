@@ -55,6 +55,7 @@ import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminHeroBannersPage from "./pages/admin/AdminHeroBannersPage";
 import AdminModulePage from "./pages/admin/AdminModulePage";
+import AdminProfilePage from "./pages/admin/AdminProfilePage";
 import {
   AdminDashboardPage,
   AdminJobsReviewPage,
@@ -1176,6 +1177,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AdminLayout>
           <AdminHeroBannersPage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/profile",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminProfilePage />
         </AdminLayout>
       </ProtectedRoute>
     ),

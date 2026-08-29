@@ -19,6 +19,9 @@ import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDown
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -55,6 +58,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [expandedGroups, setExpandedGroups] = useState<number[]>([1]);
   const [mobileUtilitiesOpen, setMobileUtilitiesOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
@@ -91,6 +95,12 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       return next;
     });
   };
+  const toggleAdminMenu = () => {
+    if (window.matchMedia("(min-width: 1024px)").matches) toggleSidebar();
+    else setMobileSidebarOpen((open) => !open);
+    setNotificationsOpen(false);
+    setProfileMenuOpen(false);
+  };
 
   const toggleGroup = (number: number) => setExpandedGroups((groups) => groups.includes(number) ? groups.filter((item) => item !== number) : [...groups, number]);
 
@@ -123,9 +133,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className={"private-shell admin-shell " + (mobileUtilitiesOpen ? "admin-utilities-open" : "")}>
+    <div className={"private-shell admin-shell " + (sidebarCollapsed ? "admin-sidebar-collapsed " : "") + (mobileUtilitiesOpen ? "admin-utilities-open" : "")}>
       <header className="private-header">
-        <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={() => { setMobileSidebarOpen((open) => !open); setNotificationsOpen(false); }} aria-label={mobileSidebarOpen ? "Close admin menu" : "Open admin menu"}>
+        <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={toggleAdminMenu} aria-label={mobileSidebarOpen ? "Close admin menu" : "Toggle admin menu"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
         <Link to="/admin" className="private-brand"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link>
@@ -142,13 +152,22 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </div>
           ) : null}
         </form>
-        <div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div>
+        <button className="private-user-pill admin-desktop-profile-trigger" type="button" onClick={() => { setProfileMenuOpen((open) => !open); setNotificationsOpen(false); }} aria-expanded={profileMenuOpen}>
+          <span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon />
+        </button>
         <button className="admin-mobile-more" type="button" onClick={() => { setMobileUtilitiesOpen((open) => !open); setNotificationsOpen(false); }} aria-label="Toggle admin utilities" aria-expanded={mobileUtilitiesOpen}><MoreHorizOutlinedIcon /></button>
         <div className="admin-mobile-utilities">
           <button type="button" aria-label="Toggle dark mode"><DarkModeOutlinedIcon /></button>
           <button className="admin-notification-trigger" type="button" onClick={() => setNotificationsOpen((open) => !open)} aria-label="Open notifications" aria-expanded={notificationsOpen}><NotificationsNoneOutlinedIcon /><i /></button>
-          <button className="admin-mobile-profile" type="button"><span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon /></button>
+          <button className="admin-mobile-profile" type="button" onClick={() => setProfileMenuOpen((open) => !open)}><span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon /></button>
         </div>
+        {profileMenuOpen ? <section className="admin-profile-menu">
+          <header><strong>{adminName}</strong><small>@{user.piUsername || user.username}</small></header>
+          <Link to="/admin/profile" onClick={() => setProfileMenuOpen(false)}><PersonOutlineOutlinedIcon /><span>Edit profile</span></Link>
+          <Link to="/admin/settings" onClick={() => setProfileMenuOpen(false)}><TuneOutlinedIcon /><span>Account settings</span></Link>
+          <Link to="/help" onClick={() => setProfileMenuOpen(false)}><InfoOutlinedIcon /><span>Support</span></Link>
+          <button type="button" onClick={() => { setProfileMenuOpen(false); setShowSignOut(true); }}><LogoutIcon /><span>Sign out</span></button>
+        </section> : null}
         {notificationsOpen ? <section className="admin-notification-popover" aria-label="Admin notifications">
           <header><h2>Notification</h2><button type="button" onClick={() => setNotificationsOpen(false)} aria-label="Close notifications"><CloseIcon /></button></header>
           <div>
@@ -163,7 +182,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside id="admin-mobile-sidebar" className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
           <div className="private-sidebar-top">
-            <Link to="/admin" className="private-sidebar-brand" title="SMAJ ADMIN" aria-label="SMAJ Admin dashboard"><img src={logoImage} alt="" /></Link>
+            <Link to="/admin" className="private-sidebar-brand" title="SMAJ ADMIN" aria-label="SMAJ Admin dashboard"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link>
             <button className="private-sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
               {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
             </button>
