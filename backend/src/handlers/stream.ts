@@ -1107,7 +1107,7 @@ const mountStreamEndpoints = (router: Router) => {
         genres: Array.isArray(movie.genres) ? movie.genres.map(genre => ({ id: genre.id, name: genre.name })) : [],
         rating: Number.isFinite(movie.vote_average) ? movie.vote_average : null,
         videoKey: key, videoUrl: privateMovieUrl(key), r2UploadId: uploadId, r2UploadFileSize: fileSize,
-        status: 'uploading', processingStatus: 'uploading', moderationStatus: 'approved', visibility: 'private', playbackAllowed: false, downloadAllowed: false,
+        status: 'uploading', processingStatus: 'uploading', processingError: null, moderationStatus: 'approved', visibility: 'private', playbackAllowed: false, downloadAllowed: false,
         creatorName: 'SMAJ Stream', catalogAttachment: { tmdbId, mediaType: 'movie', title, attachedAt: now, attachedBy: String(admin._id) }, updatedAt: now,
       };
       await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: record.cloudflareUid }, { $set: record, $setOnInsert: { createdAt: now } }, { upsert: true });
@@ -1149,7 +1149,8 @@ const mountStreamEndpoints = (router: Router) => {
     const movie = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: `r2-movie-${tmdbId}`, r2UploadId: uploadId });
     if (!movie?.videoKey) return res.status(404).json({ error: 'upload_not_found' });
     try { await abortMovieMultipartUpload(String(movie.videoKey), uploadId); } catch { /* The upload may already be closed. */ }
-    await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: movie.cloudflareUid }, { $set: { status: 'failed', processingStatus: 'error', playbackAllowed: false, visibility: 'private', r2UploadId: null, updatedAt: new Date() } });
+    const processingError = String(req.body?.reason || 'The R2 movie upload did not complete.').slice(0, 300);
+    await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: movie.cloudflareUid }, { $set: { status: 'failed', processingStatus: 'error', processingError, playbackAllowed: false, visibility: 'private', r2UploadId: null, updatedAt: new Date() } });
     return res.status(204).send();
   });
 

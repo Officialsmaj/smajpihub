@@ -34,7 +34,8 @@ export const uploadR2Movie = async (tmdbId: number, file: File, onProgress: (per
     onProgress(100);
     return result;
   } catch (error) {
-    await axiosClient.post('/stream/admin/r2/movies/upload/abort', { tmdbId, uploadId: start.uploadId }).catch(() => undefined);
+    const reason = error instanceof Error ? error.message : 'The R2 movie upload failed.';
+    await axiosClient.post('/stream/admin/r2/movies/upload/abort', { tmdbId, uploadId: start.uploadId, reason }).catch(() => undefined);
     throw error;
   }
 };

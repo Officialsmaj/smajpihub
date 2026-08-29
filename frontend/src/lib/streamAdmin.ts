@@ -1,7 +1,7 @@
 import { axiosClient } from "./axiosClient";
 import type { CreatorVideo } from "./streamCreator";
 
-export type ModerationVideo = CreatorVideo & { creatorName?: string; rightsConfirmed?: boolean; moderationReason?: string; playbackAllowed?: boolean; catalogAttachment?: { tmdbId: number; mediaType: "movie" | "tv"; title?: string } | null };
+export type ModerationVideo = CreatorVideo & { creatorName?: string; rightsConfirmed?: boolean; moderationReason?: string; playbackAllowed?: boolean; status?: string; processingStatus?: string; processingError?: string; catalogAttachment?: { tmdbId: number; mediaType: "movie" | "tv"; title?: string } | null };
 export type StreamAdminStats = { totalVideos: number; pendingVideos: number; approvedVideos: number; rejectedVideos: number; publishedVideos: number; liveStreams: number; readyVideos: number; attachedTitles: number; creators: number };
 export type StreamAdminCreator = { id: string; name: string; videos: number; approved: number; live: number; latestAt?: string | null };
 export type StreamAdminOverview = { stats: StreamAdminStats; creators: StreamAdminCreator[]; recent: ModerationVideo[]; updatedAt: string };

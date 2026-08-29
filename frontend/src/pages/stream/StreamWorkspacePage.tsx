@@ -1293,6 +1293,22 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
       : kind === "catalog-admin"
         ? videos
         : [];
+  const catalogueState = (video: StreamAdminOverview["recent"][number]) =>
+    video.processingStatus === "ready" && video.playbackAllowed === true
+      ? "Ready to watch"
+      : video.processingStatus === "error" || video.status === "failed"
+        ? "Upload failed"
+        : video.processingStatus === "uploading"
+          ? "Uploading"
+          : "Not available";
+  const catalogueStateDetail = (video: StreamAdminOverview["recent"][number]) =>
+    video.processingStatus === "ready" && video.playbackAllowed === true
+      ? "The R2 video is published on SMAJ Stream."
+      : video.processingStatus === "error" || video.status === "failed"
+        ? video.processingError || "Upload again after checking the R2 bucket CORS settings."
+        : video.processingStatus === "uploading"
+          ? "Keep this page open until the upload reaches 100%."
+          : "No playable R2 video has been completed for this title.";
   return (
     <div className="sw-admin-unified">
       <section>
@@ -1385,6 +1401,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
             {saving ? <div className="sw-r2-progress"><span style={{ width: `${r2Progress}%` }} /><b>{r2Progress}% uploaded</b></div> : null}
             <button className="sw-admin-save" type="submit" disabled={saving || !r2Movie || !r2File}>{saving ? "Uploading movie..." : "Upload movie to R2"}</button>
           </form> : null}
+          {kind === "catalog-admin" && message ? <p className={`sw-r2-message ${message.includes("available to watch") ? "success" : "error"}`}>{message}</p> : null}
           <div className="sw-admin-list">
             {rows.map(video => (
               <article key={video.cloudflareUid}>
@@ -1398,8 +1415,9 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                         : "Not attached to the catalogue"
                       : video.moderationReason || "Moderation record"}
                   </p>
+                  {kind === "catalog-admin" ? <small className="sw-r2-state-detail">{catalogueStateDetail(video)}</small> : null}
                 </div>
-                <em>{video.moderationStatus || "pending"}</em>
+                {kind === "catalog-admin" ? <em className={`r2-${catalogueState(video).toLowerCase().replaceAll(" ", "-")}`}>{catalogueState(video)}</em> : <em>{video.moderationStatus || "pending"}</em>}
                 <Link to="/admin/stream/moderation">Review</Link>
               </article>
             ))}
