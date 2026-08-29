@@ -20746,7 +20746,10 @@ svg {
   .admin-shell .private-sidebar-brand::before{content:"SP";width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#465fff,#3641f5);border-radius:10px;box-shadow:0 4px 10px rgba(70,95,255,.22);font-size:12px;font-weight:900;letter-spacing:-.05em}
   .admin-shell .private-sidebar-collapsed .private-sidebar-top{justify-content:center}
   .admin-shell .private-sidebar-collapsed .private-sidebar-brand{width:44px;height:44px;padding:2px;justify-content:center;background:transparent!important}
+  .admin-shell .private-content{grid-column:2;direction:ltr}
+  .admin-shell .private-sidebar,.admin-shell .admin-navigation{direction:ltr}
 }
+@media(max-width:1023px){.admin-shell .private-content{grid-column:1}}
 
 /* One accessible popup queue for application success and error feedback. */
 [data-feedback-source="true"]{display:none!important}
