@@ -54,6 +54,7 @@ import CommerceFlowPage from "./pages/private/CommerceFlowPage";
 import OrderTrackingPage from "./pages/private/OrderTrackingPage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminHeroBannersPage from "./pages/admin/AdminHeroBannersPage";
+import AdminModulePage from "./pages/admin/AdminModulePage";
 import {
   AdminDashboardPage,
   AdminJobsReviewPage,
@@ -1298,6 +1299,16 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   })),
+  {
+    path: "/admin/modules/:group/:module",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout>
+          <AdminModulePage />
+        </AdminLayout>
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "/search",
     element: (

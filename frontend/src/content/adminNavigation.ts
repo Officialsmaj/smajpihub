@@ -2,7 +2,7 @@ export type AdminNavItem = { label: string; to?: string };
 export type AdminNavGroup = { number: number; label: string; icon: "overview" | "users" | "payments" | "platform" | "safety" | "system"; items: AdminNavItem[] };
 const items = (labels: string[], routes: Record<string, string> = {}): AdminNavItem[] => labels.map((label) => ({ label, to: routes[label] }));
 
-export const adminNavigation: AdminNavGroup[] = [
+const configuredAdminNavigation: AdminNavGroup[] = [
   { number: 1, label: "Overview", icon: "overview", items: items(["Dashboard", "Live Activity", "Platform Health", "Pending Actions", "Global Analytics"], { Dashboard: "/admin", "Global Analytics": "/admin/reports" }) },
   { number: 2, label: "Users & Identity", icon: "users", items: items(["All Users", "Pi Accounts", "Basic Users", "Verified Users", "Trusted Sellers / Providers", "KYB Applications", "Suspended Users", "User Reports", "Verification Logs"], { "All Users": "/admin/users", "KYB Applications": "/admin/onboarding", "User Reports": "/admin/reports" }) },
   { number: 3, label: "Pi Payments", icon: "payments", items: items(["Dashboard", "All Transactions", "Pending Payments", "Completed Payments", "Failed Payments", "Payment Confirmations", "Refund / Reversal Cases", "Service Transactions", "Blockchain Logs"], { Dashboard: "/admin/orders", "All Transactions": "/admin/orders", "Pending Payments": "/admin/orders", "Completed Payments": "/admin/orders", "Failed Payments": "/admin/orders" }) },
@@ -30,5 +30,15 @@ export const adminNavigation: AdminNavGroup[] = [
   { number: 25, label: "Analytics", icon: "overview", items: items(["Platform Analytics", "User Growth", "Active Users", "Countries", "Services Usage", "Pi Transaction Volume", "Conversion", "Revenue / Fees", "Growth Reports"], { "Platform Analytics": "/admin/reports" }) },
   { number: 26, label: "System", icon: "system", items: items(["Admin Team", "Roles & Permissions", "Audit Logs", "Pi Network Integration", "Payment Configuration", "Verification Settings", "AI Settings", "API Settings", "Storage", "Security", "System Health", "Feature Flags", "Localization", "General Settings"], { "General Settings": "/admin/settings" }) },
 ];
+
+const routeSlug = (value: string) => value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+export const adminNavigation: AdminNavGroup[] = configuredAdminNavigation.map((group) => ({
+  ...group,
+  items: group.items.map((item) => ({
+    ...item,
+    to: item.to || "/admin/modules/" + String(group.number).padStart(2, "0") + "-" + routeSlug(group.label) + "/" + routeSlug(item.label),
+  })),
+}));
 
 export const searchableAdminNavigation = adminNavigation.flatMap((group) => group.items.filter((item) => item.to).map((item) => ({ ...item, to: item.to!, group: group.label, icon: group.icon })));
