@@ -573,22 +573,36 @@ export const AdminReportsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [message, setMessage] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("open");
   const load = useCallback(async () => {
+    setRefreshing(true);
     const [reportResponse, statsResponse, orderResponse, productResponse, userResponse] = await Promise.all([
-      axiosClient.get("/admin/reports"),
-      axiosClient.get("/admin/stats"),
-      axiosClient.get("/admin/orders"),
-      axiosClient.get("/admin/products"),
-      axiosClient.get("/admin/users"),
+      axiosClient.get("/admin/reports").catch(() => null),
+      axiosClient.get("/admin/stats").catch(() => null),
+      axiosClient.get("/admin/orders").catch(() => null),
+      axiosClient.get("/admin/products").catch(() => null),
+      axiosClient.get("/admin/users").catch(() => null),
     ]);
-    setReports(reportResponse.data.reports);
-    setStats(statsResponse.data.stats);
-    setOrders(orderResponse.data.orders);
-    setProducts(productResponse.data.products);
-    setUsers(userResponse.data.users);
+    if (reportResponse) setReports(reportResponse.data.reports || []);
+    if (statsResponse) setStats(statsResponse.data.stats);
+    if (orderResponse) setOrders(orderResponse.data.orders || []);
+    if (productResponse) setProducts(productResponse.data.products || []);
+    if (userResponse) setUsers(userResponse.data.users || []);
+    const availability: Array<[string, unknown]> = [["reports", reportResponse], ["stats", statsResponse], ["orders", orderResponse], ["products", productResponse], ["users", userResponse]];
+    const unavailable = availability.filter(([, response]) => !response).map(([name]) => name);
+    setLoadError(unavailable.length ? "Some live data is unavailable: " + unavailable.join(", ") + ". Retrying automatically." : "");
+    setRefreshing(false);
   }, []);
-  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  useEffect(() => {
+    const initial = window.setTimeout(() => void load(), 0);
+    const interval = window.setInterval(() => void load(), 15_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
+  }, [load]);
   const resolve = async (report: Report) => {
     await axiosClient.patch(report.source === "support" ? `/admin/support/${report._id}/resolve` : `/admin/reports/${report._id}/resolve`);
     setMessage("Record resolved.");
@@ -601,11 +615,29 @@ export const AdminReportsPage = () => {
   const trustedUsers = users.filter((user) => user.verificationStatus === "approved" && user.verificationLevel === "trusted_seller").length;
   const recentOrders = orders.slice(0, 5);
   const latestProducts = products.slice(0, 5);
+  const transactionCandles = useMemo(() => {
+    const grouped = new Map<string, number[]>();
+    orders.forEach((order) => {
+      const date = new Date(order.createdAt);
+      if (Number.isNaN(date.getTime())) return;
+      const key = date.toISOString().slice(0, 10);
+      grouped.set(key, [...(grouped.get(key) || []), Number(order.pricePi || 0)]);
+    });
+    return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-12).map(([date, values]) => ({
+      date,
+      open: values[0],
+      close: values[values.length - 1],
+      high: Math.max(...values),
+      low: Math.min(...values),
+    }));
+  }, [orders]);
+  const candleMaximum = Math.max(...transactionCandles.map((candle) => candle.high), 1);
 
   return (
     <main className="private-page">
-      <Head title="Analytics & Reports" description="Live platform metrics, marketplace health, reports, support, and operational signals." />
+      <Head title="Analytics & Reports" description="Live platform metrics, marketplace health, reports, support, and operational signals." action={<button className="private-secondary-button" type="button" onClick={() => void load()} disabled={refreshing}>{refreshing ? "Refreshing..." : "Refresh live data"}</button>} />
       <Notice text={message} />
+      {loadError ? <div className="private-alert error">{loadError}</div> : null}
       {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
         <>
           <section className="admin-analytics-grid">
@@ -628,6 +660,19 @@ export const AdminReportsPage = () => {
           </section>
         </>
       )}
+      <section className="admin-candle-panel">
+        <div className="section-title compact"><div><p className="private-kicker">PI ORDER ANALYTICS</p><h2>Transaction candles</h2><p>Real order values grouped by day. Updated every 15 seconds.</p></div><span className="admin-live-chip"><i /> Live</span></div>
+        {transactionCandles.length ? <div className="admin-candle-chart" role="img" aria-label="Daily Pi order value candlestick chart">
+          {transactionCandles.map((candle) => {
+            const top = ((candleMaximum - candle.high) / candleMaximum) * 100;
+            const bottom = (candle.low / candleMaximum) * 100;
+            const bodyTop = ((candleMaximum - Math.max(candle.open, candle.close)) / candleMaximum) * 100;
+            const bodyHeight = Math.max(4, (Math.abs(candle.open - candle.close) / candleMaximum) * 100);
+            const rising = candle.close >= candle.open;
+            return <div className="admin-candle-column" key={candle.date} title={candle.date + " · O " + candle.open + " H " + candle.high + " L " + candle.low + " C " + candle.close}><div className="admin-candle-plot"><i style={{ top: top + "%", bottom: bottom + "%" }} /><b className={rising ? "rising" : "falling"} style={{ top: bodyTop + "%", height: bodyHeight + "%" }} /></div><small>{new Date(candle.date).toLocaleDateString([], { month: "short", day: "numeric" })}</small></div>;
+          })}
+        </div> : <div className="private-state compact"><h3>No transaction candles yet</h3><p>Candles will appear when real marketplace orders contain Pi values and timestamps.</p></div>}
+      </section>
       <section className="admin-filter-bar"><label>Filter<select value={filter} onChange={(event) => setFilter(event.target.value)}><option value="open">Open</option><option value="all">All</option><option value="marketplace">Marketplace</option><option value="support">Support</option><option value="resolved">Resolved</option></select></label><span>{visible.length} records</span></section>
       {visible.length === 0 ? <div className="private-state">No records match this filter.</div> : <div className="management-list">{visible.map((report) => <article className="report-card" key={`${report.source}-${report._id}`}><div><span>{report.source || "marketplace"} - {report.targetType}</span><h3>{report.reason}</h3><p>{report.details || `Target: ${report.targetId}`}</p></div><strong className={report.resolved ? "resolved" : "open"}>{report.resolved ? "Resolved" : "Open"}</strong>{!report.resolved ? <button onClick={() => void resolve(report)}>Mark resolved</button> : null}</article>)}</div>}
     </main>

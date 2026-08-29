@@ -194,10 +194,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
               {sidebarCollapsed ? <KeyboardDoubleArrowRightIcon /> : <KeyboardDoubleArrowLeftIcon />}
             </button>
           </div>
-          <div className="private-sidebar-user">
-            <span className="admin-sidebar-avatar">{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span>
-            <div><strong>{adminName}</strong><small>Admin account</small></div>
-          </div>
           <nav className="admin-navigation">
             {adminNavigation.map((group) => {
               const active = group.items.some((item) => item.to === location.pathname);
