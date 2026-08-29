@@ -20742,14 +20742,17 @@ svg {
 @media(max-width:767px){.admin-statistics-card,.admin-demographic-card,.admin-recent-orders-card{padding:15px}.admin-recent-orders-table{overflow-x:auto}.admin-recent-orders-table>a{min-width:620px}.admin-statistics-chart svg{height:220px}}
 .admin-shell .admin-navigation{scrollbar-width:none;-ms-overflow-style:none}.admin-shell .admin-navigation::-webkit-scrollbar{width:0;height:0}.admin-shell .private-sidebar{scrollbar-width:none;-ms-overflow-style:none}.admin-shell .private-sidebar::-webkit-scrollbar{width:0;height:0}
 @media(min-width:1024px){
+  .admin-shell .private-sidebar-brand{width:auto;max-width:100%;overflow:visible}
   .admin-shell .private-sidebar-brand img{display:none}
   .admin-shell .private-sidebar-brand::before{content:"SP";width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#465fff,#3641f5);border-radius:10px;box-shadow:0 4px 10px rgba(70,95,255,.22);font-size:12px;font-weight:900;letter-spacing:-.05em}
   .admin-shell .private-sidebar-collapsed .private-sidebar-top{justify-content:center}
   .admin-shell .private-sidebar-collapsed .private-sidebar-brand{width:44px;height:44px;padding:2px;justify-content:center;background:transparent!important}
-  .admin-shell .private-content{grid-column:2;direction:ltr}
+  .admin-shell .private-body,.admin-shell .private-body.private-body-collapsed{display:block!important}
+  .admin-shell .private-content{width:calc(100% - 290px);margin-left:290px;direction:ltr}
+  .admin-shell.admin-sidebar-collapsed .private-content{width:calc(100% - 88px);margin-left:88px}
   .admin-shell .private-sidebar,.admin-shell .admin-navigation{direction:ltr}
 }
-@media(max-width:1023px){.admin-shell .private-content{grid-column:1}}
+@media(max-width:1023px){.admin-shell .private-content{width:100%;margin-left:0}}
 
 /* One accessible popup queue for application success and error feedback. */
 [data-feedback-source="true"]{display:none!important}
