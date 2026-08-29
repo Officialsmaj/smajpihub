@@ -30,6 +30,7 @@ import { adminNavigation, searchableAdminNavigation, type AdminNavGroup } from "
 
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
+const ADMIN_THEME_STORAGE_KEY = "smaj_admin_theme";
 const groupIcon = (icon: AdminNavGroup["icon"]) => icon === "overview" ? <DashboardOutlinedIcon /> : icon === "users" ? <PeopleOutlineIcon /> : icon === "payments" ? <ReceiptLongOutlinedIcon /> : icon === "safety" ? <ShieldOutlinedIcon /> : icon === "system" ? <SettingsOutlinedIcon /> : <Inventory2OutlinedIcon />;
 
 const adminSearchItems = [
@@ -59,14 +60,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [mobileUtilitiesOpen, setMobileUtilitiesOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [adminTheme, setAdminTheme] = useState<"light" | "dark">(() => window.localStorage.getItem(ADMIN_THEME_STORAGE_KEY) === "dark" ? "dark" : "light");
   const navigate = useNavigate();
   const location = useLocation();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
   const adminInitial = adminName.slice(0, 1).toUpperCase();
-
-  useEffect(() => {
-    document.documentElement.dataset.privateTheme = user?.settings?.theme || "light";
-  }, [user?.settings?.theme]);
 
   useEffect(() => {
     const route = `${location.pathname}${location.search}${location.hash}`;
@@ -103,6 +101,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleGroup = (number: number) => setExpandedGroups((groups) => groups.includes(number) ? groups.filter((item) => item !== number) : [...groups, number]);
+  const toggleAdminTheme = () => setAdminTheme((theme) => {
+    const next = theme === "light" ? "dark" : "light";
+    window.localStorage.setItem(ADMIN_THEME_STORAGE_KEY, next);
+    return next;
+  });
 
   const searchResults = useMemo(() => {
     const query = adminSearch.trim().toLowerCase();
@@ -133,7 +136,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className={"private-shell admin-shell " + (sidebarCollapsed ? "admin-sidebar-collapsed " : "") + (mobileUtilitiesOpen ? "admin-utilities-open" : "")}>
+    <div className={"private-shell admin-shell admin-theme-" + adminTheme + " " + (sidebarCollapsed ? "admin-sidebar-collapsed " : "") + (mobileUtilitiesOpen ? "admin-utilities-open" : "")}>
       <header className="private-header">
         <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={toggleAdminMenu} aria-label={mobileSidebarOpen ? "Close admin menu" : "Toggle admin menu"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
@@ -152,12 +155,16 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </div>
           ) : null}
         </form>
-        <button className="private-user-pill admin-desktop-profile-trigger" type="button" onClick={() => { setProfileMenuOpen((open) => !open); setNotificationsOpen(false); }} aria-expanded={profileMenuOpen}>
-          <span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon />
-        </button>
+        <div className="admin-desktop-actions">
+          <button type="button" onClick={toggleAdminTheme} aria-label={adminTheme === "dark" ? "Use light admin theme" : "Use dark admin theme"}><DarkModeOutlinedIcon /></button>
+          <button className="admin-notification-trigger" type="button" onClick={() => { setNotificationsOpen((open) => !open); setProfileMenuOpen(false); }} aria-label="Open notifications" aria-expanded={notificationsOpen}><NotificationsNoneOutlinedIcon /><i /></button>
+          <button className="private-user-pill admin-desktop-profile-trigger" type="button" onClick={() => { setProfileMenuOpen((open) => !open); setNotificationsOpen(false); }} aria-expanded={profileMenuOpen}>
+            <span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon />
+          </button>
+        </div>
         <button className="admin-mobile-more" type="button" onClick={() => { setMobileUtilitiesOpen((open) => !open); setNotificationsOpen(false); }} aria-label="Toggle admin utilities" aria-expanded={mobileUtilitiesOpen}><MoreHorizOutlinedIcon /></button>
         <div className="admin-mobile-utilities">
-          <button type="button" aria-label="Toggle dark mode"><DarkModeOutlinedIcon /></button>
+          <button type="button" onClick={toggleAdminTheme} aria-label={adminTheme === "dark" ? "Use light admin theme" : "Use dark admin theme"}><DarkModeOutlinedIcon /></button>
           <button className="admin-notification-trigger" type="button" onClick={() => setNotificationsOpen((open) => !open)} aria-label="Open notifications" aria-expanded={notificationsOpen}><NotificationsNoneOutlinedIcon /><i /></button>
           <button className="admin-mobile-profile" type="button" onClick={() => setProfileMenuOpen((open) => !open)}><span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon /></button>
         </div>

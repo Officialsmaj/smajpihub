@@ -1,4 +1,5 @@
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import { Link } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
 
 const AdminProfilePage = () => {
@@ -16,7 +17,7 @@ const AdminProfilePage = () => {
             <span className="admin-profile-photo">{user?.avatar ? <img src={user.avatar} alt="" /> : initial}</span>
             <div><h3>{name}</h3><p>Platform Administrator <i /> SMAJ PI HUB</p></div>
           </div>
-          <button type="button"><EditOutlinedIcon /> Edit</button>
+          <Link className="admin-profile-edit" to="/admin/settings"><EditOutlinedIcon /> Edit</Link>
           <dl>
             <div><dt>Display Name</dt><dd>{name}</dd></div>
             <div><dt>Pi Username</dt><dd>@{user?.piUsername || user?.username || "admin"}</dd></div>
@@ -26,7 +27,7 @@ const AdminProfilePage = () => {
         </article>
         <article className="admin-profile-card admin-profile-address">
           <div><h3>Admin Access</h3><p>Your SMAJ PI HUB administration profile and access information.</p></div>
-          <button type="button"><EditOutlinedIcon /> Edit</button>
+          <Link className="admin-profile-edit" to="/admin/settings"><EditOutlinedIcon /> Edit</Link>
           <dl>
             <div><dt>Access Level</dt><dd>Admin</dd></div>
             <div><dt>Authentication</dt><dd>Pi Account</dd></div>
