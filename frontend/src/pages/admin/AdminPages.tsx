@@ -104,10 +104,10 @@ export const AdminDashboardPage = () => {
     };
   }, [load]);
   const cards = [
-    ["totalUsers", "Total Users", "/admin/users"],
-    ["totalProducts", "Total Products", "/admin/products"],
-    ["totalOrders", "Total Orders", "/admin/orders"],
-    ["completedOrders", "Completed Orders", "/admin/orders"],
+    ["totalUsers", "Total Users", "/admin/users", "US"],
+    ["totalProducts", "Total Products", "/admin/products", "PR"],
+    ["totalOrders", "Total Orders", "/admin/orders", "OR"],
+    ["completedOrders", "Completed Orders", "/admin/orders", "OK"],
   ] as const;
   const attention = [
     ["Pending products", stats?.pendingProducts || 0, "/admin/products"],
@@ -121,7 +121,7 @@ export const AdminDashboardPage = () => {
   const updatedLabel = lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Not loaded";
 
   return (
-    <main className="private-page">
+    <main className="private-page admin-dashboard-page">
       <PullToRefresh onRefresh={() => load(false)} />
       <Head
         title="Admin Dashboard"
@@ -133,14 +133,33 @@ export const AdminDashboardPage = () => {
         <>
           <div className="private-alert admin-live-status"><i /> Live operations · updated {updatedLabel}</div>
           <section className="stats-grid admin-stats admin-summary-stats">
-            {cards.map(([key, label, to]) => <Link to={to} key={key}><span>{label}</span><strong>{stats[key] || 0}</strong></Link>)}
-            <Link to="/admin/stream"><span>Published Stream titles</span><strong>{streamOverview?.stats.publishedVideos || 0}</strong></Link>
+            {cards.map(([key, label, to, icon]) => <Link to={to} key={key}><i>{icon}</i><span>{label}</span><strong>{stats[key] || 0}</strong><small>View details →</small></Link>)}
+            <Link to="/admin/stream"><i>ST</i><span>Published Stream titles</span><strong>{streamOverview?.stats.publishedVideos || 0}</strong><small>View details →</small></Link>
+          </section>
+          <section className="admin-dashboard-panels">
+            <article className="admin-chart-card">
+              <header><div><p className="private-kicker">PLATFORM OVERVIEW</p><h2>Live operations</h2></div><span>All time</span></header>
+              <div className="admin-operation-chart">
+                {cards.map(([key, label]) => {
+                  const maximum = Math.max(...cards.map(([metric]) => Number(stats[metric] || 0)), 1);
+                  return <div key={key}><span>{label}</span><i><b style={{ width: Math.max(5, (Number(stats[key] || 0) / maximum) * 100) + "%" }} /></i><strong>{stats[key] || 0}</strong></div>;
+                })}
+              </div>
+            </article>
+            <article className="admin-chart-card admin-service-card">
+              <header><div><p className="private-kicker">SERVICE STATUS</p><h2>SMAJ ecosystem</h2></div><Link to="/admin/modules/25-analytics/services-usage">View all</Link></header>
+              <div><span><i className="live" />Store</span><strong>Live</strong></div>
+              <div><span><i className="live" />Stream</span><strong>Live</strong></div>
+              <div><span><i className="live" />Sports</span><strong>Live</strong></div>
+              <div><span><i className="beta" />Jobs</span><strong>Beta</strong></div>
+              <div><span><i />Other services</span><strong>Managed</strong></div>
+            </article>
           </section>
           <section className="admin-attention-panel">
             <div className="section-title compact"><div><p className="private-kicker">ACTION CENTER</p><h2>Needs attention</h2><p>One queue for marketplace and Stream operations.</p></div></div>
             <div>{attention.map(([label, count, to]) => <Link to={to} key={label}><span>{label}</span><strong>{count}</strong><small>{count ? "Review now" : "All clear"}</small></Link>)}</div>
           </section>
-          <section className="management-list">
+          <section className="management-list admin-activity-list">
             {activity.length ? activity.map((item) => (
               <article className="report-card" key={`${item.type}-${item.createdAt}-${item.description}`}>
                 <div>
