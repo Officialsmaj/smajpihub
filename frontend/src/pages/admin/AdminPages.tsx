@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import PrivateSkeleton from "../../components/PrivateSkeleton";
 import PullToRefresh from "../../components/PullToRefresh";
@@ -109,12 +109,6 @@ export const AdminDashboardPage = () => {
       window.clearInterval(interval);
     };
   }, [load]);
-  const cards = [
-    ["totalUsers", "Total Users", "/admin/users", "US"],
-    ["totalProducts", "Total Products", "/admin/products", "PR"],
-    ["totalOrders", "Total Orders", "/admin/orders", "OR"],
-    ["completedOrders", "Completed Orders", "/admin/orders", "OK"],
-  ] as const;
   const attention = [
     ["Pending products", stats?.pendingProducts || 0, "/admin/products"],
     ["Seller applications", stats?.pendingOnboarding || 0, "/admin/onboarding"],
@@ -147,6 +141,8 @@ export const AdminDashboardPage = () => {
     });
     return [...countries.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [dashboardUsers]);
+  const completionRate = Math.min(100, Math.round(((Number(stats?.completedOrders || 0)) / Math.max(Number(stats?.totalOrders || 0), 1)) * 100));
+  const monthlyOrderMaximum = Math.max(...monthlyOperations.map((month) => month.orders), 1);
 
   return (
     <main className="private-page admin-dashboard-page">
@@ -160,27 +156,23 @@ export const AdminDashboardPage = () => {
       {!stats ? <PrivateSkeleton variant="stats" count={6} /> : (
         <>
           <div className="private-alert admin-live-status"><i /> Live operations · updated {updatedLabel}</div>
-          <section className="stats-grid admin-stats admin-summary-stats">
-            {cards.map(([key, label, to, icon]) => <Link to={to} key={key}><i>{icon}</i><span>{label}</span><strong>{stats[key] || 0}</strong><small>View details →</small></Link>)}
-            <Link to="/admin/stream"><i>ST</i><span>Published Stream titles</span><strong>{streamOverview?.stats.publishedVideos || 0}</strong><small>View details →</small></Link>
-          </section>
-          <section className="admin-dashboard-panels">
-            <article className="admin-chart-card">
-              <header><div><p className="private-kicker">PLATFORM OVERVIEW</p><h2>Live operations</h2></div><span>All time</span></header>
-              <div className="admin-operation-chart">
-                {cards.map(([key, label]) => {
-                  const maximum = Math.max(...cards.map(([metric]) => Number(stats[metric] || 0)), 1);
-                  return <div key={key}><span>{label}</span><i><b style={{ width: Math.max(5, (Number(stats[key] || 0) / maximum) * 100) + "%" }} /></i><strong>{stats[key] || 0}</strong></div>;
-                })}
+          <section className="admin-tail-overview">
+            <div className="admin-tail-left">
+              <div className="admin-tail-metrics">
+                <Link to="/admin/users"><i>US</i><span>Total Users</span><strong>{stats.totalUsers || 0}</strong><small>Live users</small></Link>
+                <Link to="/admin/orders"><i>OR</i><span>Total Orders</span><strong>{stats.totalOrders || 0}</strong><small>{stats.pendingOrders || 0} pending</small></Link>
               </div>
-            </article>
-            <article className="admin-chart-card admin-service-card">
-              <header><div><p className="private-kicker">SERVICE STATUS</p><h2>SMAJ ecosystem</h2></div><Link to="/admin/modules/25-analytics/services-usage">View all</Link></header>
-              <div><span><i className="live" />Store</span><strong>Live</strong></div>
-              <div><span><i className="live" />Stream</span><strong>Live</strong></div>
-              <div><span><i className="live" />Sports</span><strong>Live</strong></div>
-              <div><span><i className="beta" />Jobs</span><strong>Beta</strong></div>
-              <div><span><i />Other services</span><strong>Managed</strong></div>
+              <article className="admin-monthly-sales">
+                <header><h2>Monthly Sales</h2><span>⋮</span></header>
+                <div>{monthlyOperations.map((month, index) => <i key={index} style={{ height: Math.max(4, (month.orders / monthlyOrderMaximum) * 100) + "%" }} title={month.orders + " orders"} />)}</div>
+                <footer>{["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((month) => <span key={month}>{month}</span>)}</footer>
+              </article>
+            </div>
+            <article className="admin-monthly-target">
+              <header><h2>Monthly Target</h2><p>Completed marketplace orders</p></header>
+              <div className="admin-target-gauge" style={{ "--admin-target": completionRate + "%" } as CSSProperties}><span><strong>{completionRate}%</strong><small>Live completion</small></span></div>
+              <p>{completionRate >= 75 ? "Great progress. Keep up your good work!" : "Track pending orders to improve completion."}</p>
+              <footer><span>Target<strong>{stats.totalOrders || 0}</strong></span><span>Completed<strong>{stats.completedOrders || 0}</strong></span><span>Pending<strong>{stats.pendingOrders || 0}</strong></span></footer>
             </article>
           </section>
           <section className="admin-attention-panel">
