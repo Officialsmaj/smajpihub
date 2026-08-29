@@ -130,7 +130,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           {adminSearch.trim() ? (
             <div className="admin-search-results">
               {searchResults.length ? searchResults.map((item) => (
-                <button type="button" key={item.group + "-" + item.label} onClick={() => { setAdminSearch(""); setMobileSidebarOpen(false); navigate(item.to); }}>
+                <button type="button" key={item.to + "-" + item.label} onClick={() => { setAdminSearch(""); setMobileSidebarOpen(false); navigate(item.to); }}>
                   {item.icon}<span>{item.label}</span>
                 </button>
               )) : <button type="submit">Open Admin Dashboard</button>}

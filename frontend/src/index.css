@@ -20605,6 +20605,41 @@ svg {
   .admin-mobile-bottom-nav svg{font-size:21px}
 }
 
+/* Admin navigation: explicit device-size guarantees. */
+@media (min-width:1024px){
+  .admin-shell .private-sidebar{min-width:0;overflow:hidden}
+  .admin-shell .admin-navigation{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .admin-shell .private-content{min-width:0}
+}
+@media (min-width:768px) and (max-width:1023px){
+  .admin-shell .private-sidebar,
+  .admin-shell .private-sidebar.private-sidebar-collapsed{width:340px;max-width:46vw}
+  .admin-shell .private-content{padding:24px 24px 90px}
+  .admin-shell .admin-search-results{right:0;left:auto;width:min(420px,calc(100vw - 96px))}
+}
+@media (max-width:767px){
+  .admin-shell .private-header{grid-template-columns:42px 40px minmax(0,1fr)}
+  .admin-shell .private-sidebar,
+  .admin-shell .private-sidebar.private-sidebar-collapsed{width:min(92vw,340px);max-width:none;padding:18px 12px}
+  .admin-shell .private-content{width:100%;padding:16px 12px 86px}
+  .admin-shell .admin-search-results{position:fixed;top:62px;right:10px;left:10px;width:auto;max-height:min(60vh,420px);overflow-y:auto}
+  .admin-nav-group-toggle{min-height:46px}
+  .admin-shell .private-sidebar .admin-nav-children a,
+  .admin-shell .private-sidebar .admin-nav-children button{min-height:40px;font-size:12px}
+  .admin-summary-stats{grid-template-columns:1fr}
+  .admin-hero-list>article>div:last-child{grid-template-columns:1fr}
+  .admin-mobile-bottom-nav{height:calc(64px + env(safe-area-inset-bottom));padding-inline:4px}
+}
+@media (max-width:479px){
+  .admin-shell .private-header{grid-template-columns:42px minmax(0,1fr)}
+  .admin-shell .private-brand{display:none}
+  .admin-shell .admin-header-search{grid-column:2}
+  .admin-shell .admin-header-search input{font-size:16px}
+  .admin-mobile-bottom-nav a,
+  .admin-mobile-bottom-nav button{font-size:8px}
+  .admin-mobile-bottom-nav svg{font-size:20px}
+}
+
 /* One accessible popup queue for application success and error feedback. */
 [data-feedback-source="true"]{display:none!important}
 .global-feedback-center{position:fixed;z-index:10000;top:18px;right:18px;width:min(400px,calc(100vw - 32px));display:grid;gap:10px;pointer-events:none}
