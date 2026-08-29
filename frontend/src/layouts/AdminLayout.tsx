@@ -16,6 +16,9 @@ import LiveTvOutlinedIcon from "@mui/icons-material/LiveTvOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
 import { useAuthContext } from "../contexts/AuthContext";
 import logoImage from "/logo.png";
 import ConfirmSignOutModal from "../components/ConfirmSignOutModal";
@@ -50,6 +53,8 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   const [showSignOut, setShowSignOut] = useState(false);
   const [adminSearch, setAdminSearch] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<number[]>([1]);
+  const [mobileUtilitiesOpen, setMobileUtilitiesOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const adminName = user?.displayName || user?.username || user?.piUsername || "Admin";
@@ -118,9 +123,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <div className="private-shell admin-shell">
+    <div className={"private-shell admin-shell " + (mobileUtilitiesOpen ? "admin-utilities-open" : "")}>
       <header className="private-header">
-        <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={() => setMobileSidebarOpen((open) => !open)} aria-label={mobileSidebarOpen ? "Close admin menu" : "Open admin menu"}>
+        <button className="private-menu-toggle admin-mobile-menu-toggle" type="button" onClick={() => { setMobileSidebarOpen((open) => !open); setNotificationsOpen(false); }} aria-label={mobileSidebarOpen ? "Close admin menu" : "Open admin menu"}>
           {mobileSidebarOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
         <Link to="/admin" className="private-brand"><img src={logoImage} alt="" /><span>SMAJ ADMIN</span></Link>
@@ -138,6 +143,22 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           ) : null}
         </form>
         <div className="private-user-pill">Administrator · @{user.piUsername || user.username}</div>
+        <button className="admin-mobile-more" type="button" onClick={() => { setMobileUtilitiesOpen((open) => !open); setNotificationsOpen(false); }} aria-label="Toggle admin utilities" aria-expanded={mobileUtilitiesOpen}><MoreHorizOutlinedIcon /></button>
+        <div className="admin-mobile-utilities">
+          <button type="button" aria-label="Toggle dark mode"><DarkModeOutlinedIcon /></button>
+          <button className="admin-notification-trigger" type="button" onClick={() => setNotificationsOpen((open) => !open)} aria-label="Open notifications" aria-expanded={notificationsOpen}><NotificationsNoneOutlinedIcon /><i /></button>
+          <button className="admin-mobile-profile" type="button"><span>{user.avatar ? <img src={user.avatar} alt="" /> : adminInitial}</span><b>{adminName}</b><ExpandMoreOutlinedIcon /></button>
+        </div>
+        {notificationsOpen ? <section className="admin-notification-popover" aria-label="Admin notifications">
+          <header><h2>Notification</h2><button type="button" onClick={() => setNotificationsOpen(false)} aria-label="Close notifications"><CloseIcon /></button></header>
+          <div>
+            <Link to="/admin/onboarding" onClick={() => setNotificationsOpen(false)}><span>SV</span><p><strong>Seller verification requests need review</strong><small>Verification · 5 min ago</small></p></Link>
+            <Link to="/admin/products" onClick={() => setNotificationsOpen(false)}><span>PR</span><p><strong>Products are waiting for approval</strong><small>Store · 8 min ago</small></p></Link>
+            <Link to="/admin/reports" onClick={() => setNotificationsOpen(false)}><span>TS</span><p><strong>New Trust &amp; Safety report received</strong><small>Reports · 15 min ago</small></p></Link>
+            <Link to="/admin/stream/moderation" onClick={() => setNotificationsOpen(false)}><span>ST</span><p><strong>Stream content entered moderation</strong><small>Stream · 1 hour ago</small></p></Link>
+          </div>
+          <Link className="admin-notification-all" to="/admin/modules/21-communications/notifications" onClick={() => setNotificationsOpen(false)}>View All Notification</Link>
+        </section> : null}
       </header>
       <div className={`private-body ${sidebarCollapsed ? "private-body-collapsed" : ""}`}>
         <aside id="admin-mobile-sidebar" className={`private-sidebar ${sidebarCollapsed ? "private-sidebar-collapsed" : ""} ${mobileSidebarOpen ? "private-sidebar-open" : ""}`}>
