@@ -20925,6 +20925,14 @@ svg {
     display: none;
   }
 
+  body.desktop-admin-route {
+    overflow: auto;
+  }
+
+  .mobile-tablet-app.desktop-admin-app {
+    display: block;
+  }
+
   .desktop-access-block {
     position: fixed;
     inset: 0;
