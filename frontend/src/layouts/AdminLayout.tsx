@@ -30,7 +30,7 @@ import { adminNavigation, searchableAdminNavigation, type AdminNavGroup } from "
 
 const SIDEBAR_STORAGE_KEY = "smaj_private_sidebar_collapsed";
 const LAST_PRIVATE_ROUTE_KEY = "smaj_last_private_route";
-const ADMIN_THEME_STORAGE_KEY = "smaj_admin_theme";
+const ADMIN_THEME_STORAGE_KEY = "smaj_admin_theme_v3";
 const groupIcon = (icon: AdminNavGroup["icon"]) => icon === "overview" ? <DashboardOutlinedIcon /> : icon === "users" ? <PeopleOutlineIcon /> : icon === "payments" ? <ReceiptLongOutlinedIcon /> : icon === "safety" ? <ShieldOutlinedIcon /> : icon === "system" ? <SettingsOutlinedIcon /> : <Inventory2OutlinedIcon />;
 
 const adminSearchItems = [

@@ -20764,6 +20764,67 @@ svg {
 .admin-workspace-table{overflow:hidden;background:var(--smaj-card);border:1px solid var(--smaj-border);border-radius:13px}.admin-workspace-table>header{padding:18px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid var(--smaj-border)}.admin-workspace-table h2,.admin-workspace-table p{margin:0}.admin-workspace-table h2{color:var(--smaj-text);font-size:17px}.admin-workspace-table p{margin-top:4px;color:var(--smaj-text-secondary);font-size:10px}.admin-workspace-tools{display:flex;gap:9px}.admin-workspace-tools label{min-width:240px;height:40px;padding:0 10px;display:flex;align-items:center;gap:8px;background:var(--smaj-input);border:1px solid var(--smaj-border);border-radius:8px}.admin-workspace-tools label svg{color:var(--smaj-text-secondary);font-size:18px}.admin-workspace-tools input{min-width:0;width:100%;color:var(--smaj-text);background:transparent;border:0;outline:0;font:inherit;font-size:11px}.admin-workspace-tools select{height:40px;padding:0 10px;color:var(--smaj-text);background:var(--smaj-input);border:1px solid var(--smaj-border);border-radius:8px;font:inherit;font-size:11px}
 .admin-workspace-rows{min-width:760px}.admin-workspace-rows>.heading,.admin-workspace-rows>article{padding:12px 18px;display:grid;grid-template-columns:minmax(170px,1.25fr) minmax(140px,1fr) 100px 145px 62px;align-items:center;gap:14px;border-bottom:1px solid var(--smaj-border)}.admin-workspace-rows>.heading{color:var(--smaj-text-secondary);background:var(--smaj-secondary-bg);font-size:9px;font-weight:800;text-transform:uppercase}.admin-workspace-rows>article:last-child{border-bottom:0}.admin-workspace-rows article>div{min-width:0;display:grid}.admin-workspace-rows article strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--smaj-text);font-size:11px}.admin-workspace-rows article small,.admin-workspace-rows article>span,.admin-workspace-rows time{margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--smaj-text-secondary);font-size:9px}.admin-workspace-rows em{width:fit-content;padding:5px 8px;color:#027a48;background:#ecfdf3;border-radius:999px;font-size:8px;font-style:normal;font-weight:800;text-transform:capitalize}.admin-workspace-rows em.pending,.admin-workspace-rows em.open{color:#b54708;background:#fffaeb}.admin-workspace-rows em.failed,.admin-workspace-rows em.blocked,.admin-workspace-rows em.rejected,.admin-workspace-rows em.cancelled{color:#b42318;background:#fef3f2}.admin-workspace-rows article>a{color:#465fff;font-size:10px;font-weight:800;text-decoration:none}
 .admin-theme-dark .admin-module-head button,.admin-theme-dark .admin-workspace-kpis article,.admin-theme-dark .admin-workspace-table{background:#1d2939;border-color:#344054}.admin-theme-dark .admin-module-head button:first-child{background:#465fff;border-color:#465fff}.admin-theme-dark .admin-workspace-rows>.heading{background:#101828}
+
+/* Optional admin dark mode must cover every nested management workspace. */
+.admin-shell.admin-theme-dark,
+.admin-shell.admin-theme-dark .private-body,
+.admin-shell.admin-theme-dark .private-content,
+.admin-shell.admin-theme-dark .private-page {
+  color-scheme: dark;
+  color: #f2f4f7 !important;
+  background: #101828 !important;
+}
+.admin-shell.admin-theme-dark .private-header,
+.admin-shell.admin-theme-dark .private-sidebar {
+  color: #f2f4f7 !important;
+  background: #1d2939 !important;
+  border-color: #344054 !important;
+}
+.admin-shell.admin-theme-dark .private-brand,
+.admin-shell.admin-theme-dark .private-sidebar-brand,
+.admin-shell.admin-theme-dark .private-user-pill,
+.admin-shell.admin-theme-dark .private-sidebar-logout,
+.admin-shell.admin-theme-dark .private-menu-toggle,
+.admin-shell.admin-theme-dark .admin-mobile-more,
+.admin-shell.admin-theme-dark .admin-mobile-utilities > button,
+.admin-shell.admin-theme-dark .admin-mobile-profile {
+  color: #f2f4f7 !important;
+}
+.admin-shell.admin-theme-dark :is(input,select,textarea) {
+  color: #f2f4f7;
+  background-color: #101828;
+  border-color: #475467;
+}
+.admin-shell.admin-theme-dark :is(input,textarea)::placeholder { color: #98a2b3; }
+.admin-shell.admin-theme-dark :is(table,thead,tbody,tr,th,td) { border-color: #344054; }
+.admin-shell.admin-theme-dark .admin-mobile-bottom-nav {
+  color: #d0d5dd;
+  background: #1d2939;
+  border-color: #344054;
+}
+.admin-shell.admin-theme-dark .admin-mobile-bottom-nav :is(a,button) { color: #98a2b3; }
+.admin-shell.admin-theme-dark .admin-mobile-bottom-nav :is(a.active,button.active) { color: #7592ff; }
+
+/* Stream management uses cinematic dark tokens publicly; inside the light admin it follows the admin palette. */
+.admin-shell.admin-theme-light .sw-page {
+  --stream-bg: #f7f9fc;
+  --stream-surface: #ffffff;
+  --stream-elevated: #f2f4f7;
+  --stream-text: #101828;
+  --stream-muted: #667085;
+  --stream-border: #d0d5dd;
+  color-scheme: light;
+  color: #101828;
+  background: #f7f9fc;
+}
+.admin-shell.admin-theme-light .sw-management > aside { color: #101828; background: #ffffff; }
+.admin-shell.admin-theme-light :is(.sw-r2-search,.sw-r2-results button,.sw-r2-selected,.sw-r2-file input,.sw-archive-import input,.sw-archive-import select) {
+  color: #101828;
+  background: #ffffff;
+  border-color: #d0d5dd;
+}
+.admin-shell.admin-theme-light :is(.sw-r2-search input,.sw-r2-file input) { color: #101828; }
+.admin-shell.admin-theme-light .sw-admin-list article { color: #101828; background: #ffffff; border-color: #d0d5dd; }
 @media(max-width:1023px){.admin-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-workspace-table{overflow-x:auto}}
 @media(max-width:700px){.admin-module-head{align-items:flex-start;flex-direction:column}.admin-module-head>div:last-child,.admin-module-head button{width:100%}.admin-module-head button{justify-content:center}.admin-workspace-kpis{grid-template-columns:1fr 1fr}.admin-workspace-table>header{align-items:stretch;flex-direction:column}.admin-workspace-tools{flex-direction:column}.admin-workspace-tools label{min-width:0}.admin-workspace-tools select{width:100%}}
 @media(max-width:420px){.admin-workspace-kpis{grid-template-columns:1fr}}
