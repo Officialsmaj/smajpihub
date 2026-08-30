@@ -20818,12 +20818,12 @@ svg {
   background: #f7f9fc;
 }
 .admin-shell.admin-theme-light .sw-management > aside { color: #101828; background: #ffffff; }
-.admin-shell.admin-theme-light :is(.sw-r2-search,.sw-r2-results button,.sw-r2-selected,.sw-r2-file input,.sw-archive-import input,.sw-archive-import select) {
+.admin-shell.admin-theme-light :is(.sw-cloudflare-search,.sw-cloudflare-results button,.sw-cloudflare-selected,.sw-cloudflare-file input,.sw-archive-import input,.sw-archive-import select) {
   color: #101828;
   background: #ffffff;
   border-color: #d0d5dd;
 }
-.admin-shell.admin-theme-light :is(.sw-r2-search input,.sw-r2-file input) { color: #101828; }
+.admin-shell.admin-theme-light :is(.sw-cloudflare-search input,.sw-cloudflare-file input) { color: #101828; }
 .admin-shell.admin-theme-light .sw-admin-list article { color: #101828; background: #ffffff; border-color: #d0d5dd; }
 @media(max-width:1023px){.admin-workspace-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-workspace-table{overflow-x:auto}}
 @media(max-width:700px){.admin-module-head{align-items:flex-start;flex-direction:column}.admin-module-head>div:last-child,.admin-module-head button{width:100%}.admin-module-head button{justify-content:center}.admin-workspace-kpis{grid-template-columns:1fr 1fr}.admin-workspace-table>header{align-items:stretch;flex-direction:column}.admin-workspace-tools{flex-direction:column}.admin-workspace-tools label{min-width:0}.admin-workspace-tools select{width:100%}}

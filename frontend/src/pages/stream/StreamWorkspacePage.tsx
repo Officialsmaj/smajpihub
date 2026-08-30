@@ -66,7 +66,7 @@ import {
 } from "../../lib/streamSubscription";
 import { requestPiBrowserHandoff } from "../../lib/piBrowserHandoff";
 
-import { uploadR2Movie } from '../../lib/streamR2';
+import { uploadCloudflareMovie } from '../../lib/streamCloudflare';
 
 export type StreamPageKind =
   | "movies"
@@ -1217,12 +1217,12 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [r2Query, setR2Query] = useState('');
-  const [r2Results, setR2Results] = useState<StreamCatalogTitle[]>([]);
-  const [r2Movie, setR2Movie] = useState<StreamCatalogTitle | null>(null);
-  const [r2File, setR2File] = useState<File | null>(null);
-  const [r2Progress, setR2Progress] = useState(0);
-  const [r2Searching, setR2Searching] = useState(false);
+  const [movieQuery, setMovieQuery] = useState('');
+  const [movieResults, setMovieResults] = useState<StreamCatalogTitle[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<StreamCatalogTitle | null>(null);
+  const [movieFile, setMovieFile] = useState<File | null>(null);
+  const [movieProgress, setMovieProgress] = useState(0);
+  const [movieSearching, setMovieSearching] = useState(false);
   const load = useCallback(async () => {
     try {
       const data = await getStreamAdminOverview();
@@ -1265,25 +1265,25 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
       setSaving(false);
     }
   };
-  const searchR2Movies = async () => {
-    if (!r2Query.trim()) return;
+  const searchCloudflareMovies = async () => {
+    if (!movieQuery.trim()) return;
     try {
-      setR2Searching(true); setMessage(''); setR2Movie(null);
-      const data = await searchStreamCatalog(r2Query.trim());
-      setR2Results(data.results.filter(item => item.mediaType === 'movie').slice(0, 8));
+      setMovieSearching(true); setMessage(''); setSelectedMovie(null);
+      const data = await searchStreamCatalog(movieQuery.trim());
+      setMovieResults(data.results.filter(item => item.mediaType === 'movie').slice(0, 8));
     } catch { setMessage('TMDB movies could not be searched.'); }
-    finally { setR2Searching(false); }
+    finally { setMovieSearching(false); }
   };
   const uploadMovie = async () => {
-    if (!r2Movie || !r2File) return;
+    if (!selectedMovie || !movieFile) return;
     try {
-      setSaving(true); setMessage(''); setR2Progress(0);
-      await uploadR2Movie(r2Movie.tmdbId, r2File, setR2Progress);
-      setMessage(`${r2Movie.title} is uploaded and available to watch.`);
-      setR2File(null); setR2Movie(null); setR2Results([]); setR2Query('');
+      setSaving(true); setMessage(''); setMovieProgress(0);
+      await uploadCloudflareMovie(selectedMovie.tmdbId, movieFile, setMovieProgress);
+      setMessage(`${selectedMovie.title} was uploaded. Cloudflare Stream is now processing it.`);
+      setMovieFile(null); setSelectedMovie(null); setMovieResults([]); setMovieQuery('');
       await load();
     } catch (error) {
-      setMessage((error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || (error as Error).message || 'The R2 movie upload failed.');
+      setMessage((error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || (error as Error).message || 'The Cloudflare Stream movie upload failed.');
     } finally { setSaving(false); }
   };
   const videos = overview?.recent || [];
@@ -1303,12 +1303,12 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
           : "Not available";
   const catalogueStateDetail = (video: StreamAdminOverview["recent"][number]) =>
     video.processingStatus === "ready" && video.playbackAllowed === true
-      ? "The R2 video is published on SMAJ Stream."
+      ? "The Cloudflare Stream video is published on SMAJ Stream."
       : video.processingStatus === "error" || video.status === "failed"
-        ? video.processingError || "Upload again after checking the R2 bucket CORS settings."
+        ? video.processingError || "Cloudflare could not process this video. Upload it again or review the Stream dashboard."
         : video.processingStatus === "uploading"
           ? "Keep this page open until the upload reaches 100%."
-          : "No playable R2 video has been completed for this title.";
+          : "The video has not finished processing in Cloudflare Stream.";
   return (
     <div className="sw-admin-unified">
       <section>
@@ -1391,17 +1391,17 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
         ) : null}
         {kind === "reports" || kind === "catalog-admin" ? (
           <>
-          {kind === "catalog-admin" ? <form className="sw-r2-upload" onSubmit={event => { event.preventDefault(); void uploadMovie(); }}>
+          {kind === "catalog-admin" ? <form className="sw-cloudflare-upload" onSubmit={event => { event.preventDefault(); void uploadMovie(); }}>
             <h2>Add movie</h2>
-            <p>Choose the TMDB title, then upload only its MP4 movie file to the private SMAJ Stream R2 bucket.</p>
-            <div className="sw-r2-search"><SearchRoundedIcon /><input value={r2Query} onChange={event => setR2Query(event.target.value)} placeholder="Search TMDB movies" /><button type="button" onClick={() => void searchR2Movies()} disabled={r2Searching || !r2Query.trim()}>{r2Searching ? "Searching..." : "Search"}</button></div>
-            {r2Results.length ? <div className="sw-r2-results">{r2Results.map(movie => <button type="button" key={movie.id} className={r2Movie?.tmdbId === movie.tmdbId ? "selected" : ""} onClick={() => setR2Movie(movie)}>{movie.posterUrl ? <img src={movie.posterUrl} alt="" /> : <span className="poster-empty" />}<span><b>{movie.title}</b><small>{movie.releaseDate?.slice(0, 4) || "Year unavailable"} · TMDB #{movie.tmdbId}</small></span></button>)}</div> : null}
-            {r2Movie ? <div className="sw-r2-selected">{r2Movie.posterUrl ? <img src={r2Movie.posterUrl} alt="" /> : null}<div><small>SELECTED FROM TMDB</small><strong>{r2Movie.title}</strong><p>{r2Movie.overview || "No overview available."}</p></div></div> : null}
-            <label className="sw-r2-file">Movie file (.mp4)<input type="file" accept="video/mp4,.mp4" onChange={event => setR2File(event.target.files?.[0] || null)} /></label>
-            {saving ? <div className="sw-r2-progress"><span style={{ width: `${r2Progress}%` }} /><b>{r2Progress}% uploaded</b></div> : null}
-            <button className="sw-admin-save" type="submit" disabled={saving || !r2Movie || !r2File}>{saving ? "Uploading movie..." : "Upload movie to R2"}</button>
+            <p>Choose the TMDB title, then upload the movie. Cloudflare Stream automatically converts it for reliable browser playback.</p>
+            <div className="sw-cloudflare-search"><SearchRoundedIcon /><input value={movieQuery} onChange={event => setMovieQuery(event.target.value)} placeholder="Search TMDB movies" /><button type="button" onClick={() => void searchCloudflareMovies()} disabled={movieSearching || !movieQuery.trim()}>{movieSearching ? "Searching..." : "Search"}</button></div>
+            {movieResults.length ? <div className="sw-cloudflare-results">{movieResults.map(movie => <button type="button" key={movie.id} className={selectedMovie?.tmdbId === movie.tmdbId ? "selected" : ""} onClick={() => setSelectedMovie(movie)}>{movie.posterUrl ? <img src={movie.posterUrl} alt="" /> : <span className="poster-empty" />}<span><b>{movie.title}</b><small>{movie.releaseDate?.slice(0, 4) || "Year unavailable"} · TMDB #{movie.tmdbId}</small></span></button>)}</div> : null}
+            {selectedMovie ? <div className="sw-cloudflare-selected">{selectedMovie.posterUrl ? <img src={selectedMovie.posterUrl} alt="" /> : null}<div><small>SELECTED FROM TMDB</small><strong>{selectedMovie.title}</strong><p>{selectedMovie.overview || "No overview available."}</p></div></div> : null}
+            <label className="sw-cloudflare-file">Movie video file<input type="file" accept="video/*" onChange={event => setMovieFile(event.target.files?.[0] || null)} /></label>
+            {saving ? <div className="sw-cloudflare-progress"><span style={{ width: `${movieProgress}%` }} /><b>{movieProgress}% uploaded</b></div> : null}
+            <button className="sw-admin-save" type="submit" disabled={saving || !selectedMovie || !movieFile}>{saving ? "Uploading movie..." : "Upload to Cloudflare Stream"}</button>
           </form> : null}
-          {kind === "catalog-admin" && message ? <p className={`sw-r2-message ${message.includes("available to watch") ? "success" : "error"}`}>{message}</p> : null}
+          {kind === "catalog-admin" && message ? <p className={`sw-cloudflare-message ${message.includes("was uploaded") ? "success" : "error"}`}>{message}</p> : null}
           <div className="sw-admin-list">
             {rows.map(video => (
               <article key={video.cloudflareUid}>
@@ -1415,9 +1415,9 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                         : "Not attached to the catalogue"
                       : video.moderationReason || "Moderation record"}
                   </p>
-                  {kind === "catalog-admin" ? <small className="sw-r2-state-detail">{catalogueStateDetail(video)}</small> : null}
+                  {kind === "catalog-admin" ? <small className="sw-cloudflare-state-detail">{catalogueStateDetail(video)}</small> : null}
                 </div>
-                {kind === "catalog-admin" ? <em className={`r2-${catalogueState(video).toLowerCase().replaceAll(" ", "-")}`}>{catalogueState(video)}</em> : <em>{video.moderationStatus || "pending"}</em>}
+                {kind === "catalog-admin" ? <em className={`cloudflare-${catalogueState(video).toLowerCase().replaceAll(" ", "-")}`}>{catalogueState(video)}</em> : <em>{video.moderationStatus || "pending"}</em>}
                 <Link to="/admin/stream/moderation">Review</Link>
               </article>
             ))}

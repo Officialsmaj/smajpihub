@@ -2669,23 +2669,23 @@
 @media(max-width:900px){.sw-creators-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.sw-creators-head{padding-right:0}.sw-creators-head>a{position:static;display:inline-block;margin-top:15px}.sw-creator-discovery-tools{grid-template-columns:1fr auto}.sw-creator-discovery-tools>div{grid-column:1/-1}.sw-creator-discovery-tools>span{display:none}.sw-creators-directory{grid-template-columns:1fr}.sw-public-channel-stats{gap:18px;justify-content:space-around}.sw-public-channel-stats b{font-size:16px}}
 
-.sw-r2-upload{margin-bottom:22px;padding:20px;border:1px solid var(--stream-border);border-radius:14px;background:var(--stream-elevated)}
-.sw-r2-upload h2{margin:0 0 6px}.sw-r2-upload>p{margin:0 0 16px;color:var(--stream-muted)}
-.sw-r2-search{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--stream-border);border-radius:10px;background:#0e0d12}
-.sw-r2-search input{min-width:0;border:0;outline:0;background:transparent;color:var(--stream-text)}.sw-r2-search button,.sw-r2-results button{border:0;color:#fff;background:var(--stream-accent)}
-.sw-r2-search button{padding:9px 13px;border-radius:8px;font-weight:800}.sw-r2-search button:disabled{opacity:.45}
-.sw-r2-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.sw-r2-results button{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--stream-border);border-radius:10px;text-align:left;background:#111016}.sw-r2-results button.selected{border-color:var(--stream-accent);box-shadow:0 0 0 1px var(--stream-accent)}
-.sw-r2-results img,.sw-r2-results .poster-empty{width:40px;height:58px;flex:none;border-radius:5px;object-fit:cover;background:#292631}.sw-r2-results span{min-width:0;display:grid;gap:4px}.sw-r2-results b,.sw-r2-results small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sw-r2-results small{color:var(--stream-muted)}
-.sw-r2-selected{display:flex;gap:13px;margin-top:14px;padding:12px;border-radius:11px;background:#111016}.sw-r2-selected>img{width:64px;height:94px;border-radius:7px;object-fit:cover}.sw-r2-selected>div{min-width:0;display:grid;align-content:start;gap:6px}.sw-r2-selected small{color:var(--stream-accent);font-weight:800}.sw-r2-selected strong{font-size:16px}.sw-r2-selected p{margin:0;color:var(--stream-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.sw-r2-file{display:grid;gap:7px;margin-top:14px;color:var(--stream-text);font-weight:800}.sw-r2-file input{padding:11px;border:1px dashed var(--stream-border);border-radius:9px;background:#0e0d12;color:var(--stream-muted)}
-.sw-r2-progress{position:relative;height:34px;margin:13px 0;overflow:hidden;border-radius:9px;background:#25222d}.sw-r2-progress span{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--stream-accent),#a965ff);transition:width .2s}.sw-r2-progress b{position:relative;z-index:1;display:grid;height:100%;place-items:center;color:#fff}
-@media(max-width:560px){.sw-r2-results{grid-template-columns:1fr}}
+.sw-cloudflare-upload{margin-bottom:22px;padding:20px;border:1px solid var(--stream-border);border-radius:14px;background:var(--stream-elevated)}
+.sw-cloudflare-upload h2{margin:0 0 6px}.sw-cloudflare-upload>p{margin:0 0 16px;color:var(--stream-muted)}
+.sw-cloudflare-search{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--stream-border);border-radius:10px;background:#0e0d12}
+.sw-cloudflare-search input{min-width:0;border:0;outline:0;background:transparent;color:var(--stream-text)}.sw-cloudflare-search button,.sw-cloudflare-results button{border:0;color:#fff;background:var(--stream-accent)}
+.sw-cloudflare-search button{padding:9px 13px;border-radius:8px;font-weight:800}.sw-cloudflare-search button:disabled{opacity:.45}
+.sw-cloudflare-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.sw-cloudflare-results button{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--stream-border);border-radius:10px;text-align:left;background:#111016}.sw-cloudflare-results button.selected{border-color:var(--stream-accent);box-shadow:0 0 0 1px var(--stream-accent)}
+.sw-cloudflare-results img,.sw-cloudflare-results .poster-empty{width:40px;height:58px;flex:none;border-radius:5px;object-fit:cover;background:#292631}.sw-cloudflare-results span{min-width:0;display:grid;gap:4px}.sw-cloudflare-results b,.sw-cloudflare-results small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sw-cloudflare-results small{color:var(--stream-muted)}
+.sw-cloudflare-selected{display:flex;gap:13px;margin-top:14px;padding:12px;border-radius:11px;background:#111016}.sw-cloudflare-selected>img{width:64px;height:94px;border-radius:7px;object-fit:cover}.sw-cloudflare-selected>div{min-width:0;display:grid;align-content:start;gap:6px}.sw-cloudflare-selected small{color:var(--stream-accent);font-weight:800}.sw-cloudflare-selected strong{font-size:16px}.sw-cloudflare-selected p{margin:0;color:var(--stream-muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sw-cloudflare-file{display:grid;gap:7px;margin-top:14px;color:var(--stream-text);font-weight:800}.sw-cloudflare-file input{padding:11px;border:1px dashed var(--stream-border);border-radius:9px;background:#0e0d12;color:var(--stream-muted)}
+.sw-cloudflare-progress{position:relative;height:34px;margin:13px 0;overflow:hidden;border-radius:9px;background:#25222d}.sw-cloudflare-progress span{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--stream-accent),#a965ff);transition:width .2s}.sw-cloudflare-progress b{position:relative;z-index:1;display:grid;height:100%;place-items:center;color:#fff}
+@media(max-width:560px){.sw-cloudflare-results{grid-template-columns:1fr}}
 .sw-admin-unified .sw-admin-list article{border-color:var(--stream-border);background:var(--stream-elevated);color:var(--stream-text)}
 .sw-admin-unified .sw-admin-list article>span{color:#c28aff;background:#2a1838}
 .sw-admin-unified .sw-admin-list p{color:var(--stream-muted)}
-.sw-r2-state-detail{display:block;margin-top:5px;color:var(--stream-muted);font-size:10px}
-.sw-admin-unified .sw-admin-list em.r2-ready-to-watch{color:#62d79b;background:#16392b}
-.sw-admin-unified .sw-admin-list em.r2-uploading{color:#f2c968;background:#463817}
-.sw-admin-unified .sw-admin-list em.r2-upload-failed{color:#ff8794;background:#481d25}
-.sw-admin-unified .sw-admin-list em.r2-not-available{color:#c3baca;background:#302c36}
-.sw-r2-message{margin:0 0 14px;padding:11px 13px;border-radius:9px;font-weight:750}.sw-r2-message.success{color:#78e3ad;background:#15392a}.sw-r2-message.error{color:#ff9ca6;background:#421d24}
+.sw-cloudflare-state-detail{display:block;margin-top:5px;color:var(--stream-muted);font-size:10px}
+.sw-admin-unified .sw-admin-list em.cloudflare-ready-to-watch{color:#62d79b;background:#16392b}
+.sw-admin-unified .sw-admin-list em.cloudflare-uploading{color:#f2c968;background:#463817}
+.sw-admin-unified .sw-admin-list em.cloudflare-upload-failed{color:#ff8794;background:#481d25}
+.sw-admin-unified .sw-admin-list em.cloudflare-not-available{color:#c3baca;background:#302c36}
+.sw-cloudflare-message{margin:0 0 14px;padding:11px 13px;border-radius:9px;font-weight:750}.sw-cloudflare-message.success{color:#78e3ad;background:#15392a}.sw-cloudflare-message.error{color:#ff9ca6;background:#421d24}
