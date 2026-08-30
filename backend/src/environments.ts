@@ -101,7 +101,7 @@ const env: Environment = {
   session_debug:
     String(process.env.SESSION_DEBUG || "false").toLowerCase() === "true",
   tmdb_access_token: process.env.TMDB_ACCESS_TOKEN || "",
-  cloudflare_stream_account_id: process.env.CLOUDFLARE_STREAM_ACCOUNT_ID || "",
+  cloudflare_stream_account_id: process.env.CLOUDFLARE_ACCOUNT_ID || process.env.CLOUDFLARE_STREAM_ACCOUNT_ID || "",
   cloudflare_stream_api_token: process.env.CLOUDFLARE_STREAM_API_TOKEN || "",
   youtube_api_key: String(process.env.YOUTUBE_API_KEY || "").trim(),
   youtube_live_channel_ids: String(process.env.YOUTUBE_LIVE_CHANNEL_IDS || "")

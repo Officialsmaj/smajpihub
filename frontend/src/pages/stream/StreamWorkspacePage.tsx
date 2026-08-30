@@ -66,7 +66,7 @@ import {
 } from "../../lib/streamSubscription";
 import { requestPiBrowserHandoff } from "../../lib/piBrowserHandoff";
 
-import { uploadCloudflareMovie } from '../../lib/streamCloudflare';
+import { publishCloudflareMovie, uploadCloudflareMovie, type CloudflareUploadStage } from '../../lib/streamCloudflare';
 
 export type StreamPageKind =
   | "movies"
@@ -1223,6 +1223,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const [movieFile, setMovieFile] = useState<File | null>(null);
   const [movieProgress, setMovieProgress] = useState(0);
   const [movieSearching, setMovieSearching] = useState(false);
+  const [movieUploadStage, setMovieUploadStage] = useState<CloudflareUploadStage | null>(null);
   const load = useCallback(async () => {
     try {
       const data = await getStreamAdminOverview();
@@ -1277,14 +1278,20 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const uploadMovie = async () => {
     if (!selectedMovie || !movieFile) return;
     try {
-      setSaving(true); setMessage(''); setMovieProgress(0);
-      await uploadCloudflareMovie(selectedMovie.tmdbId, movieFile, setMovieProgress);
-      setMessage(`${selectedMovie.title} was uploaded. Cloudflare Stream is now processing it.`);
+      setSaving(true); setMessage(''); setMovieProgress(0); setMovieUploadStage('preparing');
+      const result = await uploadCloudflareMovie(selectedMovie.tmdbId, movieFile, setMovieProgress, setMovieUploadStage);
+      setMessage(result.ready ? `${selectedMovie.title} is ready. Publish it when you are ready.` : `${selectedMovie.title} is uploaded and Cloudflare Stream is processing it.`);
       setMovieFile(null); setSelectedMovie(null); setMovieResults([]); setMovieQuery('');
       await load();
     } catch (error) {
+      setMovieUploadStage('failed');
       setMessage((error as { response?: { data?: { message?: string } }; message?: string }).response?.data?.message || (error as Error).message || 'The Cloudflare Stream movie upload failed.');
     } finally { setSaving(false); }
+  };
+  const publishMovie = async (uid: string) => {
+    try { setSaving(true); setMessage(''); await publishCloudflareMovie(uid); setMessage('Movie published and ready to watch.'); await load(); }
+    catch (error) { setMessage((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Movie could not be published.'); }
+    finally { setSaving(false); }
   };
   const videos = overview?.recent || [];
   const rows =
@@ -1296,11 +1303,15 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
   const catalogueState = (video: StreamAdminOverview["recent"][number]) =>
     video.processingStatus === "ready" && video.playbackAllowed === true
       ? "Ready to watch"
-      : video.processingStatus === "error" || video.status === "failed"
-        ? "Upload failed"
-        : video.processingStatus === "uploading"
-          ? "Uploading"
-          : "Not available";
+      : video.processingStatus === "ready"
+        ? "Ready to publish"
+        : video.processingStatus === "error" || video.status === "failed"
+          ? "Failed"
+          : video.processingStatus === "processing"
+            ? "Processing"
+            : video.processingStatus === "uploading"
+              ? "Uploading"
+              : "Preparing upload";
   const catalogueStateDetail = (video: StreamAdminOverview["recent"][number]) =>
     video.processingStatus === "ready" && video.playbackAllowed === true
       ? "The Cloudflare Stream video is published on SMAJ Stream."
@@ -1398,7 +1409,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
             {movieResults.length ? <div className="sw-cloudflare-results">{movieResults.map(movie => <button type="button" key={movie.id} className={selectedMovie?.tmdbId === movie.tmdbId ? "selected" : ""} onClick={() => setSelectedMovie(movie)}>{movie.posterUrl ? <img src={movie.posterUrl} alt="" /> : <span className="poster-empty" />}<span><b>{movie.title}</b><small>{movie.releaseDate?.slice(0, 4) || "Year unavailable"} · TMDB #{movie.tmdbId}</small></span></button>)}</div> : null}
             {selectedMovie ? <div className="sw-cloudflare-selected">{selectedMovie.posterUrl ? <img src={selectedMovie.posterUrl} alt="" /> : null}<div><small>SELECTED FROM TMDB</small><strong>{selectedMovie.title}</strong><p>{selectedMovie.overview || "No overview available."}</p></div></div> : null}
             <label className="sw-cloudflare-file">Movie video file<input type="file" accept="video/*" onChange={event => setMovieFile(event.target.files?.[0] || null)} /></label>
-            {saving ? <div className="sw-cloudflare-progress"><span style={{ width: `${movieProgress}%` }} /><b>{movieProgress}% uploaded</b></div> : null}
+            {saving && movieUploadStage ? <div className={`sw-cloudflare-progress stage-${movieUploadStage}`}><span style={{ width: `${movieProgress}%` }} /><b>{movieUploadStage === "preparing" ? "Preparing upload" : movieUploadStage === "uploading" ? `Uploading ${movieProgress}%` : movieUploadStage === "processing" ? "Processing" : movieUploadStage === "ready" ? "Ready to watch" : "Failed"}</b></div> : null}
             <button className="sw-admin-save" type="submit" disabled={saving || !selectedMovie || !movieFile}>{saving ? "Uploading movie..." : "Upload to Cloudflare Stream"}</button>
           </form> : null}
           {kind === "catalog-admin" && message ? <p className={`sw-cloudflare-message ${message.includes("was uploaded") ? "success" : "error"}`}>{message}</p> : null}
@@ -1418,7 +1429,7 @@ const Admin = ({ kind }: { kind: StreamPageKind }) => {
                   {kind === "catalog-admin" ? <small className="sw-cloudflare-state-detail">{catalogueStateDetail(video)}</small> : null}
                 </div>
                 {kind === "catalog-admin" ? <em className={`cloudflare-${catalogueState(video).toLowerCase().replaceAll(" ", "-")}`}>{catalogueState(video)}</em> : <em>{video.moderationStatus || "pending"}</em>}
-                <Link to="/admin/stream/moderation">Review</Link>
+                {kind === "catalog-admin" && video.processingStatus === "ready" && video.playbackAllowed !== true ? <button className="sw-cloudflare-publish" type="button" disabled={saving} onClick={() => void publishMovie(video.cloudflareUid)}>Publish</button> : <Link to="/admin/stream/moderation">Review</Link>}
               </article>
             ))}
             {overview && !rows.length ? (

@@ -1073,28 +1073,35 @@ const mountStreamEndpoints = (router: Router) => {
     });
   });
 
-  router.post('/admin/cloudflare/movies/upload/start', async (req, res) => {
+  router.post('/upload-url', async (req, res) => {
     const admin = await requireStreamAdmin(req, res); if (!admin) return;
     if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token) return res.status(503).json({ error: 'cloudflare_stream_not_configured', message: 'Cloudflare Stream is not configured on the backend.' });
     const tmdbId = Number(req.body?.tmdbId); const fileSize = Number(req.body?.fileSize);
     const fileName = String(req.body?.fileName || 'movie.mp4').trim().slice(0, 180);
     const maxDurationSeconds = Math.max(60, Math.min(28_800, Number(req.body?.maxDurationSeconds) || 14_400));
     if (!Number.isInteger(tmdbId) || tmdbId < 1) return res.status(400).json({ error: 'invalid_movie', message: 'Choose a valid TMDB movie.' });
-    if (!Number.isFinite(fileSize) || fileSize < 1) return res.status(400).json({ error: 'invalid_file', message: 'Choose a valid movie video file.' });
+    if (!Number.isSafeInteger(fileSize) || fileSize < 1 || fileSize > 30 * 1024 * 1024 * 1024) return res.status(400).json({ error: 'invalid_file', message: 'Choose a video file smaller than 30 GB.' });
     try {
       const movie = await tmdbGet<TmdbMedia & { genres?: Array<{ id: number; name: string }> }>(`/movie/${tmdbId}`, { language: 'en-US' });
-      const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      const cloudflare = await axios.post<{ success: boolean; result?: { uid?: string; uploadURL?: string }; errors?: Array<{ message?: string }> }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/direct_upload`, { maxDurationSeconds, expiry, requireSignedURLs: false, meta: { name: fileName, smajTmdbId: String(tmdbId), smajType: 'movie' } }, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, 'Content-Type': 'application/json' }, timeout: 15_000 });
-      const uid = cloudflare.data.result?.uid; const uploadURL = cloudflare.data.result?.uploadURL;
-      if (!cloudflare.data.success || !uid || !uploadURL) throw new Error(cloudflare.data.errors?.[0]?.message || 'Cloudflare did not create an upload URL.');
+      const uploadMetadata = [['name', fileName], ['maxdurationseconds', String(maxDurationSeconds)], ['requiresignedurls', 'false']].map(([key, value]) => `${key} ${Buffer.from(value).toString('base64')}`).join(',');
+      const cloudflare = await axios.post(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream?direct_user=true`, null, {
+        headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, 'Tus-Resumable': '1.0.0', 'Upload-Length': String(fileSize), 'Upload-Metadata': uploadMetadata },
+        timeout: 15_000, maxRedirects: 0, validateStatus: status => status === 201,
+      });
+      const uploadURL = String(cloudflare.headers.location || ''); const uid = String(cloudflare.headers['stream-media-id'] || '');
+      if (!uploadURL || !uid) throw new Error('Cloudflare created no TUS upload location or Stream UID.');
       const now = new Date(); const title = String(movie.title || 'TMDB movie').slice(0, 180);
-      const record = { cloudflareUid: uid, contentSource: 'cloudflare_stream', contentType: 'movie', tmdbId, title, description: String(movie.overview || '').slice(0, 4000), overview: String(movie.overview || '').slice(0, 4000), posterPath: movie.poster_path || null, backdropPath: movie.backdrop_path || null, releaseDate: movie.release_date || null, year: movie.release_date ? Number(movie.release_date.slice(0, 4)) || null : null, genres: Array.isArray(movie.genres) ? movie.genres.map(genre => ({ id: genre.id, name: genre.name })) : [], rating: Number.isFinite(movie.vote_average) ? movie.vote_average : null, fileName, fileSize, status: 'awaiting_upload', processingStatus: 'awaiting_upload', processingError: null, moderationStatus: 'approved', visibility: 'private', playbackAllowed: false, downloadAllowed: false, creatorName: 'SMAJ Stream', catalogAttachment: { tmdbId, mediaType: 'movie', title, attachedAt: now, attachedBy: String(admin._id) }, updatedAt: now, createdAt: now };
-      await req.app.locals.streamContentCollection.deleteMany({ 'catalogAttachment.tmdbId': tmdbId, 'catalogAttachment.mediaType': 'movie', contentSource: 'cloudflare_stream' });
+      const record = { cloudflareUid: uid, contentSource: 'cloudflare_stream', contentType: 'movie', tmdbId, title, description: String(movie.overview || '').slice(0, 4000), overview: String(movie.overview || '').slice(0, 4000), posterPath: movie.poster_path || null, backdropPath: movie.backdrop_path || null, releaseDate: movie.release_date || null, year: movie.release_date ? Number(movie.release_date.slice(0, 4)) || null : null, genres: Array.isArray(movie.genres) ? movie.genres.map(genre => ({ id: genre.id, name: genre.name })) : [], rating: Number.isFinite(movie.vote_average) ? movie.vote_average : null, fileName, fileSize, uploadProtocol: 'tus', status: 'preparing', processingStatus: 'preparing', processingError: null, moderationStatus: 'approved', visibility: 'private', playbackAllowed: false, downloadAllowed: false, creatorName: 'SMAJ Stream', catalogAttachment: { tmdbId, mediaType: 'movie', title, attachedAt: now, attachedBy: String(admin._id) }, updatedAt: now, createdAt: now };
       await req.app.locals.streamContentCollection.insertOne(record);
-      return res.status(201).json({ uid, uploadURL, expiresAt: expiry });
+      return res.status(201).json({ uid, uploadURL, protocol: 'tus', status: 'preparing' });
     } catch (error) {
-      const message = axios.isAxiosError(error) ? String(error.response?.data?.errors?.[0]?.message || error.message) : error instanceof Error ? error.message : 'Could not start the Cloudflare Stream upload.';
-      return res.status(502).json({ error: 'movie_upload_start_failed', message });
+      const responseData = axios.isAxiosError(error) ? error.response?.data as { errors?: Array<{ code?: number; message?: string }>; messages?: Array<{ code?: number; message?: string }> } | undefined : undefined;
+      const diagnostics = { httpStatus: axios.isAxiosError(error) ? error.response?.status || null : null, errors: responseData?.errors || [], messages: responseData?.messages || [], errorCodes: [...(responseData?.errors || []), ...(responseData?.messages || [])].map(item => item.code).filter(code => code !== undefined) };
+      console.error('[Cloudflare Stream TUS] upload URL request failed', diagnostics);
+      const details = [...diagnostics.errors, ...diagnostics.messages].map(item => item.message).filter(Boolean).join(' ');
+      const message = details || (error instanceof Error ? error.message : 'Cloudflare rejected the TUS upload request.');
+      const status = diagnostics.httpStatus && diagnostics.httpStatus >= 400 && diagnostics.httpStatus < 500 ? diagnostics.httpStatus : 502;
+      return res.status(status).json({ error: 'cloudflare_upload_url_failed', message, cloudflare: { httpStatus: diagnostics.httpStatus, errors: diagnostics.errors, messages: diagnostics.messages, errorCodes: diagnostics.errorCodes } });
     }
   });
 
@@ -1114,11 +1121,25 @@ const mountStreamEndpoints = (router: Router) => {
     try {
       const response = await axios.get<{ success: boolean; result?: { readyToStream?: boolean; status?: { state?: string; errorReasonText?: string }; playback?: { hls?: string; dash?: string }; thumbnail?: string; duration?: number } }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${encodeURIComponent(uid)}`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
       const remote = response.data.result; const failed = remote?.status?.state === 'error'; const ready = remote?.readyToStream === true && Boolean(remote.playback?.hls);
-      const updates = ready ? { status: 'ready', processingStatus: 'ready', processingError: null, visibility: 'public', moderationStatus: 'approved', playbackAllowed: true, playback: remote?.playback, thumbnailUrl: remote?.thumbnail || movie.thumbnailUrl || null, duration: remote?.duration || movie.duration || null, updatedAt: new Date() } : failed ? { status: 'failed', processingStatus: 'error', processingError: remote?.status?.errorReasonText || 'Cloudflare could not process this video.', visibility: 'private', playbackAllowed: false, updatedAt: new Date() } : { status: 'processing', processingStatus: 'processing', updatedAt: new Date() };
+      const updates = ready ? { status: 'ready', processingStatus: 'ready', processingError: null, visibility: 'private', moderationStatus: 'approved', playbackAllowed: false, playback: remote?.playback, thumbnailUrl: remote?.thumbnail || movie.thumbnailUrl || null, duration: remote?.duration || movie.duration || null, updatedAt: new Date() } : failed ? { status: 'failed', processingStatus: 'error', processingError: remote?.status?.errorReasonText || 'Cloudflare could not process this video.', visibility: 'private', playbackAllowed: false, updatedAt: new Date() } : { status: 'processing', processingStatus: 'processing', updatedAt: new Date() };
       await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: updates });
-      if (ready) await req.app.locals.streamContentCollection.deleteMany({ "catalogAttachment.tmdbId": movie.catalogAttachment?.tmdbId, "catalogAttachment.mediaType": "movie", contentSource: "cloudflare_stream", cloudflareUid: { $ne: uid } });
       return res.json({ uid, ready, status: updates.processingStatus, error: failed ? updates.processingError : null });
-    } catch (error) { return res.status(502).json({ error: 'cloudflare_status_failed', message: error instanceof Error ? error.message : 'Could not check Cloudflare Stream processing.' }); }
+    } catch (error) {
+      const data = axios.isAxiosError(error) ? error.response?.data as { errors?: unknown[]; messages?: unknown[] } | undefined : undefined;
+      console.error('[Cloudflare Stream] status request failed', { httpStatus: axios.isAxiosError(error) ? error.response?.status || null : null, errors: data?.errors || [], messages: data?.messages || [] });
+      return res.status(502).json({ error: 'cloudflare_status_failed', message: error instanceof Error ? error.message : 'Could not check Cloudflare Stream processing.' });
+    }
+  });
+
+  router.post('/admin/cloudflare/movies/:uid/publish', async (req, res) => {
+    const admin = await requireStreamAdmin(req, res); if (!admin) return;
+    const uid = String(req.params.uid || '').slice(0, 180);
+    const movie = await req.app.locals.streamContentCollection.findOne({ cloudflareUid: uid, contentSource: 'cloudflare_stream' });
+    if (!movie) return res.status(404).json({ error: 'not_found', message: 'Movie upload not found.' });
+    if (movie.processingStatus !== 'ready' || !movie.playback?.hls) return res.status(409).json({ error: 'not_ready', message: 'Cloudflare is still processing this movie.' });
+    await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: { status: 'published', visibility: 'public', moderationStatus: 'approved', playbackAllowed: true, publishedAt: new Date(), updatedAt: new Date() } });
+    await req.app.locals.streamContentCollection.deleteMany({ 'catalogAttachment.tmdbId': movie.catalogAttachment?.tmdbId, 'catalogAttachment.mediaType': 'movie', contentSource: 'cloudflare_stream', cloudflareUid: { $ne: uid } });
+    return res.json({ uid, status: 'published', playbackAllowed: true });
   });
 
   const defaultStreamSettings = {
@@ -1191,7 +1212,7 @@ const mountStreamEndpoints = (router: Router) => {
         const response = await axios.get<{ result?: { readyToStream?: boolean; status?: { state?: string; errorReasonText?: string }; playback?: { hls?: string; dash?: string }; thumbnail?: string; duration?: number } }>(`https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${encodeURIComponent(String(video.cloudflareUid))}`, { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}` }, timeout: 12_000 });
         const remote = response.data.result;
         if (remote?.readyToStream && remote.playback?.hls) {
-          const updates = { status: "ready", processingStatus: "ready", processingError: null, visibility: "public", moderationStatus: "approved", playbackAllowed: true, playback: remote.playback, thumbnailUrl: remote.thumbnail || video.thumbnailUrl || null, duration: remote.duration || video.duration || null, updatedAt: new Date() };
+          const updates = { status: "ready", processingStatus: "ready", processingError: null, visibility: "private", moderationStatus: "approved", playbackAllowed: false, playback: remote.playback, thumbnailUrl: remote.thumbnail || video.thumbnailUrl || null, duration: remote.duration || video.duration || null, updatedAt: new Date() };
           await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: video.cloudflareUid }, { $set: updates });
           video = { ...video, ...updates };
         } else if (remote?.status?.state === "error") {

@@ -266,6 +266,7 @@ app.use("/uploads", uploadRouter);
 const streamRouter = express.Router();
 mountStreamEndpoints(streamRouter);
 app.use("/stream", streamRouter);
+app.use("/api/stream", streamRouter);
 
 const sportsRouter = express.Router();
 mountSportsEndpoints(sportsRouter);
