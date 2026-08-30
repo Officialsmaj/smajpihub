@@ -16,6 +16,7 @@ import StreamHeader from "./StreamHeader";
 import CreatorUploadForm from "./CreatorUploadForm";
 import CreatorContentList from "./CreatorContentList";
 import StreamVideoPlayer from "./StreamVideoPlayer";
+import { requestStreamDownload } from "../../lib/streamPlayback";
 import StreamWatchHistory from "./StreamWatchHistory";
 import StreamSubscriptions from "./StreamSubscriptions";
 import StreamModerationPanel from "./StreamModerationPanel";
@@ -678,9 +679,22 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     if (!id || !playbackId || !downloadAllowed) return;
     setDownloading(true);
     try {
-      if (downloaded) await removeStreamDownload(type, id);
-      else await saveStreamDownload(detail);
-      setDownloaded(!downloaded);
+      if (downloaded) {
+        await removeStreamDownload(type, id);
+        setDownloaded(false);
+      } else {
+        const result = await requestStreamDownload(playbackId);
+        if (result.status === "processing" || !result.downloadUrl) {
+          setPlaybackUnavailableMessage(result.message || "Cloudflare is preparing the download. Try again shortly.");
+          return;
+        }
+        await saveStreamDownload(detail);
+        setDownloaded(true);
+        window.location.assign(result.downloadUrl);
+      }
+    } catch (error) {
+      const failure = error as { response?: { data?: { message?: string } } };
+      setPlaybackUnavailableMessage(failure.response?.data?.message || "The download could not start. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -760,7 +774,7 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                 <DownloadRoundedIcon />
               </button>
             </div>
-            {!playbackId ? (
+            {playbackUnavailableMessage || !playbackId ? (
               <small className="sw-detail-watch-note unavailable">{playbackUnavailableMessage || "Not available yet on SMAJ Stream."}</small>
             ) : null}
             <div className="sw-detail-description">

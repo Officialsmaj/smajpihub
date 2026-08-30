@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Link } from "react-router-dom";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
+import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import {
   getStreamPlayback,
   getStreamProgress,
@@ -199,6 +200,17 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     };
   }, [id, video]);
 
+  const enterFullscreen = async () => {
+    const element = videoRef.current;
+    if (!element) return;
+    try {
+      if (!document.fullscreenElement) await element.requestFullscreen();
+      const orientation = screen.orientation as ScreenOrientation & { lock?: (mode: "landscape") => Promise<void> };
+      if (typeof orientation.lock === "function") await orientation.lock("landscape").catch(() => undefined);
+    } catch {
+      setMessage("Pi Browser could not enter fullscreen. Use the player fullscreen icon and rotate your phone manually.");
+    }
+  };
   const persist = (completed = false) => {
     const element = videoRef.current;
     if (!video || !element || !Number.isFinite(element.duration)) return;
@@ -283,6 +295,9 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
           onPause={() => persist()}
           onEnded={() => persist(true)}
         />
+        <button className="sw-player-fullscreen" type="button" onClick={() => void enterFullscreen()} aria-label="Fullscreen and rotate landscape" title="Fullscreen">
+          <FullscreenRoundedIcon />
+        </button>
         <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
         {message ? <p className="sw-player-warning">{message}</p> : null}
       </div>

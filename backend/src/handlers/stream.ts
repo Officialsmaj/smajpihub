@@ -1222,7 +1222,11 @@ const mountStreamEndpoints = (router: Router) => {
     }
     if (!video || video.visibility !== "public" || video.moderationStatus !== "approved" || video.playbackAllowed !== true || video.processingStatus !== "ready") return res.json({ available: false, downloadAllowed: false });
     if (video.contentSource === "internet_archive" && !/^https:\/\/archive\.org\/download\//i.test(String(video.playback?.mp4 || ""))) return res.json({ available: false, downloadAllowed: false, message: NO_PLAYABLE_ARCHIVE_SOURCE_MESSAGE });
-    return res.json({ available: true, playbackId: video.cloudflareUid, title: video.title, downloadAllowed: video.downloadAllowed === true });
+    const storedViewer = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const subscription = normalizeStreamSubscription(storedViewer?.streamSubscription);
+    const paidDownloads = subscription.status === "active" && (subscription.plan === "plus" || subscription.plan === "family");
+    const sourceAllowsDownload = video.contentSource === "cloudflare_stream" || video.downloadAllowed === true;
+    return res.json({ available: true, playbackId: video.cloudflareUid, title: video.title, downloadAllowed: paidDownloads && sourceAllowsDownload });
   });
 
   router.get("/live/:uid/playback", async (req, res) => {
@@ -1335,6 +1339,43 @@ const mountStreamEndpoints = (router: Router) => {
     }
   });
 
+  router.post("/download/:uid", async (req, res) => {
+    const user = await requireViewer(req, res); if (!user) return;
+    const uid = String(req.params.uid || "").slice(0, 180);
+    const storedViewer = await req.app.locals.userCollection.findOne({ _id: user._id });
+    const subscription = normalizeStreamSubscription(storedViewer?.streamSubscription);
+    if (subscription.status !== "active" || (subscription.plan !== "plus" && subscription.plan !== "family"))
+      return res.status(403).json({ error: "download_plan_required", message: "Downloads require an active Plus or Family plan." });
+    const video = await req.app.locals.streamContentCollection?.findOne({ cloudflareUid: uid, contentSource: "cloudflare_stream", visibility: "public", moderationStatus: "approved", playbackAllowed: true, processingStatus: "ready" });
+    if (!video) return res.status(404).json({ error: "download_not_available", message: "This movie is not available for download." });
+    if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token)
+      return res.status(503).json({ error: "cloudflare_download_not_configured", message: "Movie downloads are temporarily unavailable." });
+    const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${encodeURIComponent(uid)}`;
+    const headers = { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, "Content-Type": "application/json" };
+    try {
+      let downloads = await axios.get<{ result?: { default?: { status?: string; url?: string; percentComplete?: number } } }>(`${apiUrl}/downloads`, { headers, timeout: 12_000 });
+      if (!downloads.data.result?.default) {
+        downloads = await axios.post(`${apiUrl}/downloads`, null, { headers, timeout: 12_000 });
+        await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: { downloadAllowed: true, downloadStatus: "processing", updatedAt: new Date() } });
+      }
+      const generated = downloads.data.result?.default;
+      if (generated?.status !== "ready" || !generated.url)
+        return res.status(202).json({ status: "processing", percentComplete: Number(generated?.percentComplete) || 0, message: "Cloudflare is preparing the MP4. Try again shortly." });
+      const tokenResponse = await axios.post<{ success: boolean; result?: { token?: string }; errors?: Array<{ message?: string }> }>(`${apiUrl}/token`, { exp: Math.floor(Date.now() / 1000) + 60 * 60, downloadable: true }, { headers, timeout: 12_000 });
+      const token = String(tokenResponse.data.result?.token || "");
+      if (!tokenResponse.data.success || !token) throw new Error(tokenResponse.data.errors?.[0]?.message || "Cloudflare returned no download token.");
+      const remoteUrl = new URL(generated.url);
+      const safeName = String(video.title || "SMAJ-movie").replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100) || "SMAJ-movie";
+      const downloadUrl = `${remoteUrl.origin}/${encodeURIComponent(token)}/downloads/default.mp4?filename=${encodeURIComponent(safeName)}`;
+      await req.app.locals.streamContentCollection.updateOne({ cloudflareUid: uid }, { $set: { downloadAllowed: true, downloadStatus: "ready", updatedAt: new Date() } });
+      return res.json({ status: "ready", downloadUrl, expiresIn: 3600 });
+    } catch (error) {
+      const response = axios.isAxiosError(error) ? error.response : undefined;
+      const data = response?.data as { errors?: unknown[]; messages?: unknown[] } | undefined;
+      console.error("[Cloudflare Stream download] failed", { uid, httpStatus: response?.status || null, errors: data?.errors || [], messages: data?.messages || [] });
+      return res.status(502).json({ error: "cloudflare_download_failed", message: "Cloudflare could not prepare this download. Please try again." });
+    }
+  });
   router.get("/progress/:uid", async (req, res) => {
     const user = await requireViewer(req, res); if (!user) return;
     const uid = String(req.params.uid || "").slice(0, 180);
