@@ -3,6 +3,7 @@ import Hls from "hls.js";
 import { Link } from "react-router-dom";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
+import PictureInPictureAltRoundedIcon from "@mui/icons-material/PictureInPictureAltRounded";
 import {
   getStreamPlayback,
   getStreamProgress,
@@ -204,11 +205,27 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     const element = videoRef.current;
     if (!element) return;
     try {
-      if (!document.fullscreenElement) await element.requestFullscreen();
+      const nativeVideo = element as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+      if (typeof element.requestFullscreen === "function") await element.requestFullscreen();
+      else if (typeof nativeVideo.webkitEnterFullscreen === "function") nativeVideo.webkitEnterFullscreen();
+      else throw new Error("Fullscreen is unsupported");
       const orientation = screen.orientation as ScreenOrientation & { lock?: (mode: "landscape") => Promise<void> };
       if (typeof orientation.lock === "function") await orientation.lock("landscape").catch(() => undefined);
     } catch {
-      setMessage("Pi Browser could not enter fullscreen. Use the player fullscreen icon and rotate your phone manually.");
+      setMessage("Pi Browser controls fullscreen and rotation on this device. Rotate your phone manually after opening fullscreen.");
+    }
+  };
+
+  const enterPictureInPicture = async () => {
+    const element = videoRef.current;
+    if (!element) return;
+    try {
+      if (!document.pictureInPictureEnabled || typeof element.requestPictureInPicture !== "function")
+        throw new Error("Picture-in-Picture is unsupported");
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else await element.requestPictureInPicture();
+    } catch {
+      setMessage("Picture-in-Picture is not available in this Pi Browser or device.");
     }
   };
   const persist = (completed = false) => {
@@ -295,9 +312,14 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
           onPause={() => persist()}
           onEnded={() => persist(true)}
         />
-        <button className="sw-player-fullscreen" type="button" onClick={() => void enterFullscreen()} aria-label="Fullscreen and rotate landscape" title="Fullscreen">
-          <FullscreenRoundedIcon />
-        </button>
+        <div className="sw-player-screen-actions">
+          <button className="sw-player-pip" type="button" onClick={() => void enterPictureInPicture()} aria-label="Picture in Picture" title="Picture in Picture">
+            <PictureInPictureAltRoundedIcon />
+          </button>
+          <button className="sw-player-fullscreen" type="button" onClick={() => void enterFullscreen()} aria-label="Fullscreen and rotate landscape" title="Fullscreen">
+            <FullscreenRoundedIcon />
+          </button>
+        </div>
         <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
         {message ? <p className="sw-player-warning">{message}</p> : null}
       </div>
