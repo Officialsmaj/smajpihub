@@ -1314,8 +1314,24 @@ const mountStreamEndpoints = (router: Router) => {
       } catch { /* Return the safe unavailable state below. */ }
     }
     if (!playback?.hls || !/^https:\/\//i.test(playback.hls)) return res.status(409).json({ error: "processing", message: "This licensed video is still processing. Try again shortly." });
-    const iframeUrl = `https://iframe.videodelivery.net/${encodeURIComponent(String(video.cloudflareUid))}`;
-    return res.json({ video: { id: String(video.cloudflareUid), sourceType: "cloudflare", playbackUrl: playback.hls, iframeUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
+    if (!env.cloudflare_stream_account_id || !env.cloudflare_stream_api_token)
+      return res.status(503).json({ error: "cloudflare_playback_not_configured", message: "Secure movie playback is temporarily unavailable." });
+    try {
+      const tokenResponse = await axios.post<{ success: boolean; result?: { token?: string }; errors?: Array<{ code?: number; message?: string }>; messages?: Array<{ code?: number; message?: string }> }>(
+        `https://api.cloudflare.com/client/v4/accounts/${env.cloudflare_stream_account_id}/stream/${encodeURIComponent(String(video.cloudflareUid))}/token`,
+        { exp: Math.floor(Date.now() / 1000) + 2 * 60 * 60 },
+        { headers: { Authorization: `Bearer ${env.cloudflare_stream_api_token}`, "Content-Type": "application/json" }, timeout: 12_000 }
+      );
+      const playbackToken = String(tokenResponse.data.result?.token || "");
+      if (!tokenResponse.data.success || !playbackToken) throw new Error(tokenResponse.data.errors?.[0]?.message || "Cloudflare returned no playback token.");
+      const iframeUrl = `https://iframe.videodelivery.net/${encodeURIComponent(playbackToken)}`;
+      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "cloudflare", iframeUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
+    } catch (error) {
+      const response = axios.isAxiosError(error) ? error.response : undefined;
+      const data = response?.data as { errors?: Array<{ code?: number; message?: string }>; messages?: Array<{ code?: number; message?: string }> } | undefined;
+      console.error("[Cloudflare Stream playback token] failed", { uid: String(video.cloudflareUid), httpStatus: response?.status || null, errors: data?.errors || [], messages: data?.messages || [] });
+      return res.status(502).json({ error: "cloudflare_playback_authorization_failed", message: "Cloudflare could not authorize this movie for playback. Please try again." });
+    }
   });
 
   router.get("/progress/:uid", async (req, res) => {
