@@ -89,27 +89,41 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       setState("error");
       hls?.destroy();
     };
+    let networkRecoveries = 0;
+    let mediaRecoveries = 0;
     const onElementError = () => {
+      if (hls) return;
       const code = element.error?.code;
       fail(
         code === MediaError.MEDIA_ERR_NETWORK ? "The video could not load. Check your connection and retry."
-          : code === MediaError.MEDIA_ERR_DECODE ? "This video file is corrupted and could not be decoded."
-          : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "This video format is not supported by your browser."
+          : code === MediaError.MEDIA_ERR_DECODE ? "This video could not be decoded."
+          : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "The playback source is not supported by this browser."
           : "This video could not be played."
       );
     };
     element.addEventListener("loadedmetadata", resume, { once: true });
     element.addEventListener("error", onElementError);
     if (video.sourceType === "mp4") element.src = video.playbackUrl;
-    else if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
     else if (Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-      hls.loadSource(video.playbackUrl);
-      hls.attachMedia(element);
+      hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+      hls.on(Hls.Events.MEDIA_ATTACHED, () => hls?.loadSource(video.playbackUrl!));
       hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) fail("Playback was interrupted. Check your connection and retry.");
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRecoveries < 2) {
+          networkRecoveries += 1;
+          hls?.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRecoveries < 2) {
+          mediaRecoveries += 1;
+          hls?.recoverMediaError();
+          return;
+        }
+        fail(`Cloudflare Stream playback failed (${data.details}). Retry in a moment.`);
       });
-    } else fail("This browser cannot play this video.");
+      hls.attachMedia(element);
+    } else if (element.canPlayType("application/vnd.apple.mpegurl")) element.src = video.playbackUrl;
+    else fail("This browser cannot play HLS video.");
     return () => {
       element.removeEventListener("loadedmetadata", resume);
       element.removeEventListener("error", onElementError);
