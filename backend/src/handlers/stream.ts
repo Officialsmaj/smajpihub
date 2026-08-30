@@ -1324,8 +1324,9 @@ const mountStreamEndpoints = (router: Router) => {
       );
       const playbackToken = String(tokenResponse.data.result?.token || "");
       if (!tokenResponse.data.success || !playbackToken) throw new Error(tokenResponse.data.errors?.[0]?.message || "Cloudflare returned no playback token.");
-      const iframeUrl = `https://iframe.videodelivery.net/${encodeURIComponent(playbackToken)}`;
-      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "cloudflare", iframeUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
+      const manifestUrl = new URL(playback.hls);
+      const signedPlaybackUrl = `${manifestUrl.origin}/${encodeURIComponent(playbackToken)}/manifest/video.m3u8`;
+      return res.json({ video: { id: String(video.cloudflareUid), sourceType: "hls", playbackUrl: signedPlaybackUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
     } catch (error) {
       const response = axios.isAxiosError(error) ? error.response : undefined;
       const data = response?.data as { errors?: Array<{ code?: number; message?: string }>; messages?: Array<{ code?: number; message?: string }> } | undefined;
