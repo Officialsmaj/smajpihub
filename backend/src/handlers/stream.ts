@@ -1314,8 +1314,7 @@ const mountStreamEndpoints = (router: Router) => {
       } catch { /* Return the safe unavailable state below. */ }
     }
     if (!playback?.hls || !/^https:\/\//i.test(playback.hls)) return res.status(409).json({ error: "processing", message: "This licensed video is still processing. Try again shortly." });
-    const manifestUrl = new URL(playback.hls);
-    const iframeUrl = `${manifestUrl.origin}/${encodeURIComponent(String(video.cloudflareUid))}/iframe`;
+    const iframeUrl = `https://iframe.videodelivery.net/${encodeURIComponent(String(video.cloudflareUid))}`;
     return res.json({ video: { id: String(video.cloudflareUid), sourceType: "cloudflare", playbackUrl: playback.hls, iframeUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
   });
 

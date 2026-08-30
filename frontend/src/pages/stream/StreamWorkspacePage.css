@@ -2205,6 +2205,7 @@
 .sw-trailer-spinner { position:absolute;width:46px;height:46px;border:4px solid #ffffff38;border-top-color:#fff;border-radius:50%;animation:sw-trailer-spin .8s linear infinite; }
 @keyframes sw-trailer-spin { to { transform:rotate(360deg); } }
 .sw-fullscreen-player-shell .sw-real-player video,
+.sw-fullscreen-player-shell .sw-cloudflare-player iframe,
 .sw-fullscreen-player-shell .sw-youtube-player > div,
 .sw-fullscreen-player-shell .sw-youtube-player iframe {
   width: 100% !important;
