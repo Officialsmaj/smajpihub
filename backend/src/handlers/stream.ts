@@ -1314,7 +1314,9 @@ const mountStreamEndpoints = (router: Router) => {
       } catch { /* Return the safe unavailable state below. */ }
     }
     if (!playback?.hls || !/^https:\/\//i.test(playback.hls)) return res.status(409).json({ error: "processing", message: "This licensed video is still processing. Try again shortly." });
-    return res.json({ video: { id: String(video.cloudflareUid), sourceType: "hls", playbackUrl: playback.hls, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
+    const manifestUrl = new URL(playback.hls);
+    const iframeUrl = `${manifestUrl.origin}/${encodeURIComponent(String(video.cloudflareUid))}/iframe`;
+    return res.json({ video: { id: String(video.cloudflareUid), sourceType: "cloudflare", playbackUrl: playback.hls, iframeUrl, title: video.title, description: video.description, creatorName: video.creatorName, thumbnailUrl: video.thumbnailUrl || null, duration: video.duration || null } });
   });
 
   router.get("/progress/:uid", async (req, res) => {

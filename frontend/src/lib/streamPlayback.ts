@@ -2,8 +2,9 @@ import { axiosClient } from "./axiosClient";
 
 export type StreamPlaybackVideo = {
   id: string;
-  sourceType: "hls" | "youtube" | "mp4";
+  sourceType: "cloudflare" | "hls" | "youtube" | "mp4";
   playbackUrl?: string;
+  iframeUrl?: string;
   youtubeVideoId?: string;
   title: string;
   description?: string;

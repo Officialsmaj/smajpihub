@@ -246,6 +246,30 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       </section>
     );
 
+  if (video.sourceType === "cloudflare" && video.iframeUrl)
+    return (
+      <section className="sw-watch real">
+        <div className="sw-real-player sw-cloudflare-player">
+          <iframe
+            src={video.iframeUrl}
+            title={video.title}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+          />
+          <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
+        </div>
+        <div className="sw-watch-info">
+          <div>
+            <h1>{video.title}</h1>
+            <p>{video.creatorName || "SMAJ Stream"}</p>
+          </div>
+          <button type="button">
+            <BookmarkRoundedIcon /> Save
+          </button>
+        </div>
+        {video.description ? <p className="sw-watch-description">{video.description}</p> : null}
+      </section>
+    );
   return (
     <section className="sw-watch real">
       <div className="sw-real-player">
