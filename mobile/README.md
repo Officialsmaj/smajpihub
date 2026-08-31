@@ -25,6 +25,8 @@ npm run android
 
 Use a physical Android device with Expo Go or an Android emulator. Set `EXPO_PUBLIC_API_BASE_URL` only when testing another backend.
 
+The public Pi OAuth Client ID and `smajpihub://oauth/pi` redirect URI are declared in `.env.example`. Register that redirect URI exactly with the OAuth provider before enabling native login.
+
 ## Authentication
 
-`AuthProvider.signInWithPiAuthResult` accepts a Pi authorization result and sends it to the existing `/user/signin` endpoint. Tokens are stored in device secure storage. The production native callback must not be enabled until the supported Pi Android authorization return flow is confirmed and implemented as a one-time code exchange.
+`AuthProvider.signInWithPiAuthResult` accepts a Pi authorization result and sends it to the existing `/user/signin` endpoint. Accepted tokens are stored in device secure storage. The provider currently supports OAuth implicit flow and issues a public Client ID without a client secret. Native login must validate the OAuth state, read the returned access token from the URL fragment, remove it from navigation history, verify it through the existing backend, and store it only in Expo SecureStore.

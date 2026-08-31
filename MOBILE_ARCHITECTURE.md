@@ -25,7 +25,7 @@ Existing web/backend models can move into these packages incrementally. They are
 
 The backend already accepts an HttpOnly web session or a Pi access token in `Authorization`/`X-SMAJ-Access-Token`. Android stores an accepted token using Expo SecureStore and resolves the same user by Pi UID.
 
-The current Pi Browser handoff does not return a native token. Do not pass a token in a URL. Before Play Store authentication is enabled, implement an approved one-time authorization-code callback after confirming Pi's supported Android flow. Until then, login and Pi payment actions open Pi Browser.
+The provider currently supports only OAuth implicit flow and supplies a public Client ID without a client secret. The configured Android redirect is `smajpihub://oauth/pi`. Before enabling native login, generate and validate OAuth `state`, accept tokens only from the redirect fragment, immediately remove the fragment from navigation state, verify the token through the existing backend, and persist it only in SecureStore. Until that callback is implemented and reviewed, login and Pi payment actions continue in Pi Browser.
 
 ## Commands
 
@@ -44,6 +44,6 @@ Existing commands continue to run inside `frontend/` and `backend/` unchanged.
 1. Configure `mobile/.env` from `.env.example`.
 2. Confirm Android package `com.smajpihub.mobile` in Google Play Console.
 3. Configure an Expo/EAS project and Android signing credentials.
-4. Complete and security-review the Pi native callback flow.
+4. Register `smajpihub://oauth/pi`, then implement and security-review the Pi implicit-flow callback.
 5. Run `npx eas-cli build --platform android --profile preview` for internal APK testing.
 6. Run the production profile to generate the Play Store AAB.
