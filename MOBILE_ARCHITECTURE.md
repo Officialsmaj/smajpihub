@@ -25,13 +25,14 @@ Existing web/backend models can move into these packages incrementally. They are
 
 The backend already accepts an HttpOnly web session or a Pi access token in `Authorization`/`X-SMAJ-Access-Token`. Android stores an accepted token using Expo SecureStore and resolves the same user by Pi UID.
 
-The provider currently supports only OAuth implicit flow and supplies a public Client ID without a client secret. The configured Android redirect is `smajpihub://oauth/pi`. Before enabling native login, generate and validate OAuth `state`, accept tokens only from the redirect fragment, immediately remove the fragment from navigation state, verify the token through the existing backend, and persist it only in SecureStore. Until that callback is implemented and reviewed, login and Pi payment actions continue in Pi Browser.
+Pi currently supports OAuth implicit flow and supplies a public Client ID without a client secret. Android uses the production HTTPS redirect `https://smajpihub.com/oauth/pi`, captured by a verified App Link. The implemented flow generates and validates OAuth `state`, consumes the callback once, verifies the token with Pi and the existing backend, and persists the accepted token only in SecureStore.
 
 ## Commands
 
 ```powershell
 npm install
 npm run check:shared
+npm run mobile:test:oauth
 npm run mobile:typecheck
 npm run mobile:doctor
 npm run mobile:android
@@ -44,6 +45,6 @@ Existing commands continue to run inside `frontend/` and `backend/` unchanged.
 1. Configure `mobile/.env` from `.env.example`.
 2. Confirm Android package `com.smajpihub.mobile` in Google Play Console.
 3. Configure an Expo/EAS project and Android signing credentials.
-4. Register `smajpihub://oauth/pi`, then implement and security-review the Pi implicit-flow callback.
+4. Register `https://smajpihub.com/oauth/pi` in Pi Developer Portal and publish Android `assetlinks.json` using the real EAS/Play signing fingerprint.
 5. Run `npx eas-cli build --platform android --profile preview` for internal APK testing.
 6. Run the production profile to generate the Play Store AAB.

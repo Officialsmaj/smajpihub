@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.smajpihub.mobile",
+      "sha256_cert_fingerprints": ["REPLACE_WITH_EAS_OR_GOOGLE_PLAY_SHA256_FINGERPRINT"]
+    }
+  }
+]

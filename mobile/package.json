@@ -29,7 +29,8 @@
                          "@smaj/api-client":  "file:../packages/api-client",
                          "@smaj/design-tokens":  "file:../packages/design-tokens",
                          "@smaj/shared-types":  "file:../packages/shared-types",
-                         "expo-secure-store":  "~57.0.1"
+                         "expo-secure-store":  "~57.0.1",
+                         "expo-crypto":  "~57.0.2"
                      },
     "devDependencies":  {
                             "@types/react":  "~19.2.2",
@@ -42,7 +43,9 @@
                     "web":  "expo start --web",
                     "lint":  "expo lint",
                     "typecheck":  "tsc --noEmit",
-                    "doctor":  "expo-doctor"
+                    "doctor":  "expo-doctor",
+                    "test:oauth":  "node --test --experimental-strip-types tests/pi-oauth.test.ts"
                 },
-    "private":  true
+    "private":  true,
+    "type":  "module"
 }

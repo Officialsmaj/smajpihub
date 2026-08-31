@@ -15,7 +15,24 @@
                                                       "monochromeImage":  "./assets/images/android-icon-monochrome.png"
                                                   },
                                  "predictiveBackGestureEnabled":  false,
-                                 "package":  "com.smajpihub.mobile"
+                                 "package":  "com.smajpihub.mobile",
+                                 "intentFilters":  [
+                                                       {
+                                                           "action":  "VIEW",
+                                                           "autoVerify":  true,
+                                                           "data":  [
+                                                                        {
+                                                                            "scheme":  "https",
+                                                                            "host":  "smajpihub.com",
+                                                                            "pathPrefix":  "/oauth/pi"
+                                                                        }
+                                                                    ],
+                                                           "category":  [
+                                                                            "BROWSABLE",
+                                                                            "DEFAULT"
+                                                                        ]
+                                                       }
+                                                   ]
                              },
                  "plugins":  [
                                  "expo-router",

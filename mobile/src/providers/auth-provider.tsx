@@ -1,11 +1,23 @@
 import type { PiAuthResult, SmajUser } from "@smaj/shared-types";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
+import { config } from "@/constants/config";
 import { api } from "@/lib/api";
 import { authStorage } from "@/lib/auth-storage";
+import { createPiOAuthRequest, createVerifiedPiAuthResult } from "@/lib/pi-auth";
+import { isPiOAuthCallbackUrl, parsePiOAuthCallback } from "@/lib/pi-oauth";
+
+WebBrowser.maybeCompleteAuthSession();
 
 type AuthContextValue = {
   user: SmajUser | null;
   loading: boolean;
+  signingIn: boolean;
+  authError: string | null;
+  beginPiSignIn: () => Promise<void>;
+  completePiSignIn: (callbackUrl: string) => Promise<boolean>;
+  clearAuthError: () => void;
   signInWithPiAuthResult: (result: PiAuthResult) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -14,6 +26,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<SmajUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const processingCallback = useRef(false);
+  const handledCallbacks = useRef(new Set<string>());
 
   const restore = useCallback(async () => {
     try {
@@ -21,6 +37,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (!token) return;
       const response = await api.currentUser();
       setUser(response.user);
+      if (!response.user) await authStorage.clear();
     } catch {
       await authStorage.clear();
       setUser(null);
@@ -37,12 +54,61 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setUser(response.user);
   }, []);
 
+  const completePiSignIn = useCallback(async (callbackUrl: string) => {
+    if (!isPiOAuthCallbackUrl(callbackUrl, config.piOAuthRedirectUri) || processingCallback.current || handledCallbacks.current.has(callbackUrl)) return false;
+    handledCallbacks.current.add(callbackUrl);
+    processingCallback.current = true;
+    setSigningIn(true);
+    setAuthError(null);
+    try {
+      const expectedState = await authStorage.getOAuthState();
+      const callback = parsePiOAuthCallback(callbackUrl, config.piOAuthRedirectUri, expectedState || "");
+      await authStorage.clearOAuthState();
+      const authResult = await createVerifiedPiAuthResult(callback.accessToken);
+      await signInWithPiAuthResult(authResult);
+      return true;
+    } catch (error) {
+      await authStorage.clearOAuthState();
+      setAuthError(error instanceof Error ? error.message : "Pi sign-in failed. Please try again.");
+      return false;
+    } finally {
+      processingCallback.current = false;
+      setSigningIn(false);
+    }
+  }, [signInWithPiAuthResult]);
+
+  useEffect(() => {
+    const subscription = Linking.addEventListener("url", event => {
+      void completePiSignIn(event.url).then(handled => { if (handled) void WebBrowser.dismissBrowser(); });
+    });
+    void Linking.getInitialURL().then(url => { if (url) void completePiSignIn(url); });
+    return () => subscription.remove();
+  }, [completePiSignIn]);
+
+  const beginPiSignIn = useCallback(async () => {
+    setSigningIn(true);
+    setAuthError(null);
+    try {
+      const request = await createPiOAuthRequest();
+      await authStorage.setOAuthState(request.state);
+      const result = await WebBrowser.openAuthSessionAsync(request.authorizeUrl, config.piOAuthRedirectUri);
+      if (result.type === "success") await completePiSignIn(result.url);
+    } catch (error) {
+      await authStorage.clearOAuthState();
+      setAuthError(error instanceof Error ? error.message : "Could not open Pi sign-in.");
+    } finally {
+      setSigningIn(false);
+    }
+  }, [completePiSignIn]);
+
   const signOut = useCallback(async () => {
     await authStorage.clear();
     setUser(null);
+    setAuthError(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, signInWithPiAuthResult, signOut }), [loading, signInWithPiAuthResult, signOut, user]);
+  const clearAuthError = useCallback(() => setAuthError(null), []);
+  const value = useMemo(() => ({ user, loading, signingIn, authError, beginPiSignIn, completePiSignIn, clearAuthError, signInWithPiAuthResult, signOut }), [authError, beginPiSignIn, clearAuthError, completePiSignIn, loading, signInWithPiAuthResult, signOut, signingIn, user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
