@@ -1,0 +1,8 @@
+import { colors, radii, spacing } from "@smaj/design-tokens";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Screen } from "@/components/screen";
+import { api } from "@/lib/api";
+import { useAuth } from "@/providers/auth-provider";
+export default function MessagesScreen(){const {user}=useAuth();const [loading,setLoading]=useState(false);const [count,setCount]=useState(0);useEffect(()=>{if(!user)return;setLoading(true);api.conversations().then(data=>setCount(data.conversations.length)).catch(()=>setCount(0)).finally(()=>setLoading(false));},[user]);return <Screen eyebrow="ONE SHARED INBOX" title="Messages"><View style={styles.state}><Text style={styles.icon}>MSG</Text><Text style={styles.title}>{!user?"Sign in to see your conversations":loading?"Loading conversations...":count?`${count} conversations ready`:"Your inbox is ready"}</Text><Text style={styles.text}>{!user?"Use the same Pi identity to access conversations from Web, Pi Browser and Android.":"Messages use the existing shared SMAJ backend and database."}</Text></View></Screen>}
+const styles=StyleSheet.create({state:{minHeight:300,padding:spacing.xl,alignItems:"center",justifyContent:"center",gap:spacing.md,borderRadius:radii.lg,backgroundColor:colors.surface,borderWidth:1,borderColor:colors.border},icon:{fontSize:54},title:{color:colors.text,fontSize:20,fontWeight:"900",textAlign:"center"},text:{color:colors.textMuted,fontSize:14,lineHeight:21,textAlign:"center"}});

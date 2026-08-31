@@ -1,0 +1,15 @@
+{
+    "name":  "smajpihub",
+    "private":  true,
+    "workspaces":  [
+                       "mobile",
+                       "packages/*"
+                   ],
+    "scripts":  {
+                    "mobile:start":  "npm --workspace @smaj/mobile run start",
+                    "mobile:android":  "npm --workspace @smaj/mobile run android",
+                    "mobile:typecheck":  "npm --workspace @smaj/mobile run typecheck",
+                    "mobile:doctor":  "npm --workspace @smaj/mobile run doctor",
+                    "check:shared":  "npm --workspace @smaj/shared-types run typecheck \u0026\u0026 npm --workspace @smaj/design-tokens run typecheck \u0026\u0026 npm --workspace @smaj/api-client run typecheck"
+                }
+}

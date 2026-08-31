@@ -1,0 +1,17 @@
+{
+    "name":  "@smaj/api-client",
+    "version":  "0.1.0",
+    "private":  true,
+    "type":  "module",
+    "exports":  "./src/index.ts",
+    "types":  "./src/index.ts",
+    "scripts":  {
+                    "typecheck":  "tsc --noEmit"
+                },
+    "dependencies":  {
+                         "@smaj/shared-types":  "file:../shared-types"
+                     },
+    "devDependencies":  {
+                            "typescript":  "~6.0.3"
+                        }
+}

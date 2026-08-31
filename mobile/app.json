@@ -1,0 +1,37 @@
+{
+    "expo":  {
+                 "name":  "SMAJ PI HUB",
+                 "slug":  "smaj-pi-hub",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/images/smaj-logo.png",
+                 "scheme":  "smajpihub",
+                 "userInterfaceStyle":  "automatic",
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#FFFFFF",
+                                                      "foregroundImage":  "./assets/images/smaj-logo.png",
+                                                      "backgroundImage":  "./assets/images/android-icon-background.png",
+                                                      "monochromeImage":  "./assets/images/android-icon-monochrome.png"
+                                                  },
+                                 "predictiveBackGestureEnabled":  false,
+                                 "package":  "com.smajpihub.mobile"
+                             },
+                 "plugins":  [
+                                 "expo-router",
+                                 "expo-secure-store",
+                                 [
+                                     "expo-splash-screen",
+                                     {
+                                         "imageWidth":  150,
+                                         "backgroundColor":  "#FFFFFF",
+                                         "image":  "./assets/images/smaj-logo.png"
+                                     }
+                                 ]
+                             ],
+                 "experiments":  {
+                                     "typedRoutes":  true,
+                                     "reactCompiler":  true
+                                 }
+             }
+}
