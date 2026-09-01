@@ -14,7 +14,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, rootDir, "");
   const isPublicBuild = mode === "public";
   const isLegacyBuild = mode === "legacy";
+  const isCapacitorBuild = mode === "capacitor";
   const build = {
+    ...(isCapacitorBuild ? { outDir: "dist-capacitor", assetsDir: "assets", emptyOutDir: true } : {}),
     ...(isPublicBuild
       ? {
           // GitHub Pages build output (uploaded by Actions workflow).

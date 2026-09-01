@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { axiosClient, getBaseURL } from "../lib/axiosClient";
 import type { AuthResult, User } from "../types/pi";
 import { requestPiBrowserHandoff } from "../lib/piBrowserHandoff";
+import { authenticateWithCapacitorPi, isCapacitorNative } from "../lib/capacitorPiAuth";
 
 type AuthFeedback = { type: "success" | "error"; message: string };
 type BackendErrorBody = { error?: string; message?: string };
@@ -238,6 +239,20 @@ export const useAuth = () => {
     loginInProgressRef.current = true;
     setIsLoading(true);
     setAuthFeedback({ type: "success", message: "Connecting to Pi Browser…" });
+    if (!window.Pi && isCapacitorNative()) {
+      try {
+        const authResult = await authenticateWithCapacitorPi();
+        await signInUser(authResult);
+        await redirectToDashboard();
+        return true;
+      } catch (err) {
+        setAuthFeedback({ type: "error", message: (err as Error)?.message || "Pi login failed." });
+        return false;
+      } finally {
+        loginInProgressRef.current = false;
+        setIsLoading(false);
+      }
+    }
     if (!window.Pi) {
       if (import.meta.env.DEV && getBaseURL()) {
         try {

@@ -9,6 +9,10 @@
     "build": "tsc -b && vite build",
     "build:public": "tsc -b && vite build --mode public",
     "build:legacy": "tsc -b && vite build --mode legacy",
+    "build:android-web": "tsc -b && vite build --mode capacitor",
+    "android:add": "cap add android",
+    "android:sync": "npm run build:android-web && cap sync android",
+    "android:open": "cap open android",
     "lint": "eslint .",
     "test:jobs": "node tests/jobsUi.test.mjs",
     "preview": "vite preview",
@@ -16,6 +20,11 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.1",
+    "@capacitor/preferences": "^8.0.1",
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@mui/styled-engine-sc": "^7.3.9",
@@ -34,6 +43,7 @@
     "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.1",
     "@eslint/js": "^9.39.1",
     "@types/leaflet": "^1.9.20",
     "@types/node": "^24.10.1",

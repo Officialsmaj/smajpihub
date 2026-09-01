@@ -4,6 +4,7 @@ import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import QrCode2OutlinedIcon from "@mui/icons-material/QrCode2Outlined";
 import QRCode from "qrcode";
+import { Capacitor } from "@capacitor/core";
 import { PI_BROWSER_HANDOFF_EVENT, type PiBrowserHandoffDetail } from "../lib/piBrowserHandoff";
 import logoImage from "/logo.png";
 
@@ -29,6 +30,7 @@ const PiBrowserHandoff = () => {
     [detail, publicUrl]
   );
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
     const isMobileOrTablet = window.matchMedia("(max-width: 1023px)").matches;
     const isPiBrowser = /PiBrowser|Pi Browser/i.test(navigator.userAgent || "");
     const isMinePiSandbox =

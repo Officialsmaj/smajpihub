@@ -2,3 +2,11 @@
 docker-data
 .DS_Store
 node_modules/
+# Capacitor generated output and signing material
+frontend/dist-capacitor/
+frontend/android/.gradle/
+frontend/android/**/build/
+frontend/android/app/src/main/assets/public/
+frontend/android/app/src/main/assets/capacitor.config.json
+frontend/android/app/*.keystore
+frontend/android/app/*.jks
