@@ -11,6 +11,8 @@ export default function RootLayout() {
       <Stack.Screen name="store/index" />
       <Stack.Screen name="store/product/[id]" />
       <Stack.Screen name="store/orders" />
+      <Stack.Screen name="messages/[id]" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="signin/callback" options={{ presentation: "card" }} />
     </Stack>
   </AuthProvider>;

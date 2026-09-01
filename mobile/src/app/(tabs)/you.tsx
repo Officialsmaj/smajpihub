@@ -1,11 +1,13 @@
 import { colors, radii, spacing } from "@smaj/design-tokens";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "@/components/screen";
 import { config } from "@/constants/config";
 import { useAuth } from "@/providers/auth-provider";
 
 export default function YouScreen() {
+  const router = useRouter();
   const { user, loading, signingIn, authError, beginPiSignIn, signOut } = useAuth();
   const displayName = user?.displayName || user?.username;
 
@@ -21,6 +23,7 @@ export default function YouScreen() {
             {signingIn ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Continue with Pi</Text>}
           </Pressable>}
     </View>
+    {user ? <Pressable style={styles.web} onPress={() => router.push("/notifications")}><Text>Notifications &gt;</Text></Pressable> : null}
     <View style={styles.info}>
       <Text style={styles.infoTitle}>Secure Pi sign-in</Text>
       <Text style={styles.infoText}>Your identity is verified by Pi and the existing SMAJ backend. The access token is stored only in this device&apos;s encrypted SecureStore.</Text>
