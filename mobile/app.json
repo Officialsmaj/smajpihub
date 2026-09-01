@@ -24,7 +24,7 @@
                                                                         {
                                                                             "scheme":  "https",
                                                                             "host":  "smajpihub.com",
-                                                                            "pathPrefix":  "/oauth/pi"
+                                                                            "pathPrefix":  "/signin/callback"
                                                                         }
                                                                     ],
                                                            "category":  [

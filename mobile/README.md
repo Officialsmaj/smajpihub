@@ -26,12 +26,12 @@ npm run doctor
 npm run android
 ```
 
-The public Pi OAuth Client ID and `https://smajpihub.com/oauth/pi` redirect URI are declared in `.env.example`.
+The public Pi OAuth Client ID is supplied through the build environment and the `https://smajpihub.com/signin/callback` redirect URI is declared in `.env.example`.
 
 ## Required external configuration
 
 1. Verify `smajpihub.com` in Pi Developer Portal.
-2. Enable Pi Sign-in and register `https://smajpihub.com/oauth/pi` exactly.
+2. Enable Pi Sign-in and register `https://smajpihub.com/signin/callback` exactly.
 3. Build/sign the Android app and obtain its SHA-256 signing certificate fingerprint.
 4. Replace the fingerprint in `mobile/assetlinks.example.json`, then publish it as `https://smajpihub.com/.well-known/assetlinks.json`.
 5. Confirm Android reports `smajpihub.com` as a verified App Link before live login testing.

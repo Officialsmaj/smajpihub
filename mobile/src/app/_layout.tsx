@@ -8,7 +8,7 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="service/[slug]" options={{ presentation: "card" }} />
-      <Stack.Screen name="oauth/pi" options={{ presentation: "card" }} />
+      <Stack.Screen name="signin/callback" options={{ presentation: "card" }} />
     </Stack>
   </AuthProvider>;
 }

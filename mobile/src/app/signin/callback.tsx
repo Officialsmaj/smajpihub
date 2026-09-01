@@ -7,7 +7,7 @@ import { useAuth } from "@/providers/auth-provider";
 
 export default function PiOAuthCallbackScreen() {
   const { user, signingIn, authError, beginPiSignIn } = useAuth();
-  useEffect(() => { if (user) router.replace("/(tabs)/you"); }, [user]);
+  useEffect(() => { if (user) router.replace("/(tabs)"); }, [user]);
 
   return <SafeAreaView style={styles.safe}>
     <View style={styles.card}>

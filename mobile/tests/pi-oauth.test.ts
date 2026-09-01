@@ -3,7 +3,7 @@ import test from "node:test";
 import { buildPiAuthorizeUrl, isPiOAuthCallbackUrl, parsePiOAuthCallback } from "../src/lib/pi-oauth.ts";
 
 const clientId = "test-client";
-const redirectUri = "https://smajpihub.com/oauth/pi";
+const redirectUri = "https://smajpihub.com/signin/callback";
 const state = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
 test("builds the documented Pi implicit authorization request", () => {
@@ -26,7 +26,7 @@ test("rejects a callback with the wrong state", () => {
 });
 
 test("rejects a callback on another origin", () => {
-  assert.throws(() => parsePiOAuthCallback(`https://evil.example/oauth/pi#access_token=token-123&state=${state}`, redirectUri, state), /does not match/);
+  assert.throws(() => parsePiOAuthCallback(`https://evil.example/signin/callback#access_token=token-123&state=${state}`, redirectUri, state), /does not match/);
 });
 
 test("rejects callbacks without an access token", () => {
@@ -34,7 +34,7 @@ test("rejects callbacks without an access token", () => {
 });
 test("recognizes only the configured HTTPS callback", () => {
   assert.equal(isPiOAuthCallbackUrl(`${redirectUri}#state=${state}`, redirectUri), true);
-  assert.equal(isPiOAuthCallbackUrl("smajpihub://oauth/pi#state=test", redirectUri), false);
+  assert.equal(isPiOAuthCallbackUrl("smajpihub://signin/callback#state=test", redirectUri), false);
   assert.equal(isPiOAuthCallbackUrl("not a URL", redirectUri), false);
 });
 

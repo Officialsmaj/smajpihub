@@ -246,7 +246,7 @@ const swapRoutes: Array<[string, SwapPageKind]> = [
 
 export const router = createBrowserRouter([
   {
-    path: "/oauth/pi",
+    path: "/signin/callback",
     element: <MobileOAuthCallbackPage />,
   },
   {
