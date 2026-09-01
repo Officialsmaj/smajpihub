@@ -8,6 +8,7 @@ import { FoodCartProvider } from "./contexts/FoodCartContext";
 import { HealthBookingProvider } from "./contexts/HealthBookingContext";
 import AutomaticPageTranslator from "./components/AutomaticPageTranslator";
 import PiBrowserHandoff from "./components/PiBrowserHandoff";
+import NativeWelcomeGate from "./components/NativeWelcomeGate";
 
 function App() {
   useSliceReveal();
@@ -19,7 +20,7 @@ function App() {
   }, [isAdminRoute]);
 
   return (
-    <>
+    <NativeWelcomeGate>
       {!isAdminRoute ? <main className="desktop-access-block" aria-labelledby="desktop-access-title">
         <div>
           <span aria-hidden="true">SMAJ Pi Hub</span>
@@ -38,7 +39,7 @@ function App() {
         <AutomaticPageTranslator />
       </div>
       <PiBrowserHandoff />
-    </>
+    </NativeWelcomeGate>
   );
 }
 

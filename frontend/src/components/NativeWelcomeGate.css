@@ -1,0 +1,48 @@
+.native-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: #14121b;
+  background: radial-gradient(circle at 88% 5%, rgba(119,55,244,.18), transparent 36%), linear-gradient(155deg,#fff 0%,#f7f3ff 55%,#fff9eb 100%);
+  font-family: Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.native-welcome__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(100%,34rem);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(2rem,env(safe-area-inset-top)) 1.5rem max(1.4rem,env(safe-area-inset-bottom));
+}
+.native-welcome__brand { display:flex;align-items:center;gap:.75rem; }
+.native-welcome__logo { width:auto;height:2.7rem;object-fit:contain; }
+.native-welcome__beta { padding:.35rem .65rem;border:1px solid #f0cd73;border-radius:999px;color:#755a13;background:#fff2bd;font-size:.65rem;font-weight:800;letter-spacing:.08em; }
+.native-welcome__copy { margin-top:clamp(3.2rem,11vh,6rem); }
+.native-welcome__eyebrow { margin:0 0 .8rem;color:#6f35dc;font-size:.72rem;font-weight:900;letter-spacing:.13em; }
+.native-welcome__copy h1 { margin:0;font-size:clamp(2.65rem,12vw,4.25rem);line-height:.96;letter-spacing:-.055em; }
+.native-welcome__copy>p:last-child { max-width:29rem;margin:1.25rem 0 0;color:#625d6b;font-size:1rem;line-height:1.6; }
+.native-welcome__card { display:grid;grid-template-columns:auto 1fr;gap:.2rem .9rem;margin-top:auto;padding:1.15rem;border:1px solid rgba(91,46,168,.13);border-radius:1.6rem;background:rgba(255,255,255,.88);box-shadow:0 1.2rem 3.5rem rgba(57,32,102,.14);backdrop-filter:blur(18px); }
+.native-welcome__pi { display:grid;grid-row:span 2;width:3.25rem;height:3.25rem;place-items:center;border-radius:1rem;color:#fff;background:linear-gradient(145deg,#5b24c8,#8247f5);box-shadow:0 .6rem 1.5rem rgba(111,53,220,.25);font:700 1.8rem Georgia,serif; }
+.native-welcome__card strong,.native-welcome__card span { display:block; }
+.native-welcome__card strong { align-self:end;font-size:1.08rem; }
+.native-welcome__card>div:nth-child(2)>span { margin-top:.25rem;color:#77717e;font-size:.78rem; }
+.native-welcome__button { grid-column:1/-1;display:flex;min-height:3.4rem;margin-top:1rem;align-items:center;justify-content:center;gap:.65rem;border:0;border-radius:1.1rem;color:#fff;background:linear-gradient(110deg,#5921c7,#7c3ff2 58%,#315bf4);box-shadow:0 .8rem 1.8rem rgba(103,49,220,.26);font-family:inherit;font-size:1rem;font-weight:800; }
+.native-welcome__button:disabled { opacity:.72; }
+.native-welcome__spinner { width:1.1rem;height:1.1rem;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:native-welcome-spin .75s linear infinite; }
+.native-welcome__error { grid-column:1/-1;margin:.8rem 0 0;color:#b42318;font-size:.78rem;line-height:1.4;text-align:center; }
+.native-welcome__trust { display:flex;margin-top:1.15rem;align-items:center;justify-content:center;gap:.65rem;color:#797281;font-size:.67rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase; }
+.native-welcome__trust i { width:.22rem;height:.22rem;border-radius:50%;background:#d6a522; }
+.native-welcome__glow { position:absolute;border-radius:50%;pointer-events:none; }
+.native-welcome__glow--top { top:-6rem;right:-7rem;width:18rem;height:18rem;border:3.5rem solid rgba(120,59,237,.07); }
+.native-welcome__glow--bottom { bottom:-10rem;left:-10rem;width:22rem;height:22rem;background:rgba(249,191,49,.09); }
+@keyframes native-welcome-spin { to { transform:rotate(360deg); } }
+@media (min-width:600px) {
+  .native-welcome__content { justify-content:center;padding-inline:2.5rem; }
+  .native-welcome__copy { margin-top:5rem; }
+  .native-welcome__card { margin-top:4rem; }
+}
+@media (prefers-reduced-motion:reduce) { .native-welcome__spinner { animation:none; } }
