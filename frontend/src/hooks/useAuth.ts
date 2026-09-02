@@ -239,7 +239,10 @@ export const useAuth = () => {
     loginInProgressRef.current = true;
     setIsLoading(true);
     setAuthFeedback({ type: "success", message: "Connecting to Pi Browser…" });
-    if (!window.Pi && isCapacitorNative()) {
+    // The Pi SDK script can exist inside Capacitor's WebView, but it cannot
+    // complete the Pi Browser SDK flow there. Native Android must always use
+    // the OAuth browser/deep-link flow, regardless of window.Pi.
+    if (isCapacitorNative()) {
       try {
         const authResult = await authenticateWithCapacitorPi();
         await signInUser(authResult);
