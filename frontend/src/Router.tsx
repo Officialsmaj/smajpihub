@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import MobileOAuthCallbackPage from "./pages/MobileOAuthCallbackPage.tsx";
+import MobilePiBridgePage from "./pages/MobilePiBridgePage.tsx";
 import EngagementTasksPage from "./pages/EngagementTasksPage.tsx";
 import NotFoundPage from "./pages/NotFoundPage.tsx";
 import GenericPage from "./pages/GenericPage.tsx";
@@ -245,6 +246,10 @@ const swapRoutes: Array<[string, SwapPageKind]> = [
 ];
 
 export const router = createBrowserRouter([
+  {
+    path: "/signin/android",
+    element: <MobilePiBridgePage />,
+  },
   {
     path: "/signin/callback",
     element: <MobileOAuthCallbackPage />,

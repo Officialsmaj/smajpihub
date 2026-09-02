@@ -817,6 +817,11 @@
   resolved "https://registry.npmjs.org/@capacitor/android/-/android-8.5.1.tgz"
   integrity sha512-o8fUIPDSEASeXHHrDz26WU7OlyiRb+QqtI9KFdnLS1jUL77o5iGrvegibaZX8rWpiCyDJ6jlUhhhHlfeq3ou9A==
 
+"@capacitor/app-launcher@^8.0.1":
+  version "8.0.1"
+  resolved "https://registry.npmjs.org/@capacitor/app-launcher/-/app-launcher-8.0.1.tgz"
+  integrity sha512-23D8zi74sn7kxvISix8qYwgqdxGJN+4NImcNGvHen98LB1zb4eZfkJvFvp7pwntxGw4OjIE7yuf4wbzZxQHpog==
+
 "@capacitor/app@^8.1.1":
   version "8.1.1"
   resolved "https://registry.npmjs.org/@capacitor/app/-/app-8.1.1.tgz"

@@ -40,6 +40,6 @@ Never commit the keystore or its passwords.
 
 ## Pi sign-in
 
-Pi OAuth uses `https://smajpihub.com/signin/callback`, validates a random state, verifies the access token through Pi `/v2/me`, and signs into the existing SMAJ backend. Android accepts the HTTPS App Link and the `smajpihub://oauth/pi` fallback.
+Android Pi sign-in opens `pi://smajpihub.com/signin/android` directly in Pi Browser. The bridge authenticates with the Pi SDK and returns through `smajpihub://oauth/pi`. Android validates the random state, verifies the access token through Pi `/v2/me`, and signs into the existing SMAJ backend. The HTTPS callback remains available as a fallback.
 
 Before Play release, update `frontend/public/.well-known/assetlinks.json` with the SHA-256 fingerprint of the final Play App Signing certificate.
