@@ -10,6 +10,7 @@ import AutomaticPageTranslator from "./components/AutomaticPageTranslator";
 import PiBrowserHandoff from "./components/PiBrowserHandoff";
 import NativeWelcomeGate from "./components/NativeWelcomeGate";
 import NativeRuntimeBridge from "./components/NativeRuntimeBridge";
+import OfflineStatus from "./components/OfflineStatus";
 
 function App() {
   useSliceReveal();
@@ -21,27 +22,32 @@ function App() {
   }, [isAdminRoute]);
 
   return (
-    <NativeWelcomeGate>
-      <NativeRuntimeBridge />
-      {!isAdminRoute ? <main className="desktop-access-block" aria-labelledby="desktop-access-title">
-        <div>
-          <span aria-hidden="true">SMAJ Pi Hub</span>
-          <h1 id="desktop-access-title">Mobile and tablet only</h1>
-          <p>Please open SMAJ Pi Hub on a mobile phone or tablet to continue.</p>
+    <>
+      <OfflineStatus />
+      <NativeWelcomeGate>
+        <NativeRuntimeBridge />
+        {!isAdminRoute ? (
+          <main className="desktop-access-block" aria-labelledby="desktop-access-title">
+            <div>
+              <span aria-hidden="true">SMAJ Pi Hub</span>
+              <h1 id="desktop-access-title">Mobile and tablet only</h1>
+              <p>Please open SMAJ Pi Hub on a mobile phone or tablet to continue.</p>
+            </div>
+          </main>
+        ) : null}
+        <div className={"mobile-tablet-app" + (isAdminRoute ? " desktop-admin-app" : "")}>
+          <FoodCartProvider>
+            <HealthBookingProvider>
+              <RouterProvider router={router} />
+            </HealthBookingProvider>
+          </FoodCartProvider>
+          <AuthToast />
+          <GlobalFeedbackCenter />
+          <AutomaticPageTranslator />
         </div>
-      </main> : null}
-      <div className={"mobile-tablet-app" + (isAdminRoute ? " desktop-admin-app" : "")}>
-        <FoodCartProvider>
-          <HealthBookingProvider>
-            <RouterProvider router={router} />
-          </HealthBookingProvider>
-        </FoodCartProvider>
-        <AuthToast />
-        <GlobalFeedbackCenter />
-        <AutomaticPageTranslator />
-      </div>
-      <PiBrowserHandoff />
-    </NativeWelcomeGate>
+        <PiBrowserHandoff />
+      </NativeWelcomeGate>
+    </>
   );
 }
 

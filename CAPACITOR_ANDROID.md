@@ -68,3 +68,8 @@ The Android push plugin is installed, but remote push delivery requires external
 4. Configure Firebase Admin credentials on the backend and send FCM notifications from message/order/job/course events.
 
 The current backend web-push/VAPID implementation remains unchanged for browsers. Do not commit Firebase Admin private keys. Biometric sign-in is also intentionally not enabled until a maintained biometric plugin and a server-side re-authentication policy are selected.
+## Offline mode
+
+The app monitors both browser and native Android network state. When connectivity is lost it shows a global **You're offline** banner, keeps the cached application shell available, and serves eligible previously loaded read-only API responses (products, services, jobs, courses, education, and profiles) from IndexedDB for up to 24 hours.
+
+All API mutations are blocked while offline. Payments and other financial operations are never queued or replayed. When connectivity returns, the app displays **Back online** and emits `smaj:connection-restored` so individual data-heavy screens can refresh or synchronize explicitly permitted non-financial drafts.
