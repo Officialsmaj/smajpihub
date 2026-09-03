@@ -58,14 +58,14 @@ Examples:
 - Share/copy: call `shareNative()` or `writeNativeClipboard()`.
 - Phone reminder: call `scheduleNativeReminder()` after the user chooses a reminder.
 
-### Firebase push setup still required
+### Firebase push setup
 
-The Android push plugin is installed, but remote push delivery requires external Firebase configuration that is not stored in this repository:
+The Android push plugin is installed and the Firebase Android client for `com.smajpihub.mobile` is configured in `frontend/android/app/google-services.json`.
 
-1. Create/register `com.smajpihub.mobile` in Firebase.
-2. Add the Firebase Android configuration to the build environment as `frontend/android/app/google-services.json`.
-3. Add a backend endpoint that associates each FCM registration token with the authenticated SMAJ user/device.
-4. Configure Firebase Admin credentials on the backend and send FCM notifications from message/order/job/course events.
+Remote notification delivery still requires the server-side steps below:
+
+1. Add a backend endpoint that associates each FCM registration token with the authenticated SMAJ user/device.
+2. Configure Firebase Admin credentials on the backend and send FCM notifications from message/order/job/course events.
 
 The current backend web-push/VAPID implementation remains unchanged for browsers. Do not commit Firebase Admin private keys. Biometric sign-in is also intentionally not enabled until a maintained biometric plugin and a server-side re-authentication policy are selected.
 ## Offline mode

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773252617185",
+    "project_id": "smaj-pi-hub",
+    "storage_bucket": "smaj-pi-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773252617185:android:6026388f20d94c720cb8a0",
+        "android_client_info": {
+          "package_name": "com.smajpihub.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4TUdVRr9eTXvTJi_ACWYCMx6zPyNqPso"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
