@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Link } from "react-router-dom";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
-import FullscreenRoundedIcon from "@mui/icons-material/FullscreenRounded";
 import PictureInPictureAltRoundedIcon from "@mui/icons-material/PictureInPictureAltRounded";
+import StreamFullscreenFrame from "./StreamFullscreenFrame";
 import {
   getStreamPlayback,
   getStreamProgress,
@@ -97,10 +97,13 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       if (hls) return;
       const code = element.error?.code;
       fail(
-        code === MediaError.MEDIA_ERR_NETWORK ? "The video could not load. Check your connection and retry."
-          : code === MediaError.MEDIA_ERR_DECODE ? "This video could not be decoded."
-          : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "The playback source is not supported by this browser."
-          : "This video could not be played."
+        code === MediaError.MEDIA_ERR_NETWORK
+          ? "The video could not load. Check your connection and retry."
+          : code === MediaError.MEDIA_ERR_DECODE
+            ? "This video could not be decoded."
+            : code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+              ? "The playback source is not supported by this browser."
+              : "This video could not be played."
       );
     };
     element.addEventListener("loadedmetadata", resume, { once: true });
@@ -141,11 +144,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     let timer: number | null = null;
     let lastPosition = lastSavedRef.current;
     const save = (force = false, completed = false) => {
-      if (
-        !player ||
-        typeof player.getCurrentTime !== "function" ||
-        typeof player.getDuration !== "function"
-      ) return;
+      if (!player || typeof player.getCurrentTime !== "function" || typeof player.getDuration !== "function") return;
       const position = Math.max(0, Number(player.getCurrentTime()) || 0);
       const duration = Math.max(0, Number(player.getDuration()) || 0);
       if (!duration || (!force && Math.abs(position - lastPosition) < 10)) return;
@@ -168,10 +167,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
           events: {
             onReady: event => {
               player = event.target;
-              if (
-                typeof player.getCurrentTime !== "function" ||
-                typeof player.getDuration !== "function"
-              ) {
+              if (typeof player.getCurrentTime !== "function" || typeof player.getDuration !== "function") {
                 setMessage("The YouTube player is not ready yet. Please reload the video.");
                 return;
               }
@@ -200,21 +196,6 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
       if (player && typeof player.destroy === "function") player.destroy();
     };
   }, [id, video]);
-
-  const enterFullscreen = async () => {
-    const element = videoRef.current;
-    if (!element) return;
-    try {
-      const nativeVideo = element as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
-      if (typeof element.requestFullscreen === "function") await element.requestFullscreen();
-      else if (typeof nativeVideo.webkitEnterFullscreen === "function") nativeVideo.webkitEnterFullscreen();
-      else throw new Error("Fullscreen is unsupported");
-      const orientation = screen.orientation as ScreenOrientation & { lock?: (mode: "landscape") => Promise<void> };
-      if (typeof orientation.lock === "function") await orientation.lock("landscape").catch(() => undefined);
-    } catch {
-      setMessage("Pi Browser controls fullscreen and rotation on this device. Rotate your phone manually after opening fullscreen.");
-    }
-  };
 
   const enterPictureInPicture = async () => {
     const element = videoRef.current;
@@ -262,14 +243,14 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
   if (video.sourceType === "youtube" && video.youtubeVideoId)
     return (
       <section className="sw-watch real">
-        <div className="sw-youtube-player">
+        <StreamFullscreenFrame className="sw-youtube-player" title={video.title}>
           <div ref={youtubeRef} title={video.title} />
-        </div>
+        </StreamFullscreenFrame>
         {message ? <p className="sw-player-warning">{message}</p> : null}
         <div className="sw-watch-info">
           <div>
             <h1>{video.title}</h1>
-            <p>{video.creatorName || "SMAJ Creator"}  -  Progress saves automatically</p>
+            <p>{video.creatorName || "SMAJ Creator"} - Progress saves automatically</p>
           </div>
         </div>
       </section>
@@ -278,7 +259,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
   if (video.sourceType === "cloudflare" && video.iframeUrl)
     return (
       <section className="sw-watch real">
-        <div className="sw-real-player sw-cloudflare-player">
+        <StreamFullscreenFrame className="sw-real-player sw-cloudflare-player" title={video.title}>
           <iframe
             src={video.iframeUrl}
             title={video.title}
@@ -286,7 +267,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
             allowFullScreen
           />
           <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
-        </div>
+        </StreamFullscreenFrame>
         <div className="sw-watch-info">
           <div>
             <h1>{video.title}</h1>
@@ -301,7 +282,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
     );
   return (
     <section className="sw-watch real">
-      <div className="sw-real-player">
+      <StreamFullscreenFrame className="sw-real-player" title={video.title} mediaRef={videoRef}>
         <video
           ref={videoRef}
           controls
@@ -313,20 +294,23 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
           onEnded={() => persist(true)}
         />
         <div className="sw-player-screen-actions">
-          <button className="sw-player-pip" type="button" onClick={() => void enterPictureInPicture()} aria-label="Picture in Picture" title="Picture in Picture">
+          <button
+            className="sw-player-pip"
+            type="button"
+            onClick={() => void enterPictureInPicture()}
+            aria-label="Picture in Picture"
+            title="Picture in Picture"
+          >
             <PictureInPictureAltRoundedIcon />
-          </button>
-          <button className="sw-player-fullscreen" type="button" onClick={() => void enterFullscreen()} aria-label="Fullscreen and rotate landscape" title="Fullscreen">
-            <FullscreenRoundedIcon />
           </button>
         </div>
         <span className="sw-licensed-badge">AUTHORIZED STREAM</span>
         {message ? <p className="sw-player-warning">{message}</p> : null}
-      </div>
+      </StreamFullscreenFrame>
       <div className="sw-watch-info">
         <div>
           <h1>{video.title}</h1>
-          <p>{video.creatorName || "SMAJ Stream"}  -  Progress saves automatically</p>
+          <p>{video.creatorName || "SMAJ Stream"} - Progress saves automatically</p>
         </div>
         <button type="button">
           <BookmarkRoundedIcon /> Save
