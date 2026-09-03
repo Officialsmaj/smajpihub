@@ -6,6 +6,7 @@ import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
 import { disablePushNotifications, enablePushNotifications, getPushState } from "../../lib/pushNotifications";
+import { disableNativePushNotifications, enableNativePushNotifications, getNativePushState, supportsNativePushNotifications } from "../../lib/nativePushNotifications";
 
 type SavedSettings = {
   fullName: string;
@@ -100,14 +101,18 @@ const SettingsPage = () => {
   }, []);
 
   useEffect(() => {
-    getPushState().then((state) => { setPushSupported(state.supported); setPushEnabled(state.subscribed); }).catch(() => setPushSupported(false));
+    const stateRequest = supportsNativePushNotifications() ? getNativePushState() : getPushState();
+    stateRequest.then((state) => { setPushSupported(state.supported); setPushEnabled(state.subscribed); }).catch(() => setPushSupported(false));
   }, []);
 
   const togglePhoneNotifications = async () => {
     setPushBusy(true);
     setMessage("");
     try {
-      if (pushEnabled) await disablePushNotifications();
+      if (supportsNativePushNotifications()) {
+        if (pushEnabled) await disableNativePushNotifications();
+        else await enableNativePushNotifications();
+      } else if (pushEnabled) await disablePushNotifications();
       else await enablePushNotifications();
       setPushEnabled(!pushEnabled);
       setMessage(pushEnabled ? "Phone notifications disabled on this device." : "Phone notifications enabled on this device.");

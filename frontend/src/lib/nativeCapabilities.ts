@@ -102,24 +102,24 @@ export const requestNativePushRegistration = async () => {
 
   return new Promise<string>((resolve, reject) => {
     let settled = false;
-    const timeout = window.setTimeout(() => {
+    const handles: Array<{ remove: () => Promise<void> }> = [];
+    const finish = (callback: () => void) => {
       if (settled) return;
       settled = true;
-      reject(new Error("Firebase push registration timed out. Confirm the Android Firebase configuration."));
+      window.clearTimeout(timeout);
+      void Promise.all(handles.map((handle) => handle.remove()));
+      callback();
+    };
+    const timeout = window.setTimeout(() => {
+      finish(() => reject(new Error("Firebase push registration timed out. Confirm the Android Firebase configuration.")));
     }, 20000);
 
     void PushNotifications.addListener("registration", ({ value }) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeout);
-      resolve(value);
-    });
+      finish(() => resolve(value));
+    }).then((handle) => handles.push(handle));
     void PushNotifications.addListener("registrationError", (error) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeout);
-      reject(new Error(error.error || "Android push registration failed."));
-    });
+      finish(() => reject(new Error(error.error || "Android push registration failed.")));
+    }).then((handle) => handles.push(handle));
     void PushNotifications.register();
   });
 };

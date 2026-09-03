@@ -62,10 +62,7 @@ Examples:
 
 The Android push plugin is installed and the Firebase Android client for `com.smajpihub.mobile` is configured in `frontend/android/app/google-services.json`.
 
-Remote notification delivery still requires the server-side steps below:
-
-1. Add a backend endpoint that associates each FCM registration token with the authenticated SMAJ user/device.
-2. Configure Firebase Admin credentials on the backend and send FCM notifications from message/order/job/course events.
+The authenticated backend endpoint stores each FCM token against its SMAJ user, refreshes changed tokens, removes invalid tokens, and sends Android notifications from the same notification events used by browser push. Configure these Render environment secrets from the Firebase service-account JSON: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`. Preserve the private key line breaks as `\n` when entering it as one environment-variable value.
 
 The current backend web-push/VAPID implementation remains unchanged for browsers. Do not commit Firebase Admin private keys. Biometric sign-in is also intentionally not enabled until a maintained biometric plugin and a server-side re-authentication policy are selected.
 ## Offline mode

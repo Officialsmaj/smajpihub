@@ -416,6 +416,8 @@ export const useAuth = () => {
   const signOut = useCallback(async () => {
     setIsLoading(true);
     try {
+      const { disableNativePushNotifications, supportsNativePushNotifications } = await import("../lib/nativePushNotifications");
+      if (supportsNativePushNotifications()) await disableNativePushNotifications();
       if (getBaseURL()) await axiosClient.post("/user/signout", undefined, AUTH_REQUEST_CONFIG);
       window.localStorage.removeItem(PI_USER_STORAGE_KEY);
       setUser(null);

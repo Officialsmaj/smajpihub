@@ -1,13 +1,40 @@
 import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
-import { getVapidPublicKey, pushConfigured } from "../services/pushNotifications";
+import { getVapidPublicKey, nativePushConfigured, pushConfigured } from "../services/pushNotifications";
 
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
 
 export default function mountNotificationEndpoints(router: Router) {
   router.get("/push/config", (_req, res) => res.json({ configured: pushConfigured(), publicKey: getVapidPublicKey() }));
 
+  router.get("/push/native/status", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.json({ configured: nativePushConfigured(), subscribed: false });
+    const count = await req.app.locals.nativePushTokenCollection.countDocuments({ userId: currentUser.uid });
+    return res.json({ configured: nativePushConfigured(), subscribed: count > 0 });
+  });
+
+  router.post("/push/native/register", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    const token = String(req.body?.token || "").trim();
+    if (token.length < 20 || token.length > 4096) return res.status(400).json({ error: "invalid_fcm_token" });
+    await req.app.locals.nativePushTokenCollection.updateOne(
+      { token },
+      { $set: { userId: currentUser.uid, token, platform: "android", userAgent: req.get("user-agent"), updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+      { upsert: true },
+    );
+    return res.status(201).json({ registered: true, configured: nativePushConfigured() });
+  });
+
+  router.post("/push/native/unregister", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    const token = String(req.body?.token || "").trim();
+    if (token) await req.app.locals.nativePushTokenCollection.deleteOne({ userId: currentUser.uid, token });
+    return res.json({ registered: false });
+  });
   router.get("/push/status", async (req, res) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) return res.json({ subscribed: false });

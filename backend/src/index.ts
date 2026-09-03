@@ -354,6 +354,7 @@ const start = async () => {
       app.locals.notificationCollection = db.collection("notifications");
       app.locals.pushSubscriptionCollection =
         db.collection("push_subscriptions");
+      app.locals.nativePushTokenCollection = db.collection("native_push_tokens");
       app.locals.onboardingCollection = db.collection(
         "onboarding_applications",
       );
@@ -457,6 +458,8 @@ const start = async () => {
           { unique: true },
         ),
         app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
+        app.locals.nativePushTokenCollection.createIndex({ token: 1 }, { unique: true }),
+        app.locals.nativePushTokenCollection.createIndex({ userId: 1 }),
         app.locals.heroBannerCollection.createIndex({
           placement: 1,
           active: 1,

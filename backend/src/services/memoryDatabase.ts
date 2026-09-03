@@ -183,6 +183,7 @@ export const createMemoryCollections = () => ({
   messageCollection: new MemoryCollection(),
   notificationCollection: new MemoryCollection(),
   pushSubscriptionCollection: new MemoryCollection(),
+  nativePushTokenCollection: new MemoryCollection(),
   onboardingCollection: new MemoryCollection(),
   supportCollection: new MemoryCollection(),
   heroBannerCollection: new MemoryCollection(),
