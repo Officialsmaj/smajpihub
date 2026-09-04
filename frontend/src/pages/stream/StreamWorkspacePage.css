@@ -2842,3 +2842,11 @@
   .sw-player-stage.is-fullscreen .sw-player-controls-center button.primary,
   .sw-player-stage:fullscreen .sw-player-controls-center button.primary { width: 66px; height: 66px; }
 }
+.sw-player-controls.hidden > * { pointer-events: none !important; }
+.sw-detail-list-action > span,
+.sw-detail-download-action > span { display: inline !important; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 380px) {
+  .sw-detail-secondary-row { grid-template-columns: 1fr 1fr 1.18fr; }
+  .sw-detail-list-action > span,
+  .sw-detail-download-action > span { font-size: 9px; }
+}

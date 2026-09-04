@@ -175,13 +175,22 @@ const StreamFullscreenFrame = ({ title, className, children, mediaRef, castSuppo
     if (mediaRef?.current) mediaRef.current.playbackRate = next;
     showControls();
   };
+  const toggleControls = () => {
+    if (!fullscreen) return;
+    if (controlsVisible) {
+      if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
+      setControlsVisible(false);
+    } else {
+      showControls();
+    }
+  };
 
   return (
     <div
       ref={frameRef}
       className={`${className} sw-player-stage fit-${fit}${fullscreen ? " is-fullscreen" : ""}`}
       onPointerMove={fullscreen ? showControls : undefined}
-      onClick={fullscreen ? showControls : undefined}
+      onClick={fullscreen ? toggleControls : undefined}
     >
       {children}
       {!fullscreen ? (
@@ -199,7 +208,8 @@ const StreamFullscreenFrame = ({ title, className, children, mediaRef, castSuppo
           className={`sw-player-controls ${controlsVisible ? "visible" : "hidden"}`}
           onClick={event => {
             event.stopPropagation();
-            if (!controlsVisible) showControls();
+            if ((event.target as Element).closest("button, input")) return;
+            toggleControls();
           }}
         >
           <div className="sw-player-controls-top">

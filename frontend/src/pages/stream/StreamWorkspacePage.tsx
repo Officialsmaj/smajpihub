@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CastConnectedRoundedIcon from "@mui/icons-material/CastConnectedRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -825,7 +827,11 @@ const Detail = ({ series = false }: { series?: boolean }) => {
     }
   };
   const toggleDownloaded = async () => {
-    if (!id || !playbackId || !downloadAllowed) return;
+    if (!id || !playbackId) return;
+    if (!downloadAllowed) {
+      navigate("/app/services/stream/plans");
+      return;
+    }
     setDownloading(true);
     try {
       if (downloaded) {
@@ -839,7 +845,8 @@ const Detail = ({ series = false }: { series?: boolean }) => {
         }
         await saveStreamDownload(detail);
         setDownloaded(true);
-        window.location.assign(result.downloadUrl);
+        if (Capacitor.isNativePlatform()) await Browser.open({ url: result.downloadUrl });
+        else window.location.assign(result.downloadUrl);
       }
     } catch (error) {
       const failure = error as { response?: { data?: { message?: string } } };
@@ -950,29 +957,30 @@ const Detail = ({ series = false }: { series?: boolean }) => {
                   onClick={() => void toggleSaved()}
                 >
                   <BookmarkRoundedIcon />
-                  <span className="wide-label">{saving ? "Saving..." : saved ? "In My List" : "Add to List"}</span>
-                  <span className="compact-label">{saving ? "Saving" : "My List"}</span>
+                  <span>{saving ? "Saving..." : saved ? "In My List" : "My List"}</span>
                 </button>
                 <button
                   className={`sw-detail-download-action ${downloaded ? "downloaded" : ""}`}
                   type="button"
-                  disabled={!playbackId || !downloadAllowed || downloading}
+                  disabled={!playbackId || downloading}
                   onClick={() => void toggleDownloaded()}
                   aria-label={
-                    !playbackId || !downloadAllowed
+                    !playbackId
                       ? "Download unavailable"
                       : downloading
                         ? "Downloading"
                         : downloaded
                           ? "Remove download"
-                          : "Download"
+                          : downloadAllowed
+                            ? "Download"
+                            : "View Stream plans"
                   }
                   title={
-                    !playbackId || !downloadAllowed ? "Download unavailable" : downloaded ? "Downloaded" : "Download"
+                    !playbackId ? "Download unavailable" : !downloadAllowed ? "View Stream plans" : downloaded ? "Downloaded" : "Download"
                   }
                 >
                   <DownloadRoundedIcon />
-                  <span>{downloading ? "Loading" : downloaded ? "Saved" : "Download"}</span>
+                  <span>{downloading ? "Loading" : downloaded ? "Saved" : downloadAllowed ? "Download" : "Get downloads"}</span>
                 </button>
               </div>
             </div>

@@ -286,6 +286,7 @@ const StreamVideoPlayer = ({ id }: { id: string }) => {
         <video
           ref={videoRef}
           controls
+          autoPlay
           playsInline
           preload="metadata"
           poster={video.thumbnailUrl || undefined}
