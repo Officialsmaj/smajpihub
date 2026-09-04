@@ -98,28 +98,42 @@ export const scheduleNativeReminder = async (options: { id: number; title: strin
 export const requestNativePushRegistration = async () => {
   if (!Capacitor.isNativePlatform()) throw new Error("Native push registration requires the Android app.");
   const permission = await PushNotifications.requestPermissions();
-  if (permission.receive !== "granted") throw new Error("Notification permission was not granted.");
+  if (permission.receive !== "granted") {
+    throw new Error("Notifications are off. Open Phone Settings > Apps > SMAJ PI HUB > Notifications and allow them.");
+  }
 
-  return new Promise<string>((resolve, reject) => {
-    let settled = false;
-    const handles: Array<{ remove: () => Promise<void> }> = [];
-    const finish = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeout);
-      void Promise.all(handles.map((handle) => handle.remove()));
-      callback();
-    };
-    const timeout = window.setTimeout(() => {
-      finish(() => reject(new Error("Firebase push registration timed out. Confirm the Android Firebase configuration.")));
-    }, 20000);
-
-    void PushNotifications.addListener("registration", ({ value }) => {
-      finish(() => resolve(value));
-    }).then((handle) => handles.push(handle));
-    void PushNotifications.addListener("registrationError", (error) => {
-      finish(() => reject(new Error(error.error || "Android push registration failed.")));
-    }).then((handle) => handles.push(handle));
-    void PushNotifications.register();
+  let resolveToken!: (token: string) => void;
+  let rejectToken!: (error: Error) => void;
+  const tokenPromise = new Promise<string>((resolve, reject) => {
+    resolveToken = resolve;
+    rejectToken = reject;
   });
+  let settled = false;
+  const handles: Array<{ remove: () => Promise<void> }> = [];
+  const finish = (callback: () => void) => {
+    if (settled) return;
+    settled = true;
+    window.clearTimeout(timeout);
+    void Promise.all(handles.map((handle) => handle.remove()));
+    callback();
+  };
+  const timeout = window.setTimeout(() => {
+    finish(() => rejectToken(new Error("Firebase registration timed out. Check your internet connection and try again.")));
+  }, 20000);
+
+  const [registrationHandle, errorHandle] = await Promise.all([
+    PushNotifications.addListener("registration", ({ value }) => finish(() => resolveToken(value))),
+    PushNotifications.addListener("registrationError", (error) =>
+      finish(() => rejectToken(new Error(error.error || "Android push registration failed.")))
+    ),
+  ]);
+  handles.push(registrationHandle, errorHandle);
+
+  try {
+    await PushNotifications.register();
+  } catch (error) {
+    finish(() => rejectToken(error instanceof Error ? error : new Error("Android push registration failed.")));
+  }
+
+  return tokenPromise;
 };

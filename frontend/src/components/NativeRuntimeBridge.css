@@ -1,0 +1,38 @@
+.native-notification-permission {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding: 20px;
+  background: rgba(15, 10, 30, .42);
+  backdrop-filter: blur(3px);
+}
+
+.native-notification-permission > div {
+  width: min(100%, 430px);
+  padding: 24px;
+  color: #17121f;
+  background: #fff;
+  border: 1px solid #ebe5f4;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(35, 20, 70, .25);
+}
+
+.native-notification-permission > div > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #f0e8ff;
+  border-radius: 15px;
+  font-size: 24px;
+}
+
+.native-notification-permission h2 { margin: 16px 0 8px; font-size: 1.35rem; }
+.native-notification-permission p { margin: 0 0 8px; color: #5e536c; line-height: 1.45; }
+.native-notification-permission small { display: block; color: #776d83; line-height: 1.4; }
+.native-notification-permission > div > div { margin-top: 20px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.native-notification-permission button { min-height: 48px; padding: 0 20px; color: #fff; background: linear-gradient(135deg, #6d28d9, #4338ff); border: 0; border-radius: 14px; font-weight: 800; }
+.native-notification-permission button.secondary { color: #5e536c; background: #f3eff8; }
+.native-notification-permission button:disabled { opacity: .65; }

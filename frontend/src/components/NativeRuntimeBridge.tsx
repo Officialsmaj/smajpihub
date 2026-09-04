@@ -1,11 +1,32 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Network } from "@capacitor/network";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { ensureNativePushNotificationsEnabled } from "../lib/nativePushNotifications";
+import { enableNativePushNotifications, ensureNativePushNotificationsEnabled } from "../lib/nativePushNotifications";
+import "./NativeRuntimeBridge.css";
+
+const notificationErrorMessage = (error: unknown) =>
+  error instanceof Error && error.message
+    ? error.message
+    : "Notifications could not be enabled. Check the app notification permission and try again.";
 
 const NativeRuntimeBridge = () => {
+  const [notificationIssue, setNotificationIssue] = useState("");
+  const [requestingNotifications, setRequestingNotifications] = useState(false);
+
+  const retryNotifications = async () => {
+    setRequestingNotifications(true);
+    setNotificationIssue("");
+    try {
+      await enableNativePushNotifications();
+    } catch (error) {
+      setNotificationIssue(notificationErrorMessage(error));
+    } finally {
+      setRequestingNotifications(false);
+    }
+  };
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
@@ -23,9 +44,11 @@ const NativeRuntimeBridge = () => {
 
     void Network.getStatus().then(status => updateNetwork(status.connected, status.connectionType));
     void PushNotifications.createChannel({ id: "smaj_notifications", name: "SMAJ Notifications", description: "Messages, orders, jobs, courses and account alerts", importance: 5, visibility: 1, vibration: true }).catch(() => undefined);
-    // NativeWelcomeGate mounts this bridge only after authentication, so Android
-    // requests permission after the first successful Pi login while respecting opt-out.
-    void ensureNativePushNotificationsEnabled().catch(() => undefined);
+    // This bridge mounts immediately after authentication. Android 13+ displays
+    // its system permission dialog here; older Android versions grant it automatically.
+    void ensureNativePushNotificationsEnabled().catch(error => {
+      if (active) setNotificationIssue(notificationErrorMessage(error));
+    });
     void Network.addListener("networkStatusChange", status =>
       updateNetwork(status.connected, status.connectionType)
     ).then(handle => cleanups.push(() => handle.remove()));
@@ -65,7 +88,24 @@ const NativeRuntimeBridge = () => {
     };
   }, []);
 
-  return null;
+  if (!notificationIssue) return null;
+
+  return (
+    <aside className="native-notification-permission" role="alertdialog" aria-modal="true" aria-labelledby="native-notification-title">
+      <div>
+        <span aria-hidden="true">🔔</span>
+        <h2 id="native-notification-title">Turn on notifications</h2>
+        <p>{notificationIssue}</p>
+        <small>Get new messages, orders, job updates and SMAJ alerts on this phone.</small>
+        <div>
+          <button type="button" onClick={() => void retryNotifications()} disabled={requestingNotifications}>
+            {requestingNotifications ? "Checking…" : "Try again"}
+          </button>
+          <button type="button" className="secondary" onClick={() => setNotificationIssue("")} disabled={requestingNotifications}>Later</button>
+        </div>
+      </div>
+    </aside>
+  );
 };
 
 export default NativeRuntimeBridge;
