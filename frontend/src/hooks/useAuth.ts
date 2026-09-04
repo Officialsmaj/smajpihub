@@ -139,6 +139,24 @@ const redirectToDashboard = async () => {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
 };
 
+const getLoginDeviceMetadata = async () => {
+  if (!isCapacitorNative()) return { platform: "web" };
+  try {
+    const { getNativeDeviceInfo } = await import("../lib/nativeCapabilities");
+    const device = await getNativeDeviceInfo();
+    return {
+      deviceId: device.identifier,
+      name: [device.manufacturer, device.model].filter(Boolean).join(" "),
+      model: device.model,
+      manufacturer: device.manufacturer,
+      platform: "android",
+      operatingSystem: device.operatingSystem,
+      osVersion: device.osVersion,
+    };
+  } catch {
+    return { platform: "android", name: "SMAJ PI HUB Android" };
+  }
+};
 const toErrorMessage = (err: unknown) => {
   const axiosErr = err as AxiosError<BackendErrorBody>;
   if (!axiosErr.response) return "Backend connection unavailable. Please try again.";
@@ -213,7 +231,8 @@ export const useAuth = () => {
     let signedInUser = fallback;
     if (getBaseURL()) {
       try {
-        const response = await axiosClient.post<SignInResponse>("/user/signin", { authResult, sandbox: isPiSandboxMode() }, AUTH_REQUEST_CONFIG);
+        const device = await getLoginDeviceMetadata();
+        const response = await axiosClient.post<SignInResponse>("/user/signin", { authResult, sandbox: isPiSandboxMode(), device }, AUTH_REQUEST_CONFIG);
         console.log("[auth] /user/signin success", {
           status: response.status,
           hasUser: Boolean(response.data.user?.uid),

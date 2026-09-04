@@ -33,6 +33,7 @@ import mountAmbassadorEndpoints from "./handlers/ambassadors";
 import mountEducationEndpoints from "./handlers/education";
 import mountCourseEndpoints from "./handlers/courses";
 import { createMemoryCollections } from "./services/memoryDatabase";
+import { validateAndTouchDeviceSession } from "./services/deviceSessions";
 
 const dbName = env.mongo_db_name;
 const buildLegacyMongoUri = () => {
@@ -189,6 +190,19 @@ app.use(
   }) as unknown as express.RequestHandler,
 );
 
+app.use(async (req, res, next) => {
+  const uid = req.session.user?.uid;
+  if (!uid || !req.session.deviceSessionId || !app.locals.deviceSessionCollection) return next();
+  try {
+    if (await validateAndTouchDeviceSession(req, uid)) return next();
+    req.session.destroy(() => undefined);
+    res.clearCookie("connect.sid", sessionCookieOptions);
+    return res.status(401).json({ error: "session_revoked", message: "This device was signed out. Please sign in again." });
+  } catch (error) {
+    console.error("Device session validation failed:", error);
+    return next();
+  }
+});
 if (env.session_debug) {
   app.use((req, _, next) => {
     const cookieHeader = req.get("cookie") || "";
@@ -355,6 +369,7 @@ const start = async () => {
       app.locals.pushSubscriptionCollection =
         db.collection("push_subscriptions");
       app.locals.nativePushTokenCollection = db.collection("native_push_tokens");
+      app.locals.deviceSessionCollection = db.collection("device_sessions");
       app.locals.onboardingCollection = db.collection(
         "onboarding_applications",
       );
@@ -460,6 +475,9 @@ const start = async () => {
         app.locals.pushSubscriptionCollection.createIndex({ userId: 1 }),
         app.locals.nativePushTokenCollection.createIndex({ token: 1 }, { unique: true }),
         app.locals.nativePushTokenCollection.createIndex({ userId: 1 }),
+        app.locals.deviceSessionCollection.createIndex({ sessionKey: 1 }, { unique: true }),
+        app.locals.deviceSessionCollection.createIndex({ userId: 1, active: 1, lastActiveAt: -1 }),
+        app.locals.deviceSessionCollection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
         app.locals.heroBannerCollection.createIndex({
           placement: 1,
           active: 1,

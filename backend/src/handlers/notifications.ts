@@ -2,6 +2,7 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { resolveCurrentUser } from "../services/auth";
 import { getVapidPublicKey, nativePushConfigured, pushConfigured } from "../services/pushNotifications";
+import { currentDeviceSessionKey } from "../services/deviceSessions";
 
 const serialize = (item: Record<string, any>) => ({ ...item, _id: item._id.toString() });
 
@@ -22,9 +23,11 @@ export default function mountNotificationEndpoints(router: Router) {
     if (token.length < 20 || token.length > 4096) return res.status(400).json({ error: "invalid_fcm_token" });
     await req.app.locals.nativePushTokenCollection.updateOne(
       { token },
-      { $set: { userId: currentUser.uid, token, platform: "android", userAgent: req.get("user-agent"), updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+      { $set: { userId: currentUser.uid, token, sessionKey: currentDeviceSessionKey(req), platform: "android", userAgent: req.get("user-agent"), updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
       { upsert: true },
     );
+    const sessionKey = currentDeviceSessionKey(req);
+    if (sessionKey) await req.app.locals.deviceSessionCollection?.updateOne({ sessionKey, userId: currentUser.uid }, { $set: { notificationsEnabled: true } });
     return res.status(201).json({ registered: true, configured: nativePushConfigured() });
   });
 
@@ -33,6 +36,8 @@ export default function mountNotificationEndpoints(router: Router) {
     if (!currentUser) return res.status(401).json({ error: "unauthorized" });
     const token = String(req.body?.token || "").trim();
     if (token) await req.app.locals.nativePushTokenCollection.deleteOne({ userId: currentUser.uid, token });
+    const sessionKey = currentDeviceSessionKey(req);
+    if (sessionKey) await req.app.locals.deviceSessionCollection?.updateOne({ sessionKey, userId: currentUser.uid }, { $set: { notificationsEnabled: false } });
     return res.json({ registered: false });
   });
   router.get("/push/status", async (req, res) => {

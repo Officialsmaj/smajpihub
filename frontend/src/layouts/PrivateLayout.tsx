@@ -61,6 +61,7 @@ const pageTitles: Record<string, string> = {
   "/seller": "Seller Dashboard",
   "/profile": "Profile",
   "/settings": "Settings",
+  "/settings/devices": "Devices & Sessions",
   "/search": "Search",
   "/messages": "Messages",
   "/notifications": "Notifications",

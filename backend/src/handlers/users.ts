@@ -6,6 +6,7 @@ import env from "../environments";
 import { minimalSessionUser, resolveCurrentUser } from "../services/auth";
 import { createNotification } from "../services/notifications";
 import { assertNoBase64Images, resolveImageValue } from "../services/imageStorage";
+import { currentDeviceSessionKey, ensureDeviceSession, type DeviceMetadata } from "../services/deviceSessions";
 
 type VerifiedPiUser = {
   uid?: string;
@@ -68,7 +69,7 @@ const regenerateSession = (req: Request) => new Promise<void>((resolve, reject) 
   req.session.regenerate((err) => (err ? reject(err) : resolve()));
 });
 
-const establishAuthSession = async (req: Request, currentUser: any) => {
+const establishAuthSession = async (req: Request, currentUser: any, device: DeviceMetadata = {}) => {
   const nextUser = minimalSessionUser(currentUser);
   if (req.session.user?.userId !== nextUser.userId) {
     await regenerateSession(req);
@@ -77,6 +78,8 @@ const establishAuthSession = async (req: Request, currentUser: any) => {
   delete (req.session as any).accessToken;
   delete (req.session as any).piUser;
   req.session.user = nextUser;
+  await saveSession(req);
+  await ensureDeviceSession(req, currentUser.uid, device);
   await saveSession(req);
   if (env.session_debug) {
     console.info("[session-signin]", {
@@ -112,6 +115,11 @@ const refreshExistingAuthSession = async (req: Request, currentUser: any) => {
 const destroySession = async (req: Request, res: Response) => {
   const currentUser = await resolveCurrentUser(req).catch(() => null);
   if (currentUser) {
+    const sessionKey = currentDeviceSessionKey(req);
+    if (sessionKey && req.app.locals.deviceSessionCollection) {
+      await req.app.locals.deviceSessionCollection.updateOne({ sessionKey, userId: currentUser.uid }, { $set: { active: false, revokedAt: new Date() } });
+      await req.app.locals.nativePushTokenCollection?.deleteOne({ sessionKey, userId: currentUser.uid });
+    }
     await createNotification(req.app, {
       userId: currentUser.uid,
       type: "security_logout",
@@ -229,7 +237,7 @@ export const handleSignIn = async (req: Request, res: Response) => {
       currentUser = await userCollection.findOne({ _id: insertResult.insertedId });
     }
 
-    await establishAuthSession(req, currentUser);
+    await establishAuthSession(req, currentUser, req.body?.device || {});
     if (currentUser?.uid) {
       await createNotification(req.app, {
         userId: currentUser.uid,
@@ -280,7 +288,7 @@ export default function mountUserEndpoints(router: Router) {
       { upsert: true },
     );
     const currentUser = await userCollection.findOne({ uid });
-    await establishAuthSession(req, currentUser);
+    await establishAuthSession(req, currentUser, req.body?.device || {});
     if (currentUser?.uid) {
       await createNotification(req.app, {
         userId: currentUser.uid,
@@ -455,6 +463,59 @@ export default function mountUserEndpoints(router: Router) {
     return res.status(200).json({ user: toClientUser(updatedUser), message: "Verification request submitted" });
   });
 
+  router.get("/sessions", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    if (!req.session.deviceSessionId) {
+      await ensureDeviceSession(req, currentUser.uid);
+    }
+    const currentKey = currentDeviceSessionKey(req);
+    const sessions = await req.app.locals.deviceSessionCollection
+      .find({ userId: currentUser.uid, active: true })
+      .sort({ lastActiveAt: -1 })
+      .limit(50)
+      .toArray();
+    return res.json({ sessions: sessions.map((item: any) => ({
+      id: item.sessionKey,
+      name: item.name,
+      platform: item.platform,
+      browser: item.browser,
+      operatingSystem: item.operatingSystem,
+      osVersion: item.osVersion,
+      location: item.location,
+      createdAt: item.createdAt,
+      lastActiveAt: item.lastActiveAt,
+      expiresAt: item.expiresAt,
+      notificationsEnabled: Boolean(item.notificationsEnabled),
+      current: item.sessionKey === currentKey,
+    })) });
+  });
+
+  router.delete("/sessions/:sessionKey", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    const sessionKey = String(req.params.sessionKey || "");
+    if (!/^[a-f0-9]{64}$/.test(sessionKey)) return res.status(400).json({ error: "invalid_session" });
+    if (sessionKey === currentDeviceSessionKey(req)) return res.status(400).json({ error: "current_session", message: "Use Logout to remove this device." });
+    const result = await req.app.locals.deviceSessionCollection.updateOne(
+      { sessionKey, userId: currentUser.uid, active: true },
+      { $set: { active: false, revokedAt: new Date() } },
+    );
+    await req.app.locals.nativePushTokenCollection?.deleteOne({ sessionKey, userId: currentUser.uid });
+    return res.json({ removed: result.matchedCount > 0 });
+  });
+
+  router.post("/sessions/revoke-others", async (req: Request, res: Response) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized" });
+    const currentKey = currentDeviceSessionKey(req);
+    await req.app.locals.deviceSessionCollection.updateMany(
+      { userId: currentUser.uid, sessionKey: { $ne: currentKey }, active: true },
+      { $set: { active: false, revokedAt: new Date() } },
+    );
+    await req.app.locals.nativePushTokenCollection?.deleteMany?.({ userId: currentUser.uid, sessionKey: { $ne: currentKey } });
+    return res.json({ removed: true });
+  });
   router.put("/settings", async (req: Request, res: Response) => {
     const currentUser = await resolveCurrentUser(req);
     if (!currentUser) {

@@ -1,5 +1,6 @@
 export type AuthSessionUser = {
   userId: string;
+  uid: string;
   piUsername: string;
   role: "buyer" | "seller" | "admin";
 };
@@ -8,5 +9,6 @@ export type AuthSessionUser = {
 declare module 'express-session' {
   export interface SessionData {
     user?: AuthSessionUser | null,
+    deviceSessionId?: string,
   }
 }

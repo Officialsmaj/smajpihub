@@ -29,6 +29,7 @@ export const resolveCurrentUser = async (req: Request): Promise<UserData | null>
 
 export const minimalSessionUser = (user: UserData | Record<string, any>): AuthSessionUser => ({
   userId: user._id.toString(),
+  uid: String(user.uid),
   piUsername: user.piUsername || user.username,
   role: ["buyer", "seller", "admin"].includes(user.role) ? user.role : "buyer",
 });

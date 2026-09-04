@@ -155,6 +155,12 @@ export class MemoryCollection {
     return { deletedCount: 1 };
   }
 
+  async deleteMany(query: Query) {
+    const remaining = this.documents.filter((document) => !matchesQuery(document, query));
+    const deletedCount = this.documents.length - remaining.length;
+    this.documents = remaining;
+    return { deletedCount };
+  }
   async countDocuments(query: Query = {}) {
     return this.documents.filter((document) => matchesQuery(document, query)).length;
   }
@@ -184,6 +190,7 @@ export const createMemoryCollections = () => ({
   notificationCollection: new MemoryCollection(),
   pushSubscriptionCollection: new MemoryCollection(),
   nativePushTokenCollection: new MemoryCollection(),
+  deviceSessionCollection: new MemoryCollection(),
   onboardingCollection: new MemoryCollection(),
   supportCollection: new MemoryCollection(),
   heroBannerCollection: new MemoryCollection(),

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
 import TrustBadge from "../../components/TrustBadge";
 import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
@@ -314,6 +314,7 @@ const SettingsPage = () => {
 
         <section>
           <h2>Privacy & Security</h2>
+          <div className="setting-line toggle-line"><span><strong>Devices & Sessions</strong><small>See every active web and Android login, location, date and last active time.</small></span><Link className="private-secondary-button" to="/settings/devices">Manage devices</Link></div>
           <label className="setting-line toggle-line"><span><strong>Show profile publicly</strong><small>Allow marketplace users to see your public seller or buyer profile.</small></span><input type="checkbox" checked={form.publicProfile} onChange={(event) => setField("publicProfile", event.target.checked)} /></label>
           <label className="setting-line toggle-line"><span><strong>Allow sellers/buyers to contact me</strong><small>Enable safe marketplace contact for service and order activity.</small></span><input type="checkbox" checked={form.allowContact} onChange={(event) => setField("allowContact", event.target.checked)} /></label>
           <button type="button" className="private-secondary-button danger" onClick={() => setDeleteRequested(true)}>Delete account</button>

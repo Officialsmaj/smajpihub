@@ -89,6 +89,11 @@ axiosClient.interceptors.response.use(
     const config = error?.config as RetryableRequestConfig | undefined;
     const method = String(config?.method || "get").toLowerCase();
     const status = Number(error?.response?.status || 0);
+    if (status === 401 && error?.response?.data?.error === "session_revoked" && typeof window !== "undefined") {
+      window.localStorage.removeItem(PI_USER_STORAGE_KEY);
+      window.location.assign("/");
+      return Promise.reject(error);
+    }
     const isReadRequest = method === "get" || method === "head";
     const isTemporaryFailure = error?.code === "ECONNABORTED" || !error?.response || [502, 503, 504].includes(status);
     const retryCount = config?.__smajRetryCount || 0;

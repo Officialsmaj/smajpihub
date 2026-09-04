@@ -40,6 +40,7 @@ import OrdersPage from "./pages/private/OrdersPage";
 import ProfilePage from "./pages/private/ProfilePage";
 import TokenRewardsPage from "./pages/private/TokenRewardsPage";
 import SettingsPage from "./pages/private/SettingsPage";
+import DeviceSessionsPage from "./pages/private/DeviceSessionsPage";
 import AccountDashboardPage from "./pages/private/AccountDashboardPage";
 import SellerPage from "./pages/private/SellerPage";
 import EditProductPage from "./pages/private/EditProductPage";
@@ -1102,7 +1103,16 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/store",
+    path: "/settings/devices",
+    element: (
+      <ProtectedRoute>
+        <PrivateLayout fullScreen>
+          <DeviceSessionsPage />
+        </PrivateLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {    path: "/store",
     element: (
       <ProtectedRoute>
         <PrivateLayout>
