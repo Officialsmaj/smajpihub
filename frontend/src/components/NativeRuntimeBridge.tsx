@@ -3,7 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { Network } from "@capacitor/network";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { refreshNativePushRegistration } from "../lib/nativePushNotifications";
+import { ensureNativePushNotificationsEnabled } from "../lib/nativePushNotifications";
 
 const NativeRuntimeBridge = () => {
   useEffect(() => {
@@ -23,7 +23,9 @@ const NativeRuntimeBridge = () => {
 
     void Network.getStatus().then(status => updateNetwork(status.connected, status.connectionType));
     void PushNotifications.createChannel({ id: "smaj_notifications", name: "SMAJ Notifications", description: "Messages, orders, jobs, courses and account alerts", importance: 5, visibility: 1, vibration: true }).catch(() => undefined);
-    void refreshNativePushRegistration().catch(() => undefined);
+    // NativeWelcomeGate mounts this bridge only after authentication, so Android
+    // requests permission after the first successful Pi login while respecting opt-out.
+    void ensureNativePushNotificationsEnabled().catch(() => undefined);
     void Network.addListener("networkStatusChange", status =>
       updateNetwork(status.connected, status.connectionType)
     ).then(handle => cleanups.push(() => handle.remove()));
