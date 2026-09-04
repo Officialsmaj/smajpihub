@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DevicesOutlinedIcon from "@mui/icons-material/DevicesOutlined";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PhoneAndroidOutlinedIcon from "@mui/icons-material/PhoneAndroidOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
@@ -28,6 +29,7 @@ const formatDate = (value?: string) => value
   : "Unknown";
 
 const DeviceSessionsPage = () => {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
@@ -79,13 +81,15 @@ const DeviceSessionsPage = () => {
 
   return (
     <main className="private-page device-sessions-page">
-      <section className="private-page-head device-sessions-head">
-        <div>
-          <p className="private-kicker">SECURITY</p>
-          <h1>Devices & Sessions</h1>
-          <p>Review where your SMAJ PI HUB account is signed in and remove devices you no longer use.</p>
-        </div>
-        <Link className="private-secondary-button" to="/settings/preferences">Back to settings</Link>
+      <header className="device-sessions-nav">
+        <button type="button" onClick={() => navigate(-1)} aria-label="Go back"><ArrowBackRoundedIcon /></button>
+        <div><span>Security</span><strong>Devices & Sessions</strong></div>
+      </header>
+
+      <section className="device-sessions-hero">
+        <p className="private-kicker">ACCOUNT SECURITY</p>
+        <h1>Where you’re signed in</h1>
+        <p>Review your active devices and sign out any device you no longer recognize or use.</p>
       </section>
 
       <section className="device-security-note">
