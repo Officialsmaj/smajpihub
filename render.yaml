@@ -1,5 +1,17 @@
 services:
   - type: web
+    name: sph-bot
+    runtime: node
+    plan: free
+    rootDir: sph-bot
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+  - type: web
     name: smajpihub
     runtime: docker
     rootDir: backend
