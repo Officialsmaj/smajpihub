@@ -44,10 +44,11 @@ jobs:
           chmod +x android/gradlew
           cd android
           ./gradlew assembleDebug
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/SMAJ-PI-HUB.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: smaj-pi-hub-capacitor-apk
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          name: SMAJ-PI-HUB-Android
+          path: frontend/android/app/build/outputs/apk/debug/SMAJ-PI-HUB.apk
           if-no-files-found: error
