@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate, useParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -12,6 +12,8 @@ import useSportsCatalog from "../../hooks/useSportsCatalog";
 import type { SportsCatalog } from "../../types/sports";
 import { FavoriteTeam, MatchCard, TeamMark } from "./SportsComponents";
 import SportsHeader from "./SportsHeader";
+import SportsOnboarding, { SPORTS_ONBOARDING_KEY, SPORTS_PREFERENCES_KEY } from "./SportsOnboarding";
+import { getSportsPreferences, type SportsPreferences } from "../../lib/sportsApi";
 import "./SportsPage.css";
 
 export type SportsPageKind =
@@ -22,6 +24,7 @@ export type SportsPageKind =
   | "teams"
   | "news"
   | "community"
+  | "onboarding"
   | "match"
   | "team"
   | "article";
@@ -550,66 +553,73 @@ const DetailContent = ({ kind, catalog, favorites, onToggleFavorite }: SportsVie
 };
 
 const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [activeSport, setActiveSport] = useState("All sports");
-  const { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite } = useSportsCatalog();
+  const [onboardingComplete, setOnboardingComplete] = useState(() => localStorage.getItem(SPORTS_ONBOARDING_KEY) === "true");
+  const [preferencesReady, setPreferencesReady] = useState(kind !== "home" || onboardingComplete);
+  const { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite, applyFavorites } = useSportsCatalog();
+
+  useEffect(() => {
+    if (kind !== "home" || onboardingComplete) return;
+    let active = true;
+    getSportsPreferences().then(preferences => {
+      if (!active || !preferences?.completed) return;
+      localStorage.setItem(SPORTS_ONBOARDING_KEY, "true");
+      localStorage.setItem(SPORTS_PREFERENCES_KEY, JSON.stringify(preferences));
+      applyFavorites(preferences.favoriteTeamIds);
+      setOnboardingComplete(true);
+    }).catch(() => undefined).finally(() => active && setPreferencesReady(true));
+    return () => { active = false; };
+  }, [applyFavorites, kind, onboardingComplete]);
+
+  const finishOnboarding = (preferences: SportsPreferences) => {
+    applyFavorites(preferences.favoriteTeamIds);
+    setOnboardingComplete(true);
+    if (kind === "onboarding") navigate("/services/sports", { replace: true });
+  };
+  const checkingPreferences = kind === "home" && !preferencesReady && !onboardingComplete;
+  const showOnboarding = kind === "onboarding" || (kind === "home" && preferencesReady && !onboardingComplete);
+  const hideSportsChrome = showOnboarding || checkingPreferences;
+
   return (
     <AppLayout showFooter={false} showHeader={false}>
       <main className="sports-page">
         <SportsHeader query={query} onQueryChange={setQuery} />
-        <div className={`sports-data-status${usingFallback ? " fallback" : ""}`} role="status">
-          <span>
-            {loading
-              ? "Loading latest sports data…"
-              : usingFallback
-                ? "Sports provider unavailable — showing saved demo data."
-                : `Updated ${lastUpdated?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "now"} · Data: TheSportsDB`}
-          </span>
-          {!loading ? (
-            <button type="button" onClick={() => void refresh()}>
-              Refresh
-            </button>
-          ) : null}
-        </div>
+        {!hideSportsChrome ? (
+          <div className={`sports-data-status${usingFallback ? " fallback" : ""}`} role="status">
+            <span>
+              {loading
+                ? "Loading latest sports data..."
+                : usingFallback
+                  ? "Sports provider unavailable - showing saved demo data."
+                  : `Updated ${lastUpdated?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) || "now"} - Data: TheSportsDB`}
+            </span>
+            {!loading ? <button type="button" onClick={() => void refresh()}>Refresh</button> : null}
+          </div>
+        ) : null}
         <div className="sports-content">
-          {kind === "home" ? (
+          {checkingPreferences ? (
+            <div className="sports-onboarding-loading" role="status"><span /><p>Preparing your Sports experience...</p></div>
+          ) : showOnboarding ? (
+            <SportsOnboarding catalog={catalog} onComplete={finishOnboarding} />
+          ) : kind === "home" ? (
             <HomeContent query={query} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
           ) : kind === "match" || kind === "team" || kind === "article" ? (
             <DetailContent kind={kind} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} />
           ) : (
-            <ListingContent
-              kind={kind}
-              query={query}
-              catalog={catalog}
-              favorites={favorites}
-              onToggleFavorite={toggleFavorite}
-              activeSport={activeSport}
-              onSportChange={setActiveSport}
-            />
+            <ListingContent kind={kind} query={query} catalog={catalog} favorites={favorites} onToggleFavorite={toggleFavorite} activeSport={activeSport} onSportChange={setActiveSport} />
           )}
         </div>
-        <nav className="sports-mobile-nav">
-          <NavLink end to="/services/sports">
-            <HomeRoundedIcon />
-            <span>Home</span>
-          </NavLink>
-          <NavLink to="/services/sports/live">
-            <LiveTvRoundedIcon />
-            <span>Latest</span>
-          </NavLink>
-          <NavLink to="/services/sports/matches">
-            <CalendarMonthRoundedIcon />
-            <span>Matches</span>
-          </NavLink>
-          <NavLink to="/services/sports/news">
-            <NewspaperRoundedIcon />
-            <span>News</span>
-          </NavLink>
-          <NavLink to="/services/sports/teams">
-            <SportsSoccerRoundedIcon />
-            <span>Teams</span>
-          </NavLink>
-        </nav>
+        {!hideSportsChrome ? (
+          <nav className="sports-mobile-nav">
+            <NavLink end to="/services/sports"><HomeRoundedIcon /><span>Home</span></NavLink>
+            <NavLink to="/services/sports/live"><LiveTvRoundedIcon /><span>Latest</span></NavLink>
+            <NavLink to="/services/sports/matches"><CalendarMonthRoundedIcon /><span>Matches</span></NavLink>
+            <NavLink to="/services/sports/news"><NewspaperRoundedIcon /><span>News</span></NavLink>
+            <NavLink to="/services/sports/teams"><SportsSoccerRoundedIcon /><span>Teams</span></NavLink>
+          </nav>
+        ) : null}
       </main>
     </AppLayout>
   );

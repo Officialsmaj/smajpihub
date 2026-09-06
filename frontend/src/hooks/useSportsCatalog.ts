@@ -67,6 +67,11 @@ const useSportsCatalog = () => {
     };
   }, [catalog.meta?.refreshAfterSeconds, refresh]);
 
+  const applyFavorites = useCallback((teamIds: string[]) => {
+    const next = new Set(teamIds);
+    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify([...next]));
+    setFavorites(next);
+  }, []);
   const toggleFavorite = useCallback((teamId: string) => {
     setFavorites(current => {
       const next = new Set(current);
@@ -77,7 +82,7 @@ const useSportsCatalog = () => {
     });
   }, []);
 
-  return { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite };
+  return { catalog, favorites, loading, usingFallback, lastUpdated, refresh, toggleFavorite, applyFavorites };
 };
 
 export default useSportsCatalog;

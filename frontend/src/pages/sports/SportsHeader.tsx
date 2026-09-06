@@ -36,15 +36,9 @@ const SportsHeader = ({ query, onQueryChange }: { query: string; onQueryChange: 
         placeholder="Search teams, matches and competitions"
       />
     </label>
-    <button
-      className="sports-icon-button"
-      type="button"
-      aria-label="Sports notifications coming soon"
-      title="Notifications coming soon"
-      disabled
-    >
+    <NavLink className="sports-icon-button" to="/services/sports/settings/favorites" aria-label="Sports notification and favorite settings" title="Sports preferences">
       <NotificationsNoneRoundedIcon />
-    </button>
+    </NavLink>
     <ServiceMobileMenu
       title="SMAJ Sports"
       accent="#1d64d8"

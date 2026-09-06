@@ -176,6 +176,7 @@ const sportsRoutes: Array<[string, SportsPageKind]> = [
   ["teams", "teams"],
   ["news", "news"],
   ["community", "community"],
+  ["settings/favorites", "onboarding"],
 ];
 
 const jobsRoutes: Array<[string, JobsPageKind]> = [

@@ -26,7 +26,18 @@ export interface UserData {
     language: string,
     notifications: boolean,
   },
-  recentSearches?: string[],
+  sportsPreferences?: {
+    completed: boolean,
+    favoriteTeamIds: string[],
+    favoriteCompetitionIds: string[],
+    notifications: {
+      breakingNews: boolean,
+      matchStart: boolean,
+      matchEnd: boolean,
+      scoreUpdates: boolean,
+    },
+    updatedAt?: string | null,
+  },  recentSearches?: string[],
   createdAt: Date,
   accessToken: string
 }

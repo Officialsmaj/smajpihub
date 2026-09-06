@@ -1,6 +1,7 @@
 import type { Router } from "express";
 import axios from "axios";
 import env from "../environments";
+import { resolveCurrentUser } from "../services/auth";
 
 const teams = [
   {
@@ -545,7 +546,35 @@ const getCatalog = async () => {
   return pendingCatalog;
 };
 
+const cleanIds = (value: unknown) => Array.isArray(value)
+  ? [...new Set(value.map(item => String(item || "").trim()).filter(Boolean))].slice(0, 100)
+  : [];
+
+const normalizeSportsPreferences = (value: any = {}) => ({
+  completed: Boolean(value.completed),
+  favoriteTeamIds: cleanIds(value.favoriteTeamIds),
+  favoriteCompetitionIds: cleanIds(value.favoriteCompetitionIds),
+  notifications: {
+    breakingNews: value.notifications?.breakingNews !== false,
+    matchStart: value.notifications?.matchStart !== false,
+    matchEnd: value.notifications?.matchEnd !== false,
+    scoreUpdates: Boolean(value.notifications?.scoreUpdates),
+  },
+  updatedAt: value.updatedAt || null,
+});
 const mountSportsEndpoints = (router: Router) => {
+  router.get("/preferences", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.json({ preferences: null });
+    return res.json({ preferences: normalizeSportsPreferences((currentUser as any).sportsPreferences) });
+  });
+  router.put("/preferences", async (req, res) => {
+    const currentUser = await resolveCurrentUser(req);
+    if (!currentUser) return res.status(401).json({ error: "unauthorized", message: "Sign in to save Sports preferences." });
+    const preferences = normalizeSportsPreferences({ ...req.body, completed: true, updatedAt: new Date().toISOString() });
+    await req.app.locals.userCollection.updateOne({ uid: currentUser.uid }, { $set: { sportsPreferences: preferences } });
+    return res.json({ preferences });
+  });
   router.get("/bootstrap", async (_, res) => {
     const catalog = await getCatalog();
     res.json(catalog);
