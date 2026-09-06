@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useNavigate, useParams } from "react-router-dom";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -160,7 +160,23 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
   const [status, setStatus] = useState<"all" | "upcoming" | "finished">("all");
   const sports = ["All", ...new Set(catalog.matches.map(match => sportLabel(match.sport)))];
   const [selectedSport, setSelectedSport] = useState("All");
+  const [feed, setFeedState] = useState(() => localStorage.getItem("smaj_sports_home_filter") || "all");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const savedCompetitionIds = useMemo(() => {
+    try { return new Set((JSON.parse(localStorage.getItem(SPORTS_PREFERENCES_KEY) || "null") as SportsPreferences | null)?.favoriteCompetitionIds || []); }
+    catch { return new Set<string>(); }
+  }, []);
+  const setFeed = (value: string) => {
+    setFeedState(value);
+    localStorage.setItem("smaj_sports_home_filter", value);
+    setMoreOpen(false);
+  };
+  const followedCompetitionNames = new Set(catalog.competitions.filter(item => savedCompetitionIds.has(item.id)).map(item => item.name));
   const visibleMatches = catalog.matches
+    .filter(match => feed === "all"
+      || feed === "follow" && (favorites.has(match.home.id) || favorites.has(match.away.id) || followedCompetitionNames.has(match.competition))
+      || feed === "champions" && match.competition.toLowerCase().includes("champion")
+      || feed.startsWith("competition:") && match.competition === feed.slice("competition:".length))
     .filter(match => status === "all" || match.status === status)
     .filter(match => selectedSport === "All" || sportLabel(match.sport) === selectedSport)
     .filter(match =>
@@ -183,6 +199,20 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
           All matches <ArrowForwardRoundedIcon />
         </Link>
       </section>
+
+      <section className="sports-feed-filter" aria-label="Match feed filters">
+        <button type="button" className={feed === "follow" ? "active" : ""} onClick={() => setFeed("follow")}>Follow</button>
+        <button type="button" className={feed === "all" ? "active" : ""} onClick={() => setFeed("all")}>All</button>
+        <button type="button" className={feed === "champions" ? "active" : ""} onClick={() => setFeed("champions")}>Champions League</button>
+        <button type="button" className={moreOpen || feed.startsWith("competition:") ? "active" : ""} onClick={() => setMoreOpen(current => !current)}>More <span aria-hidden="true">⌄</span></button>
+      </section>
+      {moreOpen ? <section className="sports-more-filter" aria-label="Choose a competition">
+        <header><div><span>FILTER</span><h2>All competitions</h2></div><button type="button" aria-label="Close competition filter" onClick={() => setMoreOpen(false)}>×</button></header>
+        <div>
+          {catalog.competitions.map(competition => <button type="button" className={feed === `competition:${competition.name}` ? "active" : ""} onClick={() => setFeed(`competition:${competition.name}`)} key={competition.id}>{competition.name}<small>{sportLabel(competition.sport)}</small></button>)}
+        </div>
+        <Link to="/services/sports/competitions">Open competition directory</Link>
+      </section> : null}
 
       <section className="sports-score-controls">
         <div className="sports-sport-tabs">
@@ -219,7 +249,7 @@ const HomeContent = ({ query, catalog, favorites, onToggleFavorite }: SportsView
           {!groupedMatches.length ? (
             <EmptyState
               title="No matches found"
-              message="Try another sport, status, or search. The free provider may not cover this selection."
+              message={feed === "follow" ? "Choose favorite teams or leagues in Sports preferences, or switch to All." : "Try another competition, sport, status, or search. The data provider may not cover this selection."}
             />
           ) : null}
         </div>
