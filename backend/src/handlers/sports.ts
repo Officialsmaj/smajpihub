@@ -187,6 +187,7 @@ type SportsCatalog = {
     name: string;
     sport: string;
     teamCount: number;
+    logoUrl?: string;
   }>;
   meta: { source: string; updatedAt: string; refreshAfterSeconds: number };
 };
@@ -450,6 +451,47 @@ const getNews = async (): Promise<Story[]> => {
 let cachedCatalog: { expiresAt: number; value: SportsCatalog } | null = null;
 let pendingCatalog: Promise<SportsCatalog> | null = null;
 
+type SportsDbTeam = {
+  idTeam?: string;
+  strTeam?: string;
+  strTeamShort?: string | null;
+  strLocation?: string | null;
+  strStadiumLocation?: string | null;
+  strTeamBadge?: string | null;
+};
+type SportsDbLeague = {
+  idLeague?: string;
+  strLeague?: string;
+  strSport?: string;
+  strBadge?: string | null;
+};
+const normalizeProviderTeam = (team: SportsDbTeam): Team => {
+  const name = String(team.strTeam || "Team");
+  return {
+    id: String(team.idTeam || name.toLowerCase().replace(/[^a-z0-9]+/g, "-")),
+    name,
+    shortName: String(team.strTeamShort || shortName(name)),
+    city: String(team.strLocation || team.strStadiumLocation || ""),
+    color: colorFor(name),
+    form: [],
+    ...(team.strTeamBadge ? { logoUrl: team.strTeamBadge } : {}),
+  };
+};
+
+const fetchSportsDbTeams = async (leagueId: string) => {
+  const response = await axios.get<{ teams?: SportsDbTeam[] | null }>(
+    `https://www.thesportsdb.com/api/v1/json/${encodeURIComponent(env.sports_api_key)}/lookup_all_teams.php`,
+    { params: { id: leagueId }, timeout: 12_000 },
+  );
+  return Array.isArray(response.data.teams) ? response.data.teams : [];
+};
+const fetchSportsDbLeagues = async () => {
+  const response = await axios.get<{ leagues?: SportsDbLeague[] | null }>(
+    `https://www.thesportsdb.com/api/v1/json/${encodeURIComponent(env.sports_api_key)}/all_leagues.php`,
+    { timeout: 12_000 },
+  );
+  return Array.isArray(response.data.leagues) ? response.data.leagues : [];
+};
 const fetchSportsDbEvents = async (
   leagueId: string,
   endpoint: "eventsnextleague" | "eventspastleague",
@@ -462,54 +504,43 @@ const fetchSportsDbEvents = async (
 };
 
 const fetchProviderCatalog = async (): Promise<SportsCatalog> => {
-  const eventGroups = await Promise.all(
-    env.sports_league_ids.flatMap((leagueId) => [
+  const [eventGroups, rosterGroups, leagueDirectory] = await Promise.all([
+    Promise.all(env.sports_league_ids.flatMap((leagueId) => [
       fetchSportsDbEvents(leagueId, "eventsnextleague"),
       fetchSportsDbEvents(leagueId, "eventspastleague"),
-    ]),
-  );
+    ])),
+    Promise.all(env.sports_league_ids.map(fetchSportsDbTeams)),
+    fetchSportsDbLeagues(),
+  ]);
   const providerMatches = eventGroups.flat().map(normalizeEvent);
-  if (!providerMatches.length)
-    throw new Error(
-      "TheSportsDB returned no events for the configured leagues.",
-    );
+  if (!providerMatches.length) throw new Error("TheSportsDB returned no events for the configured leagues.");
   const teamMap = new Map<string, Team>();
   providerMatches.forEach((match) => {
     teamMap.set(match.home.id, match.home);
     teamMap.set(match.away.id, match.away);
   });
+  rosterGroups.flat().map(normalizeProviderTeam).forEach((team) => teamMap.set(team.id, team));
   const providerTeams = [...teamMap.values()];
-  const competitions = [
-    ...new Map(
-      providerMatches.map((match) => [
-        match.competition,
-        {
-          id: match.competition.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-          name: match.competition,
-          sport: match.sport,
-          teamCount: new Set(
-            providerMatches
-              .filter((item) => item.competition === match.competition)
-              .flatMap((item) => [item.home.id, item.away.id]),
-          ).size,
-        },
-      ]),
-    ).values(),
-  ];
+  const competitions = leagueDirectory
+    .filter((league) => league.idLeague && league.strLeague)
+    .map((league) => ({
+      id: String(league.idLeague),
+      name: String(league.strLeague),
+      sport: String(league.strSport || "Sports"),
+      teamCount: providerMatches.some((match) => match.competition === league.strLeague)
+        ? new Set(providerMatches.filter((match) => match.competition === league.strLeague).flatMap((match) => [match.home.id, match.away.id])).size
+        : 0,
+      ...(league.strBadge ? { logoUrl: league.strBadge } : {}),
+    }));
   return {
     matches: providerMatches,
     teams: providerTeams,
     stories: [],
     standings: buildStandings(providerMatches, providerTeams),
     competitions,
-    meta: {
-      source: "thesportsdb",
-      updatedAt: new Date().toISOString(),
-      refreshAfterSeconds: Math.min(env.sports_cache_seconds, 300),
-    },
+    meta: { source: "thesportsdb", updatedAt: new Date().toISOString(), refreshAfterSeconds: Math.min(env.sports_cache_seconds, 300) },
   };
 };
-
 const getCatalog = async () => {
   if (
     env.sports_provider !== "thesportsdb" ||
@@ -599,6 +630,23 @@ const mountSportsEndpoints = (router: Router) => {
   router.get("/teams", async (_, res) => {
     const catalog = await getCatalog();
     res.json({ items: catalog.teams, meta: catalog.meta });
+  });
+  router.get("/teams/search", async (req, res) => {
+    const query = String(req.query.q || "").trim();
+    if (query.length < 2) return res.json({ items: [] });
+    if (env.sports_provider !== "thesportsdb" || !env.sports_api_key) {
+      const catalog = await getCatalog();
+      return res.json({ items: catalog.teams.filter((team) => `${team.name} ${team.city}`.toLowerCase().includes(query.toLowerCase())) });
+    }
+    try {
+      const response = await axios.get<{ teams?: SportsDbTeam[] | null }>(
+        `https://www.thesportsdb.com/api/v1/json/${encodeURIComponent(env.sports_api_key)}/searchteams.php`,
+        { params: { t: query }, timeout: 12_000 },
+      );
+      return res.json({ items: (response.data.teams || []).map(normalizeProviderTeam) });
+    } catch {
+      return res.status(502).json({ error: "provider_unavailable", message: "Team search is temporarily unavailable." });
+    }
   });
   router.get("/teams/:id", async (req, res) => {
     const catalog = await getCatalog();

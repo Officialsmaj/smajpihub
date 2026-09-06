@@ -45,6 +45,7 @@ export type SportsCompetition = {
   name: string;
   sport: string;
   teamCount: number;
+  logoUrl?: string;
 };
 
 export type SportsCatalog = {

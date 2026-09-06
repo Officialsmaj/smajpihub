@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import type { SportsCatalog, SportsCompetition, SportsTeam } from "../../types/sports";
-import { saveSportsPreferences, type SportsPreferences } from "../../lib/sportsApi";
+import { saveSportsPreferences, searchSportsTeams, type SportsPreferences } from "../../lib/sportsApi";
 import { enablePushNotifications } from "../../lib/pushNotifications";
 import { enableNativePushNotifications, supportsNativePushNotifications } from "../../lib/nativePushNotifications";
 
@@ -35,6 +35,21 @@ const SportsOnboarding = ({ catalog, onComplete }: Props) => {
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [remoteTeams, setRemoteTeams] = useState<SportsTeam[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (step !== 1 || query.trim().length < 2) { setRemoteTeams([]); setSearching(false); return; }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setSearching(true);
+      searchSportsTeams(query.trim(), controller.signal)
+        .then(({ items }) => setRemoteTeams(items))
+        .catch(() => setRemoteTeams([]))
+        .finally(() => setSearching(false));
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [query, step]);
 
   const competitionByTeam = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -44,10 +59,12 @@ const SportsOnboarding = ({ catalog, onComplete }: Props) => {
     return map;
   }, [catalog.matches]);
   const competitionLogo = (competition: SportsCompetition) => {
+    if (competition.logoUrl) return { id: competition.id, name: competition.name, shortName: competition.name, city: "", color: "#2563eb", form: [], logoUrl: competition.logoUrl };
     const match = catalog.matches.find(item => item.competition === competition.name);
     return match?.home;
   };
-  const visibleTeams = catalog.teams.filter(team => `${team.name} ${team.city} ${[...(competitionByTeam.get(team.id) || [])].join(" ")}`.toLowerCase().includes(query.toLowerCase()));
+  const searchableTeams = query.trim().length >= 2 ? [...new Map([...remoteTeams, ...catalog.teams].map(team => [team.id, team])).values()] : catalog.teams;
+  const visibleTeams = searchableTeams.filter(team => `${team.name} ${team.city} ${[...(competitionByTeam.get(team.id) || [])].join(" ")}`.toLowerCase().includes(query.toLowerCase()));
   const visibleCompetitions = catalog.competitions.filter(item => `${item.name} ${item.sport}`.toLowerCase().includes(query.toLowerCase()));
   const selectedTeams = catalog.teams.filter(team => teamIds.has(team.id));
 
@@ -96,7 +113,7 @@ const SportsOnboarding = ({ catalog, onComplete }: Props) => {
       <label className="sports-onboarding-search"><SearchRoundedIcon /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={step === 1 ? "Search teams" : "Search leagues"} /></label>
       <section className="sports-onboarding-list">
         {step === 1 ? visibleTeams.map(team => <button type="button" onClick={() => toggle(teamIds, team.id, setTeamIds)} className={teamIds.has(team.id) ? "selected" : ""} key={team.id}><Logo team={team} label={team.name} /><span><b>{team.name}</b><small>{team.city || [...(competitionByTeam.get(team.id) || [])][0] || "Sports team"}</small></span>{teamIds.has(team.id) ? <StarRoundedIcon /> : <StarBorderRoundedIcon />}</button>) : visibleCompetitions.map(competition => <button type="button" onClick={() => toggle(competitionIds, competition.id, setCompetitionIds)} className={competitionIds.has(competition.id) ? "selected" : ""} key={competition.id}><Logo team={competitionLogo(competition)} label={competition.name} /><span><b>{competition.name}</b><small>{competition.sport} · {competition.teamCount} teams</small></span>{competitionIds.has(competition.id) ? <StarRoundedIcon /> : <StarBorderRoundedIcon />}</button>)}
-        {!(step === 1 ? visibleTeams.length : visibleCompetitions.length) ? <p className="sports-onboarding-empty">No results found.</p> : null}
+        {searching ? <p className="sports-onboarding-empty">Searching teams...</p> : !(step === 1 ? visibleTeams.length : visibleCompetitions.length) ? <p className="sports-onboarding-empty">No results found.</p> : null}
       </section>
       <div className="sports-onboarding-actions sticky"><button type="button" disabled={saving} onClick={() => step === 1 ? (setQuery(""), setStep(2)) : void finish()}>{step === 1 ? "Continue" : saving ? "Saving..." : "Save preferences"}</button>{notice ? <small>{notice}</small> : null}</div>
     </>}

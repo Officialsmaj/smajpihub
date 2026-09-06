@@ -1,5 +1,5 @@
 import { apiFetch } from "./axiosClient";
-import type { SportsCatalog } from "../types/sports";
+import type { SportsCatalog, SportsTeam } from "../types/sports";
 
 export const getSportsCatalog = async (signal?: AbortSignal) => {
   const response = await apiFetch("/sports/bootstrap", { signal });
@@ -7,6 +7,11 @@ export const getSportsCatalog = async (signal?: AbortSignal) => {
   return response.json() as Promise<SportsCatalog>;
 };
 
+export const searchSportsTeams = async (query: string, signal?: AbortSignal) => {
+  const response = await apiFetch(`/sports/teams/search?q=${encodeURIComponent(query)}`, { signal });
+  if (!response.ok) throw new Error(`Sports team search returned ${response.status}.`);
+  return response.json() as Promise<{ items: SportsTeam[] }>;
+};
 export type SportsPreferences = {
   completed: boolean;
   favoriteTeamIds: string[];
