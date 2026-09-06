@@ -614,7 +614,7 @@ const SportsPage = ({ kind = "home" }: { kind?: SportsPageKind }) => {
 
   return (
     <AppLayout showFooter={false} showHeader={false}>
-      <main className="sports-page">
+      <main className={`sports-page${hideSportsChrome ? " sports-onboarding-active" : ""}`}>
         <SportsHeader query={query} onQueryChange={setQuery} />
         {!hideSportsChrome ? (
           <div className={`sports-data-status${usingFallback ? " fallback" : ""}`} role="status">

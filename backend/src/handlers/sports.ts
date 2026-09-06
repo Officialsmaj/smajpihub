@@ -458,6 +458,7 @@ type SportsDbTeam = {
   strLocation?: string | null;
   strStadiumLocation?: string | null;
   strTeamBadge?: string | null;
+  strBadge?: string | null;
 };
 type SportsDbLeague = {
   idLeague?: string;
@@ -474,7 +475,7 @@ const normalizeProviderTeam = (team: SportsDbTeam): Team => {
     city: String(team.strLocation || team.strStadiumLocation || ""),
     color: colorFor(name),
     form: [],
-    ...(team.strTeamBadge ? { logoUrl: team.strTeamBadge } : {}),
+    ...((team.strBadge || team.strTeamBadge) ? { logoUrl: String(team.strBadge || team.strTeamBadge) } : {}),
   };
 };
 
