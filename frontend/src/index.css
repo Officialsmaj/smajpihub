@@ -22020,3 +22020,152 @@ svg {
     text-align: center;
   }
 }
+
+/* Global language preview control */
+.language-soon-control {
+  position: fixed;
+  top: 34%;
+  left: 0;
+  z-index: 5200;
+  display: flex;
+  align-items: center;
+}
+.language-soon-button {
+  width: 52px;
+  height: 52px;
+  padding: 0 11px 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: #5f2b7a;
+  background: #d9c4e8;
+  border: 0;
+  border-radius: 0 26px 26px 0;
+  box-shadow: 0 6px 18px rgba(54, 27, 76, 0.18);
+  font: 700 16px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.language-soon-button:focus-visible {
+  outline: 3px solid rgba(109, 40, 217, 0.35);
+  outline-offset: 2px;
+}
+.language-soon-message {
+  position: absolute;
+  left: 62px;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 82px));
+  padding: 9px 12px;
+  color: #fff;
+  background: #58206f;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(24, 12, 36, 0.25);
+  font: 700 12px/1.35 system-ui, sans-serif;
+  animation: language-soon-in 160ms ease-out;
+}
+@keyframes language-soon-in {
+  from { opacity: 0; transform: translateX(-6px); }
+}
+@media (min-width: 1024px) {
+  body:not(.desktop-admin-route) .language-soon-control { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .language-soon-message { animation: none; }
+}
+/* Dashboard and Preferences language choice */
+.language-soon-button {
+  position: fixed;
+  top: 34%;
+  left: 0;
+  z-index: 5200;
+}
+.language-choice-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(22, 10, 35, 0.62);
+}
+.language-choice-dialog {
+  position: relative;
+  width: min(100%, 620px);
+  min-height: min(72vh, 620px);
+  padding: 72px 26px 34px;
+  display: flex;
+  flex-direction: column;
+  color: #24122e;
+  background: #fff;
+  border-radius: 42px 42px 0 0;
+  box-shadow: 0 -18px 55px rgba(28, 14, 39, 0.22);
+}
+.language-choice-dialog h2 {
+  margin: 0 0 54px;
+  color: #64217a;
+  font-size: clamp(25px, 5vw, 32px);
+  text-align: center;
+}
+.language-choice-close {
+  position: absolute;
+  top: 28px;
+  right: 30px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #27212b;
+  background: transparent;
+  border: 0;
+  font-size: 25px;
+  cursor: pointer;
+}
+.language-choice-dialog label {
+  display: grid;
+  gap: 8px;
+}
+.language-choice-dialog label > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.language-choice-dialog select {
+  width: 100%;
+  min-height: 74px;
+  padding: 0 26px;
+  color: #332d36;
+  background: #f6f4f6;
+  border: 1px solid #e7e2e8;
+  border-radius: 15px;
+  font: 600 17px/1.2 inherit;
+}
+.language-choice-actions {
+  margin-top: auto;
+  display: grid;
+  gap: 14px;
+}
+.language-choice-actions button {
+  width: min(100%, 278px);
+  min-height: 68px;
+  margin: 0 auto;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.language-choice-cancel {
+  color: #64217a;
+  background: #fff;
+  border: 2px solid #64217a;
+}
+.language-choice-save {
+  color: #fff;
+  background: #64217a;
+  border: 2px solid #64217a;
+}
+@media (min-width: 768px) {
+  .language-choice-backdrop { align-items: center; padding: 24px; }
+  .language-choice-dialog { min-height: 520px; border-radius: 32px; }
+}

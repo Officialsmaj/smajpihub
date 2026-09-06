@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmSignOutModal from "../../components/ConfirmSignOutModal";
 import TrustBadge from "../../components/TrustBadge";
+import LanguageSoonButton from "../../components/LanguageSoonButton";
 import { WELCOME_REPLAY_EVENT } from "../../components/WelcomeTour";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { axiosClient } from "../../lib/axiosClient";
@@ -239,6 +240,7 @@ const SettingsPage = () => {
 
   return (
     <main className="private-page settings-page">
+      <LanguageSoonButton />
       <section className="private-page-head">
         <div>
           <p className="private-kicker">ACCOUNT</p>
