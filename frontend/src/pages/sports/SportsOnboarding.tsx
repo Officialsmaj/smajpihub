@@ -90,7 +90,7 @@ const SportsOnboarding = ({ catalog, onComplete }: Props) => {
     finally { setSaving(false); onComplete(preferences); }
   };
 
-  return <div className="sports-onboarding">
+  return <div className={`sports-onboarding sports-onboarding-step-${step}`}>
     {step > 0 ? <button className="sports-onboarding-back" type="button" aria-label="Previous step" onClick={() => { setQuery(""); setStep(step - 1); }}><ArrowBackRoundedIcon /></button> : null}
     <div className="sports-onboarding-progress"><span className={step >= 0 ? "active" : ""} /><span className={step >= 1 ? "active" : ""} /><span className={step >= 2 ? "active" : ""} /></div>
     {step === 0 ? <>
